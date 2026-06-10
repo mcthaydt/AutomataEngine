@@ -1,0 +1,20 @@
+import type { StoragePort } from './port'
+
+export function memoryStorage(): StoragePort {
+  const map = new Map<string, string>()
+  return {
+    get: (key) => map.get(key) ?? null,
+    set: (key, value) => { map.set(key, value) }
+  }
+}
+
+export function localStorageAdapter(backing: Storage = globalThis.localStorage): StoragePort {
+  return {
+    get(key) {
+      try { return backing.getItem(key) } catch { return null }
+    },
+    set(key, value) {
+      try { backing.setItem(key, value) } catch { /* quota/private mode: drop write */ }
+    }
+  }
+}
