@@ -205,10 +205,11 @@ limit) live in level data, not components.
 - `bumper` — `contact(ball, bumper)` → radial impulse + sound + particles.
 - `goal` — `sensorEnter(ball, goal)` → `dispatch(levelCompleted({ timeMs,
   bananas }))`.
-- `fallOff` — ball y < level `fallY` → `dispatch(ballFell)`: lives−1 →
-  respawn at spawn point, or game-over at 0.
-- `timer` — countdown while `playing`; `dispatch(timeExpired)` → treated as a
-  fall.
+- `fallOff` — ball y < level `fallY` → `dispatch(ballFell)`: lives−1 → level
+  retry (ball at spawn, timer and this-run bananas reset, world rebuilt), or
+  game-over at 0 lives.
+- `timer` — counts elapsed ms while `playing`; at `timeLimitS` →
+  `dispatch(timeExpired)` → treated as a fall.
 - `cameraFollow` — smoothed chase cam behind ball velocity, look-at ball.
 
 ### Scenes & UI
@@ -276,8 +277,9 @@ confetti, fall poof.
 
 ### Saves & unlocks
 
-Progress per level `{ completed, bestTimeMs, maxBananas }`. Completing a level
-unlocks the next; completing World 1 unlocks World 2. Settings: volume,
+Progress per level `{ completed, bestTimeMs, maxBananas }` (`bestTimeMs` =
+elapsed completion time, lower is better). Completing a level unlocks the
+next; completing World 1 unlocks World 2. Settings: volume,
 joystick side. Persisted via engine persistence middleware (versioned;
 corruption → defaults + warning).
 
@@ -295,8 +297,8 @@ systems for test-play). Game never imports editor.
   pinch), ground grid, selection highlight.
 - **Tools:** palette of geometry primitives + game archetypes (banana, bumper,
   moving platform, goal, spawn); click-to-place on ground plane with grid
-  snap; drag to move; inspector panel for exact numbers (pos/rot/size,
-  waypoints, level metadata).
+  snap; drag to move on the ground plane (vertical position via inspector);
+  inspector panel for exact numbers (pos/rot/size, waypoints, level metadata).
 - **Validation:** game's level schema + sanity checks (spawn exists, goal
   exists) with an error panel. Invalid levels cannot be exported or
   test-played.
@@ -333,7 +335,7 @@ behavior; tests written first; run before any green claim.
    coverage gate; covered by one Playwright smoke test per app (game: boot →
    menu → play → ball moves on input; editor: place box → export contains it).
 
-Coverage gate ~90% on non-shim code. CI script: lint (incl.
+Coverage gate: 90% lines and branches on non-shim code. CI script: lint (incl.
 dependency-direction rules) + typecheck + tests across the workspace.
 
 ## Error handling
@@ -356,7 +358,7 @@ Editor lands **before** content so shipped levels are authored in the editor
 | # | Milestone |
 |---|---|
 | M0 | Monorepo scaffold: workspaces, strict TS, Vitest, ESLint boundaries, CI script, walking-skeleton pages |
-| M1 | Engine: store + persistence middleware |
+| M1 | Engine: store + persistence middleware + StoragePort adapters (localStorage, in-memory) |
 | M2 | Engine: data registry (TOML/YAML/JSON + zod) + archetype spawner |
 | M3 | Engine: ECS conventions — world factory, scheduler/stages, event queue |
 | M4 | Engine: loop + input (keyboard, virtual joystick) |
@@ -364,8 +366,8 @@ Editor lands **before** content so shipped levels are authored in the editor
 | M6 | Engine: render port + Three adapter, camera, groups, NullRenderer |
 | M7 | Game: first playable — load level, floor + ball + tilt + fall-off + goal + respawn, HUD skeleton |
 | M8 | Game: bananas, timer, lives, bumpers, moving platforms, camera polish |
-| M9 | Game: scenes/menus/level-select, saves + unlocks, pause |
-| M10 | Game: audio + particles |
+| M9 | Engine SceneManager; Game: scenes/menus/level-select, saves + unlocks, pause |
+| M10 | Engine: AudioPort adapters + particle emitter sim; Game: sounds + particle effects |
 | M11 | Editor: app shell, document/selection reducers, undo/redo, viewport + orbit + grid |
 | M12 | Editor: palette, place/move/delete, inspector, validation panel |
 | M13 | Editor: test-play + import/export/autosave |
