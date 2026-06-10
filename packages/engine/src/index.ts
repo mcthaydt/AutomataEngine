@@ -1,5 +1,6 @@
 export { ENGINE_VERSION } from './version'
 export * from './state/store'
 export * from './state/slices'
+export * from './state/persistence'
 export * from './storage/port'
 export * from './storage/adapters'
