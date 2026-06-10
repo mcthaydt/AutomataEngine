@@ -1,0 +1,12 @@
+{
+  "name": "level-editor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": { "@automata/engine": "*", "monkey-ball": "*" },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  }
+}
