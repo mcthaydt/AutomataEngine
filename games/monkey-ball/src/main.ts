@@ -1,3 +1,10 @@
-import { renderSkeleton } from './skeleton'
+import { attachCanvasRenderer, createThreeRenderer, startLoopDriver } from '@automata/engine'
+import { createDemoScene } from './demoScene'
 
-renderSkeleton(document.getElementById('app') as HTMLElement)
+const canvas = document.createElement('canvas')
+document.getElementById('app')!.appendChild(canvas)
+
+const renderer = createThreeRenderer()
+const canvasRenderer = attachCanvasRenderer(renderer, canvas)
+const demo = createDemoScene(renderer.port, () => canvasRenderer.renderFrame())
+startLoopDriver(demo.loop)

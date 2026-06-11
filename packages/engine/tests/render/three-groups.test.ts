@@ -21,7 +21,7 @@ describe('render groups', () => {
     port.setGroupRotation(stage, { x: 0, y: 0, z: Math.PI / 2 })
     scene.updateMatrixWorld(true)
 
-    const group = scene.children[scene.children.length - 1]
+    const group = scene.children[scene.children.length - 1]!
     const mesh = group.children[0]!
     const world = new Vector3()
     mesh.getWorldPosition(world)
