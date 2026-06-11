@@ -22,6 +22,13 @@ describe('createLoader', () => {
     await expect(promise).rejects.toMatchObject({ file: '/missing.json', kind: 'level' })
   })
 
+  it('wraps non-Error fetch failures as strings', async () => {
+    const loader = createLoader(async () => { throw 'offline' })
+    await expect(loader.load(levelKind, '/offline.json')).rejects.toMatchObject({
+      issues: ['offline']
+    })
+  })
+
   it('propagates validation failures as DataLoadError', async () => {
     const loader = createLoader(async () => '{ "id": 42 }')
     await expect(loader.load(levelKind, '/bad.json')).rejects.toBeInstanceOf(DataLoadError)

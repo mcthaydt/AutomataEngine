@@ -63,6 +63,15 @@ describe('physicsStepSystem', () => {
     expect(events.read('sensorEnter')).toHaveLength(1)
     expect(events.read('sensorExit')).toHaveLength(1)
   })
+
+  it('emits contactEnd for ended contact events', () => {
+    const port = fakePort({
+      step: vi.fn(() => [{ kind: 'contact', started: false, a: {}, b: {} }] as PhysicsEvent[])
+    })
+    const events = new EventQueue()
+    physicsStepSystem(port, events).run({ dt: 1 / 60 })
+    expect(events.read('contactEnd')).toHaveLength(1)
+  })
 })
 
 describe('physicsSyncSystem', () => {
@@ -80,5 +89,12 @@ describe('physicsSyncSystem', () => {
     system.run({ world })
     expect(entity.transform!.prevPosition).toEqual({ x: 0, y: 5, z: 0 })
     expect(entity.transform!.position).toEqual({ x: 0, y: 4.9, z: 0 })
+  })
+
+  it('leaves transforms unchanged when the port has no pose', () => {
+    const world = createWorld<EngineEntity>()
+    const entity = world.add({ transform: createTransform({ x: 0, y: 5, z: 0 }), rigidBody: ballDef })
+    physicsSyncSystem(fakePort()).run({ world })
+    expect(entity.transform!.position).toEqual({ x: 0, y: 5, z: 0 })
   })
 })

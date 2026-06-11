@@ -28,6 +28,16 @@ describe('registerRenderables', () => {
     world.add({ transform: createTransform(), renderable: ball })
     expect(renderer.calls.at(-1)).toMatchObject({ op: 'add', group: stage })
   })
+
+  it('unsubscribe stops future add/remove mirroring', () => {
+    const world = createWorld<EngineEntity>()
+    const renderer = createNullRenderer()
+    const unsubscribe = registerRenderables(world, renderer.port)
+    unsubscribe()
+    const entity = world.add({ transform: createTransform(), renderable: ball })
+    world.remove(entity)
+    expect(renderer.calls).toEqual([])
+  })
 })
 
 describe('renderSystem', () => {

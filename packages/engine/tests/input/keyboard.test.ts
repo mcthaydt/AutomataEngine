@@ -39,4 +39,11 @@ describe('createKeyboardInput', () => {
     press('KeyW')
     expect(input.read()).toEqual({ x: 0, y: 0 })
   })
+
+  it('ignores unrelated keys', () => {
+    const input = createKeyboardInput(window)
+    press('Space')
+    expect(input.read()).toEqual({ x: 0, y: 0 })
+    input.dispose()
+  })
 })

@@ -10,10 +10,9 @@ export function registerPhysicsBodies<E extends EngineEntity>(
 ): () => void {
   const query = world.with('rigidBody', 'transform')
   const add = (entity: E): void => {
-    if (!entity.rigidBody || !entity.transform) return
-    port.addBody(entity, entity.rigidBody, {
-      position: entity.transform.position,
-      rotation: entity.transform.rotation
+    port.addBody(entity, entity.rigidBody!, {
+      position: entity.transform!.position,
+      rotation: entity.transform!.rotation
     })
   }
   for (const entity of query) add(entity)

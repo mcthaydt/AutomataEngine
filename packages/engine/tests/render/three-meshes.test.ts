@@ -51,4 +51,14 @@ describe('createThreeRenderer: meshes', () => {
       port.remove({})
     }).not.toThrow()
   })
+
+  it('dispose removes all tracked meshes and clears groups', () => {
+    const { port } = createThreeRenderer()
+    const stage = port.createGroup()
+    port.add({ id: 'floor' }, { primitive: 'box', size: { x: 1, y: 1, z: 1 }, color: '#fff' }, stage)
+    expect(port.objectCount).toBe(1)
+    port.dispose()
+    expect(port.objectCount).toBe(0)
+    expect(() => port.setGroupRotation(stage, { x: 0, y: 0, z: 0 })).toThrow(/Unknown render group/)
+  })
 })

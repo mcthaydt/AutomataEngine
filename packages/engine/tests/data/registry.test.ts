@@ -33,4 +33,12 @@ describe('parseData', () => {
     expect(err.issues.some((issue) => issue.startsWith('ball.radius:'))).toBe(true)
     expect(err.message).toContain('physics.toml')
   })
+
+  it('reports root schema violations with the root path marker', () => {
+    const scalarKind = defineKind('scalar', 'json', z.object({ id: z.string() }))
+    let caught: unknown
+    try { parseData(scalarKind, '42', 'scalar.json') } catch (e) { caught = e }
+    const err = caught as DataLoadError
+    expect(err.issues.some((issue) => issue.startsWith('(root):'))).toBe(true)
+  })
 })

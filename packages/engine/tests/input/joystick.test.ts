@@ -59,4 +59,11 @@ describe('createVirtualJoystick', () => {
     expect(joystick.nub.style.transform).toBe('translate(0px, 0px)')
     joystick.dispose()
   })
+
+  it('ignores pointer moves before activation and uses default options', () => {
+    const joystick = createVirtualJoystick(base)
+    pointer(base, 'pointermove', 100, 0)
+    expect(joystick.read()).toEqual({ x: 0, y: 0 })
+    joystick.dispose()
+  })
 })

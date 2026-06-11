@@ -12,8 +12,7 @@ export function registerRenderables<E extends EngineEntity>(
 ): () => void {
   const query = world.with('renderable', 'transform')
   const add = (entity: E): void => {
-    if (!entity.renderable) return
-    port.add(entity, entity.renderable, group)
+    port.add(entity, entity.renderable!, group)
   }
   for (const entity of query) add(entity)
   const offAdd = query.onEntityAdded.subscribe(add)

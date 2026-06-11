@@ -25,4 +25,8 @@ describe('parseByFormat', () => {
       expect((caught as ParseError).message.length).toBeGreaterThan(0)
     }
   })
+
+  it('formats non-Error parse causes', () => {
+    expect(new ParseError('json', 'bad input').message).toContain('bad input')
+  })
 })

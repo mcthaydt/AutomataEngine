@@ -38,4 +38,13 @@ describe('quat', () => {
     expect(v.z).toBeCloseTo(Math.SQRT1_2)
     expect(Math.hypot(half.x, half.y, half.z, half.w)).toBeCloseTo(1)
   })
+
+  it('normalize returns identity for a zero quaternion', () => {
+    expect(quat.normalize({ x: 0, y: 0, z: 0, w: 0 })).toEqual(quat.identity())
+  })
+
+  it('nlerp takes the short path for equivalent negated quaternions', () => {
+    const half = quat.nlerp(quat.identity(), { x: 0, y: 0, z: 0, w: -1 }, 0.5)
+    expect(half).toEqual(quat.identity())
+  })
 })
