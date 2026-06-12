@@ -1,18 +1,23 @@
-import type { World } from 'miniplex'
+import type { Query, World } from 'miniplex'
 import type { EngineEntity } from '../ecs/components'
 import type { EventQueue } from '../ecs/events'
 import type { System } from '../ecs/scheduler'
 import type { PhysicsPort } from './port'
 
+type PhysicsEntity<E extends EngineEntity> = E & {
+  rigidBody: NonNullable<E['rigidBody']>
+  transform: NonNullable<E['transform']>
+}
+
 export function registerPhysicsBodies<E extends EngineEntity>(
   world: World<E>,
   port: PhysicsPort
 ): () => void {
-  const query = world.with('rigidBody', 'transform')
-  const add = (entity: E): void => {
-    port.addBody(entity, entity.rigidBody!, {
-      position: entity.transform!.position,
-      rotation: entity.transform!.rotation
+  const query = world.with('rigidBody', 'transform') as Query<PhysicsEntity<E>>
+  const add = (entity: PhysicsEntity<E>): void => {
+    port.addBody(entity, entity.rigidBody, {
+      position: entity.transform.position,
+      rotation: entity.transform.rotation
     })
   }
   for (const entity of query) add(entity)

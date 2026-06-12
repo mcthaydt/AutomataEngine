@@ -41,6 +41,8 @@ export function createPersistence<S, A extends AnyAction>(
   options: PersistenceOptions<S>
 ): Persistence<S, A> {
   let timer: ReturnType<typeof setTimeout> | null = null
+  // Undefined is reserved as the "no pending write" sentinel, so pick() values
+  // that intentionally resolve to undefined are treated as non-persistable.
   let pending: unknown = undefined
   let lastWritten: unknown = undefined
 

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createVirtualJoystick } from '../../src/input/joystick'
 
 function makeBase(): HTMLElement {
@@ -10,8 +10,17 @@ function makeBase(): HTMLElement {
   return el
 }
 
-const pointer = (el: HTMLElement, type: string, clientX: number, clientY: number) =>
-  el.dispatchEvent(new MouseEvent(type, { clientX, clientY, bubbles: true }))
+const pointer = (
+  el: HTMLElement,
+  type: string,
+  clientX: number,
+  clientY: number,
+  pointerId = 1
+) => {
+  const event = new MouseEvent(type, { clientX, clientY, bubbles: true })
+  Object.defineProperty(event, 'pointerId', { value: pointerId })
+  return el.dispatchEvent(event)
+}
 
 describe('createVirtualJoystick', () => {
   let base: HTMLElement
@@ -64,6 +73,16 @@ describe('createVirtualJoystick', () => {
     const joystick = createVirtualJoystick(base)
     pointer(base, 'pointermove', 100, 0)
     expect(joystick.read()).toEqual({ x: 0, y: 0 })
+    joystick.dispose()
+  })
+
+  it('captures the active pointer so mouse drags released outside still reset', () => {
+    base.setPointerCapture = vi.fn()
+    const joystick = createVirtualJoystick(base, { radiusPx: 50, deadZone: 0 })
+
+    pointer(base, 'pointerdown', 50, 50, 42)
+
+    expect(base.setPointerCapture).toHaveBeenCalledWith(42)
     joystick.dispose()
   })
 })

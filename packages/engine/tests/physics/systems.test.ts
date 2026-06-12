@@ -42,6 +42,19 @@ describe('registerPhysicsBodies', () => {
     world.remove(entity)
     expect(port.removeBody).toHaveBeenCalledWith(entity)
   })
+
+  it('unsubscribes from future add and remove notifications', () => {
+    const world = createWorld<EngineEntity>()
+    const port = fakePort()
+    const unregister = registerPhysicsBodies(world, port)
+
+    unregister()
+    const entity = world.add({ transform: createTransform(), rigidBody: ballDef })
+    world.remove(entity)
+
+    expect(port.addBody).not.toHaveBeenCalled()
+    expect(port.removeBody).not.toHaveBeenCalled()
+  })
 })
 
 describe('physicsStepSystem', () => {

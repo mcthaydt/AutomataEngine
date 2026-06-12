@@ -26,7 +26,8 @@ export function createThreeRenderer(): ThreeRenderer {
   const camera = new PerspectiveCamera(60, 16 / 9, 0.1, 200)
   camera.position.set(0, 6, 10)
 
-  scene.add(new AmbientLight('#ffffff', 0.6))
+  const ambient = new AmbientLight('#ffffff', 0.6)
+  scene.add(ambient)
   const sun = new DirectionalLight('#ffffff', 1.4)
   sun.position.set(6, 12, 4)
   scene.add(sun)
@@ -89,7 +90,9 @@ export function createThreeRenderer(): ThreeRenderer {
 
     dispose() {
       for (const entity of [...meshes.keys()]) port.remove(entity)
+      for (const group of groups.values()) group.removeFromParent()
       groups.clear()
+      scene.remove(ambient, sun)
     }
   }
 

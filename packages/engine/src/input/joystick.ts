@@ -48,6 +48,7 @@ export function createVirtualJoystick(
   const onDown = (event: Event): void => {
     active = true
     const e = event as PointerEvent
+    base.setPointerCapture(e.pointerId)
     update(e.clientX, e.clientY)
   }
   const onMove = (event: Event): void => {
