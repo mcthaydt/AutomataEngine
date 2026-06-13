@@ -40,4 +40,27 @@ describe('Scheduler', () => {
   it('exposes the fixed stage list for reference', () => {
     expect(FIXED_STAGES).toEqual(['input', 'update', 'physics', 'postPhysics'])
   })
+
+  it('runs onFixedEnd hooks once, after every fixed stage, each runFixed', () => {
+    const scheduler = new Scheduler<Ctx>()
+    scheduler.add(system('step', 'physics'))
+    scheduler.add(system('sync', 'postPhysics'))
+    scheduler.onFixedEnd((ctx) => ctx.log.push('frameEnd'))
+
+    const ctx = { log: [] as string[] }
+    scheduler.runFixed(ctx)
+    expect(ctx.log).toEqual(['step', 'sync', 'frameEnd'])
+    scheduler.runFixed(ctx)
+    expect(ctx.log).toEqual(['step', 'sync', 'frameEnd', 'step', 'sync', 'frameEnd'])
+  })
+
+  it('does not run onFixedEnd hooks during runStage', () => {
+    const scheduler = new Scheduler<Ctx>()
+    scheduler.add(system('draw', 'render'))
+    scheduler.onFixedEnd((ctx) => ctx.log.push('frameEnd'))
+
+    const ctx = { log: [] as string[] }
+    scheduler.runStage('render', ctx)
+    expect(ctx.log).toEqual(['draw'])
+  })
 })

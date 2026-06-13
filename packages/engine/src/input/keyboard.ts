@@ -1,4 +1,5 @@
 import type { InputSource, InputVector } from './types'
+import { clampToUnit } from './vector'
 
 const AXES: Record<string, InputVector> = {
   KeyW: { x: 0, y: 1 }, ArrowUp: { x: 0, y: 1 },
@@ -27,8 +28,7 @@ export function createKeyboardInput(target: EventTarget): InputSource {
         x += axis.x
         y += axis.y
       }
-      const len = Math.hypot(x, y)
-      return len > 1 ? { x: x / len, y: y / len } : { x, y }
+      return clampToUnit(x, y)
     },
     dispose() {
       target.removeEventListener('keydown', onDown)
