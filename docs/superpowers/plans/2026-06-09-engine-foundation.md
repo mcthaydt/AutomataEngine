@@ -30,7 +30,7 @@
 - Create: `packages/engine/src/version.ts`, `packages/engine/src/index.ts`
 - Test: `packages/engine/tests/version.test.ts`
 
-- [ ] **Step 1: Write root + engine config files**
+- [x] **Step 1: Write root + engine config files**
 
 `package.json`:
 ```json
@@ -136,12 +136,12 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 2: Install dev dependencies**
+- [x] **Step 2: Install dev dependencies**
 
 Run: `npm install -D typescript vitest @vitest/coverage-v8 happy-dom eslint typescript-eslint vite`
 Expected: lockfile created, no errors.
 
-- [ ] **Step 3: Write the failing test**
+- [x] **Step 3: Write the failing test**
 
 `packages/engine/tests/version.test.ts`:
 ```ts
@@ -155,12 +155,12 @@ describe('engine package', () => {
 })
 ```
 
-- [ ] **Step 4: Run test to verify it fails**
+- [x] **Step 4: Run test to verify it fails**
 
 Run: `npx vitest run packages/engine/tests/version.test.ts`
 Expected: FAIL — cannot resolve `../src/index`.
 
-- [ ] **Step 5: Implement**
+- [x] **Step 5: Implement**
 
 `packages/engine/src/version.ts`:
 ```ts
@@ -172,12 +172,12 @@ export const ENGINE_VERSION = '0.1.0'
 export { ENGINE_VERSION } from './version'
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `npx vitest run packages/engine/tests/version.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -189,7 +189,7 @@ git commit -m "chore: monorepo scaffold + engine package with version test"
 **Files:**
 - Create: `eslint.config.js`
 
-- [ ] **Step 1: Write the config**
+- [x] **Step 1: Write the config**
 
 `eslint.config.js`:
 ```js
@@ -225,7 +225,7 @@ export default tseslint.config(
 )
 ```
 
-- [ ] **Step 2: Verify the boundary rule actually fires**
+- [x] **Step 2: Verify the boundary rule actually fires**
 
 Create a scratch violation `games/scratch.ts`:
 ```ts
@@ -235,12 +235,12 @@ Run: `npx eslint games/scratch.ts`
 Expected: 1 error mentioning `@automata/engine`.
 Then delete the scratch file: `rm games/scratch.ts` (and `rmdir games` if now empty — it will be repopulated in Task 3).
 
-- [ ] **Step 3: Verify clean lint passes**
+- [x] **Step 3: Verify clean lint passes**
 
 Run: `npm run lint`
 Expected: exit 0, no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add eslint.config.js
@@ -254,7 +254,7 @@ git commit -m "chore: eslint flat config with engine/game/tool boundary rules"
 - Create: `games/monkey-ball/src/skeleton.ts`, `games/monkey-ball/src/main.ts`
 - Test: `games/monkey-ball/tests/skeleton.test.ts`
 
-- [ ] **Step 1: Write package config**
+- [x] **Step 1: Write package config**
 
 `games/monkey-ball/package.json`:
 ```json
@@ -306,12 +306,12 @@ export default defineConfig({
 </html>
 ```
 
-- [ ] **Step 2: Run install so the workspace links @automata/engine**
+- [x] **Step 2: Run install so the workspace links @automata/engine**
 
 Run: `npm install`
 Expected: `node_modules/@automata/engine` is a symlink into `packages/engine`.
 
-- [ ] **Step 3: Write the failing test**
+- [x] **Step 3: Write the failing test**
 
 `games/monkey-ball/tests/skeleton.test.ts`:
 ```ts
@@ -327,12 +327,12 @@ describe('walking skeleton', () => {
 })
 ```
 
-- [ ] **Step 4: Run test to verify it fails**
+- [x] **Step 4: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/skeleton.test.ts`
 Expected: FAIL — cannot resolve `../src/skeleton`.
 
-- [ ] **Step 5: Implement**
+- [x] **Step 5: Implement**
 
 `games/monkey-ball/src/skeleton.ts`:
 ```ts
@@ -350,12 +350,12 @@ import { renderSkeleton } from './skeleton'
 renderSkeleton(document.getElementById('app') as HTMLElement)
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/skeleton.test.ts`
 Expected: PASS — proves cross-package import works under Vitest.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -369,7 +369,7 @@ git commit -m "feat(game): walking-skeleton app importing @automata/engine"
 - Create: `tools/level-editor/src/skeleton.ts`, `tools/level-editor/src/main.ts`
 - Test: `tools/level-editor/tests/skeleton.test.ts`
 
-- [ ] **Step 1: Write package config**
+- [x] **Step 1: Write package config**
 
 Same shape as Task 3 with these differences — `tools/level-editor/package.json`:
 ```json
@@ -389,7 +389,7 @@ Same shape as Task 3 with these differences — `tools/level-editor/package.json
 
 `tools/level-editor/tsconfig.json`, `vitest.config.ts` (name: `'level-editor'`), and `index.html` (title `Level Editor`): copy Task 3's files with names swapped.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `tools/level-editor/tests/skeleton.test.ts`:
 ```ts
@@ -405,12 +405,12 @@ describe('editor walking skeleton', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npm install && npx vitest run tools/level-editor/tests/skeleton.test.ts`
 Expected: FAIL — cannot resolve `../src/skeleton`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `tools/level-editor/src/skeleton.ts`:
 ```ts
@@ -428,17 +428,17 @@ import { renderSkeleton } from './skeleton'
 renderSkeleton(document.getElementById('app') as HTMLElement)
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run tools/level-editor/tests/skeleton.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Full CI gate**
+- [x] **Step 6: Full CI gate**
 
 Run: `npm run ci`
 Expected: lint clean, all typechecks pass, 3 test files pass (engine version, game skeleton, editor skeleton).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -455,7 +455,7 @@ git commit -m "feat(editor): walking-skeleton app; M0 scaffold complete"
 - Create: `packages/engine/src/state/store.ts`
 - Test: `packages/engine/tests/state/store.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/state/store.test.ts`:
 ```ts
@@ -531,12 +531,12 @@ describe('createStore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/state/store.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/store`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/state/store.ts`:
 ```ts
@@ -595,12 +595,12 @@ Add to barrel (`packages/engine/src/index.ts`):
 export * from './state/store'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/state/store.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -613,7 +613,7 @@ git commit -m "feat(engine): redux-style store with middleware chain"
 - Create: `packages/engine/src/state/slices.ts`
 - Test: `packages/engine/tests/state/slices.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/state/slices.test.ts`:
 ```ts
@@ -668,12 +668,12 @@ describe('subscribeSelector', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/state/slices.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/slices`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/state/slices.ts`:
 ```ts
@@ -713,12 +713,12 @@ Add to barrel:
 export * from './state/slices'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/state/slices.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -731,7 +731,7 @@ git commit -m "feat(engine): combineReducers and per-slice subscriptions"
 - Create: `packages/engine/src/storage/port.ts`, `packages/engine/src/storage/adapters.ts`
 - Test: `packages/engine/tests/storage/adapters.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/storage/adapters.test.ts`:
 ```ts
@@ -768,12 +768,12 @@ describe('localStorageAdapter', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/storage/adapters.test.ts`
 Expected: FAIL — cannot resolve `../../src/storage/adapters`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/storage/port.ts`:
 ```ts
@@ -813,12 +813,12 @@ export * from './storage/port'
 export * from './storage/adapters'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/storage/adapters.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -831,7 +831,7 @@ git commit -m "feat(engine): StoragePort with memory and localStorage adapters"
 - Create: `packages/engine/src/state/persistence.ts`
 - Test: `packages/engine/tests/state/persistence-load.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/state/persistence-load.test.ts`:
 ```ts
@@ -880,12 +880,12 @@ describe('loadPersisted', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/state/persistence-load.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/persistence`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/state/persistence.ts`:
 ```ts
@@ -920,12 +920,12 @@ Add to barrel:
 export * from './state/persistence'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/state/persistence-load.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -938,7 +938,7 @@ git commit -m "feat(engine): versioned persisted-state loading with migration"
 - Modify: `packages/engine/src/state/persistence.ts`
 - Test: `packages/engine/tests/state/persistence-write.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/state/persistence-write.test.ts`:
 ```ts
@@ -1004,12 +1004,12 @@ describe('createPersistence', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/state/persistence-write.test.ts`
 Expected: FAIL — `createPersistence` is not exported.
 
-- [ ] **Step 3: Implement (append to `persistence.ts`; the `import` lines join the existing imports at the top of the file)**
+- [x] **Step 3: Implement (append to `persistence.ts`; the `import` lines join the existing imports at the top of the file)**
 
 ```ts
 import type { AnyAction, Middleware } from './store'
@@ -1068,12 +1068,12 @@ function deepEqual(a: unknown, b: unknown): boolean {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/state/persistence-write.test.ts`
 Expected: PASS (4 tests). Also run the whole package: `npx vitest run packages/engine` — all green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1090,12 +1090,12 @@ git commit -m "feat(engine): debounced persistence middleware with flush; M1 com
 - Create: `packages/engine/src/data/parsers.ts`
 - Test: `packages/engine/tests/data/parsers.test.ts`
 
-- [ ] **Step 1: Install data dependencies (engine workspace)**
+- [x] **Step 1: Install data dependencies (engine workspace)**
 
 Run: `npm install smol-toml yaml zod -w @automata/engine`
 Expected: added to `packages/engine/package.json` dependencies.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/engine/tests/data/parsers.test.ts`:
 ```ts
@@ -1129,12 +1129,12 @@ describe('parseByFormat', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/data/parsers.test.ts`
 Expected: FAIL — cannot resolve `../../src/data/parsers`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `packages/engine/src/data/parsers.ts`:
 ```ts
@@ -1176,12 +1176,12 @@ Add to barrel:
 export * from './data/parsers'
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/data/parsers.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -1195,7 +1195,7 @@ git commit -m "feat(engine): toml/yaml/json parsers with uniform ParseError"
 - Modify: `packages/engine/src/index.ts` (also re-export zod)
 - Test: `packages/engine/tests/data/registry.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/data/registry.test.ts`:
 ```ts
@@ -1237,12 +1237,12 @@ describe('parseData', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/data/registry.test.ts`
 Expected: FAIL — cannot resolve `../../src/data/registry`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/data/registry.ts`:
 ```ts
@@ -1291,12 +1291,12 @@ export * from './data/registry'
 export { z } from 'zod'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/data/registry.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1309,7 +1309,7 @@ git commit -m "feat(engine): typed data kinds with zod validation and rich load 
 - Create: `packages/engine/src/data/loader.ts`
 - Test: `packages/engine/tests/data/loader.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/data/loader.test.ts`:
 ```ts
@@ -1351,12 +1351,12 @@ describe('createLoader', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/data/loader.test.ts`
 Expected: FAIL — cannot resolve `../../src/data/loader`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/data/loader.ts`:
 ```ts
@@ -1396,12 +1396,12 @@ Add to barrel:
 export * from './data/loader'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/data/loader.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1414,7 +1414,7 @@ git commit -m "feat(engine): async data loader over injectable fetchText"
 - Create: `packages/engine/src/data/archetypes.ts`
 - Test: `packages/engine/tests/data/archetypes.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/data/archetypes.test.ts`:
 ```ts
@@ -1470,12 +1470,12 @@ describe('spawnFromArchetype', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/data/archetypes.test.ts`
 Expected: FAIL — cannot resolve `../../src/data/archetypes`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/data/archetypes.ts`:
 ```ts
@@ -1527,12 +1527,12 @@ Add to barrel:
 export * from './data/archetypes'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/data/archetypes.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1549,7 +1549,7 @@ git commit -m "feat(engine): YAML archetype libraries with override-merging spaw
 - Create: `packages/engine/src/math/vec3.ts`
 - Test: `packages/engine/tests/math/vec3.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/math/vec3.test.ts`:
 ```ts
@@ -1583,12 +1583,12 @@ describe('vec3', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/math/vec3.test.ts`
 Expected: FAIL — cannot resolve `../../src/math/vec3`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/math/vec3.ts`:
 ```ts
@@ -1618,12 +1618,12 @@ Add to barrel:
 export * from './math/vec3'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/math/vec3.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1636,7 +1636,7 @@ git commit -m "feat(engine): vec3 math module"
 - Create: `packages/engine/src/math/quat.ts`
 - Test: `packages/engine/tests/math/quat.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/math/quat.test.ts`:
 ```ts
@@ -1683,12 +1683,12 @@ describe('quat', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/math/quat.test.ts`
 Expected: FAIL — cannot resolve `../../src/math/quat`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/math/quat.ts`:
 ```ts
@@ -1759,12 +1759,12 @@ Add to barrel:
 export * from './math/quat'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/math/quat.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1777,12 +1777,12 @@ git commit -m "feat(engine): quat math (fromEuler, multiply, apply, nlerp)"
 - Create: `packages/engine/src/ecs/world.ts`, `packages/engine/src/ecs/components.ts`
 - Test: `packages/engine/tests/ecs/world.test.ts`
 
-- [ ] **Step 1: Install miniplex (engine workspace)**
+- [x] **Step 1: Install miniplex (engine workspace)**
 
 Run: `npm install miniplex -w @automata/engine`
 Expected: added to engine dependencies.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/engine/tests/ecs/world.test.ts`:
 ```ts
@@ -1838,12 +1838,12 @@ describe('createTransform', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/ecs/world.test.ts`
 Expected: FAIL — cannot resolve `../../src/ecs/world`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `packages/engine/src/ecs/world.ts`:
 ```ts
@@ -1933,12 +1933,12 @@ export * from './physics/types'
 export * from './render/types'
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/ecs/world.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -1951,7 +1951,7 @@ git commit -m "feat(engine): miniplex-wrapped world, Transform, engine entity ty
 - Create: `packages/engine/src/ecs/events.ts`
 - Test: `packages/engine/tests/ecs/events.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/ecs/events.test.ts`:
 ```ts
@@ -1984,12 +1984,12 @@ describe('EventQueue', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/ecs/events.test.ts`
 Expected: FAIL — cannot resolve `../../src/ecs/events`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/ecs/events.ts`:
 ```ts
@@ -2017,12 +2017,12 @@ Add to barrel:
 export * from './ecs/events'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/ecs/events.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2035,7 +2035,7 @@ git commit -m "feat(engine): per-frame event queue"
 - Create: `packages/engine/src/ecs/scheduler.ts`
 - Test: `packages/engine/tests/ecs/scheduler.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/ecs/scheduler.test.ts`:
 ```ts
@@ -2084,12 +2084,12 @@ describe('Scheduler', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/ecs/scheduler.test.ts`
 Expected: FAIL — cannot resolve `../../src/ecs/scheduler`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/ecs/scheduler.ts`:
 ```ts
@@ -2131,12 +2131,12 @@ Add to barrel:
 export * from './ecs/scheduler'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/ecs/scheduler.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2153,7 +2153,7 @@ git commit -m "feat(engine): staged system scheduler; M3 complete"
 - Create: `packages/engine/src/loop/gameLoop.ts`
 - Test: `packages/engine/tests/loop/gameLoop.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/loop/gameLoop.test.ts`:
 ```ts
@@ -2207,12 +2207,12 @@ describe('GameLoop', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/loop/gameLoop.test.ts`
 Expected: FAIL — cannot resolve `../../src/loop/gameLoop`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/loop/gameLoop.ts`:
 ```ts
@@ -2263,12 +2263,12 @@ Add to barrel:
 export * from './loop/gameLoop'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/loop/gameLoop.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2281,7 +2281,7 @@ git commit -m "feat(engine): fixed-timestep game loop with interpolation alpha"
 - Create: `packages/engine/src/input/types.ts`, `packages/engine/src/input/merge.ts`
 - Test: `packages/engine/tests/input/merge.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/input/merge.test.ts`:
 ```ts
@@ -2311,12 +2311,12 @@ describe('mergeInputs', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/input/merge.test.ts`
 Expected: FAIL — cannot resolve modules.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/input/types.ts`:
 ```ts
@@ -2352,12 +2352,12 @@ export * from './input/types'
 export * from './input/merge'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/input/merge.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2370,7 +2370,7 @@ git commit -m "feat(engine): input source contract and clamped merging"
 - Create: `packages/engine/src/input/keyboard.ts`
 - Test: `packages/engine/tests/input/keyboard.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/input/keyboard.test.ts`:
 ```ts
@@ -2418,12 +2418,12 @@ describe('createKeyboardInput', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/input/keyboard.test.ts`
 Expected: FAIL — cannot resolve `../../src/input/keyboard`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/input/keyboard.ts`:
 ```ts
@@ -2473,12 +2473,12 @@ Add to barrel:
 export * from './input/keyboard'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/input/keyboard.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2491,7 +2491,7 @@ git commit -m "feat(engine): keyboard input source (WASD + arrows)"
 - Create: `packages/engine/src/input/joystick.ts`
 - Test: `packages/engine/tests/input/joystick.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/input/joystick.test.ts`:
 ```ts
@@ -2560,12 +2560,12 @@ describe('createVirtualJoystick', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/input/joystick.test.ts`
 Expected: FAIL — cannot resolve `../../src/input/joystick`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/input/joystick.ts`:
 ```ts
@@ -2653,12 +2653,12 @@ Add to barrel:
 export * from './input/joystick'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/input/joystick.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2674,7 +2674,7 @@ This is a declared **untested shim** (excluded from coverage via the root
 config's `**/browser.ts` exclude). Keep it under ~30 lines; any logic beyond
 glue belongs in `GameLoop` where it is tested.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 `packages/engine/src/loop/browser.ts`:
 ```ts
@@ -2712,13 +2712,13 @@ Add to barrel:
 export * from './loop/browser'
 ```
 
-- [ ] **Step 2: Verify lint, typecheck, and full suite**
+- [x] **Step 2: Verify lint, typecheck, and full suite**
 
 Run: `npm run ci`
 Expected: all green (shim has no tests by design — it is on the exclusion list
 in the plan header and root coverage config).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -2739,12 +2739,12 @@ real integration tests** run by Vitest. Create the shared test helper first.
 - Create: `packages/engine/src/physics/port.ts`, `packages/engine/src/physics/rapier.ts`
 - Test: `packages/engine/tests/physics/rapier-bodies.test.ts`
 
-- [ ] **Step 1: Install rapier (engine workspace)**
+- [x] **Step 1: Install rapier (engine workspace)**
 
 Run: `npm install @dimforge/rapier3d-compat -w @automata/engine`
 Expected: added to engine dependencies.
 
-- [ ] **Step 2: Define the port (interface-first)**
+- [x] **Step 2: Define the port (interface-first)**
 
 `packages/engine/src/physics/port.ts`:
 ```ts
@@ -2777,7 +2777,7 @@ Add to barrel:
 export * from './physics/port'
 ```
 
-- [ ] **Step 3: Write the failing tests**
+- [x] **Step 3: Write the failing tests**
 
 `packages/engine/tests/physics/rapier-bodies.test.ts`:
 ```ts
@@ -2839,12 +2839,12 @@ describe('createRapierPhysics', () => {
 })
 ```
 
-- [ ] **Step 4: Run tests to verify they fail**
+- [x] **Step 4: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/physics/rapier-bodies.test.ts`
 Expected: FAIL — cannot resolve `../../src/physics/rapier`.
 
-- [ ] **Step 5: Implement the adapter**
+- [x] **Step 5: Implement the adapter**
 
 `packages/engine/src/physics/rapier.ts`:
 ```ts
@@ -2976,12 +2976,12 @@ Add to barrel:
 export * from './physics/rapier'
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/physics/rapier-bodies.test.ts`
 Expected: PASS (4 tests; first run pays ~1s WASM init).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -2998,7 +2998,7 @@ tests pin down the *behavior the whole game depends on*. Expect them to pass
 immediately — they are characterization tests guarding the core mechanic. If
 any fails, the adapter (not the test) is wrong.
 
-- [ ] **Step 1: Write the tests**
+- [x] **Step 1: Write the tests**
 
 `packages/engine/tests/physics/rapier-forces.test.ts`:
 ```ts
@@ -3074,13 +3074,13 @@ describe('the tilt mechanic: rotated gravity', () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `npx vitest run packages/engine/tests/physics/rapier-forces.test.ts`
 Expected: PASS (4 tests). If a threshold is flaky across runs, widen the
 assertion bound — never loosen the *direction* of the assertion.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -3092,7 +3092,7 @@ git commit -m "test(engine): characterize rotated-gravity tilt mechanic and impu
 **Files:**
 - Test: `packages/engine/tests/physics/rapier-events.test.ts`
 
-- [ ] **Step 1: Write the tests**
+- [x] **Step 1: Write the tests**
 
 `packages/engine/tests/physics/rapier-events.test.ts`:
 ```ts
@@ -3150,13 +3150,13 @@ describe('physics events', () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `npx vitest run packages/engine/tests/physics/rapier-events.test.ts`
 Expected: PASS (2 tests). These exercise the event-mapping code written in
 Task 24; if they fail, debug the adapter's `drainCollisionEvents` mapping.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -3168,7 +3168,7 @@ git commit -m "test(engine): physics contact/sensor events map to entity refs"
 **Files:**
 - Test: `packages/engine/tests/physics/rapier-kinematic.test.ts`
 
-- [ ] **Step 1: Write the tests**
+- [x] **Step 1: Write the tests**
 
 `packages/engine/tests/physics/rapier-kinematic.test.ts`:
 ```ts
@@ -3220,7 +3220,7 @@ describe('kinematic platform', () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `npx vitest run packages/engine/tests/physics/rapier-kinematic.test.ts`
 Expected: PASS (2 tests). This is the spec's named risk "kinematic platform
@@ -3228,7 +3228,7 @@ friction quirks" — if the carry test shows the ball not moving at all, check
 that the platform body is `kinematicPositionBased` and targets are set *before*
 each step (order matters).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -3241,7 +3241,7 @@ git commit -m "test(engine): kinematic platforms move and carry the ball"
 - Create: `packages/engine/src/physics/systems.ts`
 - Test: `packages/engine/tests/physics/systems.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/physics/systems.test.ts`:
 ```ts
@@ -3331,12 +3331,12 @@ describe('physicsSyncSystem', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/physics/systems.test.ts`
 Expected: FAIL — cannot resolve `../../src/physics/systems`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/physics/systems.ts`:
 ```ts
@@ -3419,17 +3419,17 @@ Add to barrel:
 export * from './physics/systems'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/physics/systems.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Run the full engine suite + CI**
+- [x] **Step 5: Run the full engine suite + CI**
 
 Run: `npm run ci`
 Expected: all green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -3451,12 +3451,12 @@ the `WebGLRenderer` lives in a thin browser shim (Task 34).
 - Create: `packages/engine/src/render/port.ts`, `packages/engine/src/render/three.ts`
 - Test: `packages/engine/tests/render/three-meshes.test.ts`
 
-- [ ] **Step 1: Install three (engine workspace)**
+- [x] **Step 1: Install three (engine workspace)**
 
 Run: `npm install three -w @automata/engine && npm install -D @types/three -w @automata/engine`
 Expected: added to engine deps.
 
-- [ ] **Step 2: Define the port**
+- [x] **Step 2: Define the port**
 
 `packages/engine/src/render/port.ts`:
 ```ts
@@ -3484,7 +3484,7 @@ Add to barrel:
 export * from './render/port'
 ```
 
-- [ ] **Step 3: Write the failing tests**
+- [x] **Step 3: Write the failing tests**
 
 `packages/engine/tests/render/three-meshes.test.ts`:
 ```ts
@@ -3544,12 +3544,12 @@ describe('createThreeRenderer: meshes', () => {
 })
 ```
 
-- [ ] **Step 4: Run tests to verify they fail**
+- [x] **Step 4: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/render/three-meshes.test.ts`
 Expected: FAIL — cannot resolve `../../src/render/three`.
 
-- [ ] **Step 5: Implement**
+- [x] **Step 5: Implement**
 
 `packages/engine/src/render/three.ts`:
 ```ts
@@ -3657,12 +3657,12 @@ Add to barrel:
 export * from './render/three'
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/render/three-meshes.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -3674,7 +3674,7 @@ git commit -m "feat(engine): RenderPort with Node-testable Three.js adapter"
 **Files:**
 - Test: `packages/engine/tests/render/three-groups.test.ts`
 
-- [ ] **Step 1: Write the tests**
+- [x] **Step 1: Write the tests**
 
 `packages/engine/tests/render/three-groups.test.ts`:
 ```ts
@@ -3724,14 +3724,14 @@ describe('render groups', () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `npx vitest run packages/engine/tests/render/three-groups.test.ts`
 Expected: PASS (4 tests) — groups were implemented in Task 29; this pins the
 world-space behavior the game's cosmetic tilt depends on. If the world-position
 assertion fails, check `updateMatrixWorld` is called before reading.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -3743,7 +3743,7 @@ git commit -m "test(engine): scene-graph group rotation semantics for stage tilt
 **Files:**
 - Test: `packages/engine/tests/render/three-camera.test.ts`
 
-- [ ] **Step 1: Write the tests**
+- [x] **Step 1: Write the tests**
 
 `packages/engine/tests/render/three-camera.test.ts`:
 ```ts
@@ -3774,12 +3774,12 @@ describe('setCamera', () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `npx vitest run packages/engine/tests/render/three-camera.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -3792,7 +3792,7 @@ git commit -m "test(engine): camera placement/aim and default lighting"
 - Create: `packages/engine/src/render/null.ts`
 - Test: `packages/engine/tests/render/null.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/render/null.test.ts`:
 ```ts
@@ -3828,12 +3828,12 @@ describe('createNullRenderer', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/render/null.test.ts`
 Expected: FAIL — cannot resolve `../../src/render/null`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/render/null.ts`:
 ```ts
@@ -3902,12 +3902,12 @@ Add to barrel:
 export * from './render/null'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/render/null.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -3920,7 +3920,7 @@ git commit -m "feat(engine): NullRenderer recording double"
 - Create: `packages/engine/src/render/systems.ts`
 - Test: `packages/engine/tests/render/systems.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/render/systems.test.ts`:
 ```ts
@@ -3976,12 +3976,12 @@ describe('renderSystem', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/render/systems.test.ts`
 Expected: FAIL — cannot resolve `../../src/render/systems`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/render/systems.ts`:
 ```ts
@@ -4037,12 +4037,12 @@ Add to barrel:
 export * from './render/systems'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/render/systems.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -4063,7 +4063,7 @@ scheduler + loop + render adapter, with a tilting stage group — before any
 game logic exists. `demoScene.ts` is tested headlessly with the NullRenderer;
 `main.ts` (shim) wires the same function to the real canvas.
 
-- [ ] **Step 1: Implement the render browser shim**
+- [x] **Step 1: Implement the render browser shim**
 
 `packages/engine/src/render/browser.ts`:
 ```ts
@@ -4104,7 +4104,7 @@ Add to barrel:
 export * from './render/browser'
 ```
 
-- [ ] **Step 2: Write the failing test for the demo scene**
+- [x] **Step 2: Write the failing test for the demo scene**
 
 `games/monkey-ball/tests/demoScene.test.ts`:
 ```ts
@@ -4131,12 +4131,12 @@ describe('createDemoScene', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/demoScene.test.ts`
 Expected: FAIL — cannot resolve `../src/demoScene`.
 
-- [ ] **Step 4: Implement the demo scene + main.ts**
+- [x] **Step 4: Implement the demo scene + main.ts**
 
 `games/monkey-ball/src/demoScene.ts`:
 ```ts
@@ -4206,12 +4206,12 @@ Delete the old skeleton files (superseded by the demo):
 rm games/monkey-ball/src/skeleton.ts games/monkey-ball/tests/skeleton.test.ts
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run games/monkey-ball`
 Expected: PASS (demo scene test; skeleton test removed).
 
-- [ ] **Step 6: Verify in a real browser**
+- [x] **Step 6: Verify in a real browser**
 
 Run: `npm run dev -w monkey-ball` and open the printed URL (desktop, and
 ideally a phone on the same network via `--host`).
@@ -4219,7 +4219,7 @@ Expected: green floor + red ball on a gently wobbling stage, ~60fps. This is
 the one manual checkpoint in this plan — it validates every browser shim at
 once. Stop the dev server afterward.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -4231,7 +4231,7 @@ git commit -m "feat: walking skeleton v2 — engine demo scene on real canvas"
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Run the full gate**
+- [x] **Step 1: Run the full gate**
 
 Run: `npm run ci && npm run coverage`
 Expected: lint + typecheck + all tests green; engine coverage ≥ 90% lines and
@@ -4240,7 +4240,7 @@ is short, the uncovered lines listed by the report are the to-do list — cover
 them or, if they are genuinely shim glue, move them into a `browser.ts` file
 where the exclusion applies (and keep them trivial).
 
-- [ ] **Step 2: Update README dev docs**
+- [x] **Step 2: Update README dev docs**
 
 Append to `README.md`:
 ```markdown
@@ -4259,7 +4259,7 @@ Append to `README.md`:
 - `npm run dev -w monkey-ball` — run the game locally
 ```
 
-- [ ] **Step 3: Final commit**
+- [x] **Step 3: Final commit**
 
 ```bash
 git add -A
