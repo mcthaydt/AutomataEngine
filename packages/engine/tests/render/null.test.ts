@@ -27,4 +27,12 @@ describe('createNullRenderer', () => {
     renderer.port.dispose()
     expect(renderer.port.objectCount).toBe(0)
   })
+
+  it('records removeGroup', () => {
+    const renderer = createNullRenderer()
+    const stage = renderer.port.createGroup()
+    renderer.port.removeGroup(stage)
+    expect(renderer.calls.map((call) => call.op)).toEqual(['createGroup', 'removeGroup'])
+    expect(renderer.calls[1]).toMatchObject({ op: 'removeGroup', group: stage })
+  })
 })

@@ -60,6 +60,13 @@ export function createThreeRenderer(): ThreeRenderer {
       group.rotation.set(eulerRad.x, eulerRad.y, eulerRad.z)
     },
 
+    removeGroup(groupId) {
+      const group = groups.get(groupId)
+      if (!group) return
+      group.removeFromParent()
+      groups.delete(groupId)
+    },
+
     add(entity, def, group) {
       if (meshes.has(entity)) return
       const mesh = new Mesh(geometryFor(def), new MeshStandardMaterial({ color: def.color }))

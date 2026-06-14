@@ -8,6 +8,8 @@ export interface RenderPort {
   /** Creates a scene-graph group; parentless groups attach to the root. */
   createGroup(parent?: GroupId): GroupId
   setGroupRotation(group: GroupId, eulerRad: Vec3): void
+  /** Detaches and forgets a group; remove its entities first. */
+  removeGroup(group: GroupId): void
   add(entity: object, def: RenderableDef, group?: GroupId): void
   setPose(entity: object, position: Vec3, rotation: Quat): void
   remove(entity: object): void
