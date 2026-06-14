@@ -7,13 +7,16 @@ import { createGameplay } from '../../src/game/gameplay'
 import { levelKind } from '../../src/data/level'
 import { createGameStore } from '../../src/state/root'
 import { readDataFile } from '../helpers/data'
-import type { PhysicsTuning } from '../../src/data/config'
+import { physicsTuningKind, toPhysicsTuning, type PhysicsTuning } from '../../src/data/config'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
 const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
 const tuning: PhysicsTuning = {
   maxTiltRad: (12 * Math.PI) / 180, tiltSmooth: 1, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 }
 }
+const shippedTuning = toPhysicsTuning(
+  parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml')
+)
 const stick = (v: { x: number; y: number }): InputSource => ({ read: () => v, dispose() {} })
 
 async function startGame(input: InputSource) {
@@ -30,6 +33,22 @@ async function startGame(input: InputSource) {
 describe('gameplay runner (real physics)', () => {
   it('rolls the ball toward a held tilt', async () => {
     const { physics, game } = await startGame(stick({ x: 1, y: 0 }))
+    const ball = game.world.with('ball', 'transform').first!
+    const startX = physics.readPose(ball)!.position.x
+    for (let i = 0; i < 120; i++) game.fixedUpdate(1 / 60)
+    expect(physics.readPose(ball)!.position.x).toBeGreaterThan(startX + 1)
+    game.dispose(); physics.dispose()
+  })
+
+  it('rolls visibly with the shipped physics tuning', async () => {
+    const physics = await createRapierPhysics()
+    const render = createNullRenderer()
+    const store = createGameStore()
+    store.dispatch({ type: 'levelStarted', levelId: level.id })
+    const game = createGameplay({
+      store, physics, render: render.port, lib, level, tuning: shippedTuning,
+      inputSources: [stick({ x: 1, y: 0 })]
+    })
     const ball = game.world.with('ball', 'transform').first!
     const startX = physics.readPose(ball)!.position.x
     for (let i = 0; i < 120; i++) game.fixedUpdate(1 / 60)
