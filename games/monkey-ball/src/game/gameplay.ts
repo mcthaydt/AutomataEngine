@@ -12,6 +12,11 @@ import { populateLevelWorld } from '../level/buildWorld'
 import { createTiltControl } from '../systems/tiltControl'
 import { createFallOff } from '../systems/fallOff'
 import { createGoal } from '../systems/goal'
+import { createCollection } from '../systems/collection'
+import { createTimer } from '../systems/timer'
+import { createBumper } from '../systems/bumper'
+import { createMovingPlatform } from '../systems/movingPlatform'
+import { createCameraFollow } from '../systems/cameraFollow'
 
 export interface GameplayDeps {
   store: GameStore
@@ -39,14 +44,18 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
   const offPhysics = registerPhysicsBodies(world, physics)
   const offRender = registerRenderables(world, render, stageGroup)
   populateLevelWorld(world, level, lib)
-  render.setCamera({ x: 0, y: 7, z: 13 }, { x: 0, y: 0, z: 0 })
 
   const scheduler = new Scheduler<GameCtx>()
   scheduler.add(createTiltControl(physics, render, stageGroup, tuning))
+  scheduler.add(createTimer(level))
+  scheduler.add(createMovingPlatform(physics))
   scheduler.add(physicsStepSystem<GameCtx>(physics, events))
   scheduler.add(physicsSyncSystem<GameCtx>(physics))
+  scheduler.add(createCollection(events))
+  scheduler.add(createBumper(physics, events))
   scheduler.add(createFallOff(level))
   scheduler.add(createGoal(events))
+  scheduler.add(createCameraFollow(physics, render))
   scheduler.add(renderSystem<GameCtx>(render))
 
   const offRespawn = subscribeSelector(store, (s) => s.session.runId, () => {
