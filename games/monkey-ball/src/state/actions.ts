@@ -3,6 +3,12 @@ export type SceneId =
   | 'paused' | 'levelComplete' | 'gameOver'
 
 export type Action =
+  | { type: 'bootCompleted' }
+  | { type: 'openedMenu' }
+  | { type: 'openedLevelSelect' }
+  | { type: 'paused' }
+  | { type: 'resumed' }
+  | { type: 'quitToMenu' }
   | { type: 'levelStarted'; levelId: string }
   | { type: 'retried' }
   | { type: 'tickedMs'; ms: number }
