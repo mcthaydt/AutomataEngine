@@ -5,8 +5,8 @@ import { createGameStore } from '../../src/state/root'
 import type { Entity } from '../../src/entity'
 import type { GameCtx } from '../../src/game/context'
 
-const ctxFor = (world: ReturnType<typeof createWorld<Entity>>): GameCtx => ({
-  world, store: createGameStore(), input: { x: 0, y: 0 }, dt: 1 / 60, alpha: 0
+const ctxFor = (world: ReturnType<typeof createWorld<Entity>>, alpha = 1): GameCtx => ({
+  world, store: createGameStore(), input: { x: 0, y: 0 }, dt: 1 / 60, alpha
 })
 
 describe('cameraFollow', () => {
@@ -20,6 +20,19 @@ describe('cameraFollow', () => {
     expect(call.lookAt).toEqual({ x: 0, y: 0.5, z: 0 })
     expect(call.position!.z).toBeGreaterThan(0)
     expect(call.position!.y).toBeGreaterThan(0.5)
+  })
+
+  it('looks at the same interpolated ball pose that renderSystem presents', () => {
+    const render = createNullRenderer()
+    const world = createWorld<Entity>()
+    const ball = world.add({ ball: {}, transform: createTransform({ x: 10, y: 0.5, z: 0 }) })
+    ball.transform.prevPosition = { x: 0, y: 0.5, z: 0 }
+
+    createCameraFollow(render.port).run(ctxFor(world, 0.25))
+
+    const call = render.calls.filter((c) => c.op === 'setCamera').at(-1)!
+    expect(call.lookAt).toEqual({ x: 2.5, y: 0.5, z: 0 })
+    expect(call.position).toEqual({ x: 2.5, y: 6.5, z: 9 })
   })
 
   it('keeps a fixed orientation behind the ball on the +z side as it moves', () => {

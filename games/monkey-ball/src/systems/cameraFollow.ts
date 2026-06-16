@@ -18,7 +18,7 @@ export function createCameraFollow(render: RenderPort): System<GameCtx> {
     run(ctx) {
       const ball = ctx.world.with('ball', 'transform').first
       if (!ball) return
-      const pos = ball.transform.position
+      const pos = vec3.lerp(ball.transform.prevPosition, ball.transform.position, ctx.alpha)
       const target = { x: pos.x + OFFSET.x, y: pos.y + OFFSET.y, z: pos.z + OFFSET.z }
       cam = cam === null ? target : vec3.lerp(cam, target, FOLLOW)
       render.setCamera(cam, pos)
