@@ -10,3 +10,5 @@ export type Action =
   | { type: 'ballFell' }
   | { type: 'timeExpired' }
   | { type: 'levelCompleted'; levelId: string; timeMs: number; bananas: number }
+  | { type: 'setVolume'; value: number }
+  | { type: 'setJoystickSide'; side: 'left' | 'right' }
