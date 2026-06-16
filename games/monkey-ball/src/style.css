@@ -16,3 +16,18 @@ canvas:focus { outline: none; }
   position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
   border-radius: 50%; background: rgba(255, 255, 255, 0.5);
 }
+#overlays { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+.overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  color: #fff; font: 600 20px system-ui, sans-serif; pointer-events: auto;
+  background: rgba(14, 19, 32, 0.72);
+}
+.overlay h1 { font-size: 40px; }
+.overlay button {
+  min-width: 200px; padding: 12px 20px; border: 0; border-radius: 10px;
+  background: #4ecdc4; color: #06231f; font: 600 18px system-ui, sans-serif;
+}
+.overlay button:disabled { background: #2a3550; color: #6b7896; }
+.boot-error { background: #2a0e14; color: #ff5964; padding: 24px; text-align: center; }
+.joystick.right { left: auto; right: 24px; }

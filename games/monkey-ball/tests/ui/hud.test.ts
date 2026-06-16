@@ -26,4 +26,14 @@ describe('createHud', () => {
     store.dispatch({ type: 'bananaCollected', value: 1 })
     expect(text(hud.element, '.hud-bananas')).toBe('Bananas 0')
   })
+
+  it('removes its mounted element on dispose', () => {
+    const store = createGameStore()
+    const hud = createHud(store, 60)
+    document.body.appendChild(hud.element)
+
+    hud.dispose()
+
+    expect(hud.element.isConnected).toBe(false)
+  })
 })

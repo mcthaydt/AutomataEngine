@@ -25,5 +25,11 @@ export function createHud(store: GameStore, timeLimitS: number): Hud {
   }
   paint()
   const unsubscribe = subscribeSelector(store, (st) => st.session, paint)
-  return { element, dispose: unsubscribe }
+  return {
+    element,
+    dispose() {
+      unsubscribe()
+      element.remove()
+    }
+  }
 }
