@@ -1,12 +1,16 @@
-import { vec3, type PhysicsPort, type RenderPort, type System, type Vec3 } from '@automata/engine'
+import { vec3, type RenderPort, type System, type Vec3 } from '@automata/engine'
 import type { GameCtx } from '../game/context'
 
-const DISTANCE = 9
-const HEIGHT = 6
+/** Fixed camera offset behind the stage's forward axis (+z), raised above the ball. */
+const OFFSET = { x: 0, y: 6, z: 9 }
 const FOLLOW = 0.1
 
-/** Smoothed chase camera behind the ball's travel direction. */
-export function createCameraFollow(physics: PhysicsPort, render: RenderPort): System<GameCtx> {
+/**
+ * Follows the ball's position from a fixed orientation. The view never rotates with
+ * the ball's velocity, so the input->screen mapping stays stable on a tilt-rolled ball
+ * (controls are world-fixed) and the camera never whips around on direction reversals.
+ */
+export function createCameraFollow(render: RenderPort): System<GameCtx> {
   let cam: Vec3 | null = null
   return {
     name: 'cameraFollow',
@@ -15,10 +19,7 @@ export function createCameraFollow(physics: PhysicsPort, render: RenderPort): Sy
       const ball = ctx.world.with('ball', 'transform').first
       if (!ball) return
       const pos = ball.transform.position
-      const vel = physics.readLinearVelocity(ball)
-      const horiz = { x: vel.x, y: 0, z: vel.z }
-      const dir = vec3.length(horiz) > 0.5 ? vec3.normalize(horiz) : { x: 0, y: 0, z: -1 }
-      const target = { x: pos.x - dir.x * DISTANCE, y: pos.y + HEIGHT, z: pos.z - dir.z * DISTANCE }
+      const target = { x: pos.x + OFFSET.x, y: pos.y + OFFSET.y, z: pos.z + OFFSET.z }
       cam = cam === null ? target : vec3.lerp(cam, target, FOLLOW)
       render.setCamera(cam, pos)
     }

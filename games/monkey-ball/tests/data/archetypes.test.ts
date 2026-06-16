@@ -35,14 +35,15 @@ describe('standard archetype library', () => {
     expect(banana.spinAnim).toEqual({ speed: 2 })
   })
 
-  it('spawns goal as a sensor and bumper with restitution + impulseStrength', () => {
+  it('spawns goal as a sensor and bumper with a gentle, on-stage restitution + impulse', () => {
     const world = createWorld<Entity>()
     const goal = spawnFromArchetype<Entity>(world, lib, 'goal', {})
     const bumper = spawnFromArchetype<Entity>(world, lib, 'bumper', {})
     expect(goal.goal).toEqual({})
     expect(goal.rigidBody).toMatchObject({ kind: 'fixed', sensor: true })
-    expect(bumper.bumper).toEqual({ impulseStrength: 8 })
-    expect(bumper.rigidBody).toMatchObject({ kind: 'fixed', restitution: 1.2 })
+    expect(bumper.bumper).toEqual({ impulseStrength: 1.5 })
+    // Restitution must stay <= 1 (>1 adds energy on every hit and flings the ball off-stage).
+    expect(bumper.rigidBody).toMatchObject({ kind: 'fixed', restitution: 0.5 })
   })
 
   it('spawns a kinematic moving platform with pingpong defaults', () => {

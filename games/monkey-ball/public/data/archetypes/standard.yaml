@@ -8,9 +8,9 @@ banana:
   rigidBody: { kind: fixed, sensor: true, shape: { type: sphere, radius: 0.4 } }
   spinAnim: { speed: 2.0 }
 bumper:
-  bumper: { impulseStrength: 8.0 }
+  bumper: { impulseStrength: 1.5 }
   renderable: { primitive: cylinder, radius: 0.6, height: 0.5, color: "#ff5964" }
-  rigidBody: { kind: fixed, restitution: 1.2, shape: { type: cylinder, halfHeight: 0.25, radius: 0.6 } }
+  rigidBody: { kind: fixed, restitution: 0.5, shape: { type: cylinder, halfHeight: 0.25, radius: 0.6 } }
 goal:
   goal: {}
   renderable: { primitive: cylinder, radius: 0.8, height: 0.1, color: "#4ecdc4" }

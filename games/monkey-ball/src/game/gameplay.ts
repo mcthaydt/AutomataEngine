@@ -55,7 +55,7 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
   scheduler.add(createBumper(physics, events))
   scheduler.add(createFallOff(level))
   scheduler.add(createGoal(events))
-  scheduler.add(createCameraFollow(physics, render))
+  scheduler.add(createCameraFollow(render))
   scheduler.add(renderSystem<GameCtx>(render))
 
   const offRespawn = subscribeSelector(store, (s) => s.session.runId, () => {
