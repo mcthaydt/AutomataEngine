@@ -1,5 +1,5 @@
 import {
-  EventQueue, Scheduler, createWorld, mergeInputs, particleSystem, physicsStepSystem,
+  EventQueue, Scheduler, createNullAudio, createWorld, mergeInputs, particleSystem, physicsStepSystem,
   physicsSyncSystem, registerPhysicsBodies, registerRenderables, renderSystem, spawnBurst,
   subscribeSelector, type ArchetypeLibrary, type AudioPort, type InputSource,
   type PhysicsPort, type RenderPort, type World
@@ -18,6 +18,7 @@ import { createTimer } from '../systems/timer'
 import { createBumper } from '../systems/bumper'
 import { createMovingPlatform } from '../systems/movingPlatform'
 import { createCameraFollow } from '../systems/cameraFollow'
+import { createFeedback } from '../systems/feedback'
 
 export interface GameplayDeps {
   store: GameStore
@@ -27,7 +28,7 @@ export interface GameplayDeps {
   level: Level
   tuning: PhysicsTuning
   inputSources: InputSource[]
-  /** Optional so pre-M10 tests can omit it; the app always provides it. */
+  /** Optional so tests can omit it; the runner defaults to silent NullAudio. */
   audio?: AudioPort
 }
 
@@ -39,10 +40,12 @@ export interface Gameplay {
 }
 
 export function createGameplay(deps: GameplayDeps): Gameplay {
-  const { store, physics, render, audio, lib, level, tuning, inputSources } = deps
+  const { store, physics, render, lib, level, tuning, inputSources } = deps
+  const audio = deps.audio ?? createNullAudio().port
   const world = createWorld<Entity>()
   const stageGroup = render.createGroup()
   const events = new EventQueue()
+  const feedback = new EventQueue()
 
   const offPhysics = registerPhysicsBodies(world, physics)
   const offRender = registerRenderables(world, render, stageGroup)
@@ -50,15 +53,17 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
 
   const scheduler = new Scheduler<GameCtx>()
   scheduler.add(createTiltControl(physics, render, stageGroup, tuning))
-  scheduler.add(createTimer(level, audio))
+  scheduler.add(createTimer(level, feedback))
   scheduler.add(createMovingPlatform(physics))
   scheduler.add(particleSystem<GameCtx>())
   scheduler.add(physicsStepSystem<GameCtx>(physics, events))
   scheduler.add(physicsSyncSystem<GameCtx>(physics))
-  scheduler.add(createCollection(events, audio))
-  scheduler.add(createBumper(physics, events, audio))
-  scheduler.add(createFallOff(level, audio))
-  scheduler.add(createGoal(events, audio))
+  scheduler.add(createCollection(events, feedback))
+  scheduler.add(createBumper(physics, events, feedback))
+  scheduler.add(createFallOff(level, feedback))
+  scheduler.add(createGoal(events, feedback))
+  // Consumes the gameplay facts the systems above emit; must run last in the stage.
+  scheduler.add(createFeedback(feedback, audio))
   scheduler.add(createCameraFollow(render))
   scheduler.add(renderSystem<GameCtx>(render))
 
@@ -77,6 +82,7 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
       if (store.getState().scene !== 'playing') return
       input = mergeInputs(inputSources)
       events.clear()
+      feedback.clear()
       scheduler.runFixed({ world, store, input, dt, alpha: 0 })
     },
     render(alpha) {
