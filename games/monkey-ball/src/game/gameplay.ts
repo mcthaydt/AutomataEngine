@@ -1,7 +1,8 @@
 import {
-  EventQueue, Scheduler, createWorld, mergeInputs, physicsStepSystem, physicsSyncSystem,
-  registerPhysicsBodies, registerRenderables, renderSystem, subscribeSelector,
-  type ArchetypeLibrary, type InputSource, type PhysicsPort, type RenderPort, type World
+  EventQueue, Scheduler, createWorld, mergeInputs, particleSystem, physicsStepSystem,
+  physicsSyncSystem, registerPhysicsBodies, registerRenderables, renderSystem, spawnBurst,
+  subscribeSelector, type ArchetypeLibrary, type AudioPort, type InputSource,
+  type PhysicsPort, type RenderPort, type World
 } from '@automata/engine'
 import type { Entity } from '../entity'
 import type { Level } from '../data/level'
@@ -26,6 +27,8 @@ export interface GameplayDeps {
   level: Level
   tuning: PhysicsTuning
   inputSources: InputSource[]
+  /** Optional so pre-M10 tests can omit it; the app always provides it. */
+  audio?: AudioPort
 }
 
 export interface Gameplay {
@@ -36,7 +39,7 @@ export interface Gameplay {
 }
 
 export function createGameplay(deps: GameplayDeps): Gameplay {
-  const { store, physics, render, lib, level, tuning, inputSources } = deps
+  const { store, physics, render, audio, lib, level, tuning, inputSources } = deps
   const world = createWorld<Entity>()
   const stageGroup = render.createGroup()
   const events = new EventQueue()
@@ -47,21 +50,24 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
 
   const scheduler = new Scheduler<GameCtx>()
   scheduler.add(createTiltControl(physics, render, stageGroup, tuning))
-  scheduler.add(createTimer(level))
+  scheduler.add(createTimer(level, audio))
   scheduler.add(createMovingPlatform(physics))
+  scheduler.add(particleSystem<GameCtx>())
   scheduler.add(physicsStepSystem<GameCtx>(physics, events))
   scheduler.add(physicsSyncSystem<GameCtx>(physics))
-  scheduler.add(createCollection(events))
-  scheduler.add(createBumper(physics, events))
-  scheduler.add(createFallOff(level))
-  scheduler.add(createGoal(events))
+  scheduler.add(createCollection(events, audio))
+  scheduler.add(createBumper(physics, events, audio))
+  scheduler.add(createFallOff(level, audio))
+  scheduler.add(createGoal(events, audio))
   scheduler.add(createCameraFollow(render))
   scheduler.add(renderSystem<GameCtx>(render))
 
+  const spawn = { x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] }
   const offRespawn = subscribeSelector(store, (s) => s.session.runId, () => {
     world.clear()
     populateLevelWorld(world, level, lib)
     events.clear()
+    spawnBurst(world, { origin: spawn, count: 12, speed: 2, lifetimeS: 0.5, color: '#cfd8ff' })
   })
 
   let input = { x: 0, y: 0 }

@@ -7,6 +7,7 @@ import {
   createSceneManager,
   createThreeRenderer,
   createVirtualJoystick,
+  createWebAudio,
   fetchTextViaFetch,
   localStorageAdapter,
   startLoopDriver,
@@ -16,6 +17,7 @@ import {
   type Scene
 } from '@automata/engine'
 import './style.css'
+import { registerSounds } from './audio/sounds'
 import { levelKind } from './data/level'
 import { createGameplay, type Gameplay } from './game/gameplay'
 import { loadBootData, type BootData } from './scenes/boot'
@@ -46,6 +48,15 @@ async function main(): Promise<void> {
   const canvasRenderer = attachCanvasRenderer(renderer, canvas)
   const loader = createLoader(fetchTextViaFetch())
   const store = createGameStore({ storage: localStorageAdapter() })
+  const audioContext = new AudioContext()
+  const audio = createWebAudio(audioContext)
+  registerSounds(audio)
+  audio.setMasterVolume(store.getState().settings.volume)
+  subscribeSelector(store, (state) => state.settings.volume, (volume) => audio.setMasterVolume(volume))
+  overlays.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement).closest('button')) audio.play('uiClick')
+  })
+  window.addEventListener('pointerdown', () => { void audioContext.resume() }, { once: true })
 
   let physics: PhysicsPort
   let boot: BootData
@@ -80,6 +91,7 @@ async function main(): Promise<void> {
       store,
       physics,
       render: renderer.port,
+      audio,
       lib,
       level,
       tuning,
