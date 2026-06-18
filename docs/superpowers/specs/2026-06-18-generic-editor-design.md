@@ -41,6 +41,7 @@ follow-on AI work (editor MCP server + tuning-agent loop + chat overlay) is
 | Underlying model | Every edit is a serializable `SceneCommand` → schema-validated document; live world synced from the doc. Undo/redo = bounded snapshot stack over the doc. |
 | Geometry model | Place/draw **box & cylinder primitives** now; item `kind` is an extensible tagged union so a future `'sector'` (extruded polygon) slots in without editor rework. |
 | Surface model | Per-item **`Surface`** is an extensible tagged union (`color` now, `texture` reserved); a registration-provided palette drives a generic "change surface" tool. Engine stays color-only. |
+| Spawn / goal & singleton points | **Placeable** as registration-declared **marker** brushes with generic **cardinality** `{min,max}`; the editor core has no spawn/goal concept. Monkey-ball synthesizes them from its existing top-level fields — format unchanged. |
 | Engine additions | Only `RenderPort.setGrid` / `removeGrid` / `setHighlight` (generic, litmus-passing). |
 | Document format | The monkey-ball document **is its existing level JSON**; shipped levels load unchanged. The game's `SceneModel` maps the doc to the generic abstractions at its boundary. |
 | Test-play | Live (registered `createGameplay`) **and** headless (`runHeadlessPlay → TestPlayResult`) with a pluggable input policy. |
@@ -51,7 +52,7 @@ follow-on AI work (editor MCP server + tuning-agent loop + chat overlay) is
 
 ### Dependency graph
 
-```
+```text
 packages/engine/      generic runtime (unchanged philosophy)
         ▲
         │  editor → engine ONLY
@@ -79,7 +80,7 @@ Rules (lint-enforced, extending the existing dependency-direction rules):
 
 ### Package layout
 
-```
+```text
 packages/editor/
   src/
     state/        # sceneDoc slice + SceneCommand reducer, selection, tool, mode, history (undo/redo)
@@ -111,10 +112,10 @@ abstractions — never to `Level`, `color`, `box`, `spawn`, or `goal`.
 /** A placeable thing in the scene, surfaced generically to the viewport/tools. */
 interface SceneItem {
   id: string
-  kind: 'box' | 'cylinder' | 'archetype'   // extensible union; future: 'sector'
+  kind: 'box' | 'cylinder' | 'archetype' | 'marker'  // extensible union; future: 'sector'
   transform: { position: Vec3; rotationEuler: Vec3 }
-  /** box/cylinder footprint+height; archetype name for instances. */
-  shape: BoxShape | CylinderShape | ArchetypeRef
+  /** box/cylinder footprint+height; archetype name; or marker id (e.g. spawn/goal). */
+  shape: BoxShape | CylinderShape | ArchetypeRef | MarkerRef
   surface: Surface
 }
 
@@ -142,10 +143,18 @@ interface SceneModel<Doc> {
   getSurface(doc: Doc, id: string): Surface
 }
 
+/** Every brush is a placeable; cardinality is enforced generically by the editor. */
+interface Brush { id: string; label: string; place: 'point' | 'draw-box' | 'draw-circle'
+                  cardinality: { min: number; max: number } }   // markers e.g. {1,1}; geom {0,∞}
+
 interface GameDefinition<Doc> {
   id: string
   scene: SceneModel<Doc>
-  palette: { geometry: GeometryBrush[]; archetypes: ArchetypeBrush[] }
+  palette: {
+    geometry: Brush[]    // box/cylinder draw brushes        — default { min: 0, max: Infinity }
+    archetypes: Brush[]  // entity instances                 — default { min: 0, max: Infinity }
+    markers: Brush[]     // bounded points e.g. spawn, goal  — e.g. { min: 1, max: 1 }
+  }
   surfacePalette: Surface[]                   // what "change surface" cycles through (colors today)
   /** Build the live ECS world for a doc — reuses the game's populateLevelWorld. */
   buildWorld(doc: Doc, render: RenderPort, physics: PhysicsPort): World
@@ -161,17 +170,36 @@ interface GameDefinition<Doc> {
 The **monkey-ball document is its existing `Level` JSON** (`levelKind`/
 `levelSchema`). Its `SceneModel`:
 
-- `listItems` maps `geometry[]` → `box`/`cylinder` items and `entities[]` →
-  `archetype` items;
+- `listItems` maps `geometry[]` → `box`/`cylinder` items, `entities[]` →
+  `archetype` items, **and synthesizes two singleton `marker` items** from the
+  doc's existing top-level `spawn` and `goal.pos` fields;
+- `apply` of a move / `setItemField` on those markers **writes back to the
+  `spawn` / `goal.pos` fields** — **so the on-disk format never changes and
+  shipped levels (`w1-l1.json`, …) load unchanged**;
 - `getSurface`/`setSurface` map the doc's existing `color: string` ⇄
-  `{ kind: 'color', value }` — **so the on-disk format never changes and shipped
-  levels (`w1-l1.json`, …) load unchanged**;
-- `metadataFields` exposes `name`, `timeLimitS`, `fallY`, `spawn`, `goal` as a
-  form — the editor renders the form without knowing what those mean.
+  `{ kind: 'color', value }`;
+- `metadataFields` exposes only the scalar settings `name`, `timeLimitS`,
+  `fallY` as a form — the editor renders it without knowing what they mean.
 
-`spawn`/`goal` stay **metadata fields** (not placeable items) to preserve the
-existing level format; promoting them to placeable singleton archetypes is a
-possible later refinement, not part of this design.
+### Markers & cardinality (placeable, generic)
+
+`spawn` and `goal` are **placeable** in the editor — you drop and drag them in
+either viewport like any other object — but they are **not** editor built-ins and
+**not** a monkey-ball-specific coupling. They are **registration-declared marker
+brushes** with a generic **cardinality** `{ min, max }`:
+
+- The editor core enforces cardinality with zero game knowledge: a brush at
+  `count === max` cannot be placed again; an item whose brush is at `count ===
+  min` cannot be deleted; validation flags `count < min`.
+- For monkey-ball, `spawn` and `goal` are `{ min: 1, max: 1 }` markers mapped to
+  the existing top-level fields. A platformer would register its own
+  `player-start` / `exit` markers the same way — the editor code is identical.
+- Markers render via a registration-provided gizmo/icon (2D icon, 3D
+  highlightable point), so a `spawn` with no world-renderable is still visible
+  and pickable in edit mode.
+
+This keeps spawn/goal **placeable** (the BUILD "everything is an object" feel)
+while the genericity and the on-disk format both stay intact.
 
 ## Editing model
 
@@ -276,10 +304,13 @@ fly camera, 2D map, picking, snapping, and projection are all pure editor logic.
   brushes, archetype brushes, surface swatches. Selecting a brush sets the
   `tool` slice.
 - **Place / draw:** click-to-place (grid-snapped) or drag-to-draw a footprint →
-  `addItem`.
+  `addItem`. A brush already at its `cardinality.max` is disabled (so you can't
+  add a second spawn); placing a singleton marker instead **moves** the existing
+  one.
 - **Move:** drag selected on the ground plane (3D) or in the map (2D) →
   `moveSelected`; height/Y via scroll + inspector → `setItemField`.
-- **Delete:** `deleteItems` over the selection.
+- **Delete:** `deleteItems` over the selection; items whose brush is at
+  `cardinality.min` are guarded (a required marker can't be deleted).
 - **Change surface:** point-and-cycle (3D) / cycle on selection (2D) →
   `setSurface`.
 - **Inspector:** a generic form rendered from `metadataFields(doc)` plus the
@@ -288,10 +319,12 @@ fly camera, 2D map, picking, snapping, and projection are all pure editor logic.
 
 ## Validation, import/export, autosave
 
-- **Validation panel:** runs `scene.schema.safeParse(doc)` on the working doc;
-  surfaces flattened issues. An `isExportable` / `isPlayable` selector gates
-  export and test-play (invalid documents cannot be exported or played) —
-  mirroring the game's "no silent fallback for shipped data."
+- **Validation panel:** runs `scene.schema.safeParse(doc)` on the working doc
+  **plus generic cardinality checks** (any marker brush with `count < min`, e.g.
+  a missing spawn or goal, is reported) and surfaces flattened issues. An
+  `isExportable` / `isPlayable` selector gates export and test-play (invalid
+  documents cannot be exported or played) — mirroring the game's "no silent
+  fallback for shipped data."
 - **Export:** serialize the doc to JSON (stable key order) and download (download
   is a shim); guarded by `isExportable`. Round-trip is tested: build a doc →
   export string → `scene.schema.parse` equals the doc.
@@ -358,9 +391,10 @@ now expressed in generic terms:
 3. **Headless runs emit structured metrics** — `TestPlayResult` (owner: M13;
    relies on M8).
 
-These make **Plan 4 / M16** (editor MCP server over the command model + validate
-+ test-play; tuning-agent loop over the metrics; chat overlay) a thin adapter
-rather than a rearchitecture. No MCP/agent code is built in M11–M15.
+These make **Plan 4 / M16** (an editor MCP server over the command model,
+validation, and test-play; a tuning-agent loop over the metrics; and a chat
+overlay) a thin adapter rather than a rearchitecture. No MCP/agent code is built
+in M11–M15.
 
 ## Milestones (re-scoped M11–M15; PR-sized, TDD throughout)
 
@@ -370,7 +404,7 @@ dual-viewport editor.
 | # | Milestone |
 |---|---|
 | **M11** | `packages/editor` scaffold (engine-only); `sceneDoc` + `SceneCommand` reducer + undo/redo; `GameDefinition`/`SceneModel`/`Surface` interfaces; engine `setGrid`/`removeGrid`/`setHighlight`; 3D fly-camera math + 2D map projection (pure); host app `tools/level-editor` mounts editor + monkey-ball registration; live 3D render + canvas 2D render of the doc. |
-| **M12** | Palette (geometry/archetype/surface from the registration); place/draw/move/delete in **both** viewports; pure picking (3D ray-vs-AABB, 2D rect/circle hit); selection + highlight; change-surface tool; generic inspector form; validation panel + `isExportable`. |
+| **M12** | Palette (geometry/archetype/**marker**/surface from the registration) with generic **cardinality** enforcement; place/draw/move/delete in **both** viewports; pure picking (3D ray-vs-AABB, 2D rect/circle hit); selection + highlight; change-surface tool; generic inspector form; validation panel (schema + cardinality) + `isExportable`. |
 | **M13** | Instant in-viewport test-play (`createGameplay`); headless `runHeadlessPlay → TestPlayResult`; import/export round-trip through `scene.schema`; autosave via persistence middleware. |
 | **M14** | Dogfood-author 2 worlds × 3 levels in the editor; extend `worlds.json`; manual tuning pass + recorded per-level headless metric baselines; write the **Plan 4 / M16** forward-pointer stub. |
 | **M15** | Pixel-ratio cap (named constant, applied to editor canvas too); visibility-pause confirmed for game + editor test-play; input feel; Playwright smokes (game: boot→menu→play→ball moves; editor: draw a box in the 2D map → export contains it); release builds for game + editor. |
