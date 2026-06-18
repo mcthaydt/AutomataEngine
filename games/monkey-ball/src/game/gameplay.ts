@@ -62,10 +62,11 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
   scheduler.add(createBumper(physics, events, feedback))
   scheduler.add(createFallOff(level, feedback))
   scheduler.add(createGoal(events, feedback))
-  // Consumes the gameplay facts the systems above emit; must run last in the stage.
-  scheduler.add(createFeedback(feedback, audio))
   scheduler.add(createCameraFollow(render))
   scheduler.add(renderSystem<GameCtx>(render))
+  // Drain the gameplay facts emitted above into sound + particles. onFixedEnd
+  // runs after every stage, so it can't miss a fact regardless of system order.
+  scheduler.onFixedEnd(createFeedback(feedback, audio))
 
   const spawn = { x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] }
   const offRespawn = subscribeSelector(store, (s) => s.session.runId, () => {
