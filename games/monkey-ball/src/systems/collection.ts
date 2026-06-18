@@ -1,8 +1,8 @@
-import type { EventQueue, System } from '@automata/engine'
+import { spawnBurst, type AudioPort, type EventQueue, type System } from '@automata/engine'
 import type { GameCtx } from '../game/context'
 import { ballPartner, type PairEvent } from './pairing'
 
-export function createCollection(events: EventQueue): System<GameCtx> {
+export function createCollection(events: EventQueue, audio?: AudioPort): System<GameCtx> {
   return {
     name: 'collection',
     stage: 'postPhysics',
@@ -12,7 +12,10 @@ export function createCollection(events: EventQueue): System<GameCtx> {
         const banana = ballPartner(event, 'collectible')
         if (!banana || taken.has(banana) || !ctx.world.has(banana)) continue
         taken.add(banana)
+        const origin = banana.transform?.position ?? { x: 0, y: 0, z: 0 }
         ctx.store.dispatch({ type: 'bananaCollected', value: banana.collectible!.value })
+        audio?.play('pickup')
+        spawnBurst(ctx.world, { origin, count: 10, speed: 2.5, lifetimeS: 0.5, color: '#ffd23f' })
         ctx.world.remove(banana)
       }
     }
