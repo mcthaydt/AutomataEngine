@@ -19,6 +19,7 @@ import './style.css'
 import { levelKind } from './data/level'
 import { createGameplay, type Gameplay } from './game/gameplay'
 import { loadBootData, type BootData } from './scenes/boot'
+import { shouldMountLoadedLevel } from './scenes/levelLifecycle'
 import { createGameStore } from './state/root'
 import { createHud } from './ui/hud'
 import { createLevelSelect } from './ui/levelSelect'
@@ -66,7 +67,7 @@ async function main(): Promise<void> {
 
   async function enterLevel(levelId: string): Promise<void> {
     const level = await loader.load(levelKind, `/data/levels/${levelId}.json`)
-    if (store.getState().scene !== 'playing' || active !== null) return
+    if (!shouldMountLoadedLevel(store.getState(), levelId, active !== null)) return
 
     const joystickBase = document.createElement('div')
     joystickBase.className = `joystick ${store.getState().settings.joystickSide}`

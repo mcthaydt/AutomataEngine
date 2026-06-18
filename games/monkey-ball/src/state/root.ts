@@ -47,20 +47,48 @@ export interface GameStoreOptions {
   storage?: StoragePort
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isLevelRecord(value: unknown): boolean {
+  return isRecord(value) &&
+    value.completed === true &&
+    typeof value.bestTimeMs === 'number' &&
+    Number.isFinite(value.bestTimeMs) &&
+    value.bestTimeMs >= 0 &&
+    typeof value.maxBananas === 'number' &&
+    Number.isFinite(value.maxBananas) &&
+    value.maxBananas >= 0
+}
+
+function isProgressState(value: unknown): value is ProgressState {
+  return isRecord(value) && Object.values(value).every(isLevelRecord)
+}
+
+function isSettingsState(value: unknown): value is SettingsState {
+  return isRecord(value) &&
+    typeof value.volume === 'number' &&
+    Number.isFinite(value.volume) &&
+    value.volume >= 0 &&
+    value.volume <= 1 &&
+    (value.joystickSide === 'left' || value.joystickSide === 'right')
+}
+
 export function createGameStore(options: GameStoreOptions = {}): GameStore {
   const storage = options.storage ?? memoryStorage()
-  const savedProgress = loadPersisted(storage, PROGRESS_KEY, PERSIST_VERSION) as ProgressState | null
+  const savedProgress = loadPersisted(storage, PROGRESS_KEY, PERSIST_VERSION)
   const savedSettings = loadPersisted(
     storage,
     SETTINGS_KEY,
     PERSIST_VERSION
-  ) as Partial<SettingsState> | null
+  )
 
   const initial: GameState = {
     scene: 'boot',
     session: initialSession,
-    progress: savedProgress ?? initialProgress,
-    settings: { ...initialSettings, ...(savedSettings ?? {}) }
+    progress: isProgressState(savedProgress) ? savedProgress : initialProgress,
+    settings: isSettingsState(savedSettings) ? savedSettings : initialSettings
   }
 
   const progressPersistence = createPersistence<GameState, Action>(storage, {

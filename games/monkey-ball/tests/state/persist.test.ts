@@ -35,4 +35,24 @@ describe('persisted game store', () => {
     expect(store.getState().progress).toEqual({})
     expect(store.getState().settings.volume).toBe(0.7)
   })
+
+  it('falls back to defaults for versioned saves with invalid shapes', () => {
+    const storage = memoryStorage()
+    storage.set('monkey-ball/progress', JSON.stringify({
+      version: 1,
+      data: {
+        'w1-l1': { completed: true, bestTimeMs: 'fast', maxBananas: 2 },
+        'w1-l2': null
+      }
+    }))
+    storage.set('monkey-ball/settings', JSON.stringify({
+      version: 1,
+      data: { volume: 'loud', joystickSide: 'middle' }
+    }))
+
+    const store = createGameStore({ storage })
+
+    expect(store.getState().progress).toEqual({})
+    expect(store.getState().settings).toEqual({ volume: 0.7, joystickSide: 'left' })
+  })
 })
