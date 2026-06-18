@@ -1,19 +1,6 @@
 import type { GameStore } from '../state/root'
+import { button, panel, staticView } from './dom'
 import type { View } from './view'
-
-function panel(className: string): HTMLElement {
-  const element = document.createElement('div')
-  element.className = `overlay ${className}`
-  return element
-}
-
-function button(label: string, className: string, onClick: () => void): HTMLButtonElement {
-  const element = document.createElement('button')
-  element.className = className
-  element.textContent = label
-  element.addEventListener('click', onClick)
-  return element
-}
 
 export function createPauseOverlay(store: GameStore): View {
   const element = panel('pause')
@@ -21,10 +8,7 @@ export function createPauseOverlay(store: GameStore): View {
     button('Resume', 'pause-resume', () => store.dispatch({ type: 'resumed' })),
     button('Quit', 'pause-quit', () => store.dispatch({ type: 'quitToMenu' }))
   )
-  return {
-    element,
-    dispose() { element.remove() }
-  }
+  return staticView(element)
 }
 
 export function createLevelComplete(store: GameStore): View {
@@ -37,10 +21,7 @@ export function createLevelComplete(store: GameStore): View {
     summary,
     button('Level Select', 'complete-next', () => store.dispatch({ type: 'openedLevelSelect' }))
   )
-  return {
-    element,
-    dispose() { element.remove() }
-  }
+  return staticView(element)
 }
 
 export function createGameOver(store: GameStore): View {
@@ -49,8 +30,5 @@ export function createGameOver(store: GameStore): View {
     button('Retry', 'over-retry', () => store.dispatch({ type: 'retried' })),
     button('Quit', 'over-quit', () => store.dispatch({ type: 'quitToMenu' }))
   )
-  return {
-    element,
-    dispose() { element.remove() }
-  }
+  return staticView(element)
 }

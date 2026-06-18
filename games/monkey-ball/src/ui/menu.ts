@@ -1,21 +1,16 @@
 import type { GameStore } from '../state/root'
+import { button, panel, staticView } from './dom'
 import type { View } from './view'
 
 export function createMenu(store: GameStore): View {
-  const element = document.createElement('div')
-  element.className = 'menu overlay'
+  const element = panel('menu')
 
   const title = document.createElement('h1')
   title.textContent = 'Monkey Ball'
 
-  const play = document.createElement('button')
-  play.className = 'menu-play'
-  play.textContent = 'Play'
-  play.addEventListener('click', () => store.dispatch({ type: 'openedLevelSelect' }))
-
-  element.append(title, play)
-  return {
-    element,
-    dispose() { element.remove() }
-  }
+  element.append(
+    title,
+    button('Play', 'menu-play', () => store.dispatch({ type: 'openedLevelSelect' }))
+  )
+  return staticView(element)
 }
