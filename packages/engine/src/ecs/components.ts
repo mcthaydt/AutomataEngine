@@ -27,5 +27,6 @@ export interface EngineEntity {
   transform?: Transform
   rigidBody?: RigidBodyDef
   renderable?: RenderableDef
+  particle?: { velocity: Vec3; gravity: number }
   lifetime?: { remainingS: number }
 }
