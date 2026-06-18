@@ -45,7 +45,7 @@ root unless a task explicitly says otherwise.
   polish.
 - [x] M9: Add Engine SceneManager, game scenes, menus, level select, saves,
   unlocks, and pause.
-- [ ] M10: Add AudioPort adapters, particle emitter simulation, game sounds,
+- [x] M10: Add AudioPort adapters, particle emitter simulation, game sounds,
   and particle effects.
 - [ ] Write Plan 3 for editor, content, and polish milestones M11-M15.
 - [ ] M11: Editor app shell, document and selection reducers, undo/redo,

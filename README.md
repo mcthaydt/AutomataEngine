@@ -19,3 +19,20 @@ clone (`games/monkey-ball`), and a level editor (`tools/level-editor`).
 - `npm run ci` - lint + typecheck + all tests (run before every commit claim)
 - `npm run coverage` - tests with the 90% engine coverage gate
 - `npm run dev -w monkey-ball` - run the game locally
+
+## Game (monkey-ball)
+
+`games/monkey-ball` is the first game on the engine. Run it with
+`npm run dev -w monkey-ball`. Flow: menu -> level select -> play (tilt with
+WASD/arrows or the on-screen joystick) -> goal or game-over. Progress and
+settings persist to localStorage.
+
+Data lives under `games/monkey-ball/public/data/` (served at `/data/...`):
+`config/physics.toml` (tuning), `archetypes/standard.yaml` (entity bundles),
+`levels/*.json` + `levels/worlds.json` (levels and the world manifest).
+
+### Untested browser shims (excluded from the coverage gate)
+
+`packages/engine/src/loop/browser.ts`, `packages/engine/src/render/browser.ts`,
+`packages/engine/src/audio/browser.ts`, and `games/monkey-ball/src/main.ts`.
+Everything else is unit-tested; these are covered by the M15 Playwright smoke.
