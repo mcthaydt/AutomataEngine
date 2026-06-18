@@ -8,13 +8,20 @@ export function memoryStorage(): StoragePort {
   }
 }
 
-export function localStorageAdapter(backing: Storage = globalThis.localStorage): StoragePort {
+function readGlobalLocalStorage(): Storage | null {
+  try { return globalThis.localStorage } catch { return null }
+}
+
+export function localStorageAdapter(backing?: Storage): StoragePort {
+  const storage = backing ?? readGlobalLocalStorage()
   return {
     get(key) {
-      try { return backing.getItem(key) } catch { return null }
+      if (!storage) return null
+      try { return storage.getItem(key) } catch { return null }
     },
     set(key, value) {
-      try { backing.setItem(key, value) } catch { /* quota/private mode: drop write */ }
+      if (!storage) return
+      try { storage.setItem(key, value) } catch { /* quota/private mode: drop write */ }
     }
   }
 }

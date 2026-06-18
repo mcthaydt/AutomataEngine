@@ -7,22 +7,24 @@ import {
   createSceneManager,
   createThreeRenderer,
   createVirtualJoystick,
-  createWebAudio,
   fetchTextViaFetch,
   localStorageAdapter,
   startLoopDriver,
   subscribeSelector,
+  type AudioPort,
+  type CanvasRenderer,
   type InputSource,
   type PhysicsPort,
-  type Scene
+  type Scene,
+  type ThreeRenderer
 } from '@automata/engine'
 import './style.css'
+import { createBrowserAudio } from './audio/browserAudio'
 import { registerSounds } from './audio/sounds'
-import { levelKind } from './data/level'
 import { createGameplay, type Gameplay } from './game/gameplay'
 import { loadBootData, type BootData } from './scenes/boot'
-import { shouldMountLoadedLevel } from './scenes/levelLifecycle'
-import { createGameStore } from './state/root'
+import { loadRequestedLevel } from './scenes/levelLifecycle'
+import { createGameStore, type GameStore } from './state/root'
 import { createHud } from './ui/hud'
 import { createLevelSelect } from './ui/levelSelect'
 import { createMenu } from './ui/menu'
@@ -44,23 +46,27 @@ async function main(): Promise<void> {
   overlays.id = 'overlays'
   app.appendChild(overlays)
 
-  const renderer = createThreeRenderer()
-  const canvasRenderer = attachCanvasRenderer(renderer, canvas)
   const loader = createLoader(fetchTextViaFetch())
-  const store = createGameStore({ storage: localStorageAdapter() })
-  const audioContext = new AudioContext()
-  const audio = createWebAudio(audioContext)
-  registerSounds(audio)
-  audio.setMasterVolume(store.getState().settings.volume)
-  subscribeSelector(store, (state) => state.settings.volume, (volume) => audio.setMasterVolume(volume))
-  overlays.addEventListener('click', (event) => {
-    if ((event.target as HTMLElement).closest('button')) audio.play('uiClick')
-  })
-  window.addEventListener('pointerdown', () => { void audioContext.resume() }, { once: true })
 
+  let renderer: ThreeRenderer
+  let canvasRenderer: CanvasRenderer
+  let store: GameStore
+  let audio: AudioPort
   let physics: PhysicsPort
   let boot: BootData
   try {
+    renderer = createThreeRenderer()
+    canvasRenderer = attachCanvasRenderer(renderer, canvas)
+    store = createGameStore({ storage: localStorageAdapter() })
+    const audioRuntime = createBrowserAudio()
+    audio = audioRuntime.audio
+    registerSounds(audio)
+    audio.setMasterVolume(store.getState().settings.volume)
+    subscribeSelector(store, (state) => state.settings.volume, (volume) => audio.setMasterVolume(volume))
+    overlays.addEventListener('click', (event) => {
+      if ((event.target as HTMLElement).closest('button')) audio.play('uiClick')
+    })
+    window.addEventListener('pointerdown', audioRuntime.resume, { once: true })
     physics = await createRapierPhysics()
     boot = await loadBootData(loader)
   } catch (error) {
@@ -77,8 +83,8 @@ async function main(): Promise<void> {
   } | null = null
 
   async function enterLevel(levelId: string): Promise<void> {
-    const level = await loader.load(levelKind, `/data/levels/${levelId}.json`)
-    if (!shouldMountLoadedLevel(store.getState(), levelId, active !== null)) return
+    const level = await loadRequestedLevel(loader, store, levelId, active !== null)
+    if (!level) return
 
     const joystickBase = document.createElement('div')
     joystickBase.className = `joystick ${store.getState().settings.joystickSide}`

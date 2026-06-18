@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { shouldMountLoadedLevel } from '../../src/scenes/levelLifecycle'
+import type { DataLoader } from '@automata/engine'
+import { loadRequestedLevel, shouldMountLoadedLevel } from '../../src/scenes/levelLifecycle'
 import { createGameStore } from '../../src/state/root'
 
 describe('shouldMountLoadedLevel', () => {
@@ -21,5 +22,16 @@ describe('shouldMountLoadedLevel', () => {
 
     store.dispatch({ type: 'openedLevelSelect' })
     expect(shouldMountLoadedLevel(store.getState(), 'w1-l1', false)).toBe(false)
+  })
+
+  it('returns to level select when the requested level fails to load', async () => {
+    const store = createGameStore()
+    store.dispatch({ type: 'levelStarted', levelId: 'missing' })
+    const loader = {
+      load: async () => { throw new Error('404') }
+    } as DataLoader
+
+    await expect(loadRequestedLevel(loader, store, 'missing', false)).resolves.toBeNull()
+    expect(store.getState().scene).toBe('levelSelect')
   })
 })
