@@ -1,13 +1,19 @@
 import type { Quat } from '../math/quat'
 import type { Vec3 } from '../math/vec3'
 import type { RenderableDef } from './types'
-import type { GroupId, RenderPort } from './port'
+import type { GridId, GroupId, RenderPort } from './port'
 
 export interface RenderCall {
-  op: 'createGroup' | 'removeGroup' | 'setGroupRotation' | 'add' | 'setPose' | 'remove' | 'setCamera' | 'dispose'
+  op:
+    | 'createGroup' | 'removeGroup' | 'setGroupRotation'
+    | 'setGrid' | 'removeGrid' | 'setHighlight'
+    | 'add' | 'setPose' | 'remove' | 'setCamera' | 'dispose'
   entity?: object
   def?: RenderableDef
   group?: GroupId
+  grid?: GridId
+  opts?: { size: number; divisions: number; color: string }
+  on?: boolean
   position?: Vec3
   rotation?: Quat
   eulerRad?: Vec3
@@ -24,6 +30,7 @@ export function createNullRenderer(): NullRenderer {
   const calls: RenderCall[] = []
   const objects = new Set<object>()
   let nextGroupId: GroupId = 1
+  let nextGridId: GridId = 1
 
   const port: RenderPort = {
     get objectCount() { return objects.size },
@@ -36,6 +43,17 @@ export function createNullRenderer(): NullRenderer {
     },
     removeGroup(group) {
       calls.push({ op: 'removeGroup', group })
+    },
+    setGrid(opts) {
+      const grid = nextGridId++
+      calls.push({ op: 'setGrid', grid, opts })
+      return grid
+    },
+    removeGrid(grid) {
+      calls.push({ op: 'removeGrid', grid })
+    },
+    setHighlight(entity, on) {
+      calls.push({ op: 'setHighlight', entity, on })
     },
     add(entity, def, group) {
       objects.add(entity)

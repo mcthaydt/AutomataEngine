@@ -4,6 +4,8 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
+**Overall progress:** 3% (5/200 checklist items complete)
+
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
 **Tech Stack:** Existing workspace toolchain (TypeScript strict, Vitest, ESLint flat config, Vite). The engine wraps three/rapier/miniplex/zod; the editor and game import only `@automata/engine`. **No new third-party dependencies** until M15 (Playwright, dev-only).
@@ -69,7 +71,7 @@ Generic scene-graph aids a racer's or platformer's editor would use unchanged, s
 **Interfaces:**
 - Produces: `RenderPort.setGrid(opts: { size: number; divisions: number; color: string }): GridId`, `RenderPort.removeGrid(id: GridId): void`, `RenderPort.setHighlight(entity: object, on: boolean): void`; `type GridId = number`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/render/three-grid.test.ts`:
 ```ts
@@ -115,12 +117,12 @@ Append to `packages/engine/tests/render/null.test.ts` inside the `describe('crea
   })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/render/three-grid.test.ts packages/engine/tests/render/null.test.ts`
 Expected: FAIL — `port.setGrid is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/engine/src/render/port.ts`, add to the `RenderPort` interface (after `removeGroup`):
 ```ts
@@ -192,12 +194,12 @@ In `packages/engine/src/render/null.ts`:
 ```
 with `let nextGridId = 1` declared alongside the existing counters and `opts?: { size: number; divisions: number; color: string }` added to `RenderCall`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/render/three-grid.test.ts packages/engine/tests/render/null.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
