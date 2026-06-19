@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 26% (51/200 checklist items complete)
+**Overall progress:** 29% (57/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -1412,7 +1412,7 @@ Builds the live ECS world from the document via `definition.buildWorld`, renders
 - Consumes: `RenderPort`, `PhysicsPort`, `World`, `registerRenderables`, `renderSystem`, `createNullRenderer` (test) from `@automata/engine`; `GameDefinition`; `EditorStore`.
 - Produces: `createWorldSync<Doc>(definition, store, render, physics): { syncNow(): void; render(alpha): void; dispose(): void }`. Items carry a stable `id`; the world entities expose `editorId` for highlight mapping.
 
-- [ ] **Step 1: Extend the fake fixture with a real `buildWorld`**
+- [x] **Step 1: Extend the fake fixture with a real `buildWorld`**
 
 Append to `packages/editor/tests/fixtures/fakeDefinition.ts` (add `createWorld`, `RenderPort` to its `@automata/engine` import):
 ```ts
@@ -1435,7 +1435,7 @@ export function fakeBuildWorld(doc: FakeDoc, _render: RenderPort) {
 export const renderDefinition: GameDefinition<FakeDoc> = { ...fakeDefinition, buildWorld: fakeBuildWorld as never }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `packages/editor/tests/viewport3d/worldSync.test.ts`:
 ```ts
@@ -1471,12 +1471,12 @@ describe('worldSync', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/worldSync.test.ts`
 Expected: FAIL — cannot resolve `../../src/viewport3d/worldSync`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `packages/editor/src/viewport3d/worldSync.ts`:
 ```ts
@@ -1544,12 +1544,12 @@ export function createWorldSync<Doc>(
 
 > **API note:** `registerRenderables(world, render, group)` and `renderSystem(render)` are the engine helpers the game uses in `games/monkey-ball/src/game/gameplay.ts`. If `renderSystem`'s context shape differs from `{ world, alpha }`, match the engine's `System` context (check `packages/engine/src/render/systems.ts`) and adapt the call — do not change the engine.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/worldSync.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Typecheck + commit**
+- [x] **Step 6: Typecheck + commit**
 
 ```bash
 npm run typecheck

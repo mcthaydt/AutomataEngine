@@ -1,3 +1,4 @@
+import { createWorld, type RenderPort } from '@automata/engine'
 import type { GameDefinition, SceneModel } from '../../src/model/gameDefinition'
 import { CommandError } from '../../src/model/gameDefinition'
 import type { SceneItem, Surface } from '../../src/model/types'
@@ -92,4 +93,27 @@ export function boxItem(id: string, x = 0, z = 0): SceneItem {
     shape: { type: 'box', size: { x: 1, y: 1, z: 1 } },
     surface: { kind: 'color', value: '#e0e0e0' }
   }
+}
+
+/** A fake buildWorld: one renderable box entity per item, carrying editorId. */
+export function fakeBuildWorld(doc: FakeDoc, _render: RenderPort) {
+  const world = createWorld<{ editorId?: string; renderable?: unknown; transform?: unknown }>()
+  for (const item of doc.items) {
+    world.add({
+      editorId: item.id,
+      renderable: { primitive: 'box', size: { x: 1, y: 1, z: 1 }, color: '#e0e0e0' },
+      transform: {
+        position: item.transform.position,
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        prevPosition: item.transform.position,
+        prevRotation: { x: 0, y: 0, z: 0, w: 1 }
+      }
+    })
+  }
+  return world
+}
+
+export const renderDefinition: GameDefinition<FakeDoc> = {
+  ...fakeDefinition,
+  buildWorld: fakeBuildWorld as never
 }
