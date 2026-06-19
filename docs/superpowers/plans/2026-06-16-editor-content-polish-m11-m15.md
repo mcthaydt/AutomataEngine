@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 58% (115/200 checklist items complete)
+**Overall progress:** 59% (117/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -3047,9 +3047,12 @@ Adds selection-by-picking, the place tool, surface cycling, delete, the palette 
 - Create: `packages/editor/src/tools/surfaceCycle.ts`
 - Create: `packages/editor/src/ui/panels.ts`
 - Modify: `tools/level-editor/src/main.ts`
+- Create: `tools/level-editor/src/viewTabs.ts`
 - Test: `packages/editor/tests/tools/surfaceCycle.test.ts`
 - Test: `packages/editor/tests/hostTools.test.ts`
 - Test: `packages/editor/tests/ui/panels.test.ts`
+- Test: `tools/level-editor/tests/viewTabs.test.ts`
+- Test: `tools/level-editor/tests/layout.test.ts`
 
 **Interfaces:**
 - Consumes: all M12 tools; `EditorCore`.
@@ -3368,14 +3371,14 @@ npm run ci
 ```
 Expected: all PASS; `npm run ci` green.
 
-- [ ] **Step 8: Manual checkpoint (human gate)**
+- [x] **Step 8: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w level-editor
 ```
-Pick the Box brush, click in the 2D map to place boxes; click an item to select (highlight in 3D); shift-click the map or 3D ground to move the selection; press Delete to remove; press `C` to cycle the selected item's surface; watch the validation panel flip to "Valid ✓" once spawn + goal exist. Stop the dev server.
+Use the 3D/2D tabs to switch between full-screen views. Pick the Box brush, switch to the full 2D view, and click to place boxes; click an item to select, then switch to the 3D view and confirm the highlight; shift-click in either full view to move the selection; press Delete to remove; press `C` to cycle the selected item's surface; watch the validation panel flip to "Valid ✓" once spawn + goal exist. Stop the dev server.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add -A

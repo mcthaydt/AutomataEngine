@@ -6,6 +6,7 @@ import {
   attachFlyControls, createEditor, paintMap, renderPanels, screenToWorldXZ
 } from '@automata/editor'
 import { createMonkeyBallDefinition, loadBootData, type Level } from 'monkey-ball'
+import { createViewTabs } from './viewTabs'
 
 async function main(): Promise<void> {
   const app = document.getElementById('app')
@@ -13,9 +14,6 @@ async function main(): Promise<void> {
 
   const canvas3d = document.createElement('canvas')
   const canvas2d = document.createElement('canvas')
-  canvas2d.width = 360
-  canvas2d.height = 360
-  canvas2d.className = 'map'
   app.append(canvas3d, canvas2d)
 
   const loader = createLoader(fetchTextViaFetch())
@@ -28,6 +26,28 @@ async function main(): Promise<void> {
   const editor = createEditor<Level>({ definition, render: renderer.port, physics })
   editor.store.dispatch({ type: 'loadDoc', doc: definition.scene.emptyDoc() })
   attachFlyControls(canvas3d, () => editor.camera, (camera) => { editor.camera = camera })
+  const resizeMapCanvas = (): { w: number; h: number } => {
+    const rect = app.getBoundingClientRect()
+    const size = {
+      w: Math.max(1, Math.floor(rect.width || window.innerWidth)),
+      h: Math.max(1, Math.floor(rect.height || window.innerHeight))
+    }
+    if (canvas2d.width !== size.w) canvas2d.width = size.w
+    if (canvas2d.height !== size.h) canvas2d.height = size.h
+    return size
+  }
+  const viewTabs = createViewTabs(app, {
+    initialView: '3d',
+    views: [
+      { id: '3d', label: '3D', canvas: canvas3d },
+      { id: '2d', label: '2D', canvas: canvas2d }
+    ],
+    onChange: (view) => {
+      if (view === '2d') resizeMapCanvas()
+    }
+  })
+  resizeMapCanvas()
+  window.addEventListener('resize', resizeMapCanvas)
   const panelHost = document.createElement('div')
   panelHost.id = 'panels'
   app.append(panelHost)
@@ -37,7 +57,7 @@ async function main(): Promise<void> {
   if (!context2d) throw new Error('2D canvas context unavailable')
   canvas2d.addEventListener('pointerdown', (event) => {
     const screen = { x: event.offsetX, y: event.offsetY }
-    const size = { w: canvas2d.width, h: canvas2d.height }
+    const size = resizeMapCanvas()
     const xz = screenToWorldXZ(editor.mapView, screen, size)
     if (event.shiftKey) {
       editor.moveSelectionTo({ x: xz.x, y: 0, z: xz.z })
@@ -77,12 +97,17 @@ async function main(): Promise<void> {
     render: (alpha) => {
       editor.tick(alpha)
       canvasRenderer.renderFrame()
+      const mapSize = resizeMapCanvas()
       paintMap(
         context2d,
-        editor.drawModel({ w: canvas2d.width, h: canvas2d.height }),
-        { w: canvas2d.width, h: canvas2d.height }
+        editor.drawModel(mapSize),
+        mapSize
       )
     }
+  })
+  window.addEventListener('beforeunload', () => {
+    viewTabs.dispose()
+    window.removeEventListener('resize', resizeMapCanvas)
   })
   startLoopDriver(loop)
 }

@@ -50,7 +50,7 @@ root unless a task explicitly says otherwise.
 - [x] Write Plan 3 for editor, content, and polish milestones M11-M15.
 - [x] M11: Editor app shell, document and selection reducers, undo/redo,
   viewport, orbit camera, and grid.
-- [ ] M12: Editor palette, place/move/delete tools, inspector, and validation
+- [x] M12: Editor palette, place/move/delete tools, inspector, and validation
   panel.
 - [ ] M13: Editor test-play, import/export, and autosave.
 - [ ] M14: Author 2 worlds x 3 levels in the editor and complete a tuning pass.
