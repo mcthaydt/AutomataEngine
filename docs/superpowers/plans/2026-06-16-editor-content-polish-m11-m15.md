@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 23% (46/200 checklist items complete)
+**Overall progress:** 26% (51/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -1293,7 +1293,7 @@ The 2D map renders by producing a list of pure draw ops; the canvas shim (M11 ho
 - Consumes: `MapView`, `ScreenSize`, `worldToScreen`; `SceneItem`, `GameDefinition`.
 - Produces: `DrawOp` (`{ shape: 'rect' | 'circle' | 'icon'; x; y; w?; h?; r?; color: string; selected: boolean; id: string }`), `buildDrawModel(definition, items, selection, view, size): DrawOp[]`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/viewport2d/draw.test.ts`:
 ```ts
@@ -1323,7 +1323,7 @@ describe('2D draw model', () => {
 
   it('positions a box rect centered on its world position', () => {
     const [rect] = buildDrawModel(fakeDefinition, [boxItem('b', 0, 0)], [], initialMapView, size)
-    expect(rect).toMatchObject({ x: 400, y: 300 })
+    expect(rect).toMatchObject({ x: 388, y: 288, w: 24, h: 24 })
   })
 
   it('marks selected items', () => {
@@ -1338,12 +1338,12 @@ describe('2D draw model', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/draw.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/viewport2d/draw.ts`:
 ```ts
@@ -1388,12 +1388,12 @@ export function buildDrawModel<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/draw.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
