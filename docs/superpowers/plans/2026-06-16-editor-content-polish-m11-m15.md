@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 46% (92/200 checklist items complete)
+**Overall progress:** 49% (97/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -2713,7 +2713,7 @@ git commit -m "feat(editor): placement command builder with cardinality + snap"
 **Interfaces:**
 - Produces: `levelSceneModel.apply` handling `addItem` (box/cylinder → `geometry`, archetype → `entities`) and `setItemField` (geometry position, box size, cylinder radius/height via `path`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `games/monkey-ball/tests/editor/sceneModelEdit.test.ts`:
 ```ts
@@ -2766,12 +2766,12 @@ describe('level SceneModel edits', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModelEdit.test.ts`
 Expected: FAIL — `apply` throws "not supported until M12" for `addItem`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `games/monkey-ball/src/editor/sceneModel.ts`, replace the `case 'addItem':` / `case 'setItemField':` arm (the one that throws "not supported until M12") with:
 ```ts
@@ -2825,12 +2825,12 @@ In `games/monkey-ball/src/editor/sceneModel.ts`, replace the `case 'addItem':` /
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModelEdit.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck

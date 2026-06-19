@@ -151,9 +151,68 @@ export const levelSceneModel: SceneModel<Level> = {
           entities: level.entities.filter((_, index) => !entities.has(index))
         }
       }
-      case 'addItem':
-      case 'setItemField':
-        throw new CommandError(`command ${cmd.type} not supported until M12`)
+      case 'addItem': {
+        const item = cmd.item
+        if (item.shape.type === 'box') {
+          return {
+            ...level,
+            geometry: [...level.geometry, {
+              shape: 'box',
+              size: [item.shape.size.x, item.shape.size.y, item.shape.size.z],
+              pos: [item.transform.position.x, item.transform.position.y, item.transform.position.z],
+              color: item.surface.kind === 'color' ? item.surface.value : '#ffffff',
+              friction: 0.6
+            }]
+          }
+        }
+        if (item.shape.type === 'cylinder') {
+          return {
+            ...level,
+            geometry: [...level.geometry, {
+              shape: 'cylinder',
+              radius: item.shape.radius,
+              height: item.shape.height,
+              pos: [item.transform.position.x, item.transform.position.y, item.transform.position.z],
+              color: item.surface.kind === 'color' ? item.surface.value : '#ffffff',
+              friction: 0.6
+            }]
+          }
+        }
+        if (item.shape.type === 'archetype') {
+          return {
+            ...level,
+            entities: [...level.entities, {
+              archetype: item.shape.name,
+              pos: [item.transform.position.x, item.transform.position.y, item.transform.position.z]
+            }]
+          }
+        }
+        throw new CommandError('markers are singletons and cannot be added')
+      }
+      case 'setItemField': {
+        if (!cmd.id.startsWith('geometry:')) throw new CommandError(`field edit unsupported for ${cmd.id}`)
+        const index = geometryIndex(cmd.id)
+        const axis = { x: 0, y: 1, z: 2 }[cmd.path.split('.')[1] as 'x' | 'y' | 'z']
+        return {
+          ...level,
+          geometry: level.geometry.map((geometry, gi) => {
+            if (gi !== index) return geometry
+            if (cmd.path.startsWith('pos.')) {
+              const pos = [...geometry.pos] as Tuple3
+              pos[axis] = Number(cmd.value)
+              return { ...geometry, pos }
+            }
+            if (cmd.path.startsWith('size.') && geometry.shape === 'box') {
+              const size = [...geometry.size] as Tuple3
+              size[axis] = Number(cmd.value)
+              return { ...geometry, size }
+            }
+            if (cmd.path === 'radius' && geometry.shape === 'cylinder') return { ...geometry, radius: Number(cmd.value) }
+            if (cmd.path === 'height' && geometry.shape === 'cylinder') return { ...geometry, height: Number(cmd.value) }
+            throw new CommandError(`unsupported field ${cmd.path}`)
+          })
+        }
+      }
       case 'loadDoc':
         return this.parse(cmd.doc)
     }
