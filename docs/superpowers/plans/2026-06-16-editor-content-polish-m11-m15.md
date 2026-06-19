@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 8% (16/200 checklist items complete)
+**Overall progress:** 11% (21/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -617,7 +617,7 @@ git commit -m "feat(editor): generic SceneModel/GameDefinition model + fake fixt
 - Consumes: `SceneModel`, `SceneCommand`, `CommandError`.
 - Produces: `EditorAction`; `DocumentState<Doc>` (`{ doc; dirty; past; future }`), `createDocumentReducer(scene, opts?): Reducer<DocumentState<Doc>, EditorAction>`, `initialDocument(scene): DocumentState<Doc>`, `UNDO_LIMIT`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/state/document.test.ts`:
 ```ts
@@ -681,12 +681,12 @@ describe('document slice', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/state/document.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/document`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/state/actions.ts`:
 ```ts
@@ -761,12 +761,12 @@ export function createDocumentReducer<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/state/document.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
