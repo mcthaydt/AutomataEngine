@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 54% (107/200 checklist items complete)
+**Overall progress:** 58% (115/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -3055,7 +3055,7 @@ Adds selection-by-picking, the place tool, surface cycling, delete, the palette 
 - Consumes: all M12 tools; `EditorCore`.
 - Produces: `nextSurface(palette, current): Surface`; `EditorCore` gains `pick3d(screen, size)`, `pick2d(screen, size)`, `placeAt(world)`, `moveSelectionTo(world)`, `cycleSurfaceOn(id)`, `deleteSelected()`; `renderPanels(core, host): () => void` (DOM panels bound to the store).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/tools/surfaceCycle.test.ts`:
 ```ts
@@ -3160,12 +3160,12 @@ describe('panels', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/tools/surfaceCycle.test.ts packages/editor/tests/hostTools.test.ts packages/editor/tests/ui/panels.test.ts`
 Expected: FAIL — modules/methods not found.
 
-- [ ] **Step 3: Implement `nextSurface`**
+- [x] **Step 3: Implement `nextSurface`**
 
 `packages/editor/src/tools/surfaceCycle.ts`:
 ```ts
@@ -3180,7 +3180,7 @@ export function nextSurface(palette: Surface[], current: Surface): Surface {
 }
 ```
 
-- [ ] **Step 4: Extend the host core**
+- [x] **Step 4: Extend the host core**
 
 In `packages/editor/src/host.ts`, add imports:
 ```ts
@@ -3256,7 +3256,7 @@ and add these methods to the returned `core` object (the `GRID_CELL` constant is
     },
 ```
 
-- [ ] **Step 5: Implement the DOM panels**
+- [x] **Step 5: Implement the DOM panels**
 
 `packages/editor/src/ui/panels.ts`:
 ```ts
@@ -3308,7 +3308,7 @@ export function renderPanels<Doc>(core: EditorCore<Doc>, host: HTMLElement): () 
 
 > **Note:** `renderPanels` reads `core.definition`. Add `definition` to the `EditorCore` interface and to the returned object in `host.ts` (`get definition() { return definition }`).
 
-- [ ] **Step 6: Wire the shim**
+- [x] **Step 6: Wire the shim**
 
 In `tools/level-editor/src/main.ts`, after creating `editor`, add panels + pointer tools (shim — keep thin):
 ```ts
@@ -3360,7 +3360,7 @@ Append to `packages/editor/src/index.ts`:
 export * from './ui/panels'
 ```
 
-- [ ] **Step 7: Run tests + full gate**
+- [x] **Step 7: Run tests + full gate**
 
 ```bash
 npx vitest run packages/editor/tests/tools/surfaceCycle.test.ts packages/editor/tests/hostTools.test.ts packages/editor/tests/ui/panels.test.ts

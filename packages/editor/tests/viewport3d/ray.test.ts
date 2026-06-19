@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { initialFlyCamera } from '../../src/viewport3d/flyCamera'
 import { EDITOR_FOV_Y, buildRay, rayPlaneY } from '../../src/viewport3d/ray'
 
 const size = { w: 800, h: 600 }
