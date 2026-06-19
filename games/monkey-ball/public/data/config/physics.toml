@@ -1,0 +1,7 @@
+max-tilt-deg = 12.0
+tilt-smooth = 0.15
+gravity = 9.81
+
+[ball]
+radius = 0.5
+friction = 0.6

@@ -36,16 +36,16 @@ root unless a task explicitly says otherwise.
 - [x] M6: Render port, Three adapter, camera, groups, NullRenderer, and browser
   canvas shim.
 
-## Remaining Task Board
+## Task Board
 
-- [ ] Write Plan 2 for game milestones M7-M10 against the current engine APIs.
-- [ ] M7: Game first playable: load level, floor, ball, tilt, fall-off, goal,
+- [x] Write Plan 2 for game milestones M7-M10 against the current engine APIs.
+- [x] M7: Game first playable: load level, floor, ball, tilt, fall-off, goal,
   respawn, and HUD skeleton.
-- [ ] M8: Add bananas, timer, lives, bumpers, moving platforms, and camera
+- [x] M8: Add bananas, timer, lives, bumpers, moving platforms, and camera
   polish.
-- [ ] M9: Add Engine SceneManager, game scenes, menus, level select, saves,
+- [x] M9: Add Engine SceneManager, game scenes, menus, level select, saves,
   unlocks, and pause.
-- [ ] M10: Add AudioPort adapters, particle emitter simulation, game sounds,
+- [x] M10: Add AudioPort adapters, particle emitter simulation, game sounds,
   and particle effects.
 - [ ] Write Plan 3 for editor, content, and polish milestones M11-M15.
 - [ ] M11: Editor app shell, document and selection reducers, undo/redo,

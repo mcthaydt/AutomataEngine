@@ -40,4 +40,14 @@ describe('render groups', () => {
     const { port } = createThreeRenderer()
     expect(() => port.setGroupRotation(999, { x: 0, y: 0, z: 0 })).toThrow(/999/)
   })
+
+  it('removeGroup detaches the group from the scene', () => {
+    const { port, scene } = createThreeRenderer()
+    const before = scene.children.length
+    const stage = port.createGroup()
+    expect(scene.children.length).toBe(before + 1)
+    port.removeGroup(stage)
+    expect(scene.children.length).toBe(before)
+    expect(() => port.setGroupRotation(stage, { x: 0, y: 0, z: 0 })).toThrow(/Unknown/)
+  })
 })

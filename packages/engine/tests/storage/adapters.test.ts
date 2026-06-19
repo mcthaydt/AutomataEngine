@@ -28,4 +28,20 @@ describe('localStorageAdapter', () => {
     expect(() => storage.set('k', 'v')).not.toThrow()
     expect(storage.get('k')).toBeNull()
   })
+
+  it('does not throw when the global localStorage accessor is blocked', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get: () => { throw new Error('SecurityError') }
+    })
+
+    try {
+      const storage = localStorageAdapter()
+      expect(storage.get('k')).toBeNull()
+      expect(() => storage.set('k', 'v')).not.toThrow()
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'localStorage', original)
+    }
+  })
 })

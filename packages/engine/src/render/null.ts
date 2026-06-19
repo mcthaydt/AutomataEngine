@@ -4,7 +4,7 @@ import type { RenderableDef } from './types'
 import type { GroupId, RenderPort } from './port'
 
 export interface RenderCall {
-  op: 'createGroup' | 'setGroupRotation' | 'add' | 'setPose' | 'remove' | 'setCamera' | 'dispose'
+  op: 'createGroup' | 'removeGroup' | 'setGroupRotation' | 'add' | 'setPose' | 'remove' | 'setCamera' | 'dispose'
   entity?: object
   def?: RenderableDef
   group?: GroupId
@@ -33,6 +33,9 @@ export function createNullRenderer(): NullRenderer {
     },
     setGroupRotation(group, eulerRad) {
       calls.push({ op: 'setGroupRotation', group, eulerRad })
+    },
+    removeGroup(group) {
+      calls.push({ op: 'removeGroup', group })
     },
     add(entity, def, group) {
       objects.add(entity)
