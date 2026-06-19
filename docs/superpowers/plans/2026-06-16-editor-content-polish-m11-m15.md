@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 29% (57/200 checklist items complete)
+**Overall progress:** 32% (64/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -1574,7 +1574,7 @@ The game exposes a public API for the host, and registers a `GameDefinition<Leve
 - Consumes: `levelKind`, `levelSchema`, `Level`, `populateLevelWorld`, `Entity` (game); `parseData`, `createWorld`, `registerPhysicsBodies` (engine); `SceneModel`, `GameDefinition`, `SceneItem`, `CommandError` (editor).
 - Produces: `monkeyBallDefinition: GameDefinition<Level>`; `levelSceneModel: SceneModel<Level>`; the game barrel re-exporting level/data/registration symbols. `play` is added in M13.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `games/monkey-ball/tests/editor/sceneModel.test.ts`:
 ```ts
@@ -1640,12 +1640,12 @@ describe('monkey-ball level SceneModel', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModel.test.ts`
 Expected: FAIL — cannot resolve `../../src/editor/sceneModel`.
 
-- [ ] **Step 3: Implement the SceneModel**
+- [x] **Step 3: Implement the SceneModel**
 
 `games/monkey-ball/src/editor/sceneModel.ts`:
 ```ts
@@ -1780,7 +1780,7 @@ export const levelSceneModel: SceneModel<Level> = {
 
 > **Note:** the geometry `friction` default — `parseData`/`levelSchema` apply `.default(0.6)`, so parsed levels always carry `friction`. `emptyDoc` sets it explicitly to keep the type happy.
 
-- [ ] **Step 4: Add optional editor ID tags to the runtime world builder**
+- [x] **Step 4: Add optional editor ID tags to the runtime world builder**
 
 In `games/monkey-ball/src/entity.ts`, add this optional tag to `Entity`:
 ```ts
@@ -1831,7 +1831,7 @@ export function populateLevelWorld(
 }
 ```
 
-- [ ] **Step 5: Implement the partial registration + game barrel**
+- [x] **Step 5: Implement the partial registration + game barrel**
 
 `games/monkey-ball/src/editor/registration.ts`:
 ```ts
@@ -1905,12 +1905,12 @@ In `games/monkey-ball/package.json`, add an `exports` field and the `@automata/e
 ```
 Then run `npm install` to link `@automata/editor` into the game workspace before the typecheck below.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModel.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 7: Typecheck + commit**
+- [x] **Step 7: Typecheck + commit**
 
 ```bash
 npm run typecheck

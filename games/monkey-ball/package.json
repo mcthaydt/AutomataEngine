@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "dependencies": { "@automata/engine": "*" },
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@automata/engine": "*", "@automata/editor": "*" },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
