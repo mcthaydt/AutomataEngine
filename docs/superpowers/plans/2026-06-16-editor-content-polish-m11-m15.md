@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 5% (10/200 checklist items complete)
+**Overall progress:** 8% (16/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -349,7 +349,7 @@ git commit -m "chore(editor): scaffold @automata/editor package with lint + cove
 - Produces: `SceneItem`, `Surface`, `SceneCommand`, `Brush`, `MarkerRef`, `BoxShape`, `CylinderShape`, `ArchetypeRef`, `Field`, `ItemKind`; `SceneModel<Doc>`, `GameDefinition<Doc>`, `CommandError`; the fake `FakeDoc` + `fakeDefinition` test fixture (`{ doc: FakeDoc; ... }`).
 - Consumes: `Vec3` from `@automata/engine`.
 
-- [ ] **Step 1: Write the model types**
+- [x] **Step 1: Write the model types**
 
 `packages/editor/src/model/types.ts`:
 ```ts
@@ -411,7 +411,7 @@ export interface Field {
 }
 ```
 
-- [ ] **Step 2: Write the registration interfaces**
+- [x] **Step 2: Write the registration interfaces**
 
 `packages/editor/src/model/gameDefinition.ts`:
 ```ts
@@ -476,7 +476,7 @@ export interface GameDefinition<Doc> {
 }
 ```
 
-- [ ] **Step 3: Write the fake registration fixture**
+- [x] **Step 3: Write the fake registration fixture**
 
 `packages/editor/tests/fixtures/fakeDefinition.ts`:
 ```ts
@@ -554,7 +554,7 @@ export function boxItem(id: string, x = 0, z = 0): SceneItem {
 }
 ```
 
-- [ ] **Step 4: Write the failing test**
+- [x] **Step 4: Write the failing test**
 
 `packages/editor/tests/model/fakeDefinition.test.ts`:
 ```ts
@@ -587,12 +587,12 @@ describe('generic SceneModel (fake registration)', () => {
 })
 ```
 
-- [ ] **Step 5: Run tests to verify they pass (types compile)**
+- [x] **Step 5: Run tests to verify they pass (types compile)**
 
 Run: `npx vitest run packages/editor/tests/model/fakeDefinition.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Export from the barrel + commit**
+- [x] **Step 6: Export from the barrel + commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
