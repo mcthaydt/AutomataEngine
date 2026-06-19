@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 18% (36/200 checklist items complete)
+**Overall progress:** 21% (41/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -1082,7 +1082,7 @@ git commit -m "feat(editor): grid snap math"
 - Consumes: `Vec3` from `@automata/engine`.
 - Produces: `FlyCamera` (`{ position: Vec3; yaw: number; pitch: number }`), `initialFlyCamera`, `cameraForward(cam): Vec3`, `cameraView(cam): { position: Vec3; lookAt: Vec3 }`, `moveFly(cam, move, speed): FlyCamera`, `rotateFly(cam, dYaw, dPitch): FlyCamera`. `move` is `{ forward: number; right: number; up: number }`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/viewport3d/flyCamera.test.ts`:
 ```ts
@@ -1126,12 +1126,12 @@ describe('fly camera', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/flyCamera.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/viewport3d/flyCamera.ts`:
 ```ts
@@ -1182,12 +1182,12 @@ export function moveFly(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/flyCamera.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
