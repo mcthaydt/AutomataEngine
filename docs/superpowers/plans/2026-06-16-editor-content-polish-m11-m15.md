@@ -17,7 +17,7 @@ Copied from the spec; every task's requirements implicitly include these.
 - **Dependency direction (lint-enforced):** `editor → engine` only. The editor core never imports `monkey-ball` and imports no third-party libs directly (three/rapier/miniplex/smol-toml/yaml/zod stay inside engine). The host app `tools/level-editor` is the only module that imports both `@automata/editor` and `monkey-ball`.
 - **Editor litmus test** (review gate on every editor-core change): *"Would a platformer's or top-down racer's editor use this API unchanged?"* Zero ball/banana/tilt/goal/spawn concepts in the editor core.
 - **Engine litmus test** (unchanged): *"Would a top-down racer or platformer use this API unchanged?"* The only engine additions in this plan are `RenderPort.setGrid` / `removeGrid` / `setHighlight`.
-- **AI-readiness constraints (preserve all three):** (1) every editor mutation is a serializable `SceneCommand` through the document reducer; (2) levels stay schema-validated data, import/export round-trips through `scene.schema`; (3) a headless `NullRenderer` run emits a typed `TestPlayResult`.
+- **AI-readiness constraints (preserve all three):** (1) every editor mutation is a serializable `SceneCommand` through the document reducer; (2) levels stay schema-validated data, import/export round-trips through `SceneModel.parse` + `validateDoc`; (3) a headless `NullRenderer` run emits a typed `TestPlayResult`.
 - **Format conventions:** TOML = tuning config, YAML = archetypes, JSON = levels/manifests. The monkey-ball document **is** its existing `Level` JSON — shipped levels load unchanged.
 - **Coverage gate:** 90% lines and branches on non-shim code, now covering `packages/engine/src/**` and `packages/editor/src/**`.
 - **Browser-only shims** are untested, excluded from coverage, kept trivially thin. The inventory grows by: the host `tools/level-editor/src/main.ts`, the 3D pointer-lock/fly input shim (`packages/editor/src/viewport3d/browser.ts`), and the 2D-canvas pointer shim (`packages/editor/src/viewport2d/browser.ts`). All editor shim files are named `browser.ts` so the existing coverage exclude `**/browser.ts` catches them.
@@ -38,6 +38,11 @@ Copied from the spec; every task's requirements implicitly include these.
 2. **The editor store is `document` + `selection` + `tool` + `mode` slices composed by `combineReducers`**, where `document` owns the doc, `dirty`, and the bounded undo/redo stacks (`past`/`future`). *Why:* undo/redo wraps the document only; selection/tool/mode are independent and must not be on the undo stack.
 3. **A minimal fake registration fixture** (`packages/editor/tests/fixtures/fakeDefinition.ts`) backs the editor-core tests. *Why:* the spec's risk register requires a second, non-monkey-ball consumer to keep the generic seam honest; it is also the cleanest way to unit-test the core without dragging in the game.
 4. **`Vec3` and store primitives are re-used from `@automata/engine`** (the editor's only dependency); the editor does not define its own vector type.
+5. **`SceneModel` exposes `parse(input)` instead of `schema: ZodType<Doc>`.** *Why:* the editor package is lint-forbidden from importing `zod`; the game owns schema validation behind its registration. Any round-trip or AI-readiness check uses `definition.scene.parse(...)` and `validateDoc(...)`, never `scene.schema`.
+6. **`moveSelected` carries explicit `ids`.** *Why:* the reducer keeps selection outside the document undo stack, so commands must be replayable and serializable without ambient selection state.
+7. **M11-M15 intentionally ship point placement for geometry.** The `Brush.place` union keeps the future drag-draw vocabulary, but this plan uses `place: 'point'` for box/cylinder brushes. Drag-to-draw footprints, scroll-to-set-height, and full transform/rotation gizmos are deferred to a later editor polish slice. To avoid a half-exposed model, M12's inspector exposes position plus box/cylinder size fields that `setItemField` can actually persist.
+8. **Autosave uses a small editor IO helper, not the engine persistence middleware.** *Why:* editor autosave stores an opaque validated document snapshot with debounce and versioning; the engine middleware remains appropriate for game state stores.
+9. **Play mode is gated by validation.** `enterPlay()` refuses invalid documents via `validateDoc` before creating the live gameplay handle, so "invalid documents cannot be played" is enforced in the editor core.
 
 **Execution notes (read before starting):**
 1. **Run the gate per task.** Tasks run `npx vitest run <file>`; run `npm run typecheck` (or `npm run ci`) at the end of each task — the dependency-direction ESLint rules and strict TS catch boundary violations early. Full `npm run ci` is required at each milestone checkpoint.
@@ -523,7 +528,7 @@ export const fakeDefinition: GameDefinition<FakeDoc> = {
   id: 'fake',
   scene: fakeScene,
   palette: {
-    geometry: [{ id: 'box', label: 'Box', kind: 'box', place: 'draw-box',
+    geometry: [{ id: 'box', label: 'Box', kind: 'box', place: 'point',
       cardinality: { min: 0, max: Number.POSITIVE_INFINITY } }],
     archetypes: [],
     markers: [{ id: 'start', label: 'Start', kind: 'marker', place: 'point', ref: 'start',
@@ -1419,7 +1424,7 @@ export function fakeBuildWorld(doc: FakeDoc, _render: RenderPort) {
       editorId: item.id,
       renderable: { primitive: 'box', size: { x: 1, y: 1, z: 1 }, color: '#e0e0e0' },
       transform: { position: item.transform.position, rotation: { x: 0, y: 0, z: 0, w: 1 },
-        previousPosition: item.transform.position, previousRotation: { x: 0, y: 0, z: 0, w: 1 } }
+        prevPosition: item.transform.position, prevRotation: { x: 0, y: 0, z: 0, w: 1 } }
     })
   }
   return world
@@ -1458,6 +1463,8 @@ describe('worldSync', () => {
     expect(highlight).toMatchObject({ op: 'setHighlight', on: true })
 
     sync.dispose()
+    expect(render.port.objectCount).toBe(0)
+    expect(render.calls.some((c) => c.op === 'remove')).toBe(true)
   })
 })
 ```
@@ -1497,8 +1504,8 @@ export function createWorldSync<Doc>(
   const renderStep = renderSystem<{ world: World<EditorEntity>; alpha: number }>(render)
 
   function teardown(): void {
-    offRender?.()
     world?.clear()
+    offRender?.()
     offRender = null
     world = null
   }
@@ -1555,6 +1562,8 @@ The game exposes a public API for the host, and registers a `GameDefinition<Leve
 **Files:**
 - Create: `games/monkey-ball/src/index.ts`
 - Modify: `games/monkey-ball/package.json` (add `exports`)
+- Modify: `games/monkey-ball/src/entity.ts` (optional editor ID tag)
+- Modify: `games/monkey-ball/src/level/buildWorld.ts` (optional editor ID tagging)
 - Create: `games/monkey-ball/src/editor/sceneModel.ts`
 - Create: `games/monkey-ball/src/editor/registration.ts`
 - Test: `games/monkey-ball/tests/editor/sceneModel.test.ts`
@@ -1569,11 +1578,18 @@ The game exposes a public API for the host, and registers a `GameDefinition<Leve
 ```ts
 import { describe, expect, it } from 'vitest'
 import { levelSceneModel } from '../../src/editor/sceneModel'
+import { physicsTuningKind, toPhysicsTuning } from '../../src/data/config'
 import { levelKind } from '../../src/data/level'
-import { parseData } from '@automata/engine'
+import { createMonkeyBallDefinition } from '../../src/editor/registration'
+import { archetypeLibraryKind, createNullRenderer, parseData, type PhysicsPort } from '@automata/engine'
 import { readDataFile } from '../helpers/data'
 
 const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
+const tuning = toPhysicsTuning(parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml'))
+const nullPhysics = () => ({ addBody() {}, removeBody() {}, setGravity() {}, step: () => [],
+  readPose: () => null, readLinearVelocity: () => ({ x: 0, y: 0, z: 0 }), applyImpulse() {},
+  setKinematicTarget() {}, get bodyCount() { return 0 }, dispose() {} }) as unknown as PhysicsPort
 
 describe('monkey-ball level SceneModel', () => {
   it('lists geometry, entities, and synthesized spawn + goal markers', () => {
@@ -1611,6 +1627,13 @@ describe('monkey-ball level SceneModel', () => {
   it('exposes scalar metadata fields (name, timeLimitS, fallY) only', () => {
     expect(levelSceneModel.metadataFields(level).map((f) => f.path).sort())
       .toEqual(['fallY', 'name', 'timeLimitS'])
+  })
+
+  it('buildWorld tags real renderable entities with editor IDs for 3D highlight', () => {
+    const definition = createMonkeyBallDefinition(lib, tuning)
+    const world = definition.buildWorld(level, createNullRenderer().port, nullPhysics())
+    const ids = [...world.with('editorId')].map((e) => e.editorId).sort()
+    expect(ids).toEqual(expect.arrayContaining(['geometry:0', 'marker:spawn', 'marker:goal']))
   })
 })
 ```
@@ -1755,7 +1778,58 @@ export const levelSceneModel: SceneModel<Level> = {
 
 > **Note:** the geometry `friction` default — `parseData`/`levelSchema` apply `.default(0.6)`, so parsed levels always carry `friction`. `emptyDoc` sets it explicitly to keep the type happy.
 
-- [ ] **Step 4: Implement the partial registration + game barrel**
+- [ ] **Step 4: Add optional editor ID tags to the runtime world builder**
+
+In `games/monkey-ball/src/entity.ts`, add this optional tag to `Entity`:
+```ts
+  /** Stable editor document item id, present only in editor-built worlds. */
+  editorId?: string
+```
+
+In `games/monkey-ball/src/level/buildWorld.ts`, add an options type and helper near the top:
+```ts
+export interface PopulateLevelWorldOptions {
+  /** When true, tag renderable entities with the SceneItem id used by the editor. */
+  editorIds?: boolean
+}
+
+const editorId = (opts: PopulateLevelWorldOptions, id: string): string | undefined =>
+  opts.editorIds ? id : undefined
+```
+
+Change `populateLevelWorld` to accept `opts` and tag the entities it creates:
+```ts
+export function populateLevelWorld(
+  world: World<Entity>, level: Level, lib: ArchetypeLibrary, opts: PopulateLevelWorldOptions = {}
+): { ball: Entity } {
+  for (const [index, g] of level.geometry.entries()) {
+    world.add({
+      editorId: editorId(opts, `geometry:${index}`),
+      transform: createTransform({ x: g.pos[0], y: g.pos[1], z: g.pos[2] }, rotationOf(g)),
+      rigidBody: geometryRigidBody(g),
+      renderable: geometryRenderable(g)
+    })
+  }
+  const ball = spawnFromArchetype<Entity>(world, lib, 'ball', {
+    editorId: editorId(opts, 'marker:spawn'),
+    transform: createTransform({ x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] })
+  })
+  spawnFromArchetype<Entity>(world, lib, 'goal', {
+    editorId: editorId(opts, 'marker:goal'),
+    transform: createTransform({ x: level.goal.pos[0], y: level.goal.pos[1], z: level.goal.pos[2] })
+  })
+  for (const [index, e] of level.entities.entries()) {
+    spawnFromArchetype<Entity>(world, lib, e.archetype, {
+      editorId: editorId(opts, `entity:${index}`),
+      transform: createTransform({ x: e.pos[0], y: e.pos[1], z: e.pos[2] }),
+      ...(e.overrides ?? {})
+    })
+  }
+  return { ball }
+}
+```
+
+- [ ] **Step 5: Implement the partial registration + game barrel**
 
 `games/monkey-ball/src/editor/registration.ts`:
 ```ts
@@ -1771,6 +1845,7 @@ import { levelSceneModel } from './sceneModel'
 
 const swatch = (value: string): Surface => ({ kind: 'color', value })
 const MANY = { min: 0, max: Number.POSITIVE_INFINITY }
+type EditorEntity = Entity & { editorId?: string }
 
 /** Build a definition once boot data (archetypes + tuning) is available. */
 export function createMonkeyBallDefinition(lib: ArchetypeLibrary, _tuning: PhysicsTuning): GameDefinition<Level> {
@@ -1779,8 +1854,8 @@ export function createMonkeyBallDefinition(lib: ArchetypeLibrary, _tuning: Physi
     scene: levelSceneModel,
     palette: {
       geometry: [
-        { id: 'box', label: 'Floor / Box', kind: 'box', place: 'draw-box', cardinality: MANY },
-        { id: 'cylinder', label: 'Cylinder', kind: 'cylinder', place: 'draw-circle', cardinality: MANY }
+        { id: 'box', label: 'Floor / Box', kind: 'box', place: 'point', cardinality: MANY },
+        { id: 'cylinder', label: 'Cylinder', kind: 'cylinder', place: 'point', cardinality: MANY }
       ],
       archetypes: [
         { id: 'banana', label: 'Banana', kind: 'archetype', place: 'point', ref: 'banana', cardinality: MANY },
@@ -1794,9 +1869,9 @@ export function createMonkeyBallDefinition(lib: ArchetypeLibrary, _tuning: Physi
     },
     surfacePalette: ['#7ec850', '#4ecdc4', '#ff5964', '#ffd23f', '#9b5de5', '#cfd8ff'].map(swatch),
     buildWorld(level: Level, render: RenderPort, physics: PhysicsPort) {
-      const world = createWorld<Entity>()
+      const world = createWorld<EditorEntity>()
       registerPhysicsBodies(world, physics)
-      populateLevelWorld(world, level, lib)
+      populateLevelWorld(world, level, lib, { editorIds: true })
       void render
       return world
     },
@@ -1828,12 +1903,12 @@ In `games/monkey-ball/package.json`, add an `exports` field and the `@automata/e
 ```
 Then run `npm install` to link `@automata/editor` into the game workspace before the typecheck below.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [ ] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModel.test.ts`
-Expected: PASS (6 tests).
+Expected: PASS (7 tests).
 
-- [ ] **Step 6: Typecheck + commit**
+- [ ] **Step 7: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -1851,6 +1926,7 @@ Rewrites `tools/level-editor` from the walking skeleton into the host that boots
 - Create: `packages/editor/src/host.ts`
 - Create: `packages/editor/src/viewport3d/browser.ts` (shim)
 - Create: `packages/editor/src/viewport2d/browser.ts` (shim)
+- Create: `tools/level-editor/vite.config.ts` (serve monkey-ball public data)
 - Modify: `tools/level-editor/src/main.ts`
 - Modify: `tools/level-editor/index.html` (title only — already present)
 - Test: `packages/editor/tests/host.test.ts`
@@ -2063,6 +2139,15 @@ void main()
 
 In `tools/level-editor/package.json`, add `"@automata/editor": "*"` to `dependencies`. Delete `src/skeleton.ts` and `tests/skeleton.test.ts`.
 
+Create `tools/level-editor/vite.config.ts` so the editor host can fetch the same `/data/...` files as the game during the M11 browser checkpoint:
+```ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  publicDir: '../../games/monkey-ball/public'
+})
+```
+
 Append to `packages/editor/src/index.ts`:
 ```ts
 export * from './host'
@@ -2100,7 +2185,7 @@ git commit -m "feat(editor): host app shell — live 3D + 2D map over monkey-bal
 
 ## Milestone M12 — Palette, place/move/delete, inspector, validation
 
-Delivers: editing in both viewports — pure 3D picking (ray-vs-AABB, ray-vs-ground) and 2D hit-testing; generic cardinality enforcement; place/draw/move/delete/change-surface tools that emit `SceneCommand`s; the monkey-ball `SceneModel.apply` completed for add/field edits; the generic inspector form; and the validation panel gating export.
+Delivers: editing in both viewports — pure 3D picking (ray-vs-AABB, ray-vs-ground) and 2D hit-testing; generic cardinality enforcement; point-place/move/delete/change-surface tools that emit `SceneCommand`s; the monkey-ball `SceneModel.apply` completed for add/field edits; the generic inspector form; and the validation panel gating export.
 
 ### Task 14: 3D picking — ray build, ray-plane, ray-AABB, item AABB
 
@@ -2624,7 +2709,7 @@ git commit -m "feat(editor): placement command builder with cardinality + snap"
 - Test: `games/monkey-ball/tests/editor/sceneModelEdit.test.ts`
 
 **Interfaces:**
-- Produces: `levelSceneModel.apply` handling `addItem` (box/cylinder → `geometry`, archetype → `entities`) and `setItemField` (geometry size, item pos via `path`).
+- Produces: `levelSceneModel.apply` handling `addItem` (box/cylinder → `geometry`, archetype → `entities`) and `setItemField` (geometry position, box size, cylinder radius/height via `path`).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2730,6 +2815,8 @@ In `games/monkey-ball/src/editor/sceneModel.ts`, replace the `case 'addItem':` /
               size[axis] = Number(cmd.value)
               return { ...g, size }
             }
+            if (cmd.path === 'radius' && g.shape === 'cylinder') return { ...g, radius: Number(cmd.value) }
+            if (cmd.path === 'height' && g.shape === 'cylinder') return { ...g, height: Number(cmd.value) }
             throw new CommandError(`unsupported field ${cmd.path}`)
           })
         }
@@ -2773,12 +2860,13 @@ describe('inspector', () => {
     expect(inspectorFields(fakeDefinition, doc, []).map((f) => f.path)).toEqual(['title'])
   })
 
-  it('shows the selected item position fields', () => {
+  it('shows the selected box position and size fields', () => {
     const doc: FakeDoc = { title: 'x', items: [boxItem('a', 2, 3)] }
     const fields = inspectorFields(fakeDefinition, doc, ['a'])
-    expect(fields.map((f) => f.path)).toEqual(['pos.x', 'pos.y', 'pos.z'])
+    expect(fields.map((f) => f.path)).toEqual(['pos.x', 'pos.y', 'pos.z', 'size.x', 'size.y', 'size.z'])
     expect(fields[0]).toMatchObject({ value: 2 })
     expect(fields[2]).toMatchObject({ value: 3 })
+    expect(fields.find((f) => f.path === 'size.y')).toMatchObject({ value: 1 })
   })
 
   it('builds a setMetadata command for a metadata field', () => {
@@ -2786,9 +2874,9 @@ describe('inspector', () => {
       .toEqual({ type: 'setMetadata', path: 'title', value: 'New' })
   })
 
-  it('builds a setItemField command for a selected item field', () => {
-    expect(fieldCommand(['a'], { path: 'pos.x', label: 'X', type: 'number', value: 0 }, 5))
-      .toEqual({ type: 'setItemField', id: 'a', path: 'pos.x', value: 5 })
+  it('builds a setItemField command for selected item fields', () => {
+    expect(fieldCommand(['a'], { path: 'size.x', label: 'Width', type: 'number', value: 1 }, 5))
+      .toEqual({ type: 'setItemField', id: 'a', path: 'size.x', value: 5 })
   })
 })
 ```
@@ -2812,17 +2900,33 @@ export function inspectorFields<Doc>(
   const item = definition.scene.listItems(doc).find((i) => i.id === selection[0])
   if (!item) return definition.scene.metadataFields(doc)
   const p = item.transform.position
-  return [
+  const fields: Field[] = [
     { path: 'pos.x', label: 'X', type: 'number', value: p.x },
     { path: 'pos.y', label: 'Y', type: 'number', value: p.y },
     { path: 'pos.z', label: 'Z', type: 'number', value: p.z }
   ]
+  if (item.shape.type === 'box') {
+    fields.push(
+      { path: 'size.x', label: 'Width', type: 'number', value: item.shape.size.x },
+      { path: 'size.y', label: 'Height', type: 'number', value: item.shape.size.y },
+      { path: 'size.z', label: 'Depth', type: 'number', value: item.shape.size.z }
+    )
+  } else if (item.shape.type === 'cylinder') {
+    fields.push(
+      { path: 'radius', label: 'Radius', type: 'number', value: item.shape.radius },
+      { path: 'height', label: 'Height', type: 'number', value: item.shape.height }
+    )
+  }
+  return fields
 }
 
 export function fieldCommand(
   selection: string[], field: Field, value: number | string
 ): SceneCommand {
-  if (selection.length === 1 && field.path.startsWith('pos.')) {
+  if (
+    selection.length === 1 &&
+    (field.path.startsWith('pos.') || field.path.startsWith('size.') || field.path === 'radius' || field.path === 'height')
+  ) {
     return { type: 'setItemField', id: selection[0]!, path: field.path, value }
   }
   return { type: 'setMetadata', path: field.path, value }
@@ -2947,7 +3051,7 @@ Adds selection-by-picking, the place tool, surface cycling, delete, the palette 
 
 **Interfaces:**
 - Consumes: all M12 tools; `EditorCore`.
-- Produces: `nextSurface(palette, current): Surface`; `EditorCore` gains `pick3d(screen, size)`, `pick2d(screen, size)`, `placeAt(world)`, `cycleSurfaceOn(id)`, `deleteSelected()`; `renderPanels(core, host): () => void` (DOM panels bound to the store).
+- Produces: `nextSurface(palette, current): Surface`; `EditorCore` gains `pick3d(screen, size)`, `pick2d(screen, size)`, `placeAt(world)`, `moveSelectionTo(world)`, `cycleSurfaceOn(id)`, `deleteSelected()`; `renderPanels(core, host): () => void` (DOM panels bound to the store).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -3007,6 +3111,16 @@ describe('host tools', () => {
     editor.store.dispatch({ type: 'select', ids: ['a'] })
     editor.deleteSelected()
     expect(renderDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(0)
+    editor.dispose()
+  })
+
+  it('moves the selected item to a clicked world point', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    editor.store.dispatch({ type: 'select', ids: ['a'] })
+    editor.moveSelectionTo({ x: 4, y: 0, z: 5 })
+    const item = renderDefinition.scene.listItems(editor.store.getState().document.doc)[0]!
+    expect(item.transform.position).toEqual({ x: 4, y: 0, z: 5 })
     editor.dispose()
   })
 
@@ -3081,6 +3195,7 @@ Extend the `EditorCore<Doc>` interface with:
   pick3d(screen: { x: number; y: number }, size: ScreenSize): void
   pick2d(screen: { x: number; y: number }, size: ScreenSize): void
   placeAt(world: Vec3): void
+  moveSelectionTo(world: Vec3): void
   groundPointAt(screen: { x: number; y: number }, size: ScreenSize): Vec3 | null
   cycleSurfaceOn(id: string): void
   deleteSelected(): void
@@ -3111,6 +3226,20 @@ and add these methods to the returned `core` object (the `GRID_CELL` constant is
       const items = definition.scene.listItems(s.document.doc)
       const cmd = placementCommand(definition, items, brush, world, 0.5)
       if (cmd) store.dispatch({ type: 'command', command: cmd })
+    },
+    moveSelectionTo(world) {
+      const s = store.getState()
+      const [anchorId] = s.selection
+      if (!anchorId) return
+      const items = definition.scene.listItems(s.document.doc)
+      const anchor = items.find((i) => i.id === anchorId)
+      if (!anchor) return
+      const p = anchor.transform.position
+      store.dispatch({ type: 'command', command: {
+        type: 'moveSelected',
+        ids: s.selection,
+        delta: { x: world.x - p.x, y: world.y - p.y, z: world.z - p.z }
+      } })
     },
     cycleSurfaceOn(id) {
       const current = definition.scene.getSurface(store.getState().document.doc, id)
@@ -3181,23 +3310,53 @@ export function renderPanels<Doc>(core: EditorCore<Doc>, host: HTMLElement): () 
 
 In `tools/level-editor/src/main.ts`, after creating `editor`, add panels + pointer tools (shim — keep thin):
 ```ts
-import { renderPanels } from '@automata/editor'
+import { renderPanels, screenToWorldXZ } from '@automata/editor'
 // …after editor is created and loadDoc dispatched:
 const panelHost = document.createElement('div'); panelHost.id = 'panels'; app.append(panelHost)
 renderPanels(editor, panelHost)
 canvas2d.addEventListener('pointerdown', (e) => {
-  const rect = canvas2d.getBoundingClientRect()
   const screen = { x: e.offsetX, y: e.offsetY }
   const size = { w: canvas2d.width, h: canvas2d.height }
-  if (editor.store.getState().tool.selection.mode === 'place') {
-    const world = { x: 0, y: 0, z: 0 } // 2D place: unproject via screenToWorldXZ
+  const xz = screenToWorldXZ(editor.mapView, screen, size)
+  if (e.shiftKey) {
+    editor.moveSelectionTo({ x: xz.x, y: 0, z: xz.z })
+    return
   }
-  void rect
+  if (editor.store.getState().tool.selection.mode === 'place') {
+    editor.placeAt({ x: xz.x, y: 0, z: xz.z })
+    return
+  }
   editor.pick2d(screen, size)
 })
-window.addEventListener('keydown', (e) => { if (e.key === 'Delete' || e.key === 'Backspace') editor.deleteSelected() })
+canvas3d.addEventListener('pointerdown', (e) => {
+  const rect = canvas3d.getBoundingClientRect()
+  const screen = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  const size = { w: rect.width, h: rect.height }
+  const world = editor.groundPointAt(screen, size)
+  if (e.shiftKey) {
+    if (world) editor.moveSelectionTo(world)
+    return
+  }
+  if (editor.store.getState().tool.selection.mode === 'place') {
+    if (world) editor.placeAt(world)
+    return
+  }
+  editor.pick3d(screen, size)
+})
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Delete' || e.key === 'Backspace') editor.deleteSelected()
+  if (e.key.toLowerCase() === 'c') {
+    const [id] = editor.store.getState().selection
+    if (id) editor.cycleSurfaceOn(id)
+  }
+})
 ```
-(The 2D place-unproject wiring is shim detail; the tested path is `placeAt` driven from `groundPointAt`/`screenToWorldXZ`. Keep the shim minimal; the core methods carry the logic.)
+The shim only converts browser events into `screenToWorldXZ`/`groundPointAt`/`placeAt`/`pick*` calls; the selection, placement, cardinality, and command behavior stay in tested core methods.
+
+Append to `packages/editor/src/index.ts`:
+```ts
+export * from './ui/panels'
+```
 
 - [ ] **Step 7: Run tests + full gate**
 
@@ -3212,7 +3371,7 @@ Expected: all PASS; `npm run ci` green.
 ```bash
 npm run dev -w level-editor
 ```
-Pick the Box brush, click in the 2D map to place boxes; click an item to select (highlight in 3D); press Delete to remove; cycle a surface; watch the validation panel flip to "Valid ✓" once spawn + goal exist. Stop the dev server.
+Pick the Box brush, click in the 2D map to place boxes; click an item to select (highlight in 3D); shift-click the map or 3D ground to move the selection; press Delete to remove; press `C` to cycle the selected item's surface; watch the validation panel flip to "Valid ✓" once spawn + goal exist. Stop the dev server.
 
 - [ ] **Step 9: Commit**
 
@@ -3456,8 +3615,8 @@ git commit -m "feat(game): monkey-ball play registration (live + headless)"
 - Test: `packages/editor/tests/play/controller.test.ts`
 
 **Interfaces:**
-- Consumes: `PlayHandle`, `GameDefinition.play`.
-- Produces: `EditorCore` gains `fixedUpdate(dt)`, `enterPlay()`, `exitPlay()`; `tick(alpha)` renders the play handle while in play mode.
+- Consumes: `PlayHandle`, `GameDefinition.play`, `validateDoc`.
+- Produces: `EditorCore` gains `fixedUpdate(dt)`, `enterPlay()`, `exitPlay()`; `tick(alpha)` renders the play handle while in play mode; invalid documents cannot enter play mode.
 
 - [ ] **Step 1: Add a fake play to the fixture**
 
@@ -3494,11 +3653,18 @@ const nullPhysics = () => ({ addBody() {}, removeBody() {}, setGravity() {}, ste
   readPose: () => null, readLinearVelocity: () => ({ x: 0, y: 0, z: 0 }), applyImpulse() {},
   setKinematicTarget() {}, get bodyCount() { return 0 }, dispose() {} }) as unknown as PhysicsPort
 
+const startMarker = {
+  id: 'marker:start', kind: 'marker' as const,
+  transform: { position: { x: 0, y: 0, z: 0 }, rotationEuler: { x: 0, y: 0, z: 0 } },
+  shape: { type: 'marker' as const, markerId: 'start' }, surface: { kind: 'color' as const, value: '#0f0' }
+}
+
 describe('play controller', () => {
   beforeEach(() => { playCalls.length = 0 })
 
   it('enters play, drives the handle, and exits back to edit', () => {
     const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
     editor.enterPlay()
     expect(editor.store.getState().mode).toBe('play')
     editor.fixedUpdate(1 / 60)
@@ -3507,6 +3673,28 @@ describe('play controller', () => {
     expect(editor.store.getState().mode).toBe('edit')
     expect(playCalls).toEqual(['create', 'fixed', 'render', 'dispose'])
     editor.dispose()
+  })
+
+  it('refuses to enter play with an invalid document', () => {
+    const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
+    expect(() => editor.enterPlay()).toThrow(/invalid document/)
+    expect(editor.store.getState().mode).toBe('edit')
+    editor.dispose()
+  })
+
+  it('clears edit render objects when entering play and after dispose', () => {
+    const render = createNullRenderer()
+    const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: render.port, physics: nullPhysics() })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
+    editor.tick(0)
+    expect(render.port.objectCount).toBeGreaterThan(0)
+    editor.enterPlay()
+    expect(render.port.objectCount).toBe(0)
+    editor.exitPlay()
+    editor.tick(0)
+    expect(render.port.objectCount).toBeGreaterThan(0)
+    editor.dispose()
+    expect(render.port.objectCount).toBe(0)
   })
 
   it('throws if the definition has no play support', () => {
@@ -3526,6 +3714,7 @@ Expected: FAIL — `editor.enterPlay is not a function`.
 
 In `packages/editor/src/host.ts`:
 - import the play handle type: add `import type { PlayHandle } from './model/gameDefinition'`;
+- import validation: add `import { validateDoc } from './io/validation'`;
 - change `const sync = createWorldSync(...)` to `let sync = createWorldSync(...)`;
 - add `let play: PlayHandle | null = null` near `let camera`;
 - extend the `EditorCore<Doc>` interface with:
@@ -3550,6 +3739,8 @@ In `packages/editor/src/host.ts`:
     fixedUpdate(dt) { if (play) play.fixedUpdate(dt) },
     enterPlay() {
       if (!definition.play) throw new Error('this definition has no play support')
+      const validation = validateDoc(definition, store.getState().document.doc)
+      if (!validation.exportable) throw new Error(`invalid document: ${validation.issues.join('; ')}`)
       sync.dispose()
       play = definition.play.createGameplay(store.getState().document.doc, render, physics)
       store.dispatch({ type: 'setMode', mode: 'play' })
@@ -3567,7 +3758,7 @@ In `packages/editor/src/host.ts`:
 - [ ] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/play/controller.test.ts`
-Expected: PASS (2 tests).
+Expected: PASS (4 tests).
 
 - [ ] **Step 6: Typecheck + commit**
 
@@ -3645,6 +3836,11 @@ Expected: PASS (2 tests).
 
 - [ ] **Step 5: Commit**
 
+Append to `packages/editor/src/index.ts`:
+```ts
+export * from './io/exportDoc'
+```
+Then:
 ```bash
 git add -A
 git commit -m "feat(editor): export with validity guard"
@@ -3713,6 +3909,11 @@ Expected: PASS (2 tests).
 
 - [ ] **Step 5: Commit**
 
+Append to `packages/editor/src/index.ts`:
+```ts
+export * from './io/importDoc'
+```
+Then:
 ```bash
 git add -A
 git commit -m "feat(editor): import with parse + validate"
@@ -3818,6 +4019,11 @@ Expected: PASS (2 tests).
 
 - [ ] **Step 5: Commit**
 
+Append to `packages/editor/src/index.ts`:
+```ts
+export * from './io/autosave'
+```
+Then:
 ```bash
 git add -A
 git commit -m "feat(editor): debounced autosave + restore"
@@ -3848,10 +4054,15 @@ const nullPhysics = () => ({ addBody() {}, removeBody() {}, setGravity() {}, ste
   readPose: () => null, readLinearVelocity: () => ({ x: 0, y: 0, z: 0 }), applyImpulse() {},
   setKinematicTarget() {}, get bodyCount() { return 0 }, dispose() {} }) as unknown as PhysicsPort
 
+const startMarker = {
+  ...boxItem('m'), id: 'marker:start', kind: 'marker' as const, shape: { type: 'marker' as const, markerId: 'start' }
+}
+
 describe('toolbar', () => {
   it('toggles play mode via the Play button', () => {
     const host = document.createElement('div')
     const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
     const dispose = renderToolbar(editor, host)
     host.querySelector<HTMLButtonElement>('[data-action="play"]')!.click()
     expect(editor.store.getState().mode).toBe('play')
@@ -3867,8 +4078,7 @@ describe('toolbar', () => {
     const status = host.querySelector('[data-export-status]')!
     host.querySelector<HTMLButtonElement>('[data-action="export"]')!.click()
     expect(status.textContent).toContain('Start') // missing marker
-    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: {
-      ...boxItem('m'), id: 'marker:start', kind: 'marker', shape: { type: 'marker', markerId: 'start' } } } })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
     host.querySelector<HTMLButtonElement>('[data-action="export"]')!.click()
     expect(status.textContent).toContain('Exported')
     dispose(); editor.dispose()
@@ -3883,22 +4093,31 @@ Expected: FAIL — `renderToolbar` is not exported.
 
 - [ ] **Step 3: Implement the toolbar**
 
-Append to `packages/editor/src/ui/panels.ts`:
+Add this import to the existing import block at the top of `packages/editor/src/ui/panels.ts`:
 ```ts
 import { exportDoc } from '../io/exportDoc'
+```
 
-/** Play/Edit + Export toolbar. Returns a disposer. Import wiring (file input) is a host shim. */
+Then append:
+```ts
+/** Play/Edit + Import/Export toolbar. Returns a disposer. File IO is a host shim. */
 export function renderToolbar<Doc>(core: EditorCore<Doc>, host: HTMLElement): () => void {
   const bar = document.createElement('div'); bar.className = 'toolbar'
   const play = document.createElement('button'); play.setAttribute('data-action', 'play'); play.textContent = 'Play'
+  const importBtn = document.createElement('button'); importBtn.setAttribute('data-action', 'import'); importBtn.textContent = 'Import'
   const exportBtn = document.createElement('button'); exportBtn.setAttribute('data-action', 'export'); exportBtn.textContent = 'Export'
   const status = document.createElement('span'); status.setAttribute('data-export-status', '')
-  bar.append(play, exportBtn, status)
+  bar.append(play, importBtn, exportBtn, status)
   host.append(bar)
 
   play.addEventListener('click', () => {
-    if (core.store.getState().mode === 'edit') core.enterPlay()
-    else core.exitPlay()
+    try {
+      if (core.store.getState().mode === 'edit') core.enterPlay()
+      else core.exitPlay()
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : String(error)
+      return
+    }
     play.textContent = core.store.getState().mode === 'play' ? 'Edit' : 'Play'
   })
   exportBtn.addEventListener('click', () => {
@@ -3906,11 +4125,12 @@ export function renderToolbar<Doc>(core: EditorCore<Doc>, host: HTMLElement): ()
     status.textContent = result.ok ? `Exported ${result.json.length} bytes` : result.issues.join(' · ')
     core.onExport?.(result)
   })
+  importBtn.addEventListener('click', () => core.onImportRequest?.())
   return () => { bar.remove() }
 }
 ```
 
-> **Note:** add an optional `onExport?(result): void` hook to the `EditorCore` interface (default unset); the host shim sets it to trigger the browser download. The tested path is the status text + the `exportDoc` result.
+> **Note:** add optional `onExport?(result): void` and `onImportRequest?(): void` hooks to the `EditorCore` interface (default unset); the host shim sets them to trigger browser download/file input. The tested path is the status text + the `exportDoc` result.
 
 - [ ] **Step 4: Wire the shim**
 
@@ -3923,11 +4143,23 @@ const saved = loadAutosave(definition, storage, 'monkey-ball-editor')
 editor.store.dispatch({ type: 'loadDoc', doc: saved ?? definition.scene.emptyDoc() })
 installAutosave(editor.store, definition, storage, { key: 'monkey-ball-editor', debounceMs: 400 })
 renderToolbar(editor, panelHost)
+const fileInput = document.createElement('input')
+fileInput.type = 'file'
+fileInput.accept = 'application/json'
+fileInput.hidden = true
+app.append(fileInput)
 editor.onExport = (result) => {
   if (!result.ok) return
   const blob = new Blob([result.json], { type: 'application/json' })
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'level.json'; a.click()
 }
+editor.onImportRequest = () => fileInput.click()
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files?.[0]
+  if (!file) return
+  const result = importDoc(definition, await file.text())
+  if (result.ok) editor.store.dispatch({ type: 'loadDoc', doc: result.doc })
+})
 ```
 - change the `GameLoop` `fixedUpdate` from `() => {}` to `(dt) => editor.fixedUpdate(dt)` so play mode simulates.
 
@@ -4246,7 +4478,7 @@ overlay** — without ever placing an agent in the deterministic runtime loop.
   (`addItem`, `moveSelected`, `setItemField`, `setSurface`, `setMetadata`,
   `deleteItems`); an agent emits the same commands the UI does.
 - **MCP resources = validated documents.** Levels round-trip through
-  `SceneModel.schema` / `validateDoc`; bad agent output bounces off the same
+  `SceneModel.parse` / `validateDoc`; bad agent output bounces off the same
   validator a human's does.
 - **MCP test-play tool = `runHeadlessPlay → TestPlayResult`.** The `input`
   policy parameter is the agent's action seam; `TestPlayResult` (plus the
@@ -4455,7 +4687,7 @@ git commit -m "feat(editor): visibility-pause exits test-play when tab hidden"
 
 **Files:**
 - Modify: `packages/engine/src/input/vector.ts` (add `applyDeadzone`)
-- Modify: `packages/engine/src/input/joystick.ts` (apply it in `read()`)
+- Modify: `packages/engine/src/input/joystick.ts` (replace the existing inline dead-zone with the helper)
 - Test: `packages/engine/tests/input/deadzone.test.ts`
 
 **Interfaces:**
@@ -4508,7 +4740,13 @@ export function applyDeadzone(v: InputVector, deadzone: number): InputVector {
 ```
 > **Note:** if `vector.ts` already imports `InputVector`, do not duplicate the import — add only the function.
 
-In `packages/engine/src/input/joystick.ts`, apply a small dead-zone in the source's `read()` before returning the vector — wrap the computed vector with `applyDeadzone(vector, 0.12)`. (Check the existing `read()` implementation and apply it to the normalized output.)
+In `packages/engine/src/input/joystick.ts`, replace the existing inline `Math.hypot(dx, dy) < deadZone ? ...` branch with the helper — do **not** add a second dead-zone in `read()`. Change the import and assignment to:
+```ts
+import { applyDeadzone, clampToUnit } from './vector'
+// ...
+    value = applyDeadzone({ x: dx, y: -dy }, deadZone)
+```
+Keep `JoystickOptions.deadZone` and the current default (`0.15`) as the source of truth for joystick feel.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -4622,7 +4860,7 @@ git commit -m "test(e2e): Playwright smokes for game + editor"
 
 **Files:**
 - Create: `games/monkey-ball/vite.config.ts`
-- Create: `tools/level-editor/vite.config.ts`
+- Modify: `tools/level-editor/vite.config.ts` (keep M11 `publicDir`, add relative base)
 - Modify: root `package.json` (add a `build` script)
 
 **Interfaces:**
@@ -4637,11 +4875,14 @@ import { defineConfig } from 'vite'
 export default defineConfig({ base: './' })
 ```
 
-`tools/level-editor/vite.config.ts`:
+Update `tools/level-editor/vite.config.ts`:
 ```ts
 import { defineConfig } from 'vite'
 
-export default defineConfig({ base: './' })
+export default defineConfig({
+  base: './',
+  publicDir: '../../games/monkey-ball/public'
+})
 ```
 
 - [ ] **Step 2: Add the root build script**
@@ -4696,6 +4937,7 @@ git commit -m "docs: mark M11–M15 complete (generic editor, content, polish)"
 
 ## Plan self-review summary
 
-- **Spec coverage:** generic `packages/editor` (M11 T2–T13), engine grid/highlight (M11 T1), dual viewport (2D map T9–T10, 3D fly T8/T11), command/undo model (T4–T6), picking (T14–T15), cardinality + placeable markers (T16–T17), inspector + validation (T19–T20), test-play live + headless (T22–T24), import/export/autosave (T25–T27), content (T29–T30), AI forward-pointer (T31), polish + release (T33–T37). All AI-readiness constraints map to T4/T20/T22.
+- **Spec coverage:** generic `packages/editor` (M11 T2–T13), engine grid/highlight (M11 T1), dual viewport (2D map T9–T10, 3D fly T8/T11), command/undo model (T4–T6), picking (T14–T15), cardinality + point-placeable markers/geometry (T16–T17), inspector position + size/radius/height editing (T18–T19), validation-gated test-play/export (T20/T24/T25), live + headless test-play (T22–T24), import/export/autosave (T25–T28), content (T29–T30), AI forward-pointer (T31), polish + release (T33–T37). AI-readiness constraints map to T4/T20/T22.
+- **Explicit deferrals:** drag-to-draw box/cylinder footprints, scroll-to-set-height, rotation editing/gizmos, and richer transform tools are not implemented in M11–M15. The plan ships point placement plus inspector size editing and records this in the design deltas.
 - **Shim inventory** additions: `tools/level-editor/src/main.ts`, `packages/editor/src/viewport3d/browser.ts`, `packages/editor/src/viewport2d/browser.ts` — all `browser.ts` or app `main.ts`, auto-excluded from coverage.
 - **Dependency edges:** `editor → engine` (lint-enforced no game import); `game → editor` (type-only, for the registration); host → both. Engine forbids importing `@automata/editor`.
