@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 41% (82/200 checklist items complete)
+**Overall progress:** 44% (87/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -2483,7 +2483,7 @@ git commit -m "feat(editor): 2D map hit-testing"
 - Consumes: `GameDefinition`, `Brush`, `SceneItem`, `ItemShape`.
 - Produces: `brushOf(definition, item): Brush | null`, `countForBrush(definition, items, brush): number`, `canPlace(definition, items, brush): boolean`, `canDelete(definition, items, id): boolean`, `missingRequired(definition, items): string[]` (labels of brushes below `min`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/tools/cardinality.test.ts`:
 ```ts
@@ -2521,12 +2521,12 @@ describe('cardinality', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/tools/cardinality.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/tools/cardinality.ts`:
 ```ts
@@ -2569,12 +2569,12 @@ export function missingRequired<Doc>(definition: GameDefinition<Doc>, items: Sce
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/tools/cardinality.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
