@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 51% (102/200 checklist items complete)
+**Overall progress:** 54% (107/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -2957,7 +2957,7 @@ git commit -m "feat(editor): inspector field model"
 - Consumes: `GameDefinition`, `SceneModel.parse`, `missingRequired`.
 - Produces: `validateDoc(definition, doc): { issues: string[]; exportable: boolean }`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/validation.test.ts`:
 ```ts
@@ -2985,12 +2985,12 @@ describe('validateDoc', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/validation.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/validation.ts`:
 ```ts
@@ -3013,12 +3013,12 @@ export function validateDoc<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/validation.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Export tool symbols from barrel + commit**
+- [x] **Step 5: Export tool symbols from barrel + commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
