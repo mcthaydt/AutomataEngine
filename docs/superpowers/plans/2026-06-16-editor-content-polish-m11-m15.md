@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 3% (5/200 checklist items complete)
+**Overall progress:** 5% (10/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -222,7 +222,7 @@ git commit -m "feat(engine): RenderPort setGrid/removeGrid/setHighlight for edit
 **Interfaces:**
 - Produces: package `@automata/editor` (exports `./src/index.ts`); `EDITOR_VERSION` constant.
 
-- [ ] **Step 1: Write the scaffold files**
+- [x] **Step 1: Write the scaffold files**
 
 `packages/editor/package.json`:
 ```json
@@ -266,7 +266,7 @@ export const EDITOR_VERSION = '0.1.0'
 export { EDITOR_VERSION } from './version'
 ```
 
-- [ ] **Step 2: Wire lint + coverage**
+- [x] **Step 2: Wire lint + coverage**
 
 In `eslint.config.js`, extend the games/tools restriction to include the editor package, and forbid the editor from importing the game. Change the `files: ['games/**/*.ts', 'tools/**/*.ts']` block to also cover `packages/editor`:
 ```js
@@ -306,7 +306,7 @@ In the root `vitest.config.ts`, extend `coverage.include`:
 ```
 (The existing `exclude: ['**/browser.ts', '**/index.ts', '**/version.ts']` already covers editor shims and barrels.)
 
-- [ ] **Step 3: Write the failing smoke test**
+- [x] **Step 3: Write the failing smoke test**
 
 `packages/editor/tests/smoke.test.ts`:
 ```ts
@@ -320,7 +320,7 @@ describe('editor package', () => {
 })
 ```
 
-- [ ] **Step 4: Install the workspace + run**
+- [x] **Step 4: Install the workspace + run**
 
 ```bash
 npm install
@@ -328,7 +328,7 @@ npx vitest run packages/editor/tests/smoke.test.ts
 ```
 Expected: PASS (1 test). `npm install` links the new `@automata/editor` workspace.
 
-- [ ] **Step 5: Typecheck + lint + commit**
+- [x] **Step 5: Typecheck + lint + commit**
 
 ```bash
 npm run typecheck
