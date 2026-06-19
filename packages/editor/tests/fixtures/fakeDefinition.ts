@@ -97,6 +97,7 @@ export function boxItem(id: string, x = 0, z = 0): SceneItem {
 
 /** A fake buildWorld: one renderable box entity per item, carrying editorId. */
 export function fakeBuildWorld(doc: FakeDoc, _render: RenderPort) {
+  void _render
   const world = createWorld<{ editorId?: string; renderable?: unknown; transform?: unknown }>()
   for (const item of doc.items) {
     world.add({

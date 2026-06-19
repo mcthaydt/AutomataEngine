@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 32% (64/200 checklist items complete)
+**Overall progress:** 35% (69/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -1937,7 +1937,7 @@ Rewrites `tools/level-editor` from the walking skeleton into the host that boots
 - Consumes: `createEditorStore`, `createWorldSync`, fly camera, projection, draw model, `GameDefinition`; engine `createThreeRenderer`, `attachCanvasRenderer`, `createRapierPhysics`, `GameLoop`, `startLoopDriver`.
 - Produces: `createEditor<Doc>({ definition, mount, render, physics }): { store; dispose }` (testable, no DOM-canvas/Three required when given a render port); the host `main.ts` (shim) that wires real ports + pointer input.
 
-- [ ] **Step 1: Write the failing test (headless host core)**
+- [x] **Step 1: Write the failing test (headless host core)**
 
 `packages/editor/tests/host.test.ts`:
 ```ts
@@ -1970,12 +1970,12 @@ describe('createEditor core', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/host.test.ts`
 Expected: FAIL — cannot resolve `../src/host`.
 
-- [ ] **Step 3: Implement the editor core host**
+- [x] **Step 3: Implement the editor core host**
 
 `packages/editor/src/host.ts`:
 ```ts
@@ -2036,7 +2036,7 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
 
 > **Note:** the `dirtyDoc` stamp is a deliberately coarse "did something change" check for M11 (full rebuild). M12+ replaces selection-only changes with a highlight-only update; do not optimize yet.
 
-- [ ] **Step 4: Implement the browser shims + host main**
+- [x] **Step 4: Implement the browser shims + host main**
 
 `packages/editor/src/viewport3d/browser.ts` (untested shim):
 ```ts
@@ -2160,7 +2160,7 @@ export * from './viewport2d/draw'
 export * from './viewport3d/flyCamera'
 ```
 
-- [ ] **Step 5: Run tests + full gate**
+- [x] **Step 5: Run tests + full gate**
 
 ```bash
 npm install

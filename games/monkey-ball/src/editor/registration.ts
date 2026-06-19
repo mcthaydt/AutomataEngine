@@ -17,6 +17,7 @@ export function createMonkeyBallDefinition(
   lib: ArchetypeLibrary,
   _tuning: PhysicsTuning
 ): GameDefinition<Level> {
+  void _tuning
   return {
     id: 'monkey-ball',
     scene: levelSceneModel,
