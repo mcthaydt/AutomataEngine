@@ -12,7 +12,7 @@ export function cameraForward(cam: FlyCamera): Vec3 {
   return { x: -Math.sin(cam.yaw) * cp, y: Math.sin(cam.pitch), z: -Math.cos(cam.yaw) * cp }
 }
 
-function cameraRight(cam: FlyCamera): Vec3 {
+export function cameraRight(cam: FlyCamera): Vec3 {
   return { x: Math.cos(cam.yaw), y: 0, z: -Math.sin(cam.yaw) }
 }
 

@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 36% (71/200 checklist items complete)
+**Overall progress:** 39% (77/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -2202,11 +2202,11 @@ Delivers: editing in both viewports — pure 3D picking (ray-vs-AABB, ray-vs-gro
 - Consumes: `FlyCamera`, `cameraForward`, `cameraRight`; `Vec3`, `SceneItem`.
 - Produces: `EDITOR_FOV_Y` (radians); `Ray` (`{ origin: Vec3; dir: Vec3 }`), `buildRay(cam, screen, size, fovY): Ray`, `rayPlaneY(ray, y): Vec3 | null`; `Aabb` (`{ min: Vec3; max: Vec3 }`), `itemAabb(item): Aabb`, `rayAabb(ray, aabb): number | null`, `pickItem(items, ray): string | null`.
 
-- [ ] **Step 1: Export `cameraRight`**
+- [x] **Step 1: Export `cameraRight`**
 
 In `packages/editor/src/viewport3d/flyCamera.ts`, change `function cameraRight` to `export function cameraRight`.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/editor/tests/viewport3d/ray.test.ts`:
 ```ts
@@ -2274,12 +2274,12 @@ describe('AABB + picking', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/ray.test.ts packages/editor/tests/viewport3d/aabb.test.ts`
 Expected: FAIL — cannot resolve the modules.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `packages/editor/src/viewport3d/ray.ts`:
 ```ts
@@ -2377,12 +2377,12 @@ export function pickItem(items: SceneItem[], ray: Ray): string | null {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/ray.test.ts packages/editor/tests/viewport3d/aabb.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
