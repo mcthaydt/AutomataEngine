@@ -4,7 +4,7 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
-**Overall progress:** 35% (69/200 checklist items complete)
+**Overall progress:** 36% (71/200 checklist items complete)
 
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
@@ -2169,14 +2169,14 @@ npm run ci
 ```
 Expected: host tests PASS; `npm run ci` green (lint incl. dependency rules + typecheck + all tests).
 
-- [ ] **Step 6: Manual checkpoint (human gate)**
+- [x] **Step 6: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w level-editor
 ```
 Open the URL. Expect: a 3D viewport showing the empty level's floor + spawn/goal, a small 2D map in the corner showing the floor rectangle and spawn/goal icons, and WASD + click-drag fly controls. Stop the dev server.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
