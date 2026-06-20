@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 96% (67/70 steps complete)
+**Overall Progress:** 100% (70/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -1684,6 +1684,18 @@ async function main(): Promise<void> {
     return { w, h }
   }
 
+  // The WebGL renderer owns canvas3d's backing buffer (DPR-scaled). Only measure it —
+  // mutating canvas.width here desyncs the buffer from gl.viewport and skews the render.
+  const measure = (canvas: HTMLCanvasElement): ScreenSize => {
+    const rect = canvas.getBoundingClientRect()
+    return { w: Math.max(1, Math.floor(rect.width)), h: Math.max(1, Math.floor(rect.height)) }
+  }
+
+  // 2D canvas: fit() sizes its backing buffer (the 2D context draws at canvas.width/height).
+  // 3D canvas: only measure — attachCanvasRenderer + its ResizeObserver own the buffer.
+  const sizeOf = (view: '2d' | '3d', canvas: HTMLCanvasElement): ScreenSize =>
+    view === '2d' ? fit(canvas) : measure(canvas)
+
   const localScreen = (canvas: HTMLCanvasElement, event: PointerEvent): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect()
     return { x: event.clientX - rect.left, y: event.clientY - rect.top }
@@ -1700,7 +1712,7 @@ async function main(): Promise<void> {
       editor.store.dispatch({ type: 'setPrimaryView', view })
       return
     }
-    const size = fit(canvas)
+    const size = sizeOf(view, canvas)
     const screen = localScreen(canvas, event)
     const world = worldAt(view, screen, size)
     if (event.shiftKey) { if (world) editor.moveSelectionTo(world); return }
@@ -1711,7 +1723,7 @@ async function main(): Promise<void> {
   for (const [view, canvas] of [['2d', canvas2d], ['3d', canvas3d]] as const) {
     canvas.addEventListener('pointerdown', (event) => editAt(view, event, canvas))
     canvas.addEventListener('pointermove', (event) => {
-      const world = worldAt(view, localScreen(canvas, event), fit(canvas))
+      const world = worldAt(view, localScreen(canvas, event), sizeOf(view, canvas))
       chrome.setCursorReadout(world ? { x: world.x, z: world.z } : null)
     })
     canvas.addEventListener('pointerleave', () => chrome.setCursorReadout(null))
@@ -1772,14 +1784,20 @@ git commit -m "feat(editor): mount docked chrome in host; dual viewport, cursor 
 
 **Files:** none (verification only).
 
-- [ ] **Step 1: Run the full CI gate**
+- [x] **Step 1: Run the full CI gate**
 
 ```bash
 npm run ci
 ```
 Expected: typecheck, lint, all tests, and coverage (≥90% on `packages/**/src`) green. If coverage dips, it is because a new `ui/` branch is unexercised — add the missing assertion to that panel's test (do not lower the gate).
 
-- [ ] **Step 2: Manual browser checkpoint (human gate)**
+- [x] **Step 2: Manual browser checkpoint (human gate)** — passed.
+
+  Checkpoint fix: on Retina the 3D view rendered skewed (spheres as ellipses) because the
+  pointer handlers passed `fit(canvas3d)`, which reassigned `canvas.width/height` to CSS
+  pixels and clobbered the DPR-scaled buffer owned by `attachCanvasRenderer`, leaving the
+  framebuffer out of sync with `gl.viewport`. Fixed by giving the 3D path a non-mutating `measure()` via
+  `sizeOf(view, canvas)` (see Task 12, Step 6); `fit()` now only sizes the 2D canvas.
 
 ```bash
 npm run dev -w level-editor
@@ -1795,11 +1813,10 @@ Open the URL and verify the Slate Pro shell:
 
 Stop the dev server when done.
 
-- [ ] **Step 3: Final commit (if any checkpoint fixes were needed)**
+- [x] **Step 3: Final commit (if any checkpoint fixes were needed)** — committed as `b12d2dc`.
 
 ```bash
-git add -A
-git commit -m "chore(editor): UX chrome overhaul checkpoint fixes"
+git commit -m "fix(editor): stop pointer handlers resizing canvas3d's WebGL buffer"
 ```
 
 ---
