@@ -6,12 +6,14 @@ import { createDocumentReducer, initialDocument, type DocumentState } from './do
 import { initialMode, modeReducer, type Mode } from './mode'
 import { initialSelection, selectionReducer } from './selection'
 import { initialTool, toolReducer, type ToolState } from './tool'
+import { initialUi, uiReducer, type UiState } from './ui'
 
 export interface EditorState<Doc> {
   document: DocumentState<Doc>
   selection: string[]
   tool: ToolState
   mode: Mode
+  ui: UiState
 }
 
 export type EditorStore<Doc> = Store<EditorState<Doc>, EditorAction>
@@ -21,13 +23,15 @@ export function createEditorStore<Doc>(definition: GameDefinition<Doc>): EditorS
     document: createDocumentReducer(definition.scene),
     selection: selectionReducer,
     tool: toolReducer,
-    mode: modeReducer
+    mode: modeReducer,
+    ui: uiReducer
   })
   const initial: EditorState<Doc> = {
     document: initialDocument(definition.scene),
     selection: initialSelection,
     tool: initialTool,
-    mode: initialMode
+    mode: initialMode,
+    ui: initialUi
   }
   return createStore(root, initial)
 }

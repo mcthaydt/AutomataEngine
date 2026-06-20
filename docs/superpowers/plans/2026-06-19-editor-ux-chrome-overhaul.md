@@ -4,6 +4,8 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
+**Overall Progress:** 10% (7/70 steps complete)
+
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
 **Tech Stack:** TypeScript strict, Vitest (happy-dom for editor), the engine's `combineReducers`/`createStore`, Vite. No new third-party dependencies. No new engine `RenderPort` methods.
@@ -91,7 +93,7 @@ tools/level-editor/
 - Produces: `PrimaryView = '2d' | '3d'`; `UiState = { snap: number; primaryView: PrimaryView; insetVisible: boolean }`; `initialUi`; `uiReducer(state, action): UiState`; actions `{ type: 'setSnap'; snap: number }`, `{ type: 'setPrimaryView'; view: PrimaryView }`, `{ type: 'toggleInset' }`; `EditorState<Doc>` gains `ui: UiState`.
 - Consumes: `EditorAction`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/state/ui.test.ts`:
 ```ts
@@ -116,12 +118,12 @@ describe('ui slice', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/state/ui.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/ui`.
 
-- [ ] **Step 3: Create the slice**
+- [x] **Step 3: Create the slice**
 
 `packages/editor/src/state/ui.ts`:
 ```ts
@@ -151,7 +153,7 @@ export function uiReducer(state: UiState, action: EditorAction): UiState {
 }
 ```
 
-- [ ] **Step 4: Add the actions**
+- [x] **Step 4: Add the actions**
 
 In `packages/editor/src/state/actions.ts`, add the import and three union members:
 ```ts
@@ -165,7 +167,7 @@ import type { PrimaryView } from './ui'
 ```
 (Append the three members inside the existing `EditorAction` union.)
 
-- [ ] **Step 5: Compose the slice into the store**
+- [x] **Step 5: Compose the slice into the store**
 
 In `packages/editor/src/state/store.ts`:
 - add `import { initialUi, uiReducer, type UiState } from './ui'`;
@@ -173,12 +175,12 @@ In `packages/editor/src/state/store.ts`:
 - add `ui: uiReducer` to the `combineReducers` map;
 - add `ui: initialUi` to the `initial` object.
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/state/ui.test.ts packages/editor/tests/state/store.test.ts`
 Expected: PASS (existing store tests still green — `ui` is additive).
 
-- [ ] **Step 7: Typecheck + commit**
+- [x] **Step 7: Typecheck + commit**
 
 ```bash
 npm run typecheck
