@@ -4,6 +4,8 @@ const tuple3 = z.tuple([z.number(), z.number(), z.number()])
 
 const boxGeometry = z.object({
   shape: z.literal('box'),
+  /** Stable editor identity; optional so shipped levels load unchanged. */
+  uid: z.string().optional(),
   size: tuple3,
   pos: tuple3,
   /** Euler degrees; used for ramps. */
@@ -14,6 +16,8 @@ const boxGeometry = z.object({
 
 const cylinderGeometry = z.object({
   shape: z.literal('cylinder'),
+  /** Stable editor identity; optional so shipped levels load unchanged. */
+  uid: z.string().optional(),
   radius: z.number().positive(),
   height: z.number().positive(),
   pos: tuple3,
@@ -32,6 +36,8 @@ export const levelSchema = z.object({
   geometry: z.array(z.discriminatedUnion('shape', [boxGeometry, cylinderGeometry])).min(1),
   entities: z.array(z.object({
     archetype: z.string().min(1),
+    /** Stable editor identity; optional so shipped levels load unchanged. */
+    uid: z.string().optional(),
     pos: tuple3,
     /** Per-component archetype overrides, e.g. movingPlatform waypoints. */
     overrides: z.record(z.string(), z.unknown()).optional()
@@ -40,6 +46,14 @@ export const levelSchema = z.object({
 
 export type Level = z.infer<typeof levelSchema>
 export const levelKind = defineKind('level', 'json', levelSchema)
+
+/** Stable identity of a geometry entry: its frozen uid, else a positional fallback. */
+export const geometryUid = (geometry: { uid?: string }, index: number): string =>
+  geometry.uid ?? `geometry:${index}`
+
+/** Stable identity of an entity entry: its frozen uid, else a positional fallback. */
+export const entityUid = (entity: { uid?: string }, index: number): string =>
+  entity.uid ?? `entity:${index}`
 
 export const worldsManifestSchema = z.object({
   worlds: z.array(z.object({

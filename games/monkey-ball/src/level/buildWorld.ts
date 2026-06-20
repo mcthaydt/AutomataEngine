@@ -3,7 +3,7 @@ import {
   type ArchetypeLibrary, type RenderableDef, type RigidBodyDef, type World
 } from '@automata/engine'
 import type { Entity } from '../entity'
-import type { Level } from '../data/level'
+import { entityUid, geometryUid, type Level } from '../data/level'
 
 const DEG = Math.PI / 180
 type Geometry = Level['geometry'][number]
@@ -50,7 +50,7 @@ export function populateLevelWorld(
 ): { ball: Entity } {
   for (const [index, g] of level.geometry.entries()) {
     world.add({
-      editorId: editorId(opts, `geometry:${index}`),
+      editorId: editorId(opts, geometryUid(g, index)),
       transform: createTransform({ x: g.pos[0], y: g.pos[1], z: g.pos[2] }, rotationOf(g)),
       rigidBody: geometryRigidBody(g),
       renderable: geometryRenderable(g)
@@ -66,7 +66,7 @@ export function populateLevelWorld(
   })
   for (const [index, e] of level.entities.entries()) {
     spawnFromArchetype<Entity>(world, lib, e.archetype, {
-      editorId: editorId(opts, `entity:${index}`),
+      editorId: editorId(opts, entityUid(e, index)),
       transform: createTransform({ x: e.pos[0], y: e.pos[1], z: e.pos[2] }),
       ...(e.overrides ?? {})
     })

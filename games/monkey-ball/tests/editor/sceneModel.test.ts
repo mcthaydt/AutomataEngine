@@ -78,6 +78,50 @@ describe('monkey-ball level SceneModel', () => {
       .toEqual(['fallY', 'name', 'timeLimitS'])
   })
 
+  it('keeps geometry identity stable across a mid-list delete', () => {
+    const doc = levelSceneModel.parse({
+      id: 'x', name: 'X', timeLimitS: 60, fallY: -10,
+      spawn: [0, 1, 6], goal: { pos: [0, 0, -6] },
+      geometry: [
+        { shape: 'box', size: [1, 1, 1], pos: [0, 0, 0], color: '#111' },
+        { shape: 'box', size: [1, 1, 1], pos: [5, 0, 0], color: '#222' },
+        { shape: 'box', size: [1, 1, 1], pos: [9, 0, 0], color: '#333' }
+      ],
+      entities: []
+    })
+    const items = levelSceneModel.listItems(doc)
+    const firstId = items.find((item) => item.transform.position.x === 0)!.id
+    const thirdId = items.find((item) => item.transform.position.x === 9)!.id
+    const next = levelSceneModel.apply(doc, { type: 'deleteItems', ids: [firstId] })
+    const third = levelSceneModel.listItems(next).find((item) => item.transform.position.x === 9)!
+    expect(third.id).toBe(thirdId)
+  })
+
+  it('assigns a fresh, non-colliding id when adding after a delete', () => {
+    let doc = levelSceneModel.parse({
+      id: 'x', name: 'X', timeLimitS: 60, fallY: -10,
+      spawn: [0, 1, 6], goal: { pos: [0, 0, -6] },
+      geometry: [
+        { shape: 'box', size: [1, 1, 1], pos: [0, 0, 0], color: '#111' },
+        { shape: 'box', size: [1, 1, 1], pos: [5, 0, 0], color: '#222' }
+      ],
+      entities: []
+    })
+    const firstId = levelSceneModel.listItems(doc).find((item) => item.transform.position.x === 0)!.id
+    doc = levelSceneModel.apply(doc, { type: 'deleteItems', ids: [firstId] })
+    doc = levelSceneModel.apply(doc, {
+      type: 'addItem',
+      item: {
+        id: 'ignored', kind: 'box',
+        transform: { position: { x: 2, y: 0, z: 2 }, rotationEuler: { x: 0, y: 0, z: 0 } },
+        shape: { type: 'box', size: { x: 1, y: 1, z: 1 } },
+        surface: { kind: 'color', value: '#444' }
+      }
+    })
+    const boxIds = levelSceneModel.listItems(doc).filter((item) => item.kind === 'box').map((item) => item.id)
+    expect(new Set(boxIds).size).toBe(boxIds.length)
+  })
+
   it('buildWorld tags real renderable entities with editor IDs for 3D highlight', () => {
     const definition = createMonkeyBallDefinition(lib, tuning)
     const world = definition.buildWorld(level, createNullRenderer().port, nullPhysics())

@@ -2,7 +2,7 @@ import { parseData, type Vec3 } from '@automata/engine'
 import {
   CommandError, type Field, type SceneItem, type SceneModel, type Surface
 } from '@automata/editor'
-import { levelKind, type Level } from '../data/level'
+import { entityUid, geometryUid, levelKind, type Level } from '../data/level'
 
 type Geometry = Level['geometry'][number]
 type Tuple3 = [number, number, number]
@@ -11,12 +11,47 @@ const noRot = { x: 0, y: 0, z: 0 }
 const vec = (tuple: Tuple3): Vec3 => ({ x: tuple[0], y: tuple[1], z: tuple[2] })
 const colorSurface = (value: string): Surface => ({ kind: 'color', value })
 
-function geometryItem(geometry: Geometry, index: number): SceneItem {
+/** Freeze a stable uid onto every geometry/entity that lacks one (shipped levels gain none on disk). */
+function ensureUids(level: Level): Level {
+  const used = new Set<string>()
+  for (const g of level.geometry) if (g.uid) used.add(g.uid)
+  for (const e of level.entities) if (e.uid) used.add(e.uid)
+  const fresh = (prefix: string): string => {
+    let n = 0
+    let id = `${prefix}:${n}`
+    while (used.has(id)) id = `${prefix}:${++n}`
+    used.add(id)
+    return id
+  }
+  return {
+    ...level,
+    geometry: level.geometry.map((g) => (g.uid ? g : { ...g, uid: fresh('geometry') })),
+    entities: level.entities.map((e) => (e.uid ? e : { ...e, uid: fresh('entity') }))
+  }
+}
+
+function freshGeometryUid(level: Level): string {
+  const used = new Set(level.geometry.map((g, i) => geometryUid(g, i)))
+  let n = level.geometry.length
+  let id = `geometry:${n}`
+  while (used.has(id)) id = `geometry:${++n}`
+  return id
+}
+
+function freshEntityUid(level: Level): string {
+  const used = new Set(level.entities.map((e, i) => entityUid(e, i)))
+  let n = level.entities.length
+  let id = `entity:${n}`
+  while (used.has(id)) id = `entity:${++n}`
+  return id
+}
+
+function geometryItem(geometry: Geometry, id: string): SceneItem {
   const shape = geometry.shape === 'box'
     ? { type: 'box' as const, size: { x: geometry.size[0], y: geometry.size[1], z: geometry.size[2] } }
     : { type: 'cylinder' as const, radius: geometry.radius, height: geometry.height }
   return {
-    id: `geometry:${index}`,
+    id,
     kind: geometry.shape === 'box' ? 'box' : 'cylinder',
     transform: { position: vec(geometry.pos), rotationEuler: geometry.rot ? vec(geometry.rot) : noRot },
     shape,
@@ -34,9 +69,9 @@ function markerItem(markerId: 'spawn' | 'goal', pos: Tuple3): SceneItem {
   }
 }
 
-function entityItem(entity: Level['entities'][number], index: number): SceneItem {
+function entityItem(entity: Level['entities'][number], id: string): SceneItem {
   return {
-    id: `entity:${index}`,
+    id,
     kind: 'archetype',
     transform: { position: vec(entity.pos), rotationEuler: noRot },
     shape: { type: 'archetype', name: entity.archetype },
@@ -47,11 +82,8 @@ function entityItem(entity: Level['entities'][number], index: number): SceneItem
 const addDelta = (tuple: Tuple3, delta: Vec3): Tuple3 =>
   [tuple[0] + delta.x, tuple[1] + delta.y, tuple[2] + delta.z]
 
-const geometryIndex = (id: string): number => Number(id.slice('geometry:'.length))
-const entityIndex = (id: string): number => Number(id.slice('entity:'.length))
-
 export const levelSceneModel: SceneModel<Level> = {
-  parse: (input) => (typeof input === 'string'
+  parse: (input) => ensureUids(typeof input === 'string'
     ? parseData(levelKind, input, 'imported.json')
     : levelKind.schema.parse(input)),
 
@@ -64,6 +96,7 @@ export const levelSceneModel: SceneModel<Level> = {
     goal: { pos: [0, 0, -6] },
     geometry: [{
       shape: 'box',
+      uid: 'geometry:0',
       size: [8, 0.5, 16],
       pos: [0, -0.25, 0],
       color: '#7ec850',
@@ -73,8 +106,8 @@ export const levelSceneModel: SceneModel<Level> = {
   }),
 
   listItems: (level) => [
-    ...level.geometry.map(geometryItem),
-    ...level.entities.map(entityItem),
+    ...level.geometry.map((geometry, index) => geometryItem(geometry, geometryUid(geometry, index))),
+    ...level.entities.map((entity, index) => entityItem(entity, entityUid(entity, index))),
     markerItem('spawn', level.spawn),
     markerItem('goal', level.goal.pos)
   ],
@@ -86,50 +119,33 @@ export const levelSceneModel: SceneModel<Level> = {
   ],
 
   getSurface: (level, id) => {
-    if (id.startsWith('geometry:')) {
-      const geometry = level.geometry[geometryIndex(id)]
-      if (geometry) return colorSurface(geometry.color)
-    }
-    return colorSurface('#ffffff')
+    const geometry = level.geometry.find((g, i) => geometryUid(g, i) === id)
+    return colorSurface(geometry ? geometry.color : '#ffffff')
   },
 
   apply(level, cmd) {
     switch (cmd.type) {
       case 'moveSelected': {
+        const ids = new Set(cmd.ids)
         let next = level
-        for (const id of cmd.ids) {
-          if (id === 'marker:spawn') next = { ...next, spawn: addDelta(next.spawn, cmd.delta) }
-          else if (id === 'marker:goal') next = { ...next, goal: { pos: addDelta(next.goal.pos, cmd.delta) } }
-          else if (id.startsWith('geometry:')) {
-            const index = geometryIndex(id)
-            next = {
-              ...next,
-              geometry: next.geometry.map((geometry, gi) =>
-                gi === index ? { ...geometry, pos: addDelta(geometry.pos, cmd.delta) } : geometry)
-            }
-          } else if (id.startsWith('entity:')) {
-            const index = entityIndex(id)
-            next = {
-              ...next,
-              entities: next.entities.map((entity, ei) =>
-                ei === index ? { ...entity, pos: addDelta(entity.pos, cmd.delta) } : entity)
-            }
-          }
+        if (ids.has('marker:spawn')) next = { ...next, spawn: addDelta(next.spawn, cmd.delta) }
+        if (ids.has('marker:goal')) next = { ...next, goal: { pos: addDelta(next.goal.pos, cmd.delta) } }
+        return {
+          ...next,
+          geometry: next.geometry.map((geometry, gi) =>
+            ids.has(geometryUid(geometry, gi)) ? { ...geometry, pos: addDelta(geometry.pos, cmd.delta) } : geometry),
+          entities: next.entities.map((entity, ei) =>
+            ids.has(entityUid(entity, ei)) ? { ...entity, pos: addDelta(entity.pos, cmd.delta) } : entity)
         }
-        return next
       }
       case 'setSurface': {
         const surface = cmd.surface
         if (surface.kind !== 'color') throw new CommandError('only color surfaces supported')
-        if (cmd.id.startsWith('geometry:')) {
-          const index = geometryIndex(cmd.id)
-          return {
-            ...level,
-            geometry: level.geometry.map((geometry, gi) =>
-              gi === index ? { ...geometry, color: surface.value } : geometry)
-          }
+        return {
+          ...level,
+          geometry: level.geometry.map((geometry, gi) =>
+            geometryUid(geometry, gi) === cmd.id ? { ...geometry, color: surface.value } : geometry)
         }
-        return level
       }
       case 'setMetadata': {
         if (cmd.path === 'name') return { ...level, name: String(cmd.value) }
@@ -138,29 +154,33 @@ export const levelSceneModel: SceneModel<Level> = {
         throw new CommandError(`unknown metadata ${cmd.path}`)
       }
       case 'deleteItems': {
-        const geometry = new Set<number>()
-        const entities = new Set<number>()
-        for (const id of cmd.ids) {
-          if (id.startsWith('geometry:')) geometry.add(geometryIndex(id))
-          else if (id.startsWith('entity:')) entities.add(entityIndex(id))
-          else throw new CommandError('spawn/goal cannot be deleted')
+        const remove = new Set(cmd.ids)
+        const deletable = new Set([
+          ...level.geometry.map((g, i) => geometryUid(g, i)),
+          ...level.entities.map((e, i) => entityUid(e, i))
+        ])
+        for (const id of remove) {
+          if (!deletable.has(id)) throw new CommandError(`cannot delete ${id}`)
         }
         return {
           ...level,
-          geometry: level.geometry.filter((_, index) => !geometry.has(index)),
-          entities: level.entities.filter((_, index) => !entities.has(index))
+          geometry: level.geometry.filter((g, i) => !remove.has(geometryUid(g, i))),
+          entities: level.entities.filter((e, i) => !remove.has(entityUid(e, i)))
         }
       }
       case 'addItem': {
         const item = cmd.item
+        const pos: Tuple3 = [item.transform.position.x, item.transform.position.y, item.transform.position.z]
+        const color = item.surface.kind === 'color' ? item.surface.value : '#ffffff'
         if (item.shape.type === 'box') {
           return {
             ...level,
             geometry: [...level.geometry, {
               shape: 'box',
+              uid: freshGeometryUid(level),
               size: [item.shape.size.x, item.shape.size.y, item.shape.size.z],
-              pos: [item.transform.position.x, item.transform.position.y, item.transform.position.z],
-              color: item.surface.kind === 'color' ? item.surface.value : '#ffffff',
+              pos,
+              color,
               friction: 0.6
             }]
           }
@@ -170,10 +190,11 @@ export const levelSceneModel: SceneModel<Level> = {
             ...level,
             geometry: [...level.geometry, {
               shape: 'cylinder',
+              uid: freshGeometryUid(level),
               radius: item.shape.radius,
               height: item.shape.height,
-              pos: [item.transform.position.x, item.transform.position.y, item.transform.position.z],
-              color: item.surface.kind === 'color' ? item.surface.value : '#ffffff',
+              pos,
+              color,
               friction: 0.6
             }]
           }
@@ -183,15 +204,16 @@ export const levelSceneModel: SceneModel<Level> = {
             ...level,
             entities: [...level.entities, {
               archetype: item.shape.name,
-              pos: [item.transform.position.x, item.transform.position.y, item.transform.position.z]
+              uid: freshEntityUid(level),
+              pos
             }]
           }
         }
         throw new CommandError('markers are singletons and cannot be added')
       }
       case 'setItemField': {
-        if (!cmd.id.startsWith('geometry:')) throw new CommandError(`field edit unsupported for ${cmd.id}`)
-        const index = geometryIndex(cmd.id)
+        const index = level.geometry.findIndex((g, i) => geometryUid(g, i) === cmd.id)
+        if (index < 0) throw new CommandError(`field edit unsupported for ${cmd.id}`)
         const axis = { x: 0, y: 1, z: 2 }[cmd.path.split('.')[1] as 'x' | 'y' | 'z']
         return {
           ...level,
