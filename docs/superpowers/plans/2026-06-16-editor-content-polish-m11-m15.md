@@ -3862,7 +3862,7 @@ git commit -m "feat(editor): export with validity guard"
 - Consumes: `GameDefinition`, `SceneModel.parse`.
 - Produces: `ImportResult<Doc>` (`{ ok: true; doc: Doc } | { ok: false; issues: string[] }`), `importDoc(definition, text): ImportResult<Doc>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/importDoc.test.ts`:
 ```ts
@@ -3886,12 +3886,12 @@ describe('importDoc', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/importDoc.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/importDoc.ts`:
 ```ts
@@ -3908,12 +3908,12 @@ export function importDoc<Doc>(definition: GameDefinition<Doc>, text: string): I
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/importDoc.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
