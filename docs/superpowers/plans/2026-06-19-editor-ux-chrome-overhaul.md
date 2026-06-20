@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 84% (59/70 steps complete)
+**Overall Progress:** 96% (67/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -1579,7 +1579,7 @@ git commit -m "feat(engine): attachCanvasRenderer element-sizing option for embe
 
 > The host is a browser shim (untested core logic). `index.html` + `layout.test.ts` are the only testable parts here; the manual checkpoint (Task 13) verifies behavior.
 
-- [ ] **Step 1: Rewrite the layout guard test (red)**
+- [x] **Step 1: Rewrite the layout guard test (red)**
 
 Replace `tools/level-editor/tests/layout.test.ts` with:
 ```ts
@@ -1601,12 +1601,12 @@ describe('level editor host shell', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run tools/level-editor/tests/layout.test.ts`
 Expected: FAIL — current `index.html` still contains `#view-tabs` / `.view-canvas` / `#panels`.
 
-- [ ] **Step 3: Strip `index.html` to a mount point**
+- [x] **Step 3: Strip `index.html` to a mount point**
 
 Replace `tools/level-editor/index.html` with:
 ```html
@@ -1628,18 +1628,18 @@ Replace `tools/level-editor/index.html` with:
 </html>
 ```
 
-- [ ] **Step 4: Run the layout test to verify it passes**
+- [x] **Step 4: Run the layout test to verify it passes**
 
 Run: `npx vitest run tools/level-editor/tests/layout.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Remove the obsolete tab shim**
+- [x] **Step 5: Remove the obsolete tab shim**
 
 ```bash
 git rm tools/level-editor/src/viewTabs.ts tools/level-editor/tests/viewTabs.test.ts
 ```
 
-- [ ] **Step 6: Rewrite the host shim**
+- [x] **Step 6: Rewrite the host shim**
 
 Replace `tools/level-editor/src/main.ts` with:
 ```ts
@@ -1751,7 +1751,7 @@ async function main(): Promise<void> {
 void main()
 ```
 
-- [ ] **Step 7: Typecheck + lint**
+- [x] **Step 7: Typecheck + lint**
 
 ```bash
 npm run typecheck
@@ -1759,7 +1759,7 @@ npm run lint
 ```
 Expected: clean (the host is the only module importing both `monkey-ball` and `@automata/editor`; no third-party imports leak).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A

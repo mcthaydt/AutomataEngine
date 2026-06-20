@@ -3,10 +3,9 @@ import {
   fetchTextViaFetch, startLoopDriver
 } from '@automata/engine'
 import {
-  attachFlyControls, createEditor, paintMap, screenToWorldXZ
+  attachFlyControls, createEditor, paintMap, renderEditorChrome, screenToWorldXZ, type ScreenSize
 } from '@automata/editor'
 import { createMonkeyBallDefinition, loadBootData, type Level } from 'monkey-ball'
-import { createViewTabs } from './viewTabs'
 
 async function main(): Promise<void> {
   const app = document.getElementById('app')
@@ -14,61 +13,53 @@ async function main(): Promise<void> {
 
   const canvas3d = document.createElement('canvas')
   const canvas2d = document.createElement('canvas')
-  app.append(canvas3d, canvas2d)
 
   const loader = createLoader(fetchTextViaFetch())
   const renderer = createThreeRenderer()
-  const canvasRenderer = attachCanvasRenderer(renderer, canvas3d)
+  const canvasRenderer = attachCanvasRenderer(renderer, canvas3d, { sizeTo: 'element' })
   const physics = await createRapierPhysics()
   const boot = await loadBootData(loader)
   const definition = createMonkeyBallDefinition(boot.lib, boot.tuning)
 
   const editor = createEditor<Level>({ definition, render: renderer.port, physics })
   editor.store.dispatch({ type: 'loadDoc', doc: definition.scene.emptyDoc() })
+
+  const chrome = renderEditorChrome<Level>(editor, app, { '2d': canvas2d, '3d': canvas3d })
   attachFlyControls(canvas3d, () => editor.camera, (camera) => { editor.camera = camera })
-  const resizeMapCanvas = (): { w: number; h: number } => {
-    const rect = app.getBoundingClientRect()
-    const size = {
-      w: Math.max(1, Math.floor(rect.width || window.innerWidth)),
-      h: Math.max(1, Math.floor(rect.height || window.innerHeight))
-    }
-    if (canvas2d.width !== size.w) canvas2d.width = size.w
-    if (canvas2d.height !== size.h) canvas2d.height = size.h
-    return size
-  }
-  const viewTabs = createViewTabs(app, {
-    initialView: '3d',
-    views: [
-      { id: '3d', label: '3D', canvas: canvas3d },
-      { id: '2d', label: '2D', canvas: canvas2d }
-    ],
-    onChange: (view) => {
-      if (view === '2d') resizeMapCanvas()
-    }
-  })
-  resizeMapCanvas()
-  window.addEventListener('resize', resizeMapCanvas)
+
   const context2d = canvas2d.getContext('2d')
   if (!context2d) throw new Error('2D canvas context unavailable')
-  canvas2d.addEventListener('pointerdown', (event) => {
-    const screen = { x: event.offsetX, y: event.offsetY }
-    const size = resizeMapCanvas()
-    const xz = screenToWorldXZ(editor.mapView, screen, size)
-    if (event.shiftKey) {
-      editor.moveSelectionTo({ x: xz.x, y: 0, z: xz.z })
+
+  const fit = (canvas: HTMLCanvasElement): ScreenSize => {
+    const rect = canvas.getBoundingClientRect()
+    const w = Math.max(1, Math.floor(rect.width))
+    const h = Math.max(1, Math.floor(rect.height))
+    if (canvas.width !== w) canvas.width = w
+    if (canvas.height !== h) canvas.height = h
+    return { w, h }
+  }
+
+  const localScreen = (canvas: HTMLCanvasElement, event: PointerEvent): { x: number; y: number } => {
+    const rect = canvas.getBoundingClientRect()
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+  }
+
+  const worldAt = (view: '2d' | '3d', screen: { x: number; y: number }, size: ScreenSize) =>
+    view === '2d'
+      ? (() => {
+          const xz = screenToWorldXZ(editor.mapView, screen, size)
+          return { x: xz.x, y: 0, z: xz.z }
+        })()
+      : editor.groundPointAt(screen, size)
+
+  const editAt = (view: '2d' | '3d', event: PointerEvent, canvas: HTMLCanvasElement): void => {
+    if (editor.store.getState().ui.primaryView !== view) {
+      editor.store.dispatch({ type: 'setPrimaryView', view })
       return
     }
-    if (editor.store.getState().tool.selection.mode === 'place') {
-      editor.placeAt({ x: xz.x, y: 0, z: xz.z })
-      return
-    }
-    editor.pick2d(screen, size)
-  })
-  canvas3d.addEventListener('pointerdown', (event) => {
-    const rect = canvas3d.getBoundingClientRect()
-    const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top }
-    const size = { w: rect.width, h: rect.height }
-    const world = editor.groundPointAt(screen, size)
+    const size = fit(canvas)
+    const screen = localScreen(canvas, event)
+    const world = worldAt(view, screen, size)
     if (event.shiftKey) {
       if (world) editor.moveSelectionTo(world)
       return
@@ -77,11 +68,34 @@ async function main(): Promise<void> {
       if (world) editor.placeAt(world)
       return
     }
-    editor.pick3d(screen, size)
-  })
+    if (view === '2d') editor.pick2d(screen, size)
+    else editor.pick3d(screen, size)
+  }
+
+  for (const [view, canvas] of [['2d', canvas2d], ['3d', canvas3d]] as const) {
+    canvas.addEventListener('pointerdown', (event) => editAt(view, event, canvas))
+    canvas.addEventListener('pointermove', (event) => {
+      const world = worldAt(view, localScreen(canvas, event), fit(canvas))
+      chrome.setCursorReadout(world ? { x: world.x, z: world.z } : null)
+    })
+    canvas.addEventListener('pointerleave', () => chrome.setCursorReadout(null))
+  }
+
   window.addEventListener('keydown', (event) => {
+    const key = event.key.toLowerCase()
     if (event.key === 'Delete' || event.key === 'Backspace') editor.deleteSelected()
-    if (event.key.toLowerCase() === 'c') {
+    else if (key === 'q' || event.key === 'Escape') {
+      editor.store.dispatch({ type: 'setTool', tool: { brushId: null, mode: 'select' } })
+    } else if (event.key === 'Tab') {
+      event.preventDefault()
+      const view = editor.store.getState().ui.primaryView
+      editor.store.dispatch({ type: 'setPrimaryView', view: view === '2d' ? '3d' : '2d' })
+    } else if (event.key === '\\') {
+      editor.store.dispatch({ type: 'toggleInset' })
+    } else if ((event.metaKey || event.ctrlKey) && key === 'z') {
+      event.preventDefault()
+      editor.store.dispatch(event.shiftKey ? { type: 'redo' } : { type: 'undo' })
+    } else if (key === 'c') {
       const [id] = editor.store.getState().selection
       if (id) editor.cycleSurfaceOn(id)
     }
@@ -92,18 +106,11 @@ async function main(): Promise<void> {
     render: (alpha) => {
       editor.tick(alpha)
       canvasRenderer.renderFrame()
-      const mapSize = resizeMapCanvas()
-      paintMap(
-        context2d,
-        editor.drawModel(mapSize),
-        mapSize
-      )
+      const mapSize = fit(canvas2d)
+      paintMap(context2d, editor.drawModel(mapSize), mapSize)
     }
   })
-  window.addEventListener('beforeunload', () => {
-    viewTabs.dispose()
-    window.removeEventListener('resize', resizeMapCanvas)
-  })
+  window.addEventListener('beforeunload', () => chrome.dispose())
   startLoopDriver(loop)
 }
 

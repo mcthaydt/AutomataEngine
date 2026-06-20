@@ -5,15 +5,12 @@ import { describe, expect, it } from 'vitest'
 
 const toolRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-describe('level editor host layout', () => {
-  it('keeps DOM panels styled above a full-view tabbed canvas layer', () => {
+describe('level editor host shell', () => {
+  it('is a minimal mount point - chrome + theme come from @automata/editor', () => {
     const html = readFileSync(resolve(toolRoot, 'index.html'), 'utf8')
-
-    expect(html).toContain('#view-tabs')
-    expect(html).toContain('.view-canvas')
-    expect(html).toContain('.view-canvas.is-active')
-    expect(html).toContain('#panels')
-    expect(html).toContain('.panel')
-    expect(html).not.toContain('canvas.map')
+    expect(html).toContain('id="app"')
+    expect(html).not.toContain('#view-tabs')
+    expect(html).not.toContain('.view-canvas')
+    expect(html).not.toContain('#panels')
   })
 })
