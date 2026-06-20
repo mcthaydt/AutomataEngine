@@ -63,4 +63,20 @@ describe('toolbar', () => {
     handle.dispose()
     editor.dispose()
   })
+
+  it('reports play errors in the toolbar status', () => {
+    const host = document.createElement('div')
+    const editor = createEditor<FakeDoc>({
+      definition: playableDefinition,
+      render: createNullRenderer().port,
+      physics: nullPhysics()
+    })
+    const handle = mountToolbar(editor, host)
+
+    host.querySelector<HTMLButtonElement>('[data-action="play"]')!.click()
+
+    expect(host.querySelector('[data-export-status]')!.textContent).toContain('invalid document')
+    handle.dispose()
+    editor.dispose()
+  })
 })

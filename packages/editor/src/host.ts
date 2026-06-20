@@ -92,8 +92,9 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       const validation = validateDoc(definition, store.getState().document.doc)
       if (!validation.exportable) throw new Error(`invalid document: ${validation.issues.join('; ')}`)
 
+      const nextPlay = definition.play.createGameplay(store.getState().document.doc, render, physics)
       sync.dispose()
-      play = definition.play.createGameplay(store.getState().document.doc, render, physics)
+      play = nextPlay
       store.dispatch({ type: 'setMode', mode: 'play' })
     },
     exitPlay() {

@@ -88,4 +88,29 @@ describe('play controller', () => {
     expect(() => editor.enterPlay()).toThrow(/play/)
     editor.dispose()
   })
+
+  it('keeps the edit world alive when play construction fails', () => {
+    const render = createNullRenderer()
+    const editor = createEditor<FakeDoc>({
+      definition: {
+        ...playableDefinition,
+        play: {
+          ...playableDefinition.play!,
+          createGameplay: () => { throw new Error('boom') }
+        }
+      },
+      render: render.port,
+      physics: nullPhysics()
+    })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
+    editor.tick(0)
+    const before = render.port.objectCount
+
+    expect(() => editor.enterPlay()).toThrow(/boom/)
+    expect(editor.store.getState().mode).toBe('edit')
+    expect(render.port.objectCount).toBe(before)
+    editor.tick(0)
+    expect(render.port.objectCount).toBe(before)
+    editor.dispose()
+  })
 })

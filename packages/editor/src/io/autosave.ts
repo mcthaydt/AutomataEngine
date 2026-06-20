@@ -11,15 +11,20 @@ export function installAutosave<Doc>(
   opts: { key: string; debounceMs: number }
 ): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null
+  const write = (): void => {
+    storage.set(opts.key, JSON.stringify({ version: AUTOSAVE_VERSION, doc: store.getState().document.doc }))
+  }
   const unsubscribe = store.subscribe(() => {
     if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
-      storage.set(opts.key, JSON.stringify({ version: AUTOSAVE_VERSION, doc: store.getState().document.doc }))
-    }, opts.debounceMs)
+    timer = setTimeout(write, opts.debounceMs)
   })
 
   return () => {
-    if (timer) clearTimeout(timer)
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+      write()
+    }
     unsubscribe()
   }
 }
