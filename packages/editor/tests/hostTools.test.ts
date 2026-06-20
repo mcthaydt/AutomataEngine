@@ -88,4 +88,65 @@ describe('host tools', () => {
     expect(renderDefinition.scene.getSurface(editor.store.getState().document.doc, 'a').kind).toBe('color')
     editor.dispose()
   })
+
+  it('exposes a settable fly camera', () => {
+    const editor = makeEditor()
+    editor.camera = { position: { x: 1, y: 2, z: 3 }, yaw: 1, pitch: 0.2 }
+    expect(editor.camera).toMatchObject({ position: { x: 1, y: 2, z: 3 }, yaw: 1, pitch: 0.2 })
+    editor.dispose()
+  })
+
+  it('clears the selection when a 2D pick misses', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a', 0, 0) } })
+    editor.store.dispatch({ type: 'select', ids: ['a'] })
+    editor.pick2d({ x: 5, y: 5 }, { w: 800, h: 600 })
+    expect(editor.store.getState().selection).toEqual([])
+    editor.dispose()
+  })
+
+  it('clears the selection when a 3D pick misses', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'select', ids: ['a'] })
+    editor.pick3d({ x: 0, y: 0 }, { w: 800, h: 600 })
+    expect(editor.store.getState().selection).toEqual([])
+    editor.dispose()
+  })
+
+  it('resolves a ground point under a screen pixel', () => {
+    const editor = makeEditor()
+    expect(editor.groundPointAt({ x: 400, y: 300 }, { w: 800, h: 600 })).not.toBeNull()
+    editor.dispose()
+  })
+
+  it('placeAt does nothing without an active brush', () => {
+    const editor = makeEditor()
+    editor.placeAt({ x: 0, y: 0, z: 0 })
+    expect(renderDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(0)
+    editor.dispose()
+  })
+
+  it('placeAt does nothing for an unknown brush id', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'setTool', tool: { brushId: 'nope', mode: 'place' } })
+    editor.placeAt({ x: 0, y: 0, z: 0 })
+    expect(renderDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(0)
+    editor.dispose()
+  })
+
+  it('moveSelectionTo does nothing without a selection', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    editor.moveSelectionTo({ x: 9, y: 0, z: 9 })
+    const item = renderDefinition.scene.listItems(editor.store.getState().document.doc)[0]!
+    expect(item.transform.position).toEqual({ x: 0, y: 0, z: 0 })
+    editor.dispose()
+  })
+
+  it('moveSelectionTo does nothing when the anchor is gone', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'select', ids: ['ghost'] })
+    expect(() => editor.moveSelectionTo({ x: 1, y: 0, z: 1 })).not.toThrow()
+    editor.dispose()
+  })
 })

@@ -7,6 +7,26 @@ const reduce = createDocumentReducer<FakeDoc>(scene)
 const start = () => initialDocument(scene)
 
 describe('document slice', () => {
+  it('rethrows a non-CommandError raised by apply', () => {
+    const reduceThrow = createDocumentReducer<FakeDoc>({
+      ...scene,
+      apply: () => { throw new Error('boom') }
+    })
+    expect(() =>
+      reduceThrow(start(), { type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    ).toThrow('boom')
+  })
+
+  it('undo on empty history is a no-op', () => {
+    const s = start()
+    expect(reduce(s, { type: 'undo' })).toBe(s)
+  })
+
+  it('redo with no future is a no-op', () => {
+    const s = start()
+    expect(reduce(s, { type: 'redo' })).toBe(s)
+  })
+
   it('applies a command, sets dirty, and records history', () => {
     const next = reduce(start(), { type: 'command', command: { type: 'addItem', item: boxItem('a') } })
     expect(scene.listItems(next.doc)).toHaveLength(1)

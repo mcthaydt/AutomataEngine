@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SceneItem } from '../../src/model/types'
 import { canDelete, canPlace, countForBrush, missingRequired } from '../../src/tools/cardinality'
-import { boxItem, fakeDefinition } from '../fixtures/fakeDefinition'
+import { archetypeItem, boxItem, cylinderItem, fakeDefinition } from '../fixtures/fakeDefinition'
 
 const startMarker = (id: string): SceneItem => ({
   id,
@@ -34,5 +34,17 @@ describe('cardinality', () => {
   it('reports required brushes that are missing', () => {
     expect(missingRequired(fakeDefinition, [])).toEqual(['Start'])
     expect(missingRequired(fakeDefinition, [startMarker('marker:start')])).toEqual([])
+  })
+
+  it('resolves an archetype ref when matching brushes', () => {
+    expect(countForBrush(fakeDefinition, [archetypeItem('a')], boxBrush)).toBe(0)
+  })
+
+  it('treats an item with no matching brush as freely deletable', () => {
+    expect(canDelete(fakeDefinition, [cylinderItem('c')], 'c')).toBe(true)
+  })
+
+  it('cannot delete an id that is not present', () => {
+    expect(canDelete(fakeDefinition, [], 'ghost')).toBe(false)
   })
 })

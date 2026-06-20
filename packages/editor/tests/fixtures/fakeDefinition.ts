@@ -95,6 +95,36 @@ export function boxItem(id: string, x = 0, z = 0): SceneItem {
   }
 }
 
+export function cylinderItem(id: string, radius = 1, height = 1): SceneItem {
+  return {
+    id,
+    kind: 'cylinder',
+    transform: { position: { x: 0, y: 0, z: 0 }, rotationEuler: { x: 0, y: 0, z: 0 } },
+    shape: { type: 'cylinder', radius, height },
+    surface: { kind: 'color', value: '#e0e0e0' }
+  }
+}
+
+export function archetypeItem(id: string, name = 'foo'): SceneItem {
+  return {
+    id,
+    kind: 'archetype',
+    transform: { position: { x: 0, y: 0, z: 0 }, rotationEuler: { x: 0, y: 0, z: 0 } },
+    shape: { type: 'archetype', name },
+    surface: { kind: 'color', value: '#e0e0e0' }
+  }
+}
+
+export function markerItem(id: string, markerId = 'start'): SceneItem {
+  return {
+    id,
+    kind: 'marker',
+    transform: { position: { x: 0, y: 0, z: 0 }, rotationEuler: { x: 0, y: 0, z: 0 } },
+    shape: { type: 'marker', markerId },
+    surface: { kind: 'color', value: '#e0e0e0' }
+  }
+}
+
 /** A fake buildWorld: one renderable box entity per item, carrying editorId. */
 export function fakeBuildWorld(doc: FakeDoc, _render: RenderPort) {
   void _render

@@ -1,8 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { validateDoc } from '../../src/io/validation'
+import type { GameDefinition } from '../../src/model/gameDefinition'
 import { boxItem, fakeDefinition, type FakeDoc } from '../fixtures/fakeDefinition'
 
+const withParse = (parse: (input: unknown) => FakeDoc): GameDefinition<FakeDoc> => ({
+  ...fakeDefinition,
+  scene: { ...fakeDefinition.scene, parse }
+})
+
 describe('validateDoc', () => {
+  it('surfaces an Error thrown by parse and blocks export', () => {
+    const def = withParse(() => { throw new Error('bad schema') })
+    const result = validateDoc(def, { title: 'x', items: [] })
+    expect(result.exportable).toBe(false)
+    expect(result.issues).toContain('bad schema')
+  })
+
+  it('stringifies a non-Error thrown by parse', () => {
+    const def = withParse(() => { throw 'kaput' })
+    const result = validateDoc(def, { title: 'x', items: [] })
+    expect(result.issues).toContain('kaput')
+  })
+
   it('flags a missing required marker and blocks export', () => {
     const doc: FakeDoc = { title: 'x', items: [boxItem('a')] }
     const result = validateDoc(fakeDefinition, doc)

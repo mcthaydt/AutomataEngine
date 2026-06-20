@@ -34,4 +34,22 @@ describe('status bar', () => {
     handle.dispose()
     editor.dispose()
   })
+
+  it('labels snap off, clears the cursor, and shows the active place tool', () => {
+    const host = document.createElement('div')
+    const editor = makeTestEditor()
+    const handle = mountStatusBar(editor, host)
+
+    editor.store.dispatch({ type: 'setSnap', snap: 0 })
+    editor.store.dispatch({ type: 'setTool', tool: { brushId: 'box', mode: 'place' } })
+    handle.update(editor.store.getState())
+    expect(host.querySelector('[data-snap]')!.textContent).toBe('snap off')
+    expect(host.querySelector('.ed-status-tool')!.textContent).toBe('Place: box')
+
+    handle.setCursor(null)
+    expect(host.querySelector('.ed-status-coords')!.textContent).toBe('x —  z —')
+
+    handle.dispose()
+    editor.dispose()
+  })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fieldCommand, inspectorFields } from '../../src/tools/inspector'
-import { boxItem, fakeDefinition, type FakeDoc } from '../fixtures/fakeDefinition'
+import { boxItem, cylinderItem, fakeDefinition, type FakeDoc } from '../fixtures/fakeDefinition'
 
 describe('inspector', () => {
   it('shows metadata fields when nothing is selected', () => {
@@ -25,5 +25,23 @@ describe('inspector', () => {
   it('builds a setItemField command for selected item fields', () => {
     expect(fieldCommand(['a'], { path: 'size.x', label: 'Width', type: 'number', value: 1 }, 5))
       .toEqual({ type: 'setItemField', id: 'a', path: 'size.x', value: 5 })
+  })
+
+  it('shows radius and height fields for a selected cylinder', () => {
+    const doc: FakeDoc = { title: 'x', items: [cylinderItem('c', 2, 3)] }
+    const fields = inspectorFields(fakeDefinition, doc, ['c'])
+    expect(fields.map((field) => field.path)).toEqual(['pos.x', 'pos.y', 'pos.z', 'radius', 'height'])
+    expect(fields.find((field) => field.path === 'radius')).toMatchObject({ value: 2 })
+    expect(fields.find((field) => field.path === 'height')).toMatchObject({ value: 3 })
+  })
+
+  it('falls back to metadata when the selected id is missing', () => {
+    const doc: FakeDoc = { title: 'x', items: [] }
+    expect(inspectorFields(fakeDefinition, doc, ['ghost']).map((field) => field.path)).toEqual(['title'])
+  })
+
+  it('builds a setItemField command for a radius field', () => {
+    expect(fieldCommand(['c'], { path: 'radius', label: 'Radius', type: 'number', value: 1 }, 4))
+      .toEqual({ type: 'setItemField', id: 'c', path: 'radius', value: 4 })
   })
 })

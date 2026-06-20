@@ -42,4 +42,52 @@ describe('inspector panel', () => {
     handle.dispose()
     editor.dispose()
   })
+
+  it('commits a text metadata field on input change', () => {
+    const host = document.createElement('div')
+    const editor = makeTestEditor()
+    const handle = mountInspector(editor, host)
+    const spy = vi.spyOn(editor.store, 'dispatch')
+    const title = host.querySelector<HTMLInputElement>('[data-field="title"]')!
+    title.value = 'Renamed'
+    title.dispatchEvent(new Event('change'))
+    expect(spy).toHaveBeenCalledWith({
+      type: 'command',
+      command: { type: 'setMetadata', path: 'title', value: 'Renamed' }
+    })
+    handle.dispose()
+    editor.dispose()
+  })
+
+  it('commits a numeric field on input change', () => {
+    const host = document.createElement('div')
+    const editor = makeTestEditor()
+    editor.store.dispatch({ type: 'loadDoc', doc: { title: 't', items: [boxItem('a', 1, 0)] } })
+    editor.store.dispatch({ type: 'select', ids: ['a'] })
+    const handle = mountInspector(editor, host)
+    const spy = vi.spyOn(editor.store, 'dispatch')
+    const posx = host.querySelector<HTMLInputElement>('[data-field="pos.x"]')!
+    posx.value = '7'
+    posx.dispatchEvent(new Event('change'))
+    expect(spy).toHaveBeenCalledWith({
+      type: 'command',
+      command: { type: 'setItemField', id: 'a', path: 'pos.x', value: 7 }
+    })
+    handle.dispose()
+    editor.dispose()
+  })
+
+  it('summarizes a multi-item selection', () => {
+    const host = document.createElement('div')
+    const editor = makeTestEditor()
+    editor.store.dispatch({
+      type: 'loadDoc',
+      doc: { title: 't', items: [boxItem('a', 1, 0), boxItem('b', 2, 0)] }
+    })
+    editor.store.dispatch({ type: 'select', ids: ['a', 'b'] })
+    const handle = mountInspector(editor, host)
+    expect(host.querySelector('.ed-panel-head')!.textContent).toBe('2 selected')
+    handle.dispose()
+    editor.dispose()
+  })
 })
