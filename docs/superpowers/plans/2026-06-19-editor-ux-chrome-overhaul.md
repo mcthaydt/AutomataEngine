@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 57% (40/70 steps complete)
+**Overall Progress:** 64% (45/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -1068,7 +1068,7 @@ git commit -m "feat(editor): status bar with coords/snap/selection/validation/to
 - Consumes: `EditorCore`, `PanelHandle`, `PrimaryView`, `makeTestEditor`.
 - Produces: `mountViewportRegion(core, parent, canvases: Record<PrimaryView, HTMLCanvasElement>): PanelHandle<Doc>`. Builds `[data-vp="main"]` and `[data-vp="inset"]` containers; on `update` it re-parents the primary view's canvas into `main` and the other into `inset` (preserving the inset's swap/hide buttons), and toggles `is-hidden` on the inset from `insetVisible`. `[data-vp-swap]` dispatches `setPrimaryView(other)`; `[data-vp-hide]` dispatches `toggleInset`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/viewportRegion.test.ts`:
 ```ts
@@ -1113,12 +1113,12 @@ describe('viewport region', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/viewportRegion.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/viewportRegion`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/ui/viewportRegion.ts`:
 ```ts
@@ -1176,12 +1176,12 @@ export function mountViewportRegion<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/ui/viewportRegion.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
