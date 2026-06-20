@@ -1,8 +1,8 @@
-import type { Vec3 } from '@automata/engine'
+import { PERSPECTIVE_FOV_DEG, type Vec3 } from '@automata/engine'
 import { cameraForward, cameraRight, type FlyCamera } from './flyCamera'
 
-/** Must match the engine PerspectiveCamera vertical FOV in createThreeRenderer (60 degrees). */
-export const EDITOR_FOV_Y = (60 * Math.PI) / 180
+/** Editor picking FOV (radians), derived from the engine camera's vertical FOV. */
+export const EDITOR_FOV_Y = (PERSPECTIVE_FOV_DEG * Math.PI) / 180
 
 export interface Ray { origin: Vec3; dir: Vec3 }
 

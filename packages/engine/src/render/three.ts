@@ -6,6 +6,9 @@ import {
 import type { RenderableDef } from './types'
 import type { GridId, GroupId, RenderPort } from './port'
 
+/** Vertical FOV (degrees) of the renderer's perspective camera. Single source of truth. */
+export const PERSPECTIVE_FOV_DEG = 60
+
 export interface ThreeRenderer {
   port: RenderPort
   scene: Scene
@@ -23,7 +26,7 @@ function geometryFor(def: RenderableDef): BufferGeometry {
 export function createThreeRenderer(): ThreeRenderer {
   const scene = new Scene()
   scene.background = new Color('#0e1320')
-  const camera = new PerspectiveCamera(60, 16 / 9, 0.1, 200)
+  const camera = new PerspectiveCamera(PERSPECTIVE_FOV_DEG, 16 / 9, 0.1, 200)
   camera.position.set(0, 6, 10)
 
   const ambient = new AmbientLight('#ffffff', 0.6)

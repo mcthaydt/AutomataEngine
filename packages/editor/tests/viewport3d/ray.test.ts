@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import { PERSPECTIVE_FOV_DEG } from '@automata/engine'
 import { EDITOR_FOV_Y, buildRay, rayPlaneY } from '../../src/viewport3d/ray'
 
 const size = { w: 800, h: 600 }
 
 describe('ray build', () => {
+  it('derives EDITOR_FOV_Y from the engine camera FOV', () => {
+    expect(EDITOR_FOV_Y).toBeCloseTo((PERSPECTIVE_FOV_DEG * Math.PI) / 180)
+  })
+
   it('center pixel shoots along the camera forward', () => {
     const cam = { position: { x: 0, y: 5, z: 0 }, yaw: 0, pitch: 0 }
     const ray = buildRay(cam, { x: 400, y: 300 }, size, EDITOR_FOV_Y)
@@ -24,6 +29,11 @@ describe('ray build', () => {
 
   it('returns null when the ray is parallel to the plane', () => {
     const ray = { origin: { x: 0, y: 5, z: 0 }, dir: { x: 0, y: 0, z: -1 } }
+    expect(rayPlaneY(ray, 0)).toBeNull()
+  })
+
+  it('returns null when the plane is behind the ray', () => {
+    const ray = { origin: { x: 0, y: 5, z: 0 }, dir: { x: 0, y: 1, z: 0 } }
     expect(rayPlaneY(ray, 0)).toBeNull()
   })
 })
