@@ -3405,7 +3405,7 @@ Delivers: the headless metrics harness (`runHeadlessPlay → TestPlayResult`, re
 - Consumes: `createNullAudio`, `createNullRenderer`, `createRapierPhysics`, `InputSource`, `ArchetypeLibrary` (engine); `HeadlessOpts`, `TestPlayResult` (`@automata/editor`); `createGameStore`, `createGameplay`, `Level`, `PhysicsTuning` (game).
 - Produces: `runHeadlessPlay(level, lib, tuning, opts): Promise<TestPlayResult>`.
 
-- [ ] **Step 1: Ensure the editor dependency**
+- [x] **Step 1: Ensure the editor dependency**
 
 In `games/monkey-ball/package.json`, the `dependencies` must include `@automata/editor` (added because Task 12 imports its types):
 ```json
@@ -3413,7 +3413,7 @@ In `games/monkey-ball/package.json`, the `dependencies` must include `@automata/
 ```
 Run `npm install` to link it if not already linked.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `games/monkey-ball/tests/level/headlessPlay.test.ts`:
 ```ts
@@ -3447,12 +3447,12 @@ describe('runHeadlessPlay', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/level/headlessPlay.test.ts`
 Expected: FAIL — cannot resolve `../../src/level/headlessPlay`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `games/monkey-ball/src/level/headlessPlay.ts`:
 ```ts
@@ -3511,12 +3511,12 @@ export async function runHeadlessPlay(
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/level/headlessPlay.test.ts`
 Expected: PASS (2 tests). If the "rolling forward" test does not complete, raise `maxSteps` or use input `() => ({ x: 0, y: 1 })` (already forward) — do **not** weaken the harness.
 
-- [ ] **Step 6: Export from the game barrel + commit**
+- [x] **Step 6: Export from the game barrel + commit**
 
 Append to `games/monkey-ball/src/index.ts`:
 ```ts
