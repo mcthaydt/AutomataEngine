@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 71% (50/70 steps complete)
+**Overall Progress:** 80% (56/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -1352,7 +1352,7 @@ git commit -m "feat(editor): menu bar (File/Edit/View) with enable/disable state
 - Consumes: every `mountX` from Tasks 4–9; `injectTheme`; `PrimaryView`; `EditorCore`, `makeTestEditor`.
 - Produces: `EditorChromeHandle = { setCursorReadout(coords): void; dispose(): void }`; `renderEditorChrome(core, root, canvases: Record<PrimaryView, HTMLCanvasElement>): EditorChromeHandle`. Holds the single `store.subscribe`, fanning `update(state)` to all panels; `setCursorReadout` forwards to the status bar.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/chrome.test.ts`:
 ```ts
@@ -1387,12 +1387,12 @@ describe('editor chrome', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/chrome.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/chrome`.
 
-- [ ] **Step 3: Implement the chrome**
+- [x] **Step 3: Implement the chrome**
 
 `packages/editor/src/ui/chrome.ts`:
 ```ts
@@ -1465,7 +1465,7 @@ export function renderEditorChrome<Doc>(
 }
 ```
 
-- [ ] **Step 4: Swap the barrel and delete the old panels**
+- [x] **Step 4: Swap the barrel and delete the old panels**
 
 In `packages/editor/src/index.ts`, replace the final line `export * from './ui/panels'` with:
 ```ts
@@ -1477,7 +1477,7 @@ Then remove the superseded module and its test:
 git rm packages/editor/src/ui/panels.ts packages/editor/tests/ui/panels.test.ts
 ```
 
-- [ ] **Step 5: Run the test + full editor suite to verify**
+- [x] **Step 5: Run the test + full editor suite to verify**
 
 ```bash
 npx vitest run packages/editor/tests/ui/chrome.test.ts
@@ -1485,7 +1485,7 @@ npx vitest run packages/editor
 ```
 Expected: chrome test PASS; the whole editor package green (no lingering `renderPanels` references).
 
-- [ ] **Step 6: Typecheck + commit**
+- [x] **Step 6: Typecheck + commit**
 
 ```bash
 npm run typecheck

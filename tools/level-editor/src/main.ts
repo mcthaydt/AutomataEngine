@@ -3,7 +3,7 @@ import {
   fetchTextViaFetch, startLoopDriver
 } from '@automata/engine'
 import {
-  attachFlyControls, createEditor, paintMap, renderPanels, screenToWorldXZ
+  attachFlyControls, createEditor, paintMap, screenToWorldXZ
 } from '@automata/editor'
 import { createMonkeyBallDefinition, loadBootData, type Level } from 'monkey-ball'
 import { createViewTabs } from './viewTabs'
@@ -48,11 +48,6 @@ async function main(): Promise<void> {
   })
   resizeMapCanvas()
   window.addEventListener('resize', resizeMapCanvas)
-  const panelHost = document.createElement('div')
-  panelHost.id = 'panels'
-  app.append(panelHost)
-  renderPanels(editor, panelHost)
-
   const context2d = canvas2d.getContext('2d')
   if (!context2d) throw new Error('2D canvas context unavailable')
   canvas2d.addEventListener('pointerdown', (event) => {
