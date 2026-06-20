@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 10% (7/70 steps complete)
+**Overall Progress:** 19% (13/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -202,7 +202,7 @@ git commit -m "feat(editor): ui store slice for snap/primaryView/insetVisible"
 - Consumes: `state.ui.snap` (Task 1); `snapVec3XZ`.
 - Produces: `snapToGrid(value, cell)` returns `value` unchanged when `cell <= 0`; `EditorCore.placeAt` / `moveSelectionTo` snap by `state.ui.snap`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/editor/tests/grid.test.ts` inside the `describe('grid snap', …)` block:
 ```ts
@@ -236,12 +236,12 @@ Append to `packages/editor/tests/hostTools.test.ts` inside the `describe('host t
   })
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/grid.test.ts packages/editor/tests/hostTools.test.ts`
 Expected: FAIL — `snapToGrid(1.2345, 0)` returns `NaN`; the place/move cases use the old fixed `0.5`.
 
-- [ ] **Step 3: Harden the grid math**
+- [x] **Step 3: Harden the grid math**
 
 In `packages/editor/src/grid.ts`, replace `snapToGrid`:
 ```ts
@@ -251,7 +251,7 @@ export function snapToGrid(value: number, cell: number): number {
 }
 ```
 
-- [ ] **Step 4: Thread snap through the host core**
+- [x] **Step 4: Thread snap through the host core**
 
 In `packages/editor/src/host.ts`:
 - add `import { snapVec3XZ } from './grid'`;
@@ -282,12 +282,12 @@ In `packages/editor/src/host.ts`:
     },
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/grid.test.ts packages/editor/tests/hostTools.test.ts`
 Expected: PASS (including the pre-existing host-tool cases — default snap `0.5` keeps their integer points unchanged).
 
-- [ ] **Step 6: Typecheck + commit**
+- [x] **Step 6: Typecheck + commit**
 
 ```bash
 npm run typecheck

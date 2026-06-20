@@ -11,4 +11,9 @@ describe('grid snap', () => {
   it('snaps x and z but leaves y untouched', () => {
     expect(snapVec3XZ({ x: 1.2, y: 3.7, z: -0.3 }, 0.5)).toEqual({ x: 1, y: 3.7, z: -0.5 })
   })
+
+  it('treats a non-positive cell as no snap (snap "off")', () => {
+    expect(snapToGrid(1.2345, 0)).toBe(1.2345)
+    expect(snapVec3XZ({ x: 1.2345, y: 2, z: -3.7 }, 0)).toEqual({ x: 1.2345, y: 2, z: -3.7 })
+  })
 })

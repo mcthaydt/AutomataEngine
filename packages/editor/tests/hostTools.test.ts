@@ -33,6 +33,16 @@ describe('host tools', () => {
     editor.dispose()
   })
 
+  it('places using the active snap increment', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'setSnap', snap: 1 })
+    editor.store.dispatch({ type: 'setTool', tool: { brushId: 'box', mode: 'place' } })
+    editor.placeAt({ x: 1.4, y: 0, z: 2.6 })
+    const item = renderDefinition.scene.listItems(editor.store.getState().document.doc)[0]!
+    expect(item.transform.position).toEqual({ x: 1, y: 0, z: 3 })
+    editor.dispose()
+  })
+
   it('selects the topmost item in the 2D map', () => {
     const editor = makeEditor()
     editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a', 0, 0) } })
@@ -57,6 +67,17 @@ describe('host tools', () => {
     editor.moveSelectionTo({ x: 4, y: 0, z: 5 })
     const item = renderDefinition.scene.listItems(editor.store.getState().document.doc)[0]!
     expect(item.transform.position).toEqual({ x: 4, y: 0, z: 5 })
+    editor.dispose()
+  })
+
+  it('moves to the exact point when snap is off', () => {
+    const editor = makeEditor()
+    editor.store.dispatch({ type: 'setSnap', snap: 0 })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    editor.store.dispatch({ type: 'select', ids: ['a'] })
+    editor.moveSelectionTo({ x: 4.37, y: 0, z: 5.12 })
+    const item = renderDefinition.scene.listItems(editor.store.getState().document.doc)[0]!
+    expect(item.transform.position).toEqual({ x: 4.37, y: 0, z: 5.12 })
     editor.dispose()
   })
 

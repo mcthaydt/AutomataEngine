@@ -1,4 +1,5 @@
 import type { PhysicsPort, RenderPort, Vec3 } from '@automata/engine'
+import { snapVec3XZ } from './grid'
 import type { GameDefinition } from './model/gameDefinition'
 import { createEditorStore, type EditorStore } from './state/store'
 import { canDelete } from './tools/cardinality'
@@ -35,8 +36,6 @@ export interface EditorCore<Doc> {
   deleteSelected(): void
   dispose(): void
 }
-
-const GRID_CELL = 0.5
 
 export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
   const { definition, render, physics } = opts
@@ -89,7 +88,7 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       const brush = brushes.find((candidate) => candidate.id === brushId)
       if (!brush) return
       const items = definition.scene.listItems(state.document.doc)
-      const command = placementCommand(definition, items, brush, world, GRID_CELL)
+      const command = placementCommand(definition, items, brush, world, state.ui.snap)
       if (command) store.dispatch({ type: 'command', command })
     },
     moveSelectionTo(world) {
@@ -99,13 +98,14 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       const items = definition.scene.listItems(state.document.doc)
       const anchor = items.find((item) => item.id === anchorId)
       if (!anchor) return
+      const target = snapVec3XZ(world, state.ui.snap)
       const position = anchor.transform.position
       store.dispatch({
         type: 'command',
         command: {
           type: 'moveSelected',
           ids: state.selection,
-          delta: { x: world.x - position.x, y: world.y - position.y, z: world.z - position.z }
+          delta: { x: target.x - position.x, y: target.y - position.y, z: target.z - position.z }
         }
       })
     },

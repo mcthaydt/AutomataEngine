@@ -1,6 +1,7 @@
 import type { Vec3 } from '@automata/engine'
 
 export function snapToGrid(value: number, cell: number): number {
+  if (cell <= 0) return value
   return Math.round(value / cell) * cell
 }
 
