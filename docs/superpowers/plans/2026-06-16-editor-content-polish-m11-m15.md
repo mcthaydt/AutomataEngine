@@ -3935,7 +3935,7 @@ git commit -m "feat(editor): import with parse + validate"
 - Consumes: `StoragePort` (engine), `EditorStore`, `GameDefinition`.
 - Produces: `AUTOSAVE_VERSION`, `installAutosave(store, definition, storage, opts): () => void` (`opts = { key; debounceMs }`), `loadAutosave(definition, storage, key): Doc | null`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/autosave.test.ts`:
 ```ts
@@ -3972,12 +3972,12 @@ describe('autosave', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/autosave.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/autosave.ts`:
 ```ts
@@ -4018,12 +4018,12 @@ export function loadAutosave<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/autosave.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
