@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 36% (25/70 steps complete)
+**Overall Progress:** 43% (30/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -619,7 +619,7 @@ git commit -m "feat(editor): tool palette panel with active-tool state"
 - Consumes: `inspectorFields`, `fieldCommand` (`packages/editor/src/tools/inspector.ts`); `EditorCore`, `PanelHandle`, `makeTestEditor`, `boxItem`.
 - Produces: `mountInspector(core, parent): PanelHandle<Doc>`. Single-selection numeric fields render under `Transform` (`pos.*`) / `Size` (`size.*`,`radius`,`height`) groups; each numeric `input` is `data-field="<path>"`, displayed rounded to 2 dp, with `▲`/`▼` steppers (`data-step="up|down"`) that nudge by the active snap (or `0.25` when snap is off). An empty selection shows metadata fields plus an `.ed-hint`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/inspectorView.test.ts`:
 ```ts
@@ -667,12 +667,12 @@ describe('inspector panel', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/inspectorView.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/inspectorView`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/ui/inspectorView.ts`:
 ```ts
@@ -776,12 +776,12 @@ export function mountInspector<Doc>(core: EditorCore<Doc>, parent: HTMLElement):
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/ui/inspectorView.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
