@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 80% (56/70 steps complete)
+**Overall Progress:** 84% (59/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -1507,7 +1507,7 @@ The 3D viewport is no longer full-window (it lives in a main or inset container)
 
 > **No unit test:** `render/browser.ts` is a browser-only shim (excluded from coverage, untested by convention — it needs a real `WebGLRenderer`/`ResizeObserver`). It is verified in the Task 13 manual checkpoint. Keep the change trivially thin.
 
-- [ ] **Step 1: Implement the option**
+- [x] **Step 1: Implement the option**
 
 Replace the body of `attachCanvasRenderer` in `packages/engine/src/render/browser.ts`:
 ```ts
@@ -1548,7 +1548,7 @@ export function attachCanvasRenderer(
 ```
 (Keep the existing imports/types at the top of the file; only the function body and signature change. `gl.setSize(w, h, sizeTo === 'window')` preserves the prior `updateStyle=true` behavior for window mode and lets CSS control layout in element mode.)
 
-- [ ] **Step 2: Typecheck + verify the game still compiles**
+- [x] **Step 2: Typecheck + verify the game still compiles**
 
 ```bash
 npm run typecheck
@@ -1556,7 +1556,7 @@ npx vitest run packages/engine
 ```
 Expected: typecheck clean; engine tests green (`browser.ts` is excluded from coverage, so no new test is required).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
