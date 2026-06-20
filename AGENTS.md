@@ -52,7 +52,7 @@ root unless a task explicitly says otherwise.
   viewport, orbit camera, and grid.
 - [x] M12: Editor palette, place/move/delete tools, inspector, and validation
   panel.
-- [ ] M13: Editor test-play, import/export, and autosave.
+- [x] M13: Editor test-play, import/export, and autosave.
 - [ ] M14: Author 2 worlds x 3 levels in the editor and complete a tuning pass.
 - [ ] M15: Mobile polish, visibility-pause, pixel-ratio cap, Playwright smokes,
   and release build.

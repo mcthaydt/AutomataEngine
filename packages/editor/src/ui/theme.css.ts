@@ -10,8 +10,13 @@ export const SLATE_PRO_CSS = `
   user-select: none;
 }
 .ed-root button { font: inherit; color: var(--ink); cursor: pointer; }
+.ed-menubar-host { display: flex; align-items: center; gap: 8px; background: #1e2433; box-shadow: inset 0 1px 0 var(--bevel); z-index: 5; }
 .ed-menubar { display: flex; gap: 2px; align-items: stretch; padding: 2px 6px;
   background: #1e2433; box-shadow: inset 0 1px 0 var(--bevel); z-index: 5; }
+.ed-toolbar-host { margin-left: auto; padding-right: 8px; }
+.ed-toolbar { display: flex; align-items: center; gap: 4px; }
+.ed-toolbar .ed-tool { min-width: 56px; justify-content: center; padding: 4px 8px; }
+.ed-toolbar-status { min-width: 130px; max-width: 260px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ed-menu { position: relative; }
 .ed-menu-title { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 4px 10px; }
 .ed-menu-title:hover { background: var(--panel-2); }

@@ -6,6 +6,7 @@ import { mountOutliner } from './outliner'
 import { mountPalette } from './palette'
 import { mountStatusBar } from './statusbar'
 import { injectTheme } from './theme.css'
+import { mountToolbar } from './toolbar'
 import { mountViewportRegion } from './viewportRegion'
 
 export interface EditorChromeHandle {
@@ -27,6 +28,7 @@ export function renderEditorChrome<Doc>(
   const removeTheme = injectTheme(root.ownerDocument ?? document)
   const shell = region('ed-root')
   const menubarHost = region('ed-menubar-host')
+  const toolbarHost = region('ed-toolbar-host')
   const body = region('ed-body')
   const paletteHost = region('ed-palette-host')
   const viewportHost = region('ed-viewport')
@@ -40,8 +42,11 @@ export function renderEditorChrome<Doc>(
   shell.append(menubarHost, body, statusHost)
   root.append(shell)
 
+  const menubar = mountMenuBar(core, menubarHost)
+  menubarHost.append(toolbarHost)
   const panels = [
-    mountMenuBar(core, menubarHost),
+    menubar,
+    mountToolbar(core, toolbarHost),
     mountPalette(core, paletteHost),
     mountInspector(core, inspectorHost),
     mountOutliner(core, outlinerHost),

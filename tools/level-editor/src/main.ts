@@ -1,9 +1,10 @@
 import {
   GameLoop, attachCanvasRenderer, createLoader, createRapierPhysics, createThreeRenderer,
-  fetchTextViaFetch, startLoopDriver
+  fetchTextViaFetch, localStorageAdapter, startLoopDriver
 } from '@automata/engine'
 import {
-  attachFlyControls, createEditor, paintMap, renderEditorChrome, screenToWorldXZ, type ScreenSize
+  attachFlyControls, createEditor, importDoc, installAutosave, loadAutosave, paintMap, renderEditorChrome,
+  screenToWorldXZ, type ScreenSize
 } from '@automata/editor'
 import { createMonkeyBallDefinition, loadBootData, type Level } from 'monkey-ball'
 
@@ -22,9 +23,38 @@ async function main(): Promise<void> {
   const definition = createMonkeyBallDefinition(boot.lib, boot.tuning)
 
   const editor = createEditor<Level>({ definition, render: renderer.port, physics })
-  editor.store.dispatch({ type: 'loadDoc', doc: definition.scene.emptyDoc() })
+  const storage = localStorageAdapter()
+  const saved = loadAutosave(definition, storage, 'monkey-ball-editor')
+  editor.store.dispatch({ type: 'loadDoc', doc: saved ?? definition.scene.emptyDoc() })
+  const stopAutosave = installAutosave(editor.store, definition, storage, {
+    key: 'monkey-ball-editor',
+    debounceMs: 400
+  })
 
   const chrome = renderEditorChrome<Level>(editor, app, { '2d': canvas2d, '3d': canvas3d })
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = 'application/json'
+  fileInput.hidden = true
+  app.append(fileInput)
+  editor.onExport = (result) => {
+    if (!result.ok) return
+    const blob = new Blob([result.json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'level.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+  editor.onImportRequest = () => fileInput.click()
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]
+    if (!file) return
+    const result = importDoc(definition, await file.text())
+    if (result.ok) editor.store.dispatch({ type: 'loadDoc', doc: result.doc })
+    fileInput.value = ''
+  })
   attachFlyControls(canvas3d, () => editor.camera, (camera) => { editor.camera = camera })
 
   const context2d = canvas2d.getContext('2d')
@@ -112,7 +142,7 @@ async function main(): Promise<void> {
   })
 
   const loop = new GameLoop({
-    fixedUpdate: () => {},
+    fixedUpdate: (dt) => editor.fixedUpdate(dt),
     render: (alpha) => {
       editor.tick(alpha)
       canvasRenderer.renderFrame()
@@ -120,7 +150,10 @@ async function main(): Promise<void> {
       paintMap(context2d, editor.drawModel(mapSize), mapSize)
     }
   })
-  window.addEventListener('beforeunload', () => chrome.dispose())
+  window.addEventListener('beforeunload', () => {
+    stopAutosave()
+    chrome.dispose()
+  })
   startLoopDriver(loop)
 }
 

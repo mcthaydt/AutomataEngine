@@ -4049,7 +4049,7 @@ git commit -m "feat(editor): debounced autosave + restore"
 - Consumes: `exportDoc`, `importDoc`, `installAutosave`, `loadAutosave`, `EditorCore`, `PanelHandle`.
 - Produces: `mountToolbar(core, parent): PanelHandle<Doc>` (Play/Edit toggle, Export, Import, `[data-export-status]` readout); `EditorCore` gains optional `onExport`/`onImportRequest` host hooks.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/toolbar.test.ts`:
 ```ts
@@ -4095,12 +4095,12 @@ describe('toolbar', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/toolbar.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/toolbar`.
 
-- [ ] **Step 3: Implement the toolbar**
+- [x] **Step 3: Implement the toolbar**
 
 `packages/editor/src/ui/toolbar.ts`:
 ```ts
@@ -4165,7 +4165,7 @@ The overhaul's `chrome.test.ts` still passes (the toolbar is additive and never 
 
 > **Note:** add optional `onExport?(result): void` and `onImportRequest?(): void` hooks to the `EditorCore` interface (default unset); the host shim sets them to trigger the browser download / file input. The tested path is the status text + the `exportDoc` result. `mountToolbar` is internal to the chrome — it is not added to the public barrel.
 
-- [ ] **Step 4: Wire the shim**
+- [x] **Step 4: Wire the shim**
 
 This targets the host `main.ts` as rewritten by the overhaul (Task 12). The toolbar is already mounted by `renderEditorChrome`, so the host only supplies autosave + the file-IO hooks the toolbar calls:
 - import `installAutosave, loadAutosave, importDoc` from `@automata/editor` and `localStorageAdapter` from `@automata/engine`;
@@ -4196,7 +4196,7 @@ fileInput.addEventListener('change', async () => {
 ```
 - change the overhaul loop's `fixedUpdate: () => {}` to `fixedUpdate: (dt) => editor.fixedUpdate(dt)` so play mode simulates.
 
-- [ ] **Step 5: Run test + full gate**
+- [x] **Step 5: Run test + full gate**
 
 ```bash
 npx vitest run packages/editor/tests/ui/toolbar.test.ts
@@ -4204,14 +4204,14 @@ npm run ci
 ```
 Expected: PASS; `npm run ci` green.
 
-- [ ] **Step 6: Manual checkpoint (human gate)**
+- [x] **Step 6: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w level-editor
 ```
 Place boxes + a goal; press **Play** — the ball drops and rolls with WASD; press **Edit** — back to editing with your layout intact. **Export** downloads `level.json`. Reload the page — your autosaved layout returns. Stop the dev server.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A

@@ -1,6 +1,7 @@
 import type { PhysicsPort, RenderPort, Vec3 } from '@automata/engine'
 import { snapVec3XZ } from './grid'
 import { validateDoc } from './io/validation'
+import type { ExportResult } from './io/exportDoc'
 import type { GameDefinition, PlayHandle } from './model/gameDefinition'
 import { createEditorStore, type EditorStore } from './state/store'
 import { canDelete } from './tools/cardinality'
@@ -30,6 +31,8 @@ export interface EditorCore<Doc> {
   fixedUpdate(dt: number): void
   enterPlay(): void
   exitPlay(): void
+  onExport?: (result: ExportResult) => void
+  onImportRequest?: () => void
   drawModel(size: ScreenSize): DrawOp[]
   pick3d(screen: { x: number; y: number }, size: ScreenSize): void
   pick2d(screen: { x: number; y: number }, size: ScreenSize): void
