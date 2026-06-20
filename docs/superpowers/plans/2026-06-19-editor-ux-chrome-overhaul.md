@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 64% (45/70 steps complete)
+**Overall Progress:** 71% (50/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -1201,7 +1201,7 @@ git commit -m "feat(editor): viewport region with primary/inset placement + swap
 - Consumes: `EditorCore`, `PanelHandle`, `makeTestEditor`.
 - Produces: `mountMenuBar(core, parent): PanelHandle<Doc>`. Renders File (New; Import/Export disabled), Edit (Undo/Redo/Delete), View (Swap/Toggle inset/Cycle snap) as `[data-menu-item="<id>"]` buttons. `update` disables Undo/Redo/Delete when `past`/`future`/`selection` are empty. New dispatches `loadDoc(scene.emptyDoc())`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/menubar.test.ts`:
 ```ts
@@ -1232,12 +1232,12 @@ describe('menu bar', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/menubar.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/menubar`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/ui/menubar.ts`:
 ```ts
@@ -1324,12 +1324,12 @@ export function mountMenuBar<Doc>(core: EditorCore<Doc>, parent: HTMLElement): P
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/ui/menubar.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
