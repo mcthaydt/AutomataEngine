@@ -148,3 +148,26 @@ export const renderDefinition: GameDefinition<FakeDoc> = {
   ...fakeDefinition,
   buildWorld: fakeBuildWorld as never
 }
+
+export const playCalls: string[] = []
+
+export const playableDefinition: GameDefinition<FakeDoc> = {
+  ...renderDefinition,
+  play: {
+    createGameplay: () => {
+      playCalls.push('create')
+      return {
+        fixedUpdate: () => playCalls.push('fixed'),
+        render: () => playCalls.push('render'),
+        dispose: () => playCalls.push('dispose')
+      }
+    },
+    runHeadlessPlay: async () => ({
+      outcome: 'incomplete',
+      timeMs: 0,
+      fallCount: 0,
+      bananas: 0,
+      steps: 0
+    })
+  }
+}

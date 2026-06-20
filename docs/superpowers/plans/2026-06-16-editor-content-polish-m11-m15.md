@@ -3624,7 +3624,7 @@ git commit -m "feat(game): monkey-ball play registration (live + headless)"
 - Consumes: `PlayHandle`, `GameDefinition.play`, `validateDoc`.
 - Produces: `EditorCore` gains `fixedUpdate(dt)`, `enterPlay()`, `exitPlay()`; `tick(alpha)` renders the play handle while in play mode; invalid documents cannot enter play mode.
 
-- [ ] **Step 1: Add a fake play to the fixture**
+- [x] **Step 1: Add a fake play to the fixture**
 
 Append to `packages/editor/tests/fixtures/fakeDefinition.ts`:
 ```ts
@@ -3646,7 +3646,7 @@ export const playableDefinition: GameDefinition<FakeDoc> = {
 }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `packages/editor/tests/play/controller.test.ts`:
 ```ts
@@ -3711,12 +3711,12 @@ describe('play controller', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/play/controller.test.ts`
 Expected: FAIL — `editor.enterPlay is not a function`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 In `packages/editor/src/host.ts`:
 - import the play handle type: add `import type { PlayHandle } from './model/gameDefinition'`;
@@ -3761,12 +3761,12 @@ In `packages/editor/src/host.ts`:
 ```
 - in `dispose()`, also dispose the play handle: `play?.dispose()` before `sync.dispose()`.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/play/controller.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 6: Typecheck + commit**
+- [x] **Step 6: Typecheck + commit**
 
 ```bash
 npm run typecheck

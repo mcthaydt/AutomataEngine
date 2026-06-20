@@ -1,6 +1,7 @@
 import type { PhysicsPort, RenderPort, Vec3 } from '@automata/engine'
 import { snapVec3XZ } from './grid'
-import type { GameDefinition } from './model/gameDefinition'
+import { validateDoc } from './io/validation'
+import type { GameDefinition, PlayHandle } from './model/gameDefinition'
 import { createEditorStore, type EditorStore } from './state/store'
 import { canDelete } from './tools/cardinality'
 import { nextSurface } from './tools/surfaceCycle'
@@ -26,6 +27,9 @@ export interface EditorCore<Doc> {
   mapView: MapView
   /** Re-sync the 3D world from the doc and render a frame. */
   tick(alpha: number): void
+  fixedUpdate(dt: number): void
+  enterPlay(): void
+  exitPlay(): void
   drawModel(size: ScreenSize): DrawOp[]
   pick3d(screen: { x: number; y: number }, size: ScreenSize): void
   pick2d(screen: { x: number; y: number }, size: ScreenSize): void
@@ -40,8 +44,9 @@ export interface EditorCore<Doc> {
 export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
   const { definition, render, physics } = opts
   const store = createEditorStore<Doc>(definition)
-  const sync = createWorldSync(definition, store, render, physics)
+  let sync = createWorldSync(definition, store, render, physics)
   let camera = initialFlyCamera
+  let play: PlayHandle | null = null
   const mapView = initialMapView
   let lastDoc: Doc | undefined
   let lastSelection: string[] | undefined
@@ -53,6 +58,11 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
     set camera(next: FlyCamera) { camera = next },
     mapView,
     tick(alpha) {
+      if (play) {
+        play.render(alpha)
+        return
+      }
+
       const state = store.getState()
       // Reducers return new doc/selection references only on real change, so
       // identity comparison is exact: rebuild the world when the doc changes,
@@ -68,6 +78,30 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       const view = cameraView(camera)
       render.setCamera(view.position, view.lookAt)
       sync.render(alpha)
+    },
+    fixedUpdate(dt) {
+      play?.fixedUpdate(dt)
+    },
+    enterPlay() {
+      if (play) return
+      if (!definition.play) throw new Error('this definition has no play support')
+
+      const validation = validateDoc(definition, store.getState().document.doc)
+      if (!validation.exportable) throw new Error(`invalid document: ${validation.issues.join('; ')}`)
+
+      sync.dispose()
+      play = definition.play.createGameplay(store.getState().document.doc, render, physics)
+      store.dispatch({ type: 'setMode', mode: 'play' })
+    },
+    exitPlay() {
+      if (!play) return
+
+      play.dispose()
+      play = null
+      sync = createWorldSync(definition, store, render, physics)
+      lastDoc = undefined
+      lastSelection = undefined
+      store.dispatch({ type: 'setMode', mode: 'edit' })
     },
     drawModel(size) {
       const state = store.getState()
@@ -128,6 +162,8 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       if (ids.length) store.dispatch({ type: 'command', command: { type: 'deleteItems', ids } })
     },
     dispose() {
+      play?.dispose()
+      play = null
       sync.dispose()
     }
   }
