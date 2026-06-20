@@ -50,6 +50,7 @@ Copied from the spec; every task's requirements implicitly include these.
 1. **Run the gate per task.** Tasks run `npx vitest run <file>`; run `npm run typecheck` (or `npm run ci`) at the end of each task — the dependency-direction ESLint rules and strict TS catch boundary violations early. Full `npm run ci` is required at each milestone checkpoint.
 2. **The "verify in a real browser" steps are human gates.** Each milestone ends with a manual checkpoint (`npm run dev -w level-editor` / `-w monkey-ball`, open the URL, observe). An automated/subagent runner cannot complete these — pause for a human or explicitly defer, but never mark them done from code alone. Stop the dev server after each.
 3. **`Infinity` cardinality** is written as `Number.POSITIVE_INFINITY` in code; JSON-serialized brushes are constructed in TS, never parsed from JSON, so this is safe.
+4. **The editor UX/chrome overhaul runs between M12 and M13.** `docs/superpowers/plans/2026-06-19-editor-ux-chrome-overhaul.md` deletes `packages/editor/src/ui/panels.ts` + `tools/level-editor/src/viewTabs.ts` and rewrites the host `tools/level-editor/src/main.ts` into the docked "Slate Pro" chrome. Run that plan to completion before starting M13. Tasks 28, 34, and 36 below have been updated to target the new chrome (a toolbar `PanelHandle` mounted by `renderEditorChrome`, the rewritten `main.ts`, and `[data-vp="main"] canvas` selectors) — there is no `panels.ts`/`renderToolbar`/`viewTabs` to modify after the overhaul.
 
 ---
 
@@ -4037,13 +4038,16 @@ git commit -m "feat(editor): debounced autosave + restore"
 ### Task 28: Wire test-play + import/export/autosave into the host (M13 checkpoint)
 
 **Files:**
-- Modify: `packages/editor/src/ui/panels.ts` (add toolbar: Play/Edit, Export, Import; autosave status)
-- Modify: `tools/level-editor/src/main.ts` (drive `fixedUpdate`; restore autosave; wire toolbar)
+- Create: `packages/editor/src/ui/toolbar.ts` (Play/Edit + Export/Import, mounted in the chrome)
+- Modify: `packages/editor/src/ui/chrome.ts` (mount the toolbar in the panel fan-out)
+- Modify: `tools/level-editor/src/main.ts` (drive `fixedUpdate`; restore + install autosave; file-IO hooks)
 - Test: `packages/editor/tests/ui/toolbar.test.ts`
 
+> **Overhaul dependency:** the UX/chrome overhaul deleted `ui/panels.ts` and rewrote the host `main.ts`. Test-play UI therefore lives in a new `ui/toolbar.ts` `PanelHandle` (chrome convention: `mountX(core, parent) → { update, dispose }`) mounted by `renderEditorChrome`, **not** in `panels.ts`. The menubar's disabled File ▸ Import/Export slots stay as placeholders (leave the overhaul's `menubar.test.ts` untouched); the toolbar is the working home for now.
+
 **Interfaces:**
-- Consumes: `exportDoc`, `importDoc`, `installAutosave`, `loadAutosave`, `EditorCore`.
-- Produces: `renderToolbar(core, host): () => void` (Play/Edit toggle, Export, Import buttons bound to the store + io).
+- Consumes: `exportDoc`, `importDoc`, `installAutosave`, `loadAutosave`, `EditorCore`, `PanelHandle`.
+- Produces: `mountToolbar(core, parent): PanelHandle<Doc>` (Play/Edit toggle, Export, Import, `[data-export-status]` readout); `EditorCore` gains optional `onExport`/`onImportRequest` host hooks.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -4052,7 +4056,7 @@ git commit -m "feat(editor): debounced autosave + restore"
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import { createEditor } from '../../src/host'
-import { renderToolbar } from '../../src/ui/panels'
+import { mountToolbar } from '../../src/ui/toolbar'
 import { playableDefinition, boxItem, type FakeDoc } from '../fixtures/fakeDefinition'
 
 const nullPhysics = () => ({ addBody() {}, removeBody() {}, setGravity() {}, step: () => [],
@@ -4068,25 +4072,25 @@ describe('toolbar', () => {
     const host = document.createElement('div')
     const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
     editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
-    const dispose = renderToolbar(editor, host)
+    const handle = mountToolbar(editor, host)
     host.querySelector<HTMLButtonElement>('[data-action="play"]')!.click()
     expect(editor.store.getState().mode).toBe('play')
     host.querySelector<HTMLButtonElement>('[data-action="play"]')!.click()
     expect(editor.store.getState().mode).toBe('edit')
-    dispose(); editor.dispose()
+    handle.dispose(); editor.dispose()
   })
 
   it('Export reports invalid for the empty doc and valid once required markers exist', () => {
     const host = document.createElement('div')
     const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
-    const dispose = renderToolbar(editor, host)
+    const handle = mountToolbar(editor, host)
     const status = host.querySelector('[data-export-status]')!
     host.querySelector<HTMLButtonElement>('[data-action="export"]')!.click()
     expect(status.textContent).toContain('Start') // missing marker
     editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
     host.querySelector<HTMLButtonElement>('[data-action="export"]')!.click()
     expect(status.textContent).toContain('Exported')
-    dispose(); editor.dispose()
+    handle.dispose(); editor.dispose()
   })
 })
 ```
@@ -4094,26 +4098,35 @@ describe('toolbar', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/toolbar.test.ts`
-Expected: FAIL — `renderToolbar` is not exported.
+Expected: FAIL — cannot resolve `../../src/ui/toolbar`.
 
 - [ ] **Step 3: Implement the toolbar**
 
-Add this import to the existing import block at the top of `packages/editor/src/ui/panels.ts`:
+`packages/editor/src/ui/toolbar.ts`:
 ```ts
+import type { EditorCore } from '../host'
+import type { EditorState } from '../state/store'
 import { exportDoc } from '../io/exportDoc'
-```
+import type { PanelHandle } from './panel'
 
-Then append:
-```ts
-/** Play/Edit + Import/Export toolbar. Returns a disposer. File IO is a host shim. */
-export function renderToolbar<Doc>(core: EditorCore<Doc>, host: HTMLElement): () => void {
-  const bar = document.createElement('div'); bar.className = 'toolbar'
-  const play = document.createElement('button'); play.setAttribute('data-action', 'play'); play.textContent = 'Play'
-  const importBtn = document.createElement('button'); importBtn.setAttribute('data-action', 'import'); importBtn.textContent = 'Import'
-  const exportBtn = document.createElement('button'); exportBtn.setAttribute('data-action', 'export'); exportBtn.textContent = 'Export'
-  const status = document.createElement('span'); status.setAttribute('data-export-status', '')
-  bar.append(play, importBtn, exportBtn, status)
-  host.append(bar)
+/** Play/Edit toggle + Import/Export, mounted in the chrome. File IO is a host shim via core hooks. */
+export function mountToolbar<Doc>(core: EditorCore<Doc>, parent: HTMLElement): PanelHandle<Doc> {
+  const bar = document.createElement('div')
+  bar.className = 'ed-toolbar'
+  parent.append(bar)
+
+  const button = (action: string, label: string): HTMLButtonElement => {
+    const el = document.createElement('button')
+    el.type = 'button'; el.className = 'ed-tool'; el.dataset.action = action; el.textContent = label
+    bar.append(el)
+    return el
+  }
+  const play = button('play', 'Play')
+  button('import', 'Import').addEventListener('click', () => core.onImportRequest?.())
+  const exportBtn = button('export', 'Export')
+  const status = document.createElement('span')
+  status.className = 'ed-toolbar-status'; status.dataset.exportStatus = ''
+  bar.append(status)
 
   play.addEventListener('click', () => {
     try {
@@ -4121,37 +4134,52 @@ export function renderToolbar<Doc>(core: EditorCore<Doc>, host: HTMLElement): ()
       else core.exitPlay()
     } catch (error) {
       status.textContent = error instanceof Error ? error.message : String(error)
-      return
     }
-    play.textContent = core.store.getState().mode === 'play' ? 'Edit' : 'Play'
   })
   exportBtn.addEventListener('click', () => {
     const result = exportDoc(core.definition, core.store.getState().document.doc)
     status.textContent = result.ok ? `Exported ${result.json.length} bytes` : result.issues.join(' · ')
     core.onExport?.(result)
   })
-  importBtn.addEventListener('click', () => core.onImportRequest?.())
-  return () => { bar.remove() }
+
+  function update(state: EditorState<Doc>): void {
+    play.textContent = state.mode === 'play' ? 'Edit' : 'Play'
+    play.classList.toggle('is-active', state.mode === 'play')
+  }
+
+  update(core.store.getState())
+  return { update, dispose() { bar.remove() } }
 }
 ```
 
-> **Note:** add optional `onExport?(result): void` and `onImportRequest?(): void` hooks to the `EditorCore` interface (default unset); the host shim sets them to trigger browser download/file input. The tested path is the status text + the `exportDoc` result.
+Mount it in the chrome — in `packages/editor/src/ui/chrome.ts`, import `mountToolbar`, give it a host in the top bar, and add it to the `panels` array so the single subscription updates it:
+```ts
+import { mountToolbar } from './toolbar'
+// …in renderEditorChrome, after menubarHost is created:
+const toolbarHost = region('ed-toolbar-host')
+menubarHost.append(toolbarHost)            // sits in the top bar, right of the menus (exact placement is cosmetic)
+// …add to the panels array (e.g. after mountMenuBar):
+  mountToolbar(core, toolbarHost),
+```
+The overhaul's `chrome.test.ts` still passes (the toolbar is additive and never calls `enterPlay` on mount, so a definition without `play` is fine); optionally add a `[data-action="play"]` assertion there.
+
+> **Note:** add optional `onExport?(result): void` and `onImportRequest?(): void` hooks to the `EditorCore` interface (default unset); the host shim sets them to trigger the browser download / file input. The tested path is the status text + the `exportDoc` result. `mountToolbar` is internal to the chrome — it is not added to the public barrel.
 
 - [ ] **Step 4: Wire the shim**
 
-In `tools/level-editor/src/main.ts`:
-- import `renderToolbar, installAutosave, loadAutosave, importDoc` from `@automata/editor` and `localStorageAdapter` from `@automata/engine`;
-- after creating `editor`, restore autosave then install it:
+This targets the host `main.ts` as rewritten by the overhaul (Task 12). The toolbar is already mounted by `renderEditorChrome`, so the host only supplies autosave + the file-IO hooks the toolbar calls:
+- import `installAutosave, loadAutosave, importDoc` from `@automata/editor` and `localStorageAdapter` from `@automata/engine`;
+- replace the overhaul's `editor.store.dispatch({ type: 'loadDoc', doc: definition.scene.emptyDoc() })` line with autosave restore + install:
 ```ts
 const storage = localStorageAdapter()
 const saved = loadAutosave(definition, storage, 'monkey-ball-editor')
 editor.store.dispatch({ type: 'loadDoc', doc: saved ?? definition.scene.emptyDoc() })
 installAutosave(editor.store, definition, storage, { key: 'monkey-ball-editor', debounceMs: 400 })
-renderToolbar(editor, panelHost)
+```
+- after the `renderEditorChrome(...)` call, set the file-IO host hooks:
+```ts
 const fileInput = document.createElement('input')
-fileInput.type = 'file'
-fileInput.accept = 'application/json'
-fileInput.hidden = true
+fileInput.type = 'file'; fileInput.accept = 'application/json'; fileInput.hidden = true
 app.append(fileInput)
 editor.onExport = (result) => {
   if (!result.ok) return
@@ -4166,7 +4194,7 @@ fileInput.addEventListener('change', async () => {
   if (result.ok) editor.store.dispatch({ type: 'loadDoc', doc: result.doc })
 })
 ```
-- change the `GameLoop` `fixedUpdate` from `() => {}` to `(dt) => editor.fixedUpdate(dt)` so play mode simulates.
+- change the overhaul loop's `fixedUpdate: () => {}` to `fixedUpdate: (dt) => editor.fixedUpdate(dt)` so play mode simulates.
 
 - [ ] **Step 5: Run test + full gate**
 
@@ -4674,7 +4702,7 @@ In `packages/editor/src/host.ts`, add to the `EditorCore<Doc>` interface `handle
 ```
 (Reference `this.exitPlay()` — `core` is the object literal; if `this` is awkward under strict mode, call a local `exitPlay` closure instead by extracting the exit logic into a named function and calling it from both `exitPlay` and `handleHidden`.)
 
-In `tools/level-editor/src/main.ts`, change `startLoopDriver(loop)` to `startLoopDriver(loop, () => editor.handleHidden())`.
+In `tools/level-editor/src/main.ts` (as rewritten by the overhaul, Task 12), change the final `startLoopDriver(loop)` to `startLoopDriver(loop, () => editor.handleHidden())`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -4834,18 +4862,19 @@ import { expect, test } from '@playwright/test'
 
 test('editor places a box and export reflects it', async ({ page }) => {
   await page.goto('http://localhost:5175')
-  await expect(page.locator('canvas.map')).toBeVisible()
+  // The overhaul docks the 2D map as the primary viewport canvas.
+  const map = page.locator('[data-vp="main"] canvas')
+  await expect(map).toBeVisible()
   // Select the Box brush, click the 2D map to place a box.
   await page.locator('[data-brush="box"]').click()
-  const map = page.locator('canvas.map')
   await map.click({ position: { x: 180, y: 180 } })
-  // Export status reflects the document.
+  // Export status reflects the document (toolbar lives in the docked chrome).
   await page.locator('[data-action="export"]').click()
   await expect(page.locator('[data-export-status]')).toContainText(/Exported|Start/)
 })
 ```
 
-> **Note:** these assert the shim path end-to-end; exact selectors (`#overlays`, button text, `canvas.map`) must match the host/game DOM. Adjust selectors to the real markup — do not weaken to trivial always-true assertions.
+> **Note:** these assert the shim path end-to-end; exact selectors (`#overlays`, button text, `[data-vp="main"] canvas`, `[data-action="export"]`) must match the post-overhaul host/game DOM. Adjust selectors to the real markup — do not weaken to trivial always-true assertions.
 
 - [ ] **Step 4: Run the smokes**
 
