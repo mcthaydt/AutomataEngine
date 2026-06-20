@@ -43,7 +43,8 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
   const sync = createWorldSync(definition, store, render, physics)
   let camera = initialFlyCamera
   const mapView = initialMapView
-  let dirtyDoc = -1
+  let lastDoc: Doc | undefined
+  let lastSelection: string[] | undefined
 
   return {
     definition,
@@ -53,10 +54,16 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
     mapView,
     tick(alpha) {
       const state = store.getState()
-      const stamp = state.document.past.length + state.selection.length * 1e6
-      if (stamp !== dirtyDoc) {
+      // Reducers return new doc/selection references only on real change, so
+      // identity comparison is exact: rebuild the world when the doc changes,
+      // otherwise re-apply the (cheap) highlight when only the selection changes.
+      if (state.document.doc !== lastDoc) {
         sync.syncNow()
-        dirtyDoc = stamp
+        lastDoc = state.document.doc
+        lastSelection = state.selection
+      } else if (state.selection !== lastSelection) {
+        sync.applyHighlight()
+        lastSelection = state.selection
       }
       const view = cameraView(camera)
       render.setCamera(view.position, view.lookAt)

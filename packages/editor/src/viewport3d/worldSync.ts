@@ -7,7 +7,10 @@ import type { EditorStore } from '../state/store'
 type EditorEntity = EngineEntity & { editorId?: string }
 
 export interface WorldSync {
+  /** Rebuild the live world from the current doc, then re-apply selection highlight. */
   syncNow(): void
+  /** Re-apply selection highlight without rebuilding the world (cheap). */
+  applyHighlight(): void
   render(alpha: number): void
   dispose(): void
 }
@@ -51,6 +54,7 @@ export function createWorldSync<Doc>(
       rebuild()
       applyHighlight()
     },
+    applyHighlight,
     render(alpha) {
       if (world) renderStep.run({ world, alpha })
     },

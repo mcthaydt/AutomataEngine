@@ -36,4 +36,22 @@ describe('worldSync', () => {
     expect(render.port.objectCount).toBe(0)
     expect(render.calls.some((call) => call.op === 'remove')).toBe(true)
   })
+
+  it('render and applyHighlight are no-ops before the first sync', () => {
+    const store = createEditorStore<FakeDoc>(renderDefinition)
+    const sync = createWorldSync(renderDefinition, store, createNullRenderer().port, nullPhysics())
+    expect(() => sync.render(0)).not.toThrow()
+    expect(() => sync.applyHighlight()).not.toThrow()
+    sync.dispose()
+  })
+
+  it('renders the built world after a sync', () => {
+    const store = createEditorStore<FakeDoc>(renderDefinition)
+    const render = createNullRenderer()
+    const sync = createWorldSync(renderDefinition, store, render.port, nullPhysics())
+    store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    sync.syncNow()
+    expect(() => sync.render(0.5)).not.toThrow()
+    sync.dispose()
+  })
 })
