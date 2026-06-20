@@ -3539,7 +3539,7 @@ git commit -m "feat(game): headless runHeadlessPlay → TestPlayResult (AI-readi
 - Consumes: `createKeyboardInput`, `createGameplay` (game), `runHeadlessPlay`, `createGameStore`.
 - Produces: `createMonkeyBallDefinition(lib, tuning).play` = `{ createGameplay, runHeadlessPlay }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `games/monkey-ball/tests/editor/registrationPlay.test.ts`:
 ```ts
@@ -3566,12 +3566,12 @@ describe('monkey-ball play registration', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/registrationPlay.test.ts`
 Expected: FAIL — `def.play` is undefined.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `games/monkey-ball/src/editor/registration.ts`:
 - add imports:
@@ -3600,12 +3600,12 @@ import { runHeadlessPlay } from '../level/headlessPlay'
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/registrationPlay.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck

@@ -1,11 +1,19 @@
 import {
-  createWorld, registerPhysicsBodies, type ArchetypeLibrary, type PhysicsPort, type RenderPort
+  createKeyboardInput,
+  createWorld,
+  registerPhysicsBodies,
+  type ArchetypeLibrary,
+  type PhysicsPort,
+  type RenderPort
 } from '@automata/engine'
 import type { GameDefinition, Surface } from '@automata/editor'
 import type { PhysicsTuning } from '../data/config'
 import type { Level } from '../data/level'
 import type { Entity } from '../entity'
+import { createGameplay } from '../game/gameplay'
 import { populateLevelWorld } from '../level/buildWorld'
+import { runHeadlessPlay } from '../level/headlessPlay'
+import { createGameStore } from '../state/root'
 import { levelSceneModel } from './sceneModel'
 
 const swatch = (value: string): Surface => ({ kind: 'color', value })
@@ -15,9 +23,8 @@ type EditorEntity = Entity & { editorId?: string }
 /** Build a definition once boot data is available. */
 export function createMonkeyBallDefinition(
   lib: ArchetypeLibrary,
-  _tuning: PhysicsTuning
+  tuning: PhysicsTuning
 ): GameDefinition<Level> {
-  void _tuning
   return {
     id: 'monkey-ball',
     scene: levelSceneModel,
@@ -54,6 +61,24 @@ export function createMonkeyBallDefinition(
     resolveSurface(surface) {
       if (surface.kind === 'color') return { color: surface.value }
       throw new Error(`unsupported surface kind ${surface.kind}`)
+    },
+    play: {
+      createGameplay(level: Level, render: RenderPort, physics: PhysicsPort) {
+        const store = createGameStore()
+        const inputs = [createKeyboardInput(window)]
+        const game = createGameplay({ store, physics, render, lib, level, tuning, inputSources: inputs })
+        store.dispatch({ type: 'levelStarted', levelId: level.id })
+
+        return {
+          fixedUpdate: (dt: number) => game.fixedUpdate(dt),
+          render: (alpha: number) => game.render(alpha),
+          dispose: () => {
+            game.dispose()
+            for (const input of inputs) input.dispose()
+          }
+        }
+      },
+      runHeadlessPlay: (level: Level, opts) => runHeadlessPlay(level, lib, tuning, opts)
     }
   }
 }
