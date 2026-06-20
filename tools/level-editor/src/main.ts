@@ -39,6 +39,16 @@ async function main(): Promise<void> {
     return { w, h }
   }
 
+  // The WebGL renderer owns canvas3d's backing buffer (DPR-scaled). Only measure it —
+  // mutating canvas.width here desyncs the buffer from gl.viewport and skews the render.
+  const measure = (canvas: HTMLCanvasElement): ScreenSize => {
+    const rect = canvas.getBoundingClientRect()
+    return { w: Math.max(1, Math.floor(rect.width)), h: Math.max(1, Math.floor(rect.height)) }
+  }
+
+  const sizeOf = (view: '2d' | '3d', canvas: HTMLCanvasElement): ScreenSize =>
+    view === '2d' ? fit(canvas) : measure(canvas)
+
   const localScreen = (canvas: HTMLCanvasElement, event: PointerEvent): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect()
     return { x: event.clientX - rect.left, y: event.clientY - rect.top }
@@ -57,7 +67,7 @@ async function main(): Promise<void> {
       editor.store.dispatch({ type: 'setPrimaryView', view })
       return
     }
-    const size = fit(canvas)
+    const size = sizeOf(view, canvas)
     const screen = localScreen(canvas, event)
     const world = worldAt(view, screen, size)
     if (event.shiftKey) {
@@ -75,7 +85,7 @@ async function main(): Promise<void> {
   for (const [view, canvas] of [['2d', canvas2d], ['3d', canvas3d]] as const) {
     canvas.addEventListener('pointerdown', (event) => editAt(view, event, canvas))
     canvas.addEventListener('pointermove', (event) => {
-      const world = worldAt(view, localScreen(canvas, event), fit(canvas))
+      const world = worldAt(view, localScreen(canvas, event), sizeOf(view, canvas))
       chrome.setCursorReadout(world ? { x: world.x, z: world.z } : null)
     })
     canvas.addEventListener('pointerleave', () => chrome.setCursorReadout(null))
