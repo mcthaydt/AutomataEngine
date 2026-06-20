@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 43% (30/70 steps complete)
+**Overall Progress:** 50% (35/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -801,7 +801,7 @@ git commit -m "feat(editor): inspector panel with rounded display, steppers, gro
 - Consumes: `brushOf`, `missingRequired` (`packages/editor/src/tools/cardinality.ts`); `EditorCore`, `PanelHandle`, `makeTestEditor`, `boxItem`.
 - Produces: `mountOutliner(core, parent): PanelHandle<Doc>`. Renders one `data-item="<id>"` row per `listItems` item (label = `brushOf(...)?.label ?? kind`, selection-highlighted), a delete control `data-del="<id>"` (selects then `core.deleteSelected()`), and a `data-warn` banner listing `missingRequired` labels.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/outliner.test.ts`:
 ```ts
@@ -836,12 +836,12 @@ describe('outliner panel', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/outliner.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/outliner`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/ui/outliner.ts`:
 ```ts
@@ -907,12 +907,12 @@ export function mountOutliner<Doc>(core: EditorCore<Doc>, parent: HTMLElement): 
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/ui/outliner.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
