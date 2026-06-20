@@ -4,7 +4,7 @@
 
 **Goal:** Replace the editor's three floating panels with a cohesive, BUILD-style docked shell (menu · tool palette · dual viewport · inspector + outliner · status bar) wearing a "Slate Pro" skin, with a fixed inspector, explicit tool state, adjustable snap, and a live, swappable 3D inset over a 2D-primary map.
 
-**Overall Progress:** 19% (13/70 steps complete)
+**Overall Progress:** 29% (20/70 steps complete)
 
 **Architecture:** All chrome is **generic** (game-agnostic, driven by `GameDefinition` + the editor store) and lives in `packages/editor/src/ui/`, fully unit-tested in happy-dom. A new `ui` store slice holds `snap` / `primaryView` / `insetVisible`. The host app `tools/level-editor` stays a thin browser shim that mounts the chrome, hands it the two canvases, wires pointer/keyboard, and runs the loop. Cursor coordinates bypass the store (high-frequency) and update the status bar directly.
 
@@ -309,7 +309,7 @@ git commit -m "feat(editor): snap 'off' support + live snap in placeAt/moveSelec
 - Produces: `THEME_STYLE_ID`; `SLATE_PRO_CSS`; `injectTheme(doc?): () => void` (idempotent by id; the disposer removes the style only if this call created it); `PanelHandle<Doc> = { update(state): void; dispose(): void }`; test helpers `nullPhysics()`, `makeTestEditor()`.
 - Consumes: `EditorState` (Task 1 shape); `renderDefinition`, `FakeDoc` from `fixtures/fakeDefinition`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/theme.test.ts`:
 ```ts
@@ -330,12 +330,12 @@ describe('Slate Pro theme', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/theme.test.ts`
 Expected: FAIL — cannot resolve `../../src/ui/theme.css`.
 
-- [ ] **Step 3: Create the PanelHandle type**
+- [x] **Step 3: Create the PanelHandle type**
 
 `packages/editor/src/ui/panel.ts`:
 ```ts
@@ -348,7 +348,7 @@ export interface PanelHandle<Doc> {
 }
 ```
 
-- [ ] **Step 4: Create the theme**
+- [x] **Step 4: Create the theme**
 
 `packages/editor/src/ui/theme.css.ts`:
 ```ts
@@ -442,7 +442,7 @@ export function injectTheme(doc: Document = document): () => void {
 }
 ```
 
-- [ ] **Step 5: Create the test harness**
+- [x] **Step 5: Create the test harness**
 
 `packages/editor/tests/fixtures/editorHarness.ts`:
 ```ts
@@ -468,12 +468,12 @@ export function makeTestEditor(): EditorCore<FakeDoc> {
 }
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/ui/theme.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Typecheck + commit**
+- [x] **Step 7: Typecheck + commit**
 
 ```bash
 npm run typecheck
