@@ -527,7 +527,7 @@ git commit -m "feat(contracts): eval contract (TestPlayResult, HeadlessOpts, Pla
 
 These are the contracts the browser chat-overlay host and the MCP server host will both implement in later plans.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/contracts/tests/tools.test.ts`:
 
@@ -565,12 +565,12 @@ describe('tool contract', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project contracts tests/tools.test.ts`
 Expected: FAIL ("Cannot find module '../src/tools'").
 
-- [ ] **Step 3: Implement the tool contract**
+- [x] **Step 3: Implement the tool contract**
 
 `packages/contracts/src/tools.ts`:
 
@@ -666,7 +666,7 @@ export function parseToolArgs(name: ToolName, args: unknown): unknown {
 }
 ```
 
-- [ ] **Step 4: Export it from the barrel**
+- [x] **Step 4: Export it from the barrel**
 
 Replace `packages/contracts/src/index.ts` with:
 
@@ -677,17 +677,17 @@ export * from './eval'
 export * from './tools'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project contracts tests/tools.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 6: Full verification (typecheck, lint, coverage gate)**
+- [x] **Step 6: Full verification (typecheck, lint, coverage gate)**
 
 Run: `npm run typecheck && npm run lint && npm run coverage`
 Expected: PASS, with `packages/contracts/src/**` reported in coverage at ≥90% lines/branches.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/contracts/src/tools.ts packages/contracts/src/index.ts \
