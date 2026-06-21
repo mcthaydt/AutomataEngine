@@ -46,7 +46,43 @@ describe('cameraFollow', () => {
     for (let i = 0; i < 60; i++) sys.run(ctxFor(world))
     const call = render.calls.filter((c) => c.op === 'setCamera').at(-1)!
     expect(call.position!.z).toBeGreaterThan(ball.transform.position.z)
-    expect(call.lookAt).toEqual({ x: 0, y: 0.5, z: 5 })
+    // Look-at converges on the (now steady) ball; the camera stays on the +z side.
+    expect(call.lookAt!.x).toBeCloseTo(0)
+    expect(call.lookAt!.y).toBeCloseTo(0.5)
+    expect(call.lookAt!.z).toBeCloseTo(5, 1)
+  })
+
+  it('lets the ball drift off-center toward travel while it is moving', () => {
+    const render = createNullRenderer()
+    const world = createWorld<Entity>()
+    const ball = world.add({ ball: {}, transform: createTransform({ x: 0, y: 0.5, z: 0 }) })
+    const sys = createCameraFollow(render.port)
+    // Ball rolls steadily toward +z, advancing one unit per frame.
+    for (let i = 0; i < 30; i++) {
+      ball.transform.prevPosition = ball.transform.position
+      ball.transform.position = { x: 0, y: 0.5, z: ball.transform.position.z + 1 }
+      sys.run(ctxFor(world))
+    }
+    const call = render.calls.filter((c) => c.op === 'setCamera').at(-1)!
+    // The look-at trails the ball's true z, so the ball sits ahead of screen center.
+    expect(call.lookAt!.z).toBeLessThan(ball.transform.position.z)
+  })
+
+  it('recenters the look-at on the ball after it stops', () => {
+    const render = createNullRenderer()
+    const world = createWorld<Entity>()
+    const ball = world.add({ ball: {}, transform: createTransform({ x: 0, y: 0.5, z: 0 }) })
+    const sys = createCameraFollow(render.port)
+    for (let i = 0; i < 30; i++) {
+      ball.transform.prevPosition = ball.transform.position
+      ball.transform.position = { x: 0, y: 0.5, z: ball.transform.position.z + 1 }
+      sys.run(ctxFor(world))
+    }
+    // Ball halts; hold position so the trailing look-at can catch back up.
+    ball.transform.prevPosition = ball.transform.position
+    for (let i = 0; i < 200; i++) sys.run(ctxFor(world))
+    const call = render.calls.filter((c) => c.op === 'setCamera').at(-1)!
+    expect(call.lookAt!.z).toBeCloseTo(ball.transform.position.z, 1)
   })
 
   it('smoothly approaches the target as the ball moves', () => {
