@@ -4492,7 +4492,7 @@ git commit -m "test(content): headless metric baseline + tuning pass"
 **Interfaces:**
 - Produces: a committed stub recording the deferred AI work and the seams it builds on.
 
-- [ ] **Step 1: Write the stub**
+- [x] **Step 1: Write the stub**
 
 `docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md`:
 ```markdown
@@ -4532,7 +4532,7 @@ overlay** — without ever placing an agent in the deterministic runtime loop.
 Agent SDK and the latest Claude models when the spec is written.
 ```
 
-- [ ] **Step 2: Update the board**
+- [x] **Step 2: Update the board**
 
 In `AGENTS.md`, under the Task Board, mark the M11–M15 items complete as they land and append:
 ```markdown
@@ -4541,7 +4541,7 @@ In `AGENTS.md`, under the Task Board, mark the M11–M15 items complete as they 
   spec pending after M13).
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
