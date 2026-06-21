@@ -4663,7 +4663,7 @@ When the tab is hidden during play, the editor returns to the safe edit state (m
 **Interfaces:**
 - Produces: `EditorCore.handleHidden(): void` — exits play mode if playing; no-op in edit mode.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/play/visibility.test.ts`:
 ```ts
@@ -4689,12 +4689,12 @@ describe('visibility pause', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/play/visibility.test.ts`
 Expected: FAIL — `editor.handleHidden is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/editor/src/host.ts`, add to the `EditorCore<Doc>` interface `handleHidden(): void`, and to the `core` object:
 ```ts
@@ -4704,12 +4704,12 @@ In `packages/editor/src/host.ts`, add to the `EditorCore<Doc>` interface `handle
 
 In `tools/level-editor/src/main.ts` (as rewritten by the overhaul, Task 12), change the final `startLoopDriver(loop)` to `startLoopDriver(loop, () => editor.handleHidden())`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/play/visibility.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A

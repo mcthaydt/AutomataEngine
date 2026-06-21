@@ -154,7 +154,7 @@ async function main(): Promise<void> {
     stopAutosave()
     chrome.dispose()
   })
-  startLoopDriver(loop)
+  startLoopDriver(loop, () => editor.handleHidden())
 }
 
 void main()

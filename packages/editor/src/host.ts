@@ -31,6 +31,7 @@ export interface EditorCore<Doc> {
   fixedUpdate(dt: number): void
   enterPlay(): void
   exitPlay(): void
+  handleHidden(): void
   onExport?: (result: ExportResult) => void
   onImportRequest?: () => void
   drawModel(size: ScreenSize): DrawOp[]
@@ -53,6 +54,17 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
   const mapView = initialMapView
   let lastDoc: Doc | undefined
   let lastSelection: string[] | undefined
+
+  const exitPlay = (): void => {
+    if (!play) return
+
+    play.dispose()
+    play = null
+    sync = createWorldSync(definition, store, render, physics)
+    lastDoc = undefined
+    lastSelection = undefined
+    store.dispatch({ type: 'setMode', mode: 'edit' })
+  }
 
   return {
     definition,
@@ -98,14 +110,10 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       store.dispatch({ type: 'setMode', mode: 'play' })
     },
     exitPlay() {
-      if (!play) return
-
-      play.dispose()
-      play = null
-      sync = createWorldSync(definition, store, render, physics)
-      lastDoc = undefined
-      lastSelection = undefined
-      store.dispatch({ type: 'setMode', mode: 'edit' })
+      exitPlay()
+    },
+    handleHidden() {
+      exitPlay()
     },
     drawModel(size) {
       const state = store.getState()
