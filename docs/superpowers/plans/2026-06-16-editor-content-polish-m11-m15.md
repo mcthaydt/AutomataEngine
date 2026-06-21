@@ -4943,7 +4943,7 @@ git commit -m "build: release builds for game + editor (relative base)"
 
 ### Task 38: Final gate + checkpoint (human gate)
 
-- [ ] **Step 1: Full CI + coverage**
+- [x] **Step 1: Full CI + coverage**
 
 ```bash
 npm run ci
