@@ -164,7 +164,7 @@ git commit -m "feat(contracts): scaffold @automata/contracts leaf package"
   - Schemas: `vec3Schema`, `surfaceSchema`, `boxShapeSchema`, `cylinderShapeSchema`, `archetypeRefSchema`, `markerRefSchema`, `itemShapeSchema`, `itemKindSchema`, `itemTransformSchema`, `sceneItemSchema`, `addItemSchema`, `moveSelectedSchema`, `setItemFieldSchema`, `setSurfaceSchema`, `setMetadataSchema`, `deleteItemsSchema`, `loadDocSchema`, `sceneCommandSchema`.
   - Types: `Vec3`, `Surface`, `ItemKind`, `BoxShape`, `CylinderShape`, `ArchetypeRef`, `MarkerRef`, `ItemShape`, `ItemTransform`, `SceneItem`, `SceneCommand`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/contracts/tests/command.test.ts`:
 
@@ -207,12 +207,12 @@ describe('sceneCommandSchema', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project contracts tests/command.test.ts`
 Expected: FAIL ("Cannot find module '../src/command'").
 
-- [ ] **Step 3: Implement the command contract**
+- [x] **Step 3: Implement the command contract**
 
 `packages/contracts/src/command.ts`:
 
@@ -304,7 +304,7 @@ export const sceneCommandSchema = z.discriminatedUnion('type', [
 export type SceneCommand = z.infer<typeof sceneCommandSchema>
 ```
 
-- [ ] **Step 4: Export it from the barrel**
+- [x] **Step 4: Export it from the barrel**
 
 Replace `packages/contracts/src/index.ts` with:
 
@@ -313,12 +313,12 @@ export const CONTRACTS_VERSION = '0.1.0'
 export * from './command'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project contracts tests/command.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 6: Lift the editor's command types onto contracts**
+- [x] **Step 6: Lift the editor's command types onto contracts**
 
 Make the editor depend on contracts — `packages/editor/package.json` `dependencies`:
 
@@ -364,19 +364,19 @@ export interface Field {
 }
 ```
 
-- [ ] **Step 7: Re-install and verify the whole repo still typechecks + tests pass**
+- [x] **Step 7: Re-install and verify the whole repo still typechecks + tests pass**
 
 Run: `npm install && npm run typecheck && npm run test`
 Expected: PASS. (The editor + monkey-ball suites are unchanged because `SceneCommand`/`SceneItem`/etc. are re-exported with identical shapes.)
 
 > No type changes are expected here. Per the drop-in invariant in Global Constraints, `@automata/engine`'s `Vec3` is the structural interface `{ x: number; y: number; z: number }` (`packages/engine/src/math/vec3.ts`) and contracts' `Vec3` infers to the identical shape, so the lifted/re-exported types are assignment-compatible with the editor files that continue to import `Vec3` from the engine (`host.ts`, `grid.ts`, `tools/place.ts`, and the viewport modules). In the unlikely event typecheck flags a `Vec3` assignment, fix it at that editor call site — pass `{ x, y, z }` literals (e.g. `host.ts` already does at `host.ts:160`). Do **not** weaken the contracts leaf rule or have contracts import `@automata/engine`.
 
-- [ ] **Step 8: Lint**
+- [x] **Step 8: Lint**
 
 Run: `npm run lint`
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/contracts/src/command.ts packages/contracts/src/index.ts \
