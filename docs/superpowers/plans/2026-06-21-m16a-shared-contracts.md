@@ -19,6 +19,7 @@ This is the first slice of M16a. Follow-on plans (not in this document): M16a-2 
 - Tests live in `packages/contracts/tests/**/*.test.ts`; per-package Vitest project name `contracts`, `environment: 'node'`.
 - The 90% line/branch coverage gate (`vitest.config.ts`) must stay green; add `packages/contracts/src/**` to its `include`.
 - Type names lifted into contracts must keep their exact existing spelling so the editor re-export is a drop-in: `Vec3`, `Surface`, `ItemKind`, `BoxShape`, `CylinderShape`, `ArchetypeRef`, `MarkerRef`, `ItemShape`, `ItemTransform`, `SceneItem`, `SceneCommand`, `HeadlessOpts`, `TestPlayResult`.
+- Drop-in invariant (the fact the whole lift rests on): `@automata/engine`'s `Vec3` is a *structural* interface — `export interface Vec3 { x: number; y: number; z: number }` in `packages/engine/src/math/vec3.ts`, not a class or branded type. Contracts' own `Vec3` (`z.object({ x, y, z })`) infers to the identical shape, so under TypeScript structural typing the two are mutually assignable. This is what lets the editor files that still import `Vec3` from `@automata/engine` interoperate with the contracts-sourced `SceneItem`/`ItemTransform` without any call-site changes. Do **not** have contracts import `@automata/engine` to "share" the type — that would break the leaf rule and is unnecessary.
 
 ---
 
@@ -368,7 +369,7 @@ export interface Field {
 Run: `npm install && npm run typecheck && npm run test`
 Expected: PASS. (The editor + monkey-ball suites are unchanged because `SceneCommand`/`SceneItem`/etc. are re-exported with identical shapes.)
 
-> If typecheck fails specifically because the structural `Vec3` from contracts is not assignable to `@automata/engine`'s `Vec3` somewhere in the editor, the one-line fix is to make contracts' `Vec3` identical by importing it type-only: add `import type { Vec3 as EngineVec3 } from '@automata/engine'` is **not** allowed (leaf rule) — instead, confirm the editor site passes `{x,y,z}` literals (it does in `host.ts`); if a genuine class mismatch exists, relax that editor call site to accept `{ x: number; y: number; z: number }`. Do not weaken the contracts leaf rule.
+> No type changes are expected here. Per the drop-in invariant in Global Constraints, `@automata/engine`'s `Vec3` is the structural interface `{ x: number; y: number; z: number }` (`packages/engine/src/math/vec3.ts`) and contracts' `Vec3` infers to the identical shape, so the lifted/re-exported types are assignment-compatible with the editor files that continue to import `Vec3` from the engine (`host.ts`, `grid.ts`, `tools/place.ts`, and the viewport modules). In the unlikely event typecheck flags a `Vec3` assignment, fix it at that editor call site — pass `{ x, y, z }` literals (e.g. `host.ts` already does at `host.ts:160`). Do **not** weaken the contracts leaf rule or have contracts import `@automata/engine`.
 
 - [ ] **Step 8: Lint**
 

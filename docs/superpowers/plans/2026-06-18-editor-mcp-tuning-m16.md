@@ -4,8 +4,10 @@
 > [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
 > First implementation slice:
 > [`docs/superpowers/plans/2026-06-21-m16a-shared-contracts.md`](2026-06-21-m16a-shared-contracts.md)
-> (the `@automata/contracts` package). Follow-on slices: agent-core (providers + loop),
-> chat overlay preview/confirm, tuning loop, MCP server host.
+> (the `@automata/contracts` package) — this is the only executable plan so far.
+> Follow-on slices are **designed in the spec but not yet written as plans**:
+> agent-core (providers + loop), chat overlay preview/confirm, tuning loop, MCP
+> server host. Each needs its own plan before it can be executed.
 >
 > The notes below are the original framing, kept for context; the spec is authoritative.
 
