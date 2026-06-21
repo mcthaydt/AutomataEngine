@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SceneItem } from '../../src/model/types'
-import { canDelete, canPlace, countForBrush, missingRequired } from '../../src/tools/cardinality'
+import { canDelete, canPlace, countForBrush, findBrushById, missingRequired } from '../../src/tools/cardinality'
 import { archetypeItem, boxItem, cylinderItem, fakeDefinition } from '../fixtures/fakeDefinition'
 
 const startMarker = (id: string): SceneItem => ({
@@ -46,5 +46,11 @@ describe('cardinality', () => {
 
   it('cannot delete an id that is not present', () => {
     expect(canDelete(fakeDefinition, [], 'ghost')).toBe(false)
+  })
+
+  it('finds a brush by id across every palette', () => {
+    expect(findBrushById(fakeDefinition, 'box')).toBe(fakeDefinition.palette.geometry[0])
+    expect(findBrushById(fakeDefinition, 'start')).toBe(fakeDefinition.palette.markers[0])
+    expect(findBrushById(fakeDefinition, 'nope')).toBeNull()
   })
 })

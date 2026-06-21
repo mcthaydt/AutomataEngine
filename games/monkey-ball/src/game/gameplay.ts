@@ -69,12 +69,13 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
   scheduler.onFixedEnd(createFeedback(feedback, audio))
 
   const spawn = { x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] }
-  const offRespawn = subscribeSelector(store, (s) => s.session.runId, () => {
+  const respawn = (): void => {
     world.clear()
     populateLevelWorld(world, level, lib)
     events.clear()
     spawnBurst(world, { origin: spawn, count: 12, speed: 2, lifetimeS: 0.5, color: '#cfd8ff' })
-  })
+  }
+  const offRespawn = subscribeSelector(store, (s) => s.session.runId, respawn)
 
   let input = { x: 0, y: 0 }
   return {

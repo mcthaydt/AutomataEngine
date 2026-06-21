@@ -44,6 +44,15 @@ describe('document slice', () => {
     expect(scene.listItems(state.doc)).toHaveLength(1)
   })
 
+  it('clears dirty when undo returns to the saved doc, and re-dirties on redo', () => {
+    let state = reduce(start(), { type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    expect(state.dirty).toBe(true)
+    state = reduce(state, { type: 'undo' })
+    expect(state.dirty).toBe(false)
+    state = reduce(state, { type: 'redo' })
+    expect(state.dirty).toBe(true)
+  })
+
   it('a new command after undo clears the redo future', () => {
     let state = reduce(start(), { type: 'command', command: { type: 'addItem', item: boxItem('a') } })
     state = reduce(state, { type: 'undo' })

@@ -1,8 +1,14 @@
 import type { GameDefinition } from '../model/gameDefinition'
 import type { Brush, SceneItem } from '../model/types'
 
-function allBrushes<Doc>(definition: GameDefinition<Doc>): Brush[] {
+/** Every placeable brush across the geometry, archetype, and marker palettes. */
+export function allBrushes<Doc>(definition: GameDefinition<Doc>): Brush[] {
   return [...definition.palette.geometry, ...definition.palette.archetypes, ...definition.palette.markers]
+}
+
+/** The brush with the given id, or null. Single source of truth for brush lookup. */
+export function findBrushById<Doc>(definition: GameDefinition<Doc>, id: string): Brush | null {
+  return allBrushes(definition).find((brush) => brush.id === id) ?? null
 }
 
 /** The brush that produced an item, matched by kind plus archetype/marker ref. */

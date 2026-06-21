@@ -34,6 +34,16 @@ describe('level SceneModel edits', () => {
     expect(next.entities.at(-1)).toMatchObject({ archetype: 'banana', pos: [3, 0.6, 0] })
   })
 
+  it('addItem adopts the editor item id as the geometry uid', () => {
+    const next = levelSceneModel.apply(level, { type: 'addItem', item: boxItem })
+    expect(next.geometry.at(-1)!.uid).toBe('box:9')
+  })
+
+  it('addItem adopts the editor item id as the entity uid', () => {
+    const next = levelSceneModel.apply(level, { type: 'addItem', item: archItem })
+    expect(next.entities.at(-1)!.uid).toBe('banana:9')
+  })
+
   it('setItemField edits a geometry box size component', () => {
     const next = levelSceneModel.apply(level, { type: 'setItemField', id: 'geometry:0', path: 'size.y', value: 1.5 })
     expect(next.geometry[0]!.shape === 'box' && next.geometry[0]!.size[1]).toBe(1.5)

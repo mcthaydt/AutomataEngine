@@ -30,22 +30,6 @@ function ensureUids(level: Level): Level {
   }
 }
 
-function freshGeometryUid(level: Level): string {
-  const used = new Set(level.geometry.map((g, i) => geometryUid(g, i)))
-  let n = level.geometry.length
-  let id = `geometry:${n}`
-  while (used.has(id)) id = `geometry:${++n}`
-  return id
-}
-
-function freshEntityUid(level: Level): string {
-  const used = new Set(level.entities.map((e, i) => entityUid(e, i)))
-  let n = level.entities.length
-  let id = `entity:${n}`
-  while (used.has(id)) id = `entity:${++n}`
-  return id
-}
-
 function geometryItem(geometry: Geometry, id: string): SceneItem {
   const shape = geometry.shape === 'box'
     ? { type: 'box' as const, size: { x: geometry.size[0], y: geometry.size[1], z: geometry.size[2] } }
@@ -169,45 +153,24 @@ export const levelSceneModel: SceneModel<Level> = {
         }
       }
       case 'addItem': {
-        const item = cmd.item
-        const pos: Tuple3 = [item.transform.position.x, item.transform.position.y, item.transform.position.z]
-        const color = item.surface.kind === 'color' ? item.surface.value : '#ffffff'
-        if (item.shape.type === 'box') {
-          return {
-            ...level,
-            geometry: [...level.geometry, {
-              shape: 'box',
-              uid: freshGeometryUid(level),
-              size: [item.shape.size.x, item.shape.size.y, item.shape.size.z],
-              pos,
-              color,
-              friction: 0.6
-            }]
-          }
+        const { shape, id } = cmd.item
+        const pos: Tuple3 = [cmd.item.transform.position.x, cmd.item.transform.position.y, cmd.item.transform.position.z]
+        const color = cmd.item.surface.kind === 'color' ? cmd.item.surface.value : '#ffffff'
+        // The editor owns id allocation; the model adopts it as the stable uid so
+        // listItems round-trips the same identity the editor placed and selected.
+        const addGeometry = (geometry: Geometry): Level => ({ ...level, geometry: [...level.geometry, geometry] })
+        if (shape.type === 'box') {
+          return addGeometry({
+            shape: 'box', uid: id, size: [shape.size.x, shape.size.y, shape.size.z], pos, color, friction: 0.6
+          })
         }
-        if (item.shape.type === 'cylinder') {
-          return {
-            ...level,
-            geometry: [...level.geometry, {
-              shape: 'cylinder',
-              uid: freshGeometryUid(level),
-              radius: item.shape.radius,
-              height: item.shape.height,
-              pos,
-              color,
-              friction: 0.6
-            }]
-          }
+        if (shape.type === 'cylinder') {
+          return addGeometry({
+            shape: 'cylinder', uid: id, radius: shape.radius, height: shape.height, pos, color, friction: 0.6
+          })
         }
-        if (item.shape.type === 'archetype') {
-          return {
-            ...level,
-            entities: [...level.entities, {
-              archetype: item.shape.name,
-              uid: freshEntityUid(level),
-              pos
-            }]
-          }
+        if (shape.type === 'archetype') {
+          return { ...level, entities: [...level.entities, { archetype: shape.name, uid: id, pos }] }
         }
         throw new CommandError('markers are singletons and cannot be added')
       }

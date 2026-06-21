@@ -4,7 +4,7 @@ import { validateDoc } from './io/validation'
 import type { ExportResult } from './io/exportDoc'
 import type { GameDefinition, PlayHandle } from './model/gameDefinition'
 import { createEditorStore, type EditorStore } from './state/store'
-import { canDelete } from './tools/cardinality'
+import { canDelete, findBrushById } from './tools/cardinality'
 import { nextSurface } from './tools/surfaceCycle'
 import { placementCommand } from './tools/place'
 import { buildDrawModel, type DrawOp } from './viewport2d/draw'
@@ -137,8 +137,7 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
       const state = store.getState()
       const brushId = state.tool.selection.brushId
       if (!brushId) return
-      const brushes = [...definition.palette.geometry, ...definition.palette.archetypes, ...definition.palette.markers]
-      const brush = brushes.find((candidate) => candidate.id === brushId)
+      const brush = findBrushById(definition, brushId)
       if (!brush) return
       const items = definition.scene.listItems(state.document.doc)
       const command = placementCommand(definition, items, brush, world, state.ui.snap)
