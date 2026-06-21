@@ -4590,7 +4590,7 @@ Delivers: a capped pixel ratio (named, tested), visibility-pause for editor test
 **Interfaces:**
 - Produces: `MAX_PIXEL_RATIO` (= 2), `cappedPixelRatio(devicePixelRatio: number, cap?: number): number`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/engine/tests/render/pixelRatio.test.ts`:
 ```ts
@@ -4609,12 +4609,12 @@ describe('cappedPixelRatio', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/engine/tests/render/pixelRatio.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/render/pixelRatio.ts`:
 ```ts
@@ -4638,12 +4638,12 @@ Add to the engine barrel `packages/engine/src/index.ts`:
 export * from './render/pixelRatio'
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/engine/tests/render/pixelRatio.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck

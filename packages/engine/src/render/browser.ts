@@ -1,5 +1,6 @@
 import { WebGLRenderer } from 'three'
 import { canvasDims, createResizeReconciler } from './canvasSize'
+import { cappedPixelRatio } from './pixelRatio'
 import type { ThreeRenderer } from './three'
 
 export interface CanvasRenderer {
@@ -14,7 +15,7 @@ export function attachCanvasRenderer(
   opts?: { sizeTo?: 'window' | 'element' }
 ): CanvasRenderer {
   const gl = new WebGLRenderer({ canvas, antialias: true })
-  gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  gl.setPixelRatio(cappedPixelRatio(window.devicePixelRatio))
   const sizeTo = opts?.sizeTo ?? 'window'
   const reconcile = createResizeReconciler(({ w, h }) => {
     gl.setSize(w, h, sizeTo === 'window')
