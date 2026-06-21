@@ -403,7 +403,7 @@ git commit -m "feat(contracts): command contract; editor re-exports SceneCommand
 
 `PlayObservation` is defined now but not yet consumed; the M16b tuning plan widens `HeadlessOpts.input` to receive it and wires the monkey-ball runtime to populate it. `HeadlessOpts` keeps its current `input?: (step: number) => { x: number; y: number }` signature in this slice (no runtime behavior change).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/contracts/tests/eval.test.ts`:
 
@@ -425,12 +425,12 @@ describe('testPlayResultSchema', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project contracts tests/eval.test.ts`
 Expected: FAIL ("Cannot find module '../src/eval'").
 
-- [ ] **Step 3: Implement the eval contract**
+- [x] **Step 3: Implement the eval contract**
 
 `packages/contracts/src/eval.ts`:
 
@@ -460,7 +460,7 @@ export interface PlayObservation {
 }
 ```
 
-- [ ] **Step 4: Export it from the barrel**
+- [x] **Step 4: Export it from the barrel**
 
 Replace `packages/contracts/src/index.ts` with:
 
@@ -470,12 +470,12 @@ export * from './command'
 export * from './eval'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project contracts tests/eval.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Re-export the eval types from the editor**
+- [x] **Step 6: Re-export the eval types from the editor**
 
 In `packages/editor/src/model/gameDefinition.ts`: remove the local `HeadlessOpts` and `TestPlayResult` interface declarations (lines 21–32) and instead import + re-export them from contracts. The top of the file becomes:
 
@@ -492,17 +492,17 @@ export class CommandError extends Error {}
 
 Leave the rest of the file (`SceneModel`, `PlayHandle`, `PlayDefinition`, `GameDefinition`) unchanged — they already reference `HeadlessOpts` / `TestPlayResult`, now sourced from contracts via the import above.
 
-- [ ] **Step 7: Verify the whole repo still typechecks + tests pass**
+- [x] **Step 7: Verify the whole repo still typechecks + tests pass**
 
 Run: `npm run typecheck && npm run test`
 Expected: PASS. (`games/monkey-ball/src/level/headlessPlay.ts` imports `HeadlessOpts`/`TestPlayResult` from `@automata/editor` and keeps working via the re-export.)
 
-- [ ] **Step 8: Lint**
+- [x] **Step 8: Lint**
 
 Run: `npm run lint`
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/contracts/src/eval.ts packages/contracts/src/index.ts \

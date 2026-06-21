@@ -1,5 +1,8 @@
 import type { PhysicsPort, RenderPort, World } from '@automata/engine'
+import type { HeadlessOpts, TestPlayResult } from '@automata/contracts'
 import type { Brush, Field, SceneCommand, SceneItem, Surface } from './types'
+
+export type { HeadlessOpts, TestPlayResult, PlayObservation } from '@automata/contracts'
 
 /** Thrown by SceneModel.apply when a command cannot be applied. */
 export class CommandError extends Error {}
@@ -16,19 +19,6 @@ export interface SceneModel<Doc> {
   /** Scalar metadata fields for the inspector form. */
   metadataFields(doc: Doc): Field[]
   getSurface(doc: Doc, id: string): Surface
-}
-
-export interface HeadlessOpts {
-  input?: (step: number) => { x: number; y: number }
-  maxSteps: number
-}
-
-export interface TestPlayResult {
-  outcome: 'completed' | 'gameOver' | 'incomplete'
-  timeMs: number
-  fallCount: number
-  bananas: number
-  steps: number
 }
 
 /** Live in-viewport gameplay handle. */
