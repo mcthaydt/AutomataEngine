@@ -4422,7 +4422,7 @@ Locks in a trustworthy per-level metric signal (the baseline a future tuning age
 - Consumes: `runHeadlessPlay`, the shipped levels.
 - Produces: a committed baseline (`{ [levelId]: { restSteps, restOutcome } }`) and a regression test.
 
-- [ ] **Step 1: Write the baseline fixture**
+- [x] **Step 1: Write the baseline fixture**
 
 `games/monkey-ball/tests/fixtures/metric-baselines.json`:
 ```json
@@ -4434,7 +4434,7 @@ Locks in a trustworthy per-level metric signal (the baseline a future tuning age
 }
 ```
 
-- [ ] **Step 2: Write the failing regression test**
+- [x] **Step 2: Write the failing regression test**
 
 `games/monkey-ball/tests/content/baseline.test.ts`:
 ```ts
@@ -4463,12 +4463,12 @@ describe('metric baseline (regression guard)', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it passes**
+- [x] **Step 3: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/content/baseline.test.ts`
 Expected: PASS (the levels from Task 29 already satisfy this).
 
-- [ ] **Step 4: Manual tuning pass (human gate)**
+- [x] **Step 4: Manual tuning pass (human gate)**
 
 ```bash
 npm run dev -w level-editor   # author/adjust, or:
@@ -4476,7 +4476,7 @@ npm run dev -w monkey-ball    # play the shipped levels end to end
 ```
 Play all six levels. Tune by editing `games/monkey-ball/public/data/config/physics.toml` (`max-tilt-deg`, `tilt-smooth`), `camera.toml` if present, and per-level `timeLimitS` until each level is completable but not trivial. Re-run `npx vitest run games/monkey-ball/tests/content` after any data change. Stop the dev server.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A

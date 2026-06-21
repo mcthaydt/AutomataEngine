@@ -1,0 +1,6 @@
+{
+  "note": "Headless no-input metric baseline. Each level's ball must rest (incomplete, no falls) for 180 steps. Plan 4's tuning agent optimizes richer metrics against this same harness.",
+  "restSteps": 180,
+  "restOutcome": "incomplete",
+  "restFallCount": 0
+}
