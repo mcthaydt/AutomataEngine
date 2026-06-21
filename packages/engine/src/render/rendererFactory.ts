@@ -1,0 +1,29 @@
+import type { Camera, Scene } from 'three'
+
+export interface CanvasRenderer {
+  renderFrame(): void
+  dispose(): void
+}
+
+/** Minimal surface both WebGLRenderer and WebGPURenderer satisfy. */
+export interface RendererSurface {
+  render(scene: Scene, camera: Camera): void
+  setSize(width: number, height: number, updateStyle?: boolean): void
+  setPixelRatio(ratio: number): void
+  dispose(): void
+}
+
+/** Factory: builds a renderer backend for the given canvas. May be async (WebGPU init). */
+export type RendererFactory = (canvas: HTMLCanvasElement) => RendererSurface | Promise<RendererSurface>
+
+/**
+ * Resolve the renderer factory for `attachCanvasRenderer`. Explicit opt-in
+ * overrides the default WebGPU backend. Pure/testable: takes the default as an
+ * argument so tests don't need a DOM.
+ */
+export function resolveRendererFactory(
+  explicit: RendererFactory | undefined,
+  fallback: RendererFactory
+): RendererFactory {
+  return explicit ?? fallback
+}

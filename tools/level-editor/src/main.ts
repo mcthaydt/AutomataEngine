@@ -17,7 +17,7 @@ async function main(): Promise<void> {
 
   const loader = createLoader(fetchTextViaFetch())
   const renderer = createThreeRenderer()
-  const canvasRenderer = attachCanvasRenderer(renderer, canvas3d, { sizeTo: 'element' })
+  const canvasRenderer = await attachCanvasRenderer(renderer, canvas3d, { sizeTo: 'element' })
   const physics = await createRapierPhysics()
   const boot = await loadBootData(loader)
   const definition = createMonkeyBallDefinition(boot.lib, boot.tuning)

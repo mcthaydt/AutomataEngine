@@ -1,20 +1,32 @@
 import { WebGLRenderer } from 'three'
 import { canvasDims, createResizeReconciler } from './canvasSize'
 import { cappedPixelRatio } from './pixelRatio'
+import { resolveRendererFactory, type CanvasRenderer, type RendererFactory, type RendererSurface } from './rendererFactory'
 import type { ThreeRenderer } from './three'
 
-export interface CanvasRenderer {
-  renderFrame(): void
-  dispose(): void
+export type { CanvasRenderer, RendererFactory, RendererSurface } from './rendererFactory'
+
+/** Default backend: WebGPU (forward-looking). Falls back via app-supplied factory. */
+export async function createWebGPURenderer(canvas: HTMLCanvasElement): Promise<RendererSurface> {
+  const { WebGPURenderer } = await import('three/webgpu')
+  const renderer = new WebGPURenderer({ canvas, antialias: true })
+  await renderer.init()
+  return renderer
 }
 
-/** WebGL glue. Untested shim, keep trivially thin. */
-export function attachCanvasRenderer(
+/** Legacy backend: WebGL. Synchronous construction. */
+export function createWebGLRenderer(canvas: HTMLCanvasElement): RendererSurface {
+  return new WebGLRenderer({ canvas, antialias: true })
+}
+
+/** Canvas glue. Untested shim, keep trivially thin. Default backend is WebGPU. */
+export async function attachCanvasRenderer(
   renderer: ThreeRenderer,
   canvas: HTMLCanvasElement,
-  opts?: { sizeTo?: 'window' | 'element' }
-): CanvasRenderer {
-  const gl = new WebGLRenderer({ canvas, antialias: true })
+  opts?: { sizeTo?: 'window' | 'element'; createRenderer?: RendererFactory }
+): Promise<CanvasRenderer> {
+  const create = resolveRendererFactory(opts?.createRenderer, createWebGPURenderer)
+  const gl = await create(canvas)
   gl.setPixelRatio(cappedPixelRatio(window.devicePixelRatio))
   const sizeTo = opts?.sizeTo ?? 'window'
   const reconcile = createResizeReconciler(({ w, h }) => {
