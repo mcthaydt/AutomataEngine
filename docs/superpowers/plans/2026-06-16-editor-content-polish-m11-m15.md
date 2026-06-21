@@ -4241,7 +4241,7 @@ Delivers: 2 worlds × 3 levels (dogfood-authored in the editor, committed as val
 - Consumes: `levelKind`, `worldsManifestKind`, `buildLevelWorld`, `runHeadlessPlay`, archetype library + tuning.
 - Produces: six shipped levels and a 2-world manifest, all validated.
 
-- [ ] **Step 1: Write the failing content test**
+- [x] **Step 1: Write the failing content test**
 
 `games/monkey-ball/tests/content/levels.test.ts`:
 ```ts
@@ -4283,12 +4283,12 @@ describe('shipped content', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/content/levels.test.ts`
 Expected: FAIL — missing level files / manifest has 1 world.
 
-- [ ] **Step 3: Author the levels**
+- [x] **Step 3: Author the levels**
 
 `games/monkey-ball/public/data/levels/w1-l2.json`:
 ```json
@@ -4386,7 +4386,7 @@ Expected: FAIL — missing level files / manifest has 1 world.
 }
 ```
 
-- [ ] **Step 4: Extend the manifest**
+- [x] **Step 4: Extend the manifest**
 
 `games/monkey-ball/public/data/levels/worlds.json`:
 ```json
@@ -4398,12 +4398,12 @@ Expected: FAIL — missing level files / manifest has 1 world.
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/content/levels.test.ts`
 Expected: PASS. If a level fails the "rests on solid ground" smoke, the spawn is over a gap — nudge the spawn or widen the start platform (do not weaken the test).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
