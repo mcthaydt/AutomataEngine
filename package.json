@@ -13,9 +13,13 @@
     "coverage": "vitest run --coverage",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
-    "ci": "npm run lint && npm run typecheck && npm run test"
+    "ci": "npm run lint && npm run typecheck && npm run test",
+    "dev:game": "npm run dev -w monkey-ball -- --host 127.0.0.1 --port 5174 --strictPort",
+    "dev:editor": "npm run dev -w level-editor -- --host 127.0.0.1 --port 5175 --strictPort",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^10.4.1",
     "happy-dom": "^20.10.2",

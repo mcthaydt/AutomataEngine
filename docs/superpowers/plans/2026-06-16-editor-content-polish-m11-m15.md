@@ -4807,7 +4807,7 @@ Two end-to-end smokes covering the untested shims. Kept out of `npm run ci` (bro
 **Interfaces:**
 - Produces: `npm run e2e` running both smokes against locally-served apps.
 
-- [ ] **Step 1: Install Playwright + scripts**
+- [x] **Step 1: Install Playwright + scripts**
 
 ```bash
 npm install -D @playwright/test
@@ -4821,7 +4821,7 @@ In the root `package.json` scripts, add:
 ```
 > **Note:** confirm the exact `vite dev <dir>` invocation works in this workspace; if each app must be served from its own dir, use `npm run dev -w monkey-ball -- --port 5174 --strictPort` form instead. The ports must match `playwright.config.ts`.
 
-- [ ] **Step 2: Write the Playwright config**
+- [x] **Step 2: Write the Playwright config**
 
 `playwright.config.ts`:
 ```ts
@@ -4838,7 +4838,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Write the smokes**
+- [x] **Step 3: Write the smokes**
 
 `e2e/game.spec.ts`:
 ```ts
@@ -4876,14 +4876,14 @@ test('editor places a box and export reflects it', async ({ page }) => {
 
 > **Note:** these assert the shim path end-to-end; exact selectors (`#overlays`, button text, `[data-vp="main"] canvas`, `[data-action="export"]`) must match the post-overhaul host/game DOM. Adjust selectors to the real markup — do not weaken to trivial always-true assertions.
 
-- [ ] **Step 4: Run the smokes**
+- [x] **Step 4: Run the smokes**
 
 ```bash
 npm run e2e
 ```
 Expected: 2 passed. (CI integration of `e2e` is optional; it is not part of `npm run ci`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
