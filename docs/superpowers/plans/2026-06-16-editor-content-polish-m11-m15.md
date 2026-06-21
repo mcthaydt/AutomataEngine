@@ -4727,7 +4727,7 @@ git commit -m "feat(editor): visibility-pause exits test-play when tab hidden"
 - Consumes: `InputVector`.
 - Produces: `applyDeadzone(v: InputVector, deadzone: number): InputVector` — zero below the dead-zone, rescaled smoothly above it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/engine/tests/input/deadzone.test.ts`:
 ```ts
@@ -4751,12 +4751,12 @@ describe('applyDeadzone', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/engine/tests/input/deadzone.test.ts`
 Expected: FAIL — `applyDeadzone` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Append to `packages/engine/src/input/vector.ts`:
 ```ts
@@ -4781,12 +4781,12 @@ import { applyDeadzone, clampToUnit } from './vector'
 ```
 Keep `JoystickOptions.deadZone` and the current default (`0.15`) as the source of truth for joystick feel.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/engine/tests/input/deadzone.test.ts`
 Expected: PASS (3 tests). Run the existing joystick test too: `npx vitest run packages/engine/tests/input/joystick.test.ts` — if a dead-zone now zeroes a previously-tiny expected value, update that test's input to clear the dead-zone (the feel change is intended).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
