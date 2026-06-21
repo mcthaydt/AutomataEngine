@@ -35,4 +35,14 @@ describe('createNullRenderer', () => {
     expect(renderer.calls.map((call) => call.op)).toEqual(['createGroup', 'removeGroup'])
     expect(renderer.calls[1]).toMatchObject({ op: 'removeGroup', group: stage })
   })
+
+  it('records grid + highlight calls', () => {
+    const renderer = createNullRenderer()
+    const grid = renderer.port.setGrid({ size: 10, divisions: 10, color: '#222' })
+    const entity = {}
+    renderer.port.setHighlight(entity, true)
+    renderer.port.removeGrid(grid)
+    expect(renderer.calls.map((call) => call.op)).toEqual(['setGrid', 'setHighlight', 'removeGrid'])
+    expect(renderer.calls[1]).toMatchObject({ op: 'setHighlight', entity, on: true })
+  })
 })

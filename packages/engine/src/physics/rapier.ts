@@ -34,6 +34,7 @@ export async function createRapierPhysics(
   const eventQueue = new RAPIER.EventQueue(true)
   const bodies = new Map<object, RAPIER.RigidBody>()
   const entityByColliderHandle = new Map<number, object>()
+  let gx = gravity.x, gy = gravity.y, gz = gravity.z
 
   return {
     get bodyCount() { return bodies.size },
@@ -66,7 +67,14 @@ export async function createRapierPhysics(
     },
 
     setGravity(g) {
+      if (g.x === gx && g.y === gy && g.z === gz) return
+      gx = g.x; gy = g.y; gz = g.z
       world.gravity.x = g.x; world.gravity.y = g.y; world.gravity.z = g.z
+      // Gravity is a force on every dynamic body; a body asleep at rest must wake
+      // or it ignores the change (e.g. a respawned ball that settled before the
+      // player tilts). Mirrors applyImpulse passing wakeUp=true. Unchanged gravity
+      // is a no-op above, so idle bodies still sleep.
+      for (const body of bodies.values()) body.wakeUp()
     },
 
     step(dt): PhysicsEvent[] {

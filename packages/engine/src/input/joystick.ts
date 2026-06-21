@@ -1,5 +1,5 @@
 import type { InputSource, InputVector } from './types'
-import { clampToUnit } from './vector'
+import { applyDeadzone, clampToUnit } from './vector'
 
 export interface JoystickOptions {
   radiusPx?: number
@@ -34,7 +34,7 @@ export function createVirtualJoystick(
     const c = center()
     const { x: dx, y: dy } = clampToUnit((clientX - c.x) / radius, (clientY - c.y) / radius)
     nub.style.transform = `translate(${dx * radius}px, ${dy * radius}px)`
-    value = Math.hypot(dx, dy) < deadZone ? { x: 0, y: 0 } : { x: dx, y: -dy }
+    value = applyDeadzone({ x: dx, y: -dy }, deadZone)
   }
 
   const reset = (): void => {

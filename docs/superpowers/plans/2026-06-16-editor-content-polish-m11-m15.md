@@ -4,6 +4,8 @@
 
 **Goal:** Build a **generic, engine-powered level editor** (`packages/editor`) that the monkey-ball game registers its content into, author the shipping content in it, and complete release polish — milestones M11–M15.
 
+**Overall progress:** 59% (117/200 checklist items complete)
+
 **Architecture:** The editor is generic like the engine: `packages/editor` depends **only** on `@automata/engine` and is driven by a `GameDefinition` the game registers; a host app `tools/level-editor` is the sole place the game and editor meet. Editing is BUILD 2-style — a dual viewport (pure-canvas 2D top-down map + Three fly-through 3D) editing one **serializable `SceneCommand`** stream into a **schema-validated document**, with live world sync and an instant play/edit toggle. The engine grows only three generic `RenderPort` methods (`setGrid`/`removeGrid`/`setHighlight`).
 
 **Tech Stack:** Existing workspace toolchain (TypeScript strict, Vitest, ESLint flat config, Vite). The engine wraps three/rapier/miniplex/zod; the editor and game import only `@automata/engine`. **No new third-party dependencies** until M15 (Playwright, dev-only).
@@ -48,6 +50,7 @@ Copied from the spec; every task's requirements implicitly include these.
 1. **Run the gate per task.** Tasks run `npx vitest run <file>`; run `npm run typecheck` (or `npm run ci`) at the end of each task — the dependency-direction ESLint rules and strict TS catch boundary violations early. Full `npm run ci` is required at each milestone checkpoint.
 2. **The "verify in a real browser" steps are human gates.** Each milestone ends with a manual checkpoint (`npm run dev -w level-editor` / `-w monkey-ball`, open the URL, observe). An automated/subagent runner cannot complete these — pause for a human or explicitly defer, but never mark them done from code alone. Stop the dev server after each.
 3. **`Infinity` cardinality** is written as `Number.POSITIVE_INFINITY` in code; JSON-serialized brushes are constructed in TS, never parsed from JSON, so this is safe.
+4. **The editor UX/chrome overhaul runs between M12 and M13.** `docs/superpowers/plans/2026-06-19-editor-ux-chrome-overhaul.md` deletes `packages/editor/src/ui/panels.ts` + `tools/level-editor/src/viewTabs.ts` and rewrites the host `tools/level-editor/src/main.ts` into the docked "Slate Pro" chrome. Run that plan to completion before starting M13. Tasks 28, 34, and 36 below have been updated to target the new chrome (a toolbar `PanelHandle` mounted by `renderEditorChrome`, the rewritten `main.ts`, and `[data-vp="main"] canvas` selectors) — there is no `panels.ts`/`renderToolbar`/`viewTabs` to modify after the overhaul.
 
 ---
 
@@ -69,7 +72,7 @@ Generic scene-graph aids a racer's or platformer's editor would use unchanged, s
 **Interfaces:**
 - Produces: `RenderPort.setGrid(opts: { size: number; divisions: number; color: string }): GridId`, `RenderPort.removeGrid(id: GridId): void`, `RenderPort.setHighlight(entity: object, on: boolean): void`; `type GridId = number`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/engine/tests/render/three-grid.test.ts`:
 ```ts
@@ -115,12 +118,12 @@ Append to `packages/engine/tests/render/null.test.ts` inside the `describe('crea
   })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/engine/tests/render/three-grid.test.ts packages/engine/tests/render/null.test.ts`
 Expected: FAIL — `port.setGrid is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/engine/src/render/port.ts`, add to the `RenderPort` interface (after `removeGroup`):
 ```ts
@@ -192,12 +195,12 @@ In `packages/engine/src/render/null.ts`:
 ```
 with `let nextGridId = 1` declared alongside the existing counters and `opts?: { size: number; divisions: number; color: string }` added to `RenderCall`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/engine/tests/render/three-grid.test.ts packages/engine/tests/render/null.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -220,7 +223,7 @@ git commit -m "feat(engine): RenderPort setGrid/removeGrid/setHighlight for edit
 **Interfaces:**
 - Produces: package `@automata/editor` (exports `./src/index.ts`); `EDITOR_VERSION` constant.
 
-- [ ] **Step 1: Write the scaffold files**
+- [x] **Step 1: Write the scaffold files**
 
 `packages/editor/package.json`:
 ```json
@@ -264,7 +267,7 @@ export const EDITOR_VERSION = '0.1.0'
 export { EDITOR_VERSION } from './version'
 ```
 
-- [ ] **Step 2: Wire lint + coverage**
+- [x] **Step 2: Wire lint + coverage**
 
 In `eslint.config.js`, extend the games/tools restriction to include the editor package, and forbid the editor from importing the game. Change the `files: ['games/**/*.ts', 'tools/**/*.ts']` block to also cover `packages/editor`:
 ```js
@@ -304,7 +307,7 @@ In the root `vitest.config.ts`, extend `coverage.include`:
 ```
 (The existing `exclude: ['**/browser.ts', '**/index.ts', '**/version.ts']` already covers editor shims and barrels.)
 
-- [ ] **Step 3: Write the failing smoke test**
+- [x] **Step 3: Write the failing smoke test**
 
 `packages/editor/tests/smoke.test.ts`:
 ```ts
@@ -318,7 +321,7 @@ describe('editor package', () => {
 })
 ```
 
-- [ ] **Step 4: Install the workspace + run**
+- [x] **Step 4: Install the workspace + run**
 
 ```bash
 npm install
@@ -326,7 +329,7 @@ npx vitest run packages/editor/tests/smoke.test.ts
 ```
 Expected: PASS (1 test). `npm install` links the new `@automata/editor` workspace.
 
-- [ ] **Step 5: Typecheck + lint + commit**
+- [x] **Step 5: Typecheck + lint + commit**
 
 ```bash
 npm run typecheck
@@ -347,7 +350,7 @@ git commit -m "chore(editor): scaffold @automata/editor package with lint + cove
 - Produces: `SceneItem`, `Surface`, `SceneCommand`, `Brush`, `MarkerRef`, `BoxShape`, `CylinderShape`, `ArchetypeRef`, `Field`, `ItemKind`; `SceneModel<Doc>`, `GameDefinition<Doc>`, `CommandError`; the fake `FakeDoc` + `fakeDefinition` test fixture (`{ doc: FakeDoc; ... }`).
 - Consumes: `Vec3` from `@automata/engine`.
 
-- [ ] **Step 1: Write the model types**
+- [x] **Step 1: Write the model types**
 
 `packages/editor/src/model/types.ts`:
 ```ts
@@ -409,7 +412,7 @@ export interface Field {
 }
 ```
 
-- [ ] **Step 2: Write the registration interfaces**
+- [x] **Step 2: Write the registration interfaces**
 
 `packages/editor/src/model/gameDefinition.ts`:
 ```ts
@@ -474,7 +477,7 @@ export interface GameDefinition<Doc> {
 }
 ```
 
-- [ ] **Step 3: Write the fake registration fixture**
+- [x] **Step 3: Write the fake registration fixture**
 
 `packages/editor/tests/fixtures/fakeDefinition.ts`:
 ```ts
@@ -552,7 +555,7 @@ export function boxItem(id: string, x = 0, z = 0): SceneItem {
 }
 ```
 
-- [ ] **Step 4: Write the failing test**
+- [x] **Step 4: Write the failing test**
 
 `packages/editor/tests/model/fakeDefinition.test.ts`:
 ```ts
@@ -585,12 +588,12 @@ describe('generic SceneModel (fake registration)', () => {
 })
 ```
 
-- [ ] **Step 5: Run tests to verify they pass (types compile)**
+- [x] **Step 5: Run tests to verify they pass (types compile)**
 
 Run: `npx vitest run packages/editor/tests/model/fakeDefinition.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Export from the barrel + commit**
+- [x] **Step 6: Export from the barrel + commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
@@ -615,7 +618,7 @@ git commit -m "feat(editor): generic SceneModel/GameDefinition model + fake fixt
 - Consumes: `SceneModel`, `SceneCommand`, `CommandError`.
 - Produces: `EditorAction`; `DocumentState<Doc>` (`{ doc; dirty; past; future }`), `createDocumentReducer(scene, opts?): Reducer<DocumentState<Doc>, EditorAction>`, `initialDocument(scene): DocumentState<Doc>`, `UNDO_LIMIT`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/state/document.test.ts`:
 ```ts
@@ -679,12 +682,12 @@ describe('document slice', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/state/document.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/document`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/state/actions.ts`:
 ```ts
@@ -759,12 +762,12 @@ export function createDocumentReducer<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/state/document.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -784,7 +787,7 @@ git commit -m "feat(editor): document slice with command apply + bounded undo/re
 - Consumes: `EditorAction`, `Surface`, `ToolSelection`.
 - Produces: `selectionReducer`, `initialSelection` (`string[]`); `ToolState` (`{ selection: ToolSelection; surface: Surface }`), `toolReducer`, `initialTool`; `modeReducer`, `initialMode` (`'edit' | 'play'`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/state/uiSlices.test.ts`:
 ```ts
@@ -819,12 +822,12 @@ describe('mode slice', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/state/uiSlices.test.ts`
 Expected: FAIL — cannot resolve the slice modules.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/state/selection.ts`:
 ```ts
@@ -884,12 +887,12 @@ export function modeReducer(state: Mode, action: EditorAction): Mode {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/state/uiSlices.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -907,7 +910,7 @@ git commit -m "feat(editor): selection/tool/mode slices"
 - Consumes: `combineReducers`, `createStore`, `Store` from `@automata/engine`; all slice reducers; `GameDefinition`.
 - Produces: `EditorState<Doc>` (`{ document; selection; tool; mode }`), `EditorStore<Doc>`, `createEditorStore<Doc>(definition): EditorStore<Doc>`, selectors `selectDoc`, `selectItems`, `selectSelection`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/state/store.test.ts`:
 ```ts
@@ -940,12 +943,12 @@ describe('editor store', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/state/store.test.ts`
 Expected: FAIL — cannot resolve `../../src/state/store`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/state/store.ts`:
 ```ts
@@ -990,12 +993,12 @@ export function selectItems<Doc>(definition: GameDefinition<Doc>, state: EditorS
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/state/store.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Export from barrel + commit**
+- [x] **Step 5: Export from barrel + commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
@@ -1019,7 +1022,7 @@ git commit -m "feat(editor): createEditorStore composing document/selection/tool
 - Consumes: `Vec3` from `@automata/engine`.
 - Produces: `snapToGrid(value: number, cell: number): number`, `snapVec3XZ(v: Vec3, cell: number): Vec3`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/grid.test.ts`:
 ```ts
@@ -1038,12 +1041,12 @@ describe('grid snap', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/grid.test.ts`
 Expected: FAIL — cannot resolve `../src/grid`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/grid.ts`:
 ```ts
@@ -1058,12 +1061,12 @@ export function snapVec3XZ(v: Vec3, cell: number): Vec3 {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/grid.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1080,7 +1083,7 @@ git commit -m "feat(editor): grid snap math"
 - Consumes: `Vec3` from `@automata/engine`.
 - Produces: `FlyCamera` (`{ position: Vec3; yaw: number; pitch: number }`), `initialFlyCamera`, `cameraForward(cam): Vec3`, `cameraView(cam): { position: Vec3; lookAt: Vec3 }`, `moveFly(cam, move, speed): FlyCamera`, `rotateFly(cam, dYaw, dPitch): FlyCamera`. `move` is `{ forward: number; right: number; up: number }`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/viewport3d/flyCamera.test.ts`:
 ```ts
@@ -1124,12 +1127,12 @@ describe('fly camera', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/flyCamera.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/viewport3d/flyCamera.ts`:
 ```ts
@@ -1180,12 +1183,12 @@ export function moveFly(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/flyCamera.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1202,7 +1205,7 @@ git commit -m "feat(editor): pure fly-camera math"
 - Consumes: `Vec3` from `@automata/engine`.
 - Produces: `MapView` (`{ panX: number; panZ: number; pixelsPerUnit: number }`), `initialMapView`, `worldToScreen(view, world, size): { x: number; y: number }`, `screenToWorldXZ(view, screen, size): { x: number; z: number }` (`size = { w, h }`, screen origin top-left; world +x → right, +z → down).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/viewport2d/projection.test.ts`:
 ```ts
@@ -1234,12 +1237,12 @@ describe('2D map projection', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/projection.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/viewport2d/projection.ts`:
 ```ts
@@ -1267,12 +1270,12 @@ export function screenToWorldXZ(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/projection.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1291,7 +1294,7 @@ The 2D map renders by producing a list of pure draw ops; the canvas shim (M11 ho
 - Consumes: `MapView`, `ScreenSize`, `worldToScreen`; `SceneItem`, `GameDefinition`.
 - Produces: `DrawOp` (`{ shape: 'rect' | 'circle' | 'icon'; x; y; w?; h?; r?; color: string; selected: boolean; id: string }`), `buildDrawModel(definition, items, selection, view, size): DrawOp[]`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/viewport2d/draw.test.ts`:
 ```ts
@@ -1321,7 +1324,7 @@ describe('2D draw model', () => {
 
   it('positions a box rect centered on its world position', () => {
     const [rect] = buildDrawModel(fakeDefinition, [boxItem('b', 0, 0)], [], initialMapView, size)
-    expect(rect).toMatchObject({ x: 400, y: 300 })
+    expect(rect).toMatchObject({ x: 388, y: 288, w: 24, h: 24 })
   })
 
   it('marks selected items', () => {
@@ -1336,12 +1339,12 @@ describe('2D draw model', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/draw.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/viewport2d/draw.ts`:
 ```ts
@@ -1386,12 +1389,12 @@ export function buildDrawModel<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/draw.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1410,7 +1413,7 @@ Builds the live ECS world from the document via `definition.buildWorld`, renders
 - Consumes: `RenderPort`, `PhysicsPort`, `World`, `registerRenderables`, `renderSystem`, `createNullRenderer` (test) from `@automata/engine`; `GameDefinition`; `EditorStore`.
 - Produces: `createWorldSync<Doc>(definition, store, render, physics): { syncNow(): void; render(alpha): void; dispose(): void }`. Items carry a stable `id`; the world entities expose `editorId` for highlight mapping.
 
-- [ ] **Step 1: Extend the fake fixture with a real `buildWorld`**
+- [x] **Step 1: Extend the fake fixture with a real `buildWorld`**
 
 Append to `packages/editor/tests/fixtures/fakeDefinition.ts` (add `createWorld`, `RenderPort` to its `@automata/engine` import):
 ```ts
@@ -1433,7 +1436,7 @@ export function fakeBuildWorld(doc: FakeDoc, _render: RenderPort) {
 export const renderDefinition: GameDefinition<FakeDoc> = { ...fakeDefinition, buildWorld: fakeBuildWorld as never }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `packages/editor/tests/viewport3d/worldSync.test.ts`:
 ```ts
@@ -1469,12 +1472,12 @@ describe('worldSync', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/worldSync.test.ts`
 Expected: FAIL — cannot resolve `../../src/viewport3d/worldSync`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `packages/editor/src/viewport3d/worldSync.ts`:
 ```ts
@@ -1542,12 +1545,12 @@ export function createWorldSync<Doc>(
 
 > **API note:** `registerRenderables(world, render, group)` and `renderSystem(render)` are the engine helpers the game uses in `games/monkey-ball/src/game/gameplay.ts`. If `renderSystem`'s context shape differs from `{ world, alpha }`, match the engine's `System` context (check `packages/engine/src/render/systems.ts`) and adapt the call — do not change the engine.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/worldSync.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Typecheck + commit**
+- [x] **Step 6: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -1572,7 +1575,7 @@ The game exposes a public API for the host, and registers a `GameDefinition<Leve
 - Consumes: `levelKind`, `levelSchema`, `Level`, `populateLevelWorld`, `Entity` (game); `parseData`, `createWorld`, `registerPhysicsBodies` (engine); `SceneModel`, `GameDefinition`, `SceneItem`, `CommandError` (editor).
 - Produces: `monkeyBallDefinition: GameDefinition<Level>`; `levelSceneModel: SceneModel<Level>`; the game barrel re-exporting level/data/registration symbols. `play` is added in M13.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `games/monkey-ball/tests/editor/sceneModel.test.ts`:
 ```ts
@@ -1638,12 +1641,12 @@ describe('monkey-ball level SceneModel', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModel.test.ts`
 Expected: FAIL — cannot resolve `../../src/editor/sceneModel`.
 
-- [ ] **Step 3: Implement the SceneModel**
+- [x] **Step 3: Implement the SceneModel**
 
 `games/monkey-ball/src/editor/sceneModel.ts`:
 ```ts
@@ -1778,7 +1781,7 @@ export const levelSceneModel: SceneModel<Level> = {
 
 > **Note:** the geometry `friction` default — `parseData`/`levelSchema` apply `.default(0.6)`, so parsed levels always carry `friction`. `emptyDoc` sets it explicitly to keep the type happy.
 
-- [ ] **Step 4: Add optional editor ID tags to the runtime world builder**
+- [x] **Step 4: Add optional editor ID tags to the runtime world builder**
 
 In `games/monkey-ball/src/entity.ts`, add this optional tag to `Entity`:
 ```ts
@@ -1829,7 +1832,7 @@ export function populateLevelWorld(
 }
 ```
 
-- [ ] **Step 5: Implement the partial registration + game barrel**
+- [x] **Step 5: Implement the partial registration + game barrel**
 
 `games/monkey-ball/src/editor/registration.ts`:
 ```ts
@@ -1903,12 +1906,12 @@ In `games/monkey-ball/package.json`, add an `exports` field and the `@automata/e
 ```
 Then run `npm install` to link `@automata/editor` into the game workspace before the typecheck below.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModel.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 7: Typecheck + commit**
+- [x] **Step 7: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -1935,7 +1938,7 @@ Rewrites `tools/level-editor` from the walking skeleton into the host that boots
 - Consumes: `createEditorStore`, `createWorldSync`, fly camera, projection, draw model, `GameDefinition`; engine `createThreeRenderer`, `attachCanvasRenderer`, `createRapierPhysics`, `GameLoop`, `startLoopDriver`.
 - Produces: `createEditor<Doc>({ definition, mount, render, physics }): { store; dispose }` (testable, no DOM-canvas/Three required when given a render port); the host `main.ts` (shim) that wires real ports + pointer input.
 
-- [ ] **Step 1: Write the failing test (headless host core)**
+- [x] **Step 1: Write the failing test (headless host core)**
 
 `packages/editor/tests/host.test.ts`:
 ```ts
@@ -1968,12 +1971,12 @@ describe('createEditor core', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/host.test.ts`
 Expected: FAIL — cannot resolve `../src/host`.
 
-- [ ] **Step 3: Implement the editor core host**
+- [x] **Step 3: Implement the editor core host**
 
 `packages/editor/src/host.ts`:
 ```ts
@@ -2034,7 +2037,7 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
 
 > **Note:** the `dirtyDoc` stamp is a deliberately coarse "did something change" check for M11 (full rebuild). M12+ replaces selection-only changes with a highlight-only update; do not optimize yet.
 
-- [ ] **Step 4: Implement the browser shims + host main**
+- [x] **Step 4: Implement the browser shims + host main**
 
 `packages/editor/src/viewport3d/browser.ts` (untested shim):
 ```ts
@@ -2158,7 +2161,7 @@ export * from './viewport2d/draw'
 export * from './viewport3d/flyCamera'
 ```
 
-- [ ] **Step 5: Run tests + full gate**
+- [x] **Step 5: Run tests + full gate**
 
 ```bash
 npm install
@@ -2167,14 +2170,14 @@ npm run ci
 ```
 Expected: host tests PASS; `npm run ci` green (lint incl. dependency rules + typecheck + all tests).
 
-- [ ] **Step 6: Manual checkpoint (human gate)**
+- [x] **Step 6: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w level-editor
 ```
 Open the URL. Expect: a 3D viewport showing the empty level's floor + spawn/goal, a small 2D map in the corner showing the floor rectangle and spawn/goal icons, and WASD + click-drag fly controls. Stop the dev server.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -2200,11 +2203,11 @@ Delivers: editing in both viewports — pure 3D picking (ray-vs-AABB, ray-vs-gro
 - Consumes: `FlyCamera`, `cameraForward`, `cameraRight`; `Vec3`, `SceneItem`.
 - Produces: `EDITOR_FOV_Y` (radians); `Ray` (`{ origin: Vec3; dir: Vec3 }`), `buildRay(cam, screen, size, fovY): Ray`, `rayPlaneY(ray, y): Vec3 | null`; `Aabb` (`{ min: Vec3; max: Vec3 }`), `itemAabb(item): Aabb`, `rayAabb(ray, aabb): number | null`, `pickItem(items, ray): string | null`.
 
-- [ ] **Step 1: Export `cameraRight`**
+- [x] **Step 1: Export `cameraRight`**
 
 In `packages/editor/src/viewport3d/flyCamera.ts`, change `function cameraRight` to `export function cameraRight`.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/editor/tests/viewport3d/ray.test.ts`:
 ```ts
@@ -2272,12 +2275,12 @@ describe('AABB + picking', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/ray.test.ts packages/editor/tests/viewport3d/aabb.test.ts`
 Expected: FAIL — cannot resolve the modules.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `packages/editor/src/viewport3d/ray.ts`:
 ```ts
@@ -2375,12 +2378,12 @@ export function pickItem(items: SceneItem[], ray: Ray): string | null {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/ray.test.ts packages/editor/tests/viewport3d/aabb.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -2397,7 +2400,7 @@ git commit -m "feat(editor): 3D picking — ray build, ray-plane, ray-AABB, item
 - Consumes: `DrawOp`, `buildDrawModel`, `MapView`, `ScreenSize`; `GameDefinition`, `SceneItem`.
 - Produces: `hitTestMap(definition, items, view, size, screen): string | null` (topmost item under a screen point).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/viewport2d/hit.test.ts`:
 ```ts
@@ -2424,12 +2427,12 @@ describe('2D hit-testing', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/hit.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/viewport2d/hit.ts`:
 ```ts
@@ -2459,12 +2462,12 @@ export function hitTestMap<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/viewport2d/hit.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2481,7 +2484,7 @@ git commit -m "feat(editor): 2D map hit-testing"
 - Consumes: `GameDefinition`, `Brush`, `SceneItem`, `ItemShape`.
 - Produces: `brushOf(definition, item): Brush | null`, `countForBrush(definition, items, brush): number`, `canPlace(definition, items, brush): boolean`, `canDelete(definition, items, id): boolean`, `missingRequired(definition, items): string[]` (labels of brushes below `min`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/tools/cardinality.test.ts`:
 ```ts
@@ -2519,12 +2522,12 @@ describe('cardinality', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/tools/cardinality.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/tools/cardinality.ts`:
 ```ts
@@ -2567,12 +2570,12 @@ export function missingRequired<Doc>(definition: GameDefinition<Doc>, items: Sce
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/tools/cardinality.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2591,7 +2594,7 @@ Turns a brush + a world point into a `SceneCommand`: a new item for unbounded br
 - Consumes: `GameDefinition`, `Brush`, `SceneItem`, `SceneCommand`, `Vec3`; `snapVec3XZ`; `canPlace`, `countForBrush`.
 - Produces: `placementCommand(definition, items, brush, world, cell): SceneCommand | null`, `newItemId(brush, items): string`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/tools/place.test.ts`:
 ```ts
@@ -2628,12 +2631,12 @@ describe('placement command', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/tools/place.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/tools/place.ts`:
 ```ts
@@ -2690,12 +2693,12 @@ export function placementCommand<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/tools/place.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2711,7 +2714,7 @@ git commit -m "feat(editor): placement command builder with cardinality + snap"
 **Interfaces:**
 - Produces: `levelSceneModel.apply` handling `addItem` (box/cylinder → `geometry`, archetype → `entities`) and `setItemField` (geometry position, box size, cylinder radius/height via `path`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `games/monkey-ball/tests/editor/sceneModelEdit.test.ts`:
 ```ts
@@ -2764,12 +2767,12 @@ describe('level SceneModel edits', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModelEdit.test.ts`
 Expected: FAIL — `apply` throws "not supported until M12" for `addItem`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `games/monkey-ball/src/editor/sceneModel.ts`, replace the `case 'addItem':` / `case 'setItemField':` arm (the one that throws "not supported until M12") with:
 ```ts
@@ -2823,12 +2826,12 @@ In `games/monkey-ball/src/editor/sceneModel.ts`, replace the `case 'addItem':` /
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModelEdit.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -2846,7 +2849,7 @@ git commit -m "feat(game): complete level SceneModel apply (addItem + setItemFie
 - Consumes: `GameDefinition`, `SceneItem`, `Field`, `SceneCommand`.
 - Produces: `inspectorFields(definition, doc, selection): Field[]` (metadata fields when nothing selected; otherwise the selected item's pos/size fields), `fieldCommand(selection, field, value): SceneCommand`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/tools/inspector.test.ts`:
 ```ts
@@ -2881,12 +2884,12 @@ describe('inspector', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/tools/inspector.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/tools/inspector.ts`:
 ```ts
@@ -2933,12 +2936,12 @@ export function fieldCommand(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/tools/inspector.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2955,7 +2958,7 @@ git commit -m "feat(editor): inspector field model"
 - Consumes: `GameDefinition`, `SceneModel.parse`, `missingRequired`.
 - Produces: `validateDoc(definition, doc): { issues: string[]; exportable: boolean }`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/validation.test.ts`:
 ```ts
@@ -2983,12 +2986,12 @@ describe('validateDoc', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/validation.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/validation.ts`:
 ```ts
@@ -3011,12 +3014,12 @@ export function validateDoc<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/validation.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Export tool symbols from barrel + commit**
+- [x] **Step 5: Export tool symbols from barrel + commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
@@ -3045,15 +3048,18 @@ Adds selection-by-picking, the place tool, surface cycling, delete, the palette 
 - Create: `packages/editor/src/tools/surfaceCycle.ts`
 - Create: `packages/editor/src/ui/panels.ts`
 - Modify: `tools/level-editor/src/main.ts`
+- Create: `tools/level-editor/src/viewTabs.ts`
 - Test: `packages/editor/tests/tools/surfaceCycle.test.ts`
 - Test: `packages/editor/tests/hostTools.test.ts`
 - Test: `packages/editor/tests/ui/panels.test.ts`
+- Test: `tools/level-editor/tests/viewTabs.test.ts`
+- Test: `tools/level-editor/tests/layout.test.ts`
 
 **Interfaces:**
 - Consumes: all M12 tools; `EditorCore`.
 - Produces: `nextSurface(palette, current): Surface`; `EditorCore` gains `pick3d(screen, size)`, `pick2d(screen, size)`, `placeAt(world)`, `moveSelectionTo(world)`, `cycleSurfaceOn(id)`, `deleteSelected()`; `renderPanels(core, host): () => void` (DOM panels bound to the store).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/tools/surfaceCycle.test.ts`:
 ```ts
@@ -3158,12 +3164,12 @@ describe('panels', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/tools/surfaceCycle.test.ts packages/editor/tests/hostTools.test.ts packages/editor/tests/ui/panels.test.ts`
 Expected: FAIL — modules/methods not found.
 
-- [ ] **Step 3: Implement `nextSurface`**
+- [x] **Step 3: Implement `nextSurface`**
 
 `packages/editor/src/tools/surfaceCycle.ts`:
 ```ts
@@ -3178,7 +3184,7 @@ export function nextSurface(palette: Surface[], current: Surface): Surface {
 }
 ```
 
-- [ ] **Step 4: Extend the host core**
+- [x] **Step 4: Extend the host core**
 
 In `packages/editor/src/host.ts`, add imports:
 ```ts
@@ -3254,7 +3260,7 @@ and add these methods to the returned `core` object (the `GRID_CELL` constant is
     },
 ```
 
-- [ ] **Step 5: Implement the DOM panels**
+- [x] **Step 5: Implement the DOM panels**
 
 `packages/editor/src/ui/panels.ts`:
 ```ts
@@ -3306,7 +3312,7 @@ export function renderPanels<Doc>(core: EditorCore<Doc>, host: HTMLElement): () 
 
 > **Note:** `renderPanels` reads `core.definition`. Add `definition` to the `EditorCore` interface and to the returned object in `host.ts` (`get definition() { return definition }`).
 
-- [ ] **Step 6: Wire the shim**
+- [x] **Step 6: Wire the shim**
 
 In `tools/level-editor/src/main.ts`, after creating `editor`, add panels + pointer tools (shim — keep thin):
 ```ts
@@ -3358,7 +3364,7 @@ Append to `packages/editor/src/index.ts`:
 export * from './ui/panels'
 ```
 
-- [ ] **Step 7: Run tests + full gate**
+- [x] **Step 7: Run tests + full gate**
 
 ```bash
 npx vitest run packages/editor/tests/tools/surfaceCycle.test.ts packages/editor/tests/hostTools.test.ts packages/editor/tests/ui/panels.test.ts
@@ -3366,14 +3372,14 @@ npm run ci
 ```
 Expected: all PASS; `npm run ci` green.
 
-- [ ] **Step 8: Manual checkpoint (human gate)**
+- [x] **Step 8: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w level-editor
 ```
-Pick the Box brush, click in the 2D map to place boxes; click an item to select (highlight in 3D); shift-click the map or 3D ground to move the selection; press Delete to remove; press `C` to cycle the selected item's surface; watch the validation panel flip to "Valid ✓" once spawn + goal exist. Stop the dev server.
+Use the 3D/2D tabs to switch between full-screen views. Pick the Box brush, switch to the full 2D view, and click to place boxes; click an item to select, then switch to the 3D view and confirm the highlight; shift-click in either full view to move the selection; press Delete to remove; press `C` to cycle the selected item's surface; watch the validation panel flip to "Valid ✓" once spawn + goal exist. Stop the dev server.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add -A
@@ -3399,7 +3405,7 @@ Delivers: the headless metrics harness (`runHeadlessPlay → TestPlayResult`, re
 - Consumes: `createNullAudio`, `createNullRenderer`, `createRapierPhysics`, `InputSource`, `ArchetypeLibrary` (engine); `HeadlessOpts`, `TestPlayResult` (`@automata/editor`); `createGameStore`, `createGameplay`, `Level`, `PhysicsTuning` (game).
 - Produces: `runHeadlessPlay(level, lib, tuning, opts): Promise<TestPlayResult>`.
 
-- [ ] **Step 1: Ensure the editor dependency**
+- [x] **Step 1: Ensure the editor dependency**
 
 In `games/monkey-ball/package.json`, the `dependencies` must include `@automata/editor` (added because Task 12 imports its types):
 ```json
@@ -3407,7 +3413,7 @@ In `games/monkey-ball/package.json`, the `dependencies` must include `@automata/
 ```
 Run `npm install` to link it if not already linked.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `games/monkey-ball/tests/level/headlessPlay.test.ts`:
 ```ts
@@ -3441,12 +3447,12 @@ describe('runHeadlessPlay', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/level/headlessPlay.test.ts`
 Expected: FAIL — cannot resolve `../../src/level/headlessPlay`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `games/monkey-ball/src/level/headlessPlay.ts`:
 ```ts
@@ -3505,12 +3511,12 @@ export async function runHeadlessPlay(
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/level/headlessPlay.test.ts`
 Expected: PASS (2 tests). If the "rolling forward" test does not complete, raise `maxSteps` or use input `() => ({ x: 0, y: 1 })` (already forward) — do **not** weaken the harness.
 
-- [ ] **Step 6: Export from the game barrel + commit**
+- [x] **Step 6: Export from the game barrel + commit**
 
 Append to `games/monkey-ball/src/index.ts`:
 ```ts
@@ -3533,7 +3539,7 @@ git commit -m "feat(game): headless runHeadlessPlay → TestPlayResult (AI-readi
 - Consumes: `createKeyboardInput`, `createGameplay` (game), `runHeadlessPlay`, `createGameStore`.
 - Produces: `createMonkeyBallDefinition(lib, tuning).play` = `{ createGameplay, runHeadlessPlay }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `games/monkey-ball/tests/editor/registrationPlay.test.ts`:
 ```ts
@@ -3560,12 +3566,12 @@ describe('monkey-ball play registration', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/registrationPlay.test.ts`
 Expected: FAIL — `def.play` is undefined.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `games/monkey-ball/src/editor/registration.ts`:
 - add imports:
@@ -3594,12 +3600,12 @@ import { runHeadlessPlay } from '../level/headlessPlay'
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/registrationPlay.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -3618,7 +3624,7 @@ git commit -m "feat(game): monkey-ball play registration (live + headless)"
 - Consumes: `PlayHandle`, `GameDefinition.play`, `validateDoc`.
 - Produces: `EditorCore` gains `fixedUpdate(dt)`, `enterPlay()`, `exitPlay()`; `tick(alpha)` renders the play handle while in play mode; invalid documents cannot enter play mode.
 
-- [ ] **Step 1: Add a fake play to the fixture**
+- [x] **Step 1: Add a fake play to the fixture**
 
 Append to `packages/editor/tests/fixtures/fakeDefinition.ts`:
 ```ts
@@ -3640,7 +3646,7 @@ export const playableDefinition: GameDefinition<FakeDoc> = {
 }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `packages/editor/tests/play/controller.test.ts`:
 ```ts
@@ -3705,12 +3711,12 @@ describe('play controller', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/play/controller.test.ts`
 Expected: FAIL — `editor.enterPlay is not a function`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 In `packages/editor/src/host.ts`:
 - import the play handle type: add `import type { PlayHandle } from './model/gameDefinition'`;
@@ -3755,12 +3761,12 @@ In `packages/editor/src/host.ts`:
 ```
 - in `dispose()`, also dispose the play handle: `play?.dispose()` before `sync.dispose()`.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/play/controller.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 6: Typecheck + commit**
+- [x] **Step 6: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -3778,7 +3784,7 @@ git commit -m "feat(editor): instant play/edit toggle via registered play handle
 - Consumes: `GameDefinition`, `validateDoc`.
 - Produces: `ExportResult` (`{ ok: true; json: string } | { ok: false; issues: string[] }`), `exportDoc(definition, doc): ExportResult`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/exportDoc.test.ts`:
 ```ts
@@ -3808,12 +3814,12 @@ describe('exportDoc', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/exportDoc.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/exportDoc.ts`:
 ```ts
@@ -3829,12 +3835,12 @@ export function exportDoc<Doc>(definition: GameDefinition<Doc>, doc: Doc): Expor
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/exportDoc.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
@@ -3856,7 +3862,7 @@ git commit -m "feat(editor): export with validity guard"
 - Consumes: `GameDefinition`, `SceneModel.parse`.
 - Produces: `ImportResult<Doc>` (`{ ok: true; doc: Doc } | { ok: false; issues: string[] }`), `importDoc(definition, text): ImportResult<Doc>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/importDoc.test.ts`:
 ```ts
@@ -3880,12 +3886,12 @@ describe('importDoc', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/importDoc.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/importDoc.ts`:
 ```ts
@@ -3902,12 +3908,12 @@ export function importDoc<Doc>(definition: GameDefinition<Doc>, text: string): I
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/importDoc.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
@@ -3929,7 +3935,7 @@ git commit -m "feat(editor): import with parse + validate"
 - Consumes: `StoragePort` (engine), `EditorStore`, `GameDefinition`.
 - Produces: `AUTOSAVE_VERSION`, `installAutosave(store, definition, storage, opts): () => void` (`opts = { key; debounceMs }`), `loadAutosave(definition, storage, key): Doc | null`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/editor/tests/io/autosave.test.ts`:
 ```ts
@@ -3966,12 +3972,12 @@ describe('autosave', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/editor/tests/io/autosave.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/editor/src/io/autosave.ts`:
 ```ts
@@ -4012,12 +4018,12 @@ export function loadAutosave<Doc>(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/editor/tests/io/autosave.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Append to `packages/editor/src/index.ts`:
 ```ts
@@ -4032,22 +4038,25 @@ git commit -m "feat(editor): debounced autosave + restore"
 ### Task 28: Wire test-play + import/export/autosave into the host (M13 checkpoint)
 
 **Files:**
-- Modify: `packages/editor/src/ui/panels.ts` (add toolbar: Play/Edit, Export, Import; autosave status)
-- Modify: `tools/level-editor/src/main.ts` (drive `fixedUpdate`; restore autosave; wire toolbar)
+- Create: `packages/editor/src/ui/toolbar.ts` (Play/Edit + Export/Import, mounted in the chrome)
+- Modify: `packages/editor/src/ui/chrome.ts` (mount the toolbar in the panel fan-out)
+- Modify: `tools/level-editor/src/main.ts` (drive `fixedUpdate`; restore + install autosave; file-IO hooks)
 - Test: `packages/editor/tests/ui/toolbar.test.ts`
 
-**Interfaces:**
-- Consumes: `exportDoc`, `importDoc`, `installAutosave`, `loadAutosave`, `EditorCore`.
-- Produces: `renderToolbar(core, host): () => void` (Play/Edit toggle, Export, Import buttons bound to the store + io).
+> **Overhaul dependency:** the UX/chrome overhaul deleted `ui/panels.ts` and rewrote the host `main.ts`. Test-play UI therefore lives in a new `ui/toolbar.ts` `PanelHandle` (chrome convention: `mountX(core, parent) → { update, dispose }`) mounted by `renderEditorChrome`, **not** in `panels.ts`. The menubar's disabled File ▸ Import/Export slots stay as placeholders (leave the overhaul's `menubar.test.ts` untouched); the toolbar is the working home for now.
 
-- [ ] **Step 1: Write the failing test**
+**Interfaces:**
+- Consumes: `exportDoc`, `importDoc`, `installAutosave`, `loadAutosave`, `EditorCore`, `PanelHandle`.
+- Produces: `mountToolbar(core, parent): PanelHandle<Doc>` (Play/Edit toggle, Export, Import, `[data-export-status]` readout); `EditorCore` gains optional `onExport`/`onImportRequest` host hooks.
+
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/toolbar.test.ts`:
 ```ts
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import { createEditor } from '../../src/host'
-import { renderToolbar } from '../../src/ui/panels'
+import { mountToolbar } from '../../src/ui/toolbar'
 import { playableDefinition, boxItem, type FakeDoc } from '../fixtures/fakeDefinition'
 
 const nullPhysics = () => ({ addBody() {}, removeBody() {}, setGravity() {}, step: () => [],
@@ -4063,52 +4072,61 @@ describe('toolbar', () => {
     const host = document.createElement('div')
     const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
     editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
-    const dispose = renderToolbar(editor, host)
+    const handle = mountToolbar(editor, host)
     host.querySelector<HTMLButtonElement>('[data-action="play"]')!.click()
     expect(editor.store.getState().mode).toBe('play')
     host.querySelector<HTMLButtonElement>('[data-action="play"]')!.click()
     expect(editor.store.getState().mode).toBe('edit')
-    dispose(); editor.dispose()
+    handle.dispose(); editor.dispose()
   })
 
   it('Export reports invalid for the empty doc and valid once required markers exist', () => {
     const host = document.createElement('div')
     const editor = createEditor<FakeDoc>({ definition: playableDefinition, render: createNullRenderer().port, physics: nullPhysics() })
-    const dispose = renderToolbar(editor, host)
+    const handle = mountToolbar(editor, host)
     const status = host.querySelector('[data-export-status]')!
     host.querySelector<HTMLButtonElement>('[data-action="export"]')!.click()
     expect(status.textContent).toContain('Start') // missing marker
     editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: startMarker } })
     host.querySelector<HTMLButtonElement>('[data-action="export"]')!.click()
     expect(status.textContent).toContain('Exported')
-    dispose(); editor.dispose()
+    handle.dispose(); editor.dispose()
   })
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/ui/toolbar.test.ts`
-Expected: FAIL — `renderToolbar` is not exported.
+Expected: FAIL — cannot resolve `../../src/ui/toolbar`.
 
-- [ ] **Step 3: Implement the toolbar**
+- [x] **Step 3: Implement the toolbar**
 
-Add this import to the existing import block at the top of `packages/editor/src/ui/panels.ts`:
+`packages/editor/src/ui/toolbar.ts`:
 ```ts
+import type { EditorCore } from '../host'
+import type { EditorState } from '../state/store'
 import { exportDoc } from '../io/exportDoc'
-```
+import type { PanelHandle } from './panel'
 
-Then append:
-```ts
-/** Play/Edit + Import/Export toolbar. Returns a disposer. File IO is a host shim. */
-export function renderToolbar<Doc>(core: EditorCore<Doc>, host: HTMLElement): () => void {
-  const bar = document.createElement('div'); bar.className = 'toolbar'
-  const play = document.createElement('button'); play.setAttribute('data-action', 'play'); play.textContent = 'Play'
-  const importBtn = document.createElement('button'); importBtn.setAttribute('data-action', 'import'); importBtn.textContent = 'Import'
-  const exportBtn = document.createElement('button'); exportBtn.setAttribute('data-action', 'export'); exportBtn.textContent = 'Export'
-  const status = document.createElement('span'); status.setAttribute('data-export-status', '')
-  bar.append(play, importBtn, exportBtn, status)
-  host.append(bar)
+/** Play/Edit toggle + Import/Export, mounted in the chrome. File IO is a host shim via core hooks. */
+export function mountToolbar<Doc>(core: EditorCore<Doc>, parent: HTMLElement): PanelHandle<Doc> {
+  const bar = document.createElement('div')
+  bar.className = 'ed-toolbar'
+  parent.append(bar)
+
+  const button = (action: string, label: string): HTMLButtonElement => {
+    const el = document.createElement('button')
+    el.type = 'button'; el.className = 'ed-tool'; el.dataset.action = action; el.textContent = label
+    bar.append(el)
+    return el
+  }
+  const play = button('play', 'Play')
+  button('import', 'Import').addEventListener('click', () => core.onImportRequest?.())
+  const exportBtn = button('export', 'Export')
+  const status = document.createElement('span')
+  status.className = 'ed-toolbar-status'; status.dataset.exportStatus = ''
+  bar.append(status)
 
   play.addEventListener('click', () => {
     try {
@@ -4116,37 +4134,52 @@ export function renderToolbar<Doc>(core: EditorCore<Doc>, host: HTMLElement): ()
       else core.exitPlay()
     } catch (error) {
       status.textContent = error instanceof Error ? error.message : String(error)
-      return
     }
-    play.textContent = core.store.getState().mode === 'play' ? 'Edit' : 'Play'
   })
   exportBtn.addEventListener('click', () => {
     const result = exportDoc(core.definition, core.store.getState().document.doc)
     status.textContent = result.ok ? `Exported ${result.json.length} bytes` : result.issues.join(' · ')
     core.onExport?.(result)
   })
-  importBtn.addEventListener('click', () => core.onImportRequest?.())
-  return () => { bar.remove() }
+
+  function update(state: EditorState<Doc>): void {
+    play.textContent = state.mode === 'play' ? 'Edit' : 'Play'
+    play.classList.toggle('is-active', state.mode === 'play')
+  }
+
+  update(core.store.getState())
+  return { update, dispose() { bar.remove() } }
 }
 ```
 
-> **Note:** add optional `onExport?(result): void` and `onImportRequest?(): void` hooks to the `EditorCore` interface (default unset); the host shim sets them to trigger browser download/file input. The tested path is the status text + the `exportDoc` result.
+Mount it in the chrome — in `packages/editor/src/ui/chrome.ts`, import `mountToolbar`, give it a host in the top bar, and add it to the `panels` array so the single subscription updates it:
+```ts
+import { mountToolbar } from './toolbar'
+// …in renderEditorChrome, after menubarHost is created:
+const toolbarHost = region('ed-toolbar-host')
+menubarHost.append(toolbarHost)            // sits in the top bar, right of the menus (exact placement is cosmetic)
+// …add to the panels array (e.g. after mountMenuBar):
+  mountToolbar(core, toolbarHost),
+```
+The overhaul's `chrome.test.ts` still passes (the toolbar is additive and never calls `enterPlay` on mount, so a definition without `play` is fine); optionally add a `[data-action="play"]` assertion there.
 
-- [ ] **Step 4: Wire the shim**
+> **Note:** add optional `onExport?(result): void` and `onImportRequest?(): void` hooks to the `EditorCore` interface (default unset); the host shim sets them to trigger the browser download / file input. The tested path is the status text + the `exportDoc` result. `mountToolbar` is internal to the chrome — it is not added to the public barrel.
 
-In `tools/level-editor/src/main.ts`:
-- import `renderToolbar, installAutosave, loadAutosave, importDoc` from `@automata/editor` and `localStorageAdapter` from `@automata/engine`;
-- after creating `editor`, restore autosave then install it:
+- [x] **Step 4: Wire the shim**
+
+This targets the host `main.ts` as rewritten by the overhaul (Task 12). The toolbar is already mounted by `renderEditorChrome`, so the host only supplies autosave + the file-IO hooks the toolbar calls:
+- import `installAutosave, loadAutosave, importDoc` from `@automata/editor` and `localStorageAdapter` from `@automata/engine`;
+- replace the overhaul's `editor.store.dispatch({ type: 'loadDoc', doc: definition.scene.emptyDoc() })` line with autosave restore + install:
 ```ts
 const storage = localStorageAdapter()
 const saved = loadAutosave(definition, storage, 'monkey-ball-editor')
 editor.store.dispatch({ type: 'loadDoc', doc: saved ?? definition.scene.emptyDoc() })
 installAutosave(editor.store, definition, storage, { key: 'monkey-ball-editor', debounceMs: 400 })
-renderToolbar(editor, panelHost)
+```
+- after the `renderEditorChrome(...)` call, set the file-IO host hooks:
+```ts
 const fileInput = document.createElement('input')
-fileInput.type = 'file'
-fileInput.accept = 'application/json'
-fileInput.hidden = true
+fileInput.type = 'file'; fileInput.accept = 'application/json'; fileInput.hidden = true
 app.append(fileInput)
 editor.onExport = (result) => {
   if (!result.ok) return
@@ -4161,9 +4194,9 @@ fileInput.addEventListener('change', async () => {
   if (result.ok) editor.store.dispatch({ type: 'loadDoc', doc: result.doc })
 })
 ```
-- change the `GameLoop` `fixedUpdate` from `() => {}` to `(dt) => editor.fixedUpdate(dt)` so play mode simulates.
+- change the overhaul loop's `fixedUpdate: () => {}` to `fixedUpdate: (dt) => editor.fixedUpdate(dt)` so play mode simulates.
 
-- [ ] **Step 5: Run test + full gate**
+- [x] **Step 5: Run test + full gate**
 
 ```bash
 npx vitest run packages/editor/tests/ui/toolbar.test.ts
@@ -4171,14 +4204,14 @@ npm run ci
 ```
 Expected: PASS; `npm run ci` green.
 
-- [ ] **Step 6: Manual checkpoint (human gate)**
+- [x] **Step 6: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w level-editor
 ```
 Place boxes + a goal; press **Play** — the ball drops and rolls with WASD; press **Edit** — back to editing with your layout intact. **Export** downloads `level.json`. Reload the page — your autosaved layout returns. Stop the dev server.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -4208,7 +4241,7 @@ Delivers: 2 worlds × 3 levels (dogfood-authored in the editor, committed as val
 - Consumes: `levelKind`, `worldsManifestKind`, `buildLevelWorld`, `runHeadlessPlay`, archetype library + tuning.
 - Produces: six shipped levels and a 2-world manifest, all validated.
 
-- [ ] **Step 1: Write the failing content test**
+- [x] **Step 1: Write the failing content test**
 
 `games/monkey-ball/tests/content/levels.test.ts`:
 ```ts
@@ -4250,12 +4283,12 @@ describe('shipped content', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/content/levels.test.ts`
 Expected: FAIL — missing level files / manifest has 1 world.
 
-- [ ] **Step 3: Author the levels**
+- [x] **Step 3: Author the levels**
 
 `games/monkey-ball/public/data/levels/w1-l2.json`:
 ```json
@@ -4353,7 +4386,7 @@ Expected: FAIL — missing level files / manifest has 1 world.
 }
 ```
 
-- [ ] **Step 4: Extend the manifest**
+- [x] **Step 4: Extend the manifest**
 
 `games/monkey-ball/public/data/levels/worlds.json`:
 ```json
@@ -4365,12 +4398,12 @@ Expected: FAIL — missing level files / manifest has 1 world.
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/content/levels.test.ts`
 Expected: PASS. If a level fails the "rests on solid ground" smoke, the spawn is over a gap — nudge the spawn or widen the start platform (do not weaken the test).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -4389,7 +4422,7 @@ Locks in a trustworthy per-level metric signal (the baseline a future tuning age
 - Consumes: `runHeadlessPlay`, the shipped levels.
 - Produces: a committed baseline (`{ [levelId]: { restSteps, restOutcome } }`) and a regression test.
 
-- [ ] **Step 1: Write the baseline fixture**
+- [x] **Step 1: Write the baseline fixture**
 
 `games/monkey-ball/tests/fixtures/metric-baselines.json`:
 ```json
@@ -4401,7 +4434,7 @@ Locks in a trustworthy per-level metric signal (the baseline a future tuning age
 }
 ```
 
-- [ ] **Step 2: Write the failing regression test**
+- [x] **Step 2: Write the failing regression test**
 
 `games/monkey-ball/tests/content/baseline.test.ts`:
 ```ts
@@ -4430,12 +4463,12 @@ describe('metric baseline (regression guard)', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it passes**
+- [x] **Step 3: Run test to verify it passes**
 
 Run: `npx vitest run games/monkey-ball/tests/content/baseline.test.ts`
 Expected: PASS (the levels from Task 29 already satisfy this).
 
-- [ ] **Step 4: Manual tuning pass (human gate)**
+- [x] **Step 4: Manual tuning pass (human gate)**
 
 ```bash
 npm run dev -w level-editor   # author/adjust, or:
@@ -4443,7 +4476,7 @@ npm run dev -w monkey-ball    # play the shipped levels end to end
 ```
 Play all six levels. Tune by editing `games/monkey-ball/public/data/config/physics.toml` (`max-tilt-deg`, `tilt-smooth`), `camera.toml` if present, and per-level `timeLimitS` until each level is completable but not trivial. Re-run `npx vitest run games/monkey-ball/tests/content` after any data change. Stop the dev server.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -4459,7 +4492,7 @@ git commit -m "test(content): headless metric baseline + tuning pass"
 **Interfaces:**
 - Produces: a committed stub recording the deferred AI work and the seams it builds on.
 
-- [ ] **Step 1: Write the stub**
+- [x] **Step 1: Write the stub**
 
 `docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md`:
 ```markdown
@@ -4499,7 +4532,7 @@ overlay** — without ever placing an agent in the deterministic runtime loop.
 Agent SDK and the latest Claude models when the spec is written.
 ```
 
-- [ ] **Step 2: Update the board**
+- [x] **Step 2: Update the board**
 
 In `AGENTS.md`, under the Task Board, mark the M11–M15 items complete as they land and append:
 ```markdown
@@ -4508,7 +4541,7 @@ In `AGENTS.md`, under the Task Board, mark the M11–M15 items complete as they 
   spec pending after M13).
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -4517,21 +4550,21 @@ git commit -m "docs: Plan 4 / M16 forward-pointer stub (editor MCP + tuning + ch
 
 ### Task 32: M14 checkpoint — play all six levels (human gate)
 
-- [ ] **Step 1: Full gate**
+- [x] **Step 1: Full gate**
 
 ```bash
 npm run ci
 ```
 Expected: green.
 
-- [ ] **Step 2: Manual checkpoint (human gate)**
+- [x] **Step 2: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w monkey-ball
 ```
 From the menu, play through World 1 (3 levels) and World 2 (3 levels). Confirm: levels are completable, unlocks progress world-to-world, timers feel fair after tuning. Stop the dev server.
 
-- [ ] **Step 3: Commit (if any tuning changed)**
+- [x] **Step 3: Commit (if any tuning changed)**
 
 ```bash
 git add -A
@@ -4557,7 +4590,7 @@ Delivers: a capped pixel ratio (named, tested), visibility-pause for editor test
 **Interfaces:**
 - Produces: `MAX_PIXEL_RATIO` (= 2), `cappedPixelRatio(devicePixelRatio: number, cap?: number): number`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/engine/tests/render/pixelRatio.test.ts`:
 ```ts
@@ -4576,12 +4609,12 @@ describe('cappedPixelRatio', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/engine/tests/render/pixelRatio.test.ts`
 Expected: FAIL — cannot resolve the module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/engine/src/render/pixelRatio.ts`:
 ```ts
@@ -4605,12 +4638,12 @@ Add to the engine barrel `packages/engine/src/index.ts`:
 export * from './render/pixelRatio'
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/engine/tests/render/pixelRatio.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -4630,7 +4663,7 @@ When the tab is hidden during play, the editor returns to the safe edit state (m
 **Interfaces:**
 - Produces: `EditorCore.handleHidden(): void` — exits play mode if playing; no-op in edit mode.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/play/visibility.test.ts`:
 ```ts
@@ -4656,12 +4689,12 @@ describe('visibility pause', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/play/visibility.test.ts`
 Expected: FAIL — `editor.handleHidden is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/editor/src/host.ts`, add to the `EditorCore<Doc>` interface `handleHidden(): void`, and to the `core` object:
 ```ts
@@ -4669,14 +4702,14 @@ In `packages/editor/src/host.ts`, add to the `EditorCore<Doc>` interface `handle
 ```
 (Reference `this.exitPlay()` — `core` is the object literal; if `this` is awkward under strict mode, call a local `exitPlay` closure instead by extracting the exit logic into a named function and calling it from both `exitPlay` and `handleHidden`.)
 
-In `tools/level-editor/src/main.ts`, change `startLoopDriver(loop)` to `startLoopDriver(loop, () => editor.handleHidden())`.
+In `tools/level-editor/src/main.ts` (as rewritten by the overhaul, Task 12), change the final `startLoopDriver(loop)` to `startLoopDriver(loop, () => editor.handleHidden())`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/play/visibility.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -4694,7 +4727,7 @@ git commit -m "feat(editor): visibility-pause exits test-play when tab hidden"
 - Consumes: `InputVector`.
 - Produces: `applyDeadzone(v: InputVector, deadzone: number): InputVector` — zero below the dead-zone, rescaled smoothly above it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/engine/tests/input/deadzone.test.ts`:
 ```ts
@@ -4718,12 +4751,12 @@ describe('applyDeadzone', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/engine/tests/input/deadzone.test.ts`
 Expected: FAIL — `applyDeadzone` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Append to `packages/engine/src/input/vector.ts`:
 ```ts
@@ -4748,12 +4781,12 @@ import { applyDeadzone, clampToUnit } from './vector'
 ```
 Keep `JoystickOptions.deadZone` and the current default (`0.15`) as the source of truth for joystick feel.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/engine/tests/input/deadzone.test.ts`
 Expected: PASS (3 tests). Run the existing joystick test too: `npx vitest run packages/engine/tests/input/joystick.test.ts` — if a dead-zone now zeroes a previously-tiny expected value, update that test's input to clear the dead-zone (the feel change is intended).
 
-- [ ] **Step 5: Typecheck + commit**
+- [x] **Step 5: Typecheck + commit**
 
 ```bash
 npm run typecheck
@@ -4774,7 +4807,7 @@ Two end-to-end smokes covering the untested shims. Kept out of `npm run ci` (bro
 **Interfaces:**
 - Produces: `npm run e2e` running both smokes against locally-served apps.
 
-- [ ] **Step 1: Install Playwright + scripts**
+- [x] **Step 1: Install Playwright + scripts**
 
 ```bash
 npm install -D @playwright/test
@@ -4788,7 +4821,7 @@ In the root `package.json` scripts, add:
 ```
 > **Note:** confirm the exact `vite dev <dir>` invocation works in this workspace; if each app must be served from its own dir, use `npm run dev -w monkey-ball -- --port 5174 --strictPort` form instead. The ports must match `playwright.config.ts`.
 
-- [ ] **Step 2: Write the Playwright config**
+- [x] **Step 2: Write the Playwright config**
 
 `playwright.config.ts`:
 ```ts
@@ -4805,7 +4838,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Write the smokes**
+- [x] **Step 3: Write the smokes**
 
 `e2e/game.spec.ts`:
 ```ts
@@ -4829,27 +4862,28 @@ import { expect, test } from '@playwright/test'
 
 test('editor places a box and export reflects it', async ({ page }) => {
   await page.goto('http://localhost:5175')
-  await expect(page.locator('canvas.map')).toBeVisible()
+  // The overhaul docks the 2D map as the primary viewport canvas.
+  const map = page.locator('[data-vp="main"] canvas')
+  await expect(map).toBeVisible()
   // Select the Box brush, click the 2D map to place a box.
   await page.locator('[data-brush="box"]').click()
-  const map = page.locator('canvas.map')
   await map.click({ position: { x: 180, y: 180 } })
-  // Export status reflects the document.
+  // Export status reflects the document (toolbar lives in the docked chrome).
   await page.locator('[data-action="export"]').click()
   await expect(page.locator('[data-export-status]')).toContainText(/Exported|Start/)
 })
 ```
 
-> **Note:** these assert the shim path end-to-end; exact selectors (`#overlays`, button text, `canvas.map`) must match the host/game DOM. Adjust selectors to the real markup — do not weaken to trivial always-true assertions.
+> **Note:** these assert the shim path end-to-end; exact selectors (`#overlays`, button text, `[data-vp="main"] canvas`, `[data-action="export"]`) must match the post-overhaul host/game DOM. Adjust selectors to the real markup — do not weaken to trivial always-true assertions.
 
-- [ ] **Step 4: Run the smokes**
+- [x] **Step 4: Run the smokes**
 
 ```bash
 npm run e2e
 ```
 Expected: 2 passed. (CI integration of `e2e` is optional; it is not part of `npm run ci`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -4866,7 +4900,7 @@ git commit -m "test(e2e): Playwright smokes for game + editor"
 **Interfaces:**
 - Produces: `npm run build` producing `dist/` for both apps with a relative base path.
 
-- [ ] **Step 1: Add per-app vite configs (relative base for static hosting)**
+- [x] **Step 1: Add per-app vite configs (relative base for static hosting)**
 
 `games/monkey-ball/vite.config.ts`:
 ```ts
@@ -4885,14 +4919,14 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 2: Add the root build script**
+- [x] **Step 2: Add the root build script**
 
 In the root `package.json` scripts:
 ```json
     "build": "npm run build -w monkey-ball && npm run build -w level-editor"
 ```
 
-- [ ] **Step 3: Build + verify output**
+- [x] **Step 3: Build + verify output**
 
 ```bash
 npm run build
@@ -4900,7 +4934,7 @@ ls games/monkey-ball/dist/index.html tools/level-editor/dist/index.html
 ```
 Expected: both `dist/index.html` files exist; the build completes without type or bundling errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -4909,7 +4943,7 @@ git commit -m "build: release builds for game + editor (relative base)"
 
 ### Task 38: Final gate + checkpoint (human gate)
 
-- [ ] **Step 1: Full CI + coverage**
+- [x] **Step 1: Full CI + coverage**
 
 ```bash
 npm run ci
@@ -4917,7 +4951,7 @@ npm run coverage
 ```
 Expected: `npm run ci` green; coverage ≥ 90% lines/branches on non-shim code across `packages/engine/src` and `packages/editor/src`. If editor coverage is short, add focused unit tests for the uncovered pure logic (not the shims).
 
-- [ ] **Step 2: Manual smoke (human gate)**
+- [x] **Step 2: Manual smoke (human gate)**
 
 ```bash
 npm run dev -w level-editor   # author a level, play it, export
@@ -4925,7 +4959,7 @@ npm run dev -w monkey-ball     # play the exported/shipped content on a narrow v
 ```
 Confirm mobile viewport behaves (dvh sizing, joystick dead-zone feel, capped pixel ratio), tab-away pauses test-play, and the release build serves. Stop the dev servers.
 
-- [ ] **Step 3: Update the board + commit**
+- [x] **Step 3: Update the board + commit**
 
 In `AGENTS.md`, mark M11–M15 complete. Then:
 ```bash

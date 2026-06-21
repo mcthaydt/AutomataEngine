@@ -56,7 +56,7 @@ async function main(): Promise<void> {
   let boot: BootData
   try {
     renderer = createThreeRenderer()
-    canvasRenderer = attachCanvasRenderer(renderer, canvas)
+    canvasRenderer = await attachCanvasRenderer(renderer, canvas)
     store = createGameStore({ storage: localStorageAdapter() })
     const audioRuntime = createBrowserAudio()
     audio = audioRuntime.audio

@@ -47,15 +47,18 @@ root unless a task explicitly says otherwise.
   unlocks, and pause.
 - [x] M10: Add AudioPort adapters, particle emitter simulation, game sounds,
   and particle effects.
-- [ ] Write Plan 3 for editor, content, and polish milestones M11-M15.
-- [ ] M11: Editor app shell, document and selection reducers, undo/redo,
+- [x] Write Plan 3 for editor, content, and polish milestones M11-M15.
+- [x] M11: Editor app shell, document and selection reducers, undo/redo,
   viewport, orbit camera, and grid.
-- [ ] M12: Editor palette, place/move/delete tools, inspector, and validation
+- [x] M12: Editor palette, place/move/delete tools, inspector, and validation
   panel.
-- [ ] M13: Editor test-play, import/export, and autosave.
-- [ ] M14: Author 2 worlds x 3 levels in the editor and complete a tuning pass.
-- [ ] M15: Mobile polish, visibility-pause, pixel-ratio cap, Playwright smokes,
+- [x] M13: Editor test-play, import/export, and autosave.
+- [x] M14: Author 2 worlds x 3 levels in the editor and complete a tuning pass.
+- [x] M15: Mobile polish, visibility-pause, pixel-ratio cap, Playwright smokes,
   and release build.
+- [ ] Plan 4 / M16: editor MCP server + tuning-agent loop + chat overlay
+  (stub: docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md;
+  spec pending after M13).
 
 ## Verification Commands
 

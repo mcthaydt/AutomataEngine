@@ -1,10 +1,13 @@
 import {
   AmbientLight, BoxGeometry, BufferGeometry, Color, CylinderGeometry,
-  DirectionalLight, Group, Material, Mesh, MeshStandardMaterial, Object3D,
+  DirectionalLight, GridHelper, Group, Material, Mesh, MeshStandardMaterial, Object3D,
   PerspectiveCamera, Scene, SphereGeometry
 } from 'three'
 import type { RenderableDef } from './types'
-import type { GroupId, RenderPort } from './port'
+import type { GridId, GroupId, RenderPort } from './port'
+
+/** Vertical FOV (degrees) of the renderer's perspective camera. Single source of truth. */
+export const PERSPECTIVE_FOV_DEG = 60
 
 export interface ThreeRenderer {
   port: RenderPort
@@ -23,7 +26,7 @@ function geometryFor(def: RenderableDef): BufferGeometry {
 export function createThreeRenderer(): ThreeRenderer {
   const scene = new Scene()
   scene.background = new Color('#0e1320')
-  const camera = new PerspectiveCamera(60, 16 / 9, 0.1, 200)
+  const camera = new PerspectiveCamera(PERSPECTIVE_FOV_DEG, 16 / 9, 0.1, 200)
   camera.position.set(0, 6, 10)
 
   const ambient = new AmbientLight('#ffffff', 0.6)
@@ -34,7 +37,9 @@ export function createThreeRenderer(): ThreeRenderer {
 
   const meshes = new Map<object, Mesh>()
   const groups = new Map<GroupId, Group>()
+  const grids = new Map<GridId, GridHelper>()
   let nextGroupId: GroupId = 1
+  let nextGridId: GridId = 1
 
   const parentOf = (group?: GroupId): Object3D => {
     if (group === undefined) return scene
@@ -65,6 +70,31 @@ export function createThreeRenderer(): ThreeRenderer {
       if (!group) return
       group.removeFromParent()
       groups.delete(groupId)
+    },
+
+    setGrid({ size, divisions, color }) {
+      const grid = new GridHelper(size, divisions, new Color(color), new Color(color))
+      scene.add(grid)
+      const id = nextGridId++
+      grids.set(id, grid)
+      return id
+    },
+
+    removeGrid(gridId) {
+      const grid = grids.get(gridId)
+      if (!grid) return
+      grid.removeFromParent()
+      grid.geometry.dispose()
+      ;(grid.material as Material).dispose()
+      grids.delete(gridId)
+    },
+
+    setHighlight(entity, on) {
+      const mesh = meshes.get(entity)
+      if (!mesh) return
+      const material = mesh.material as MeshStandardMaterial
+      material.emissive.set(on ? '#ffffff' : '#000000')
+      material.emissiveIntensity = on ? 0.4 : 0
     },
 
     add(entity, def, group) {
@@ -99,6 +129,12 @@ export function createThreeRenderer(): ThreeRenderer {
       for (const entity of [...meshes.keys()]) port.remove(entity)
       for (const group of groups.values()) group.removeFromParent()
       groups.clear()
+      for (const grid of grids.values()) {
+        grid.removeFromParent()
+        grid.geometry.dispose()
+        ;(grid.material as Material).dispose()
+      }
+      grids.clear()
       scene.remove(ambient, sun)
     }
   }

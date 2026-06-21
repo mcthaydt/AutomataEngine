@@ -69,12 +69,13 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
   scheduler.onFixedEnd(createFeedback(feedback, audio))
 
   const spawn = { x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] }
-  const offRespawn = subscribeSelector(store, (s) => s.session.runId, () => {
+  const respawn = (): void => {
     world.clear()
     populateLevelWorld(world, level, lib)
     events.clear()
     spawnBurst(world, { origin: spawn, count: 12, speed: 2, lifetimeS: 0.5, color: '#cfd8ff' })
-  })
+  }
+  const offRespawn = subscribeSelector(store, (s) => s.session.runId, respawn)
 
   let input = { x: 0, y: 0 }
   return {
@@ -87,7 +88,11 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
       scheduler.runFixed({ world, store, input, dt, alpha: 0 })
     },
     render(alpha) {
-      scheduler.runStage('render', { world, store, input, dt: 0, alpha })
+      // While the sim is frozen (paused/complete/over) fixedUpdate no-ops, so prev/current
+      // poses stay fixed at two distinct points. The loop keeps sweeping alpha, which would
+      // interpolate the ball between them every frame (jitter). Pin to the settled pose.
+      const a = store.getState().scene === 'playing' ? alpha : 1
+      scheduler.runStage('render', { world, store, input, dt: 0, alpha: a })
     },
     dispose() {
       offRespawn()

@@ -8,6 +8,8 @@ export interface MovingPlatform {
 
 /** Game entity = engine mechanism components + game-meaning components. */
 export interface Entity extends EngineEntity {
+  /** Stable editor document item id, present only in editor-built worlds. */
+  editorId?: string
   /** Player tag. Empty object: archetype components are YAML mappings. */
   ball?: Record<string, never>
   collectible?: { value: number }

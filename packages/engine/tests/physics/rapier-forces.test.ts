@@ -41,6 +41,22 @@ describe('the tilt mechanic: rotated gravity', () => {
     physics.dispose()
   })
 
+  it('tilting gravity rolls a ball that has fallen asleep at rest', async () => {
+    const { physics, ball } = await ballOnFloor()
+    // Let the ball settle until Rapier puts it to sleep — the situation a player
+    // hits when they return to a level and pause before pressing a key.
+    for (let i = 0; i < 180; i++) physics.step(DT)
+    const before = physics.readPose(ball)!.position
+
+    const tilt = quat.fromEuler(0, 0, 12 * Math.PI / 180)
+    physics.setGravity(quat.apply(tilt, { x: 0, y: -9.81, z: 0 }))
+    for (let i = 0; i < 60; i++) physics.step(DT)
+
+    const after = physics.readPose(ball)!.position
+    expect(after.x - before.x).toBeGreaterThan(0.2)
+    physics.dispose()
+  })
+
   it('applyImpulse kicks the ball laterally', async () => {
     const { physics, ball } = await ballOnFloor()
     physics.applyImpulse(ball, { x: 0, y: 0, z: -2 })

@@ -1,0 +1,25 @@
+{
+  "id": "w2-l3",
+  "name": "Sky Finish",
+  "timeLimitS": 45,
+  "fallY": -12,
+  "spawn": [0, 1, 9],
+  "goal": { "pos": [0, 0, -9] },
+  "geometry": [
+    { "shape": "box", "size": [5, 0.5, 6], "pos": [0, -0.25, 9], "color": "#4ea0d0" },
+    { "shape": "box", "size": [3, 0.5, 10], "pos": [0, -0.25, 0], "color": "#3f8fbf" },
+    { "shape": "box", "size": [5, 0.5, 6], "pos": [0, -0.25, -9], "color": "#4ea0d0" }
+  ],
+  "entities": [
+    {
+      "archetype": "bumper",
+      "pos": [0, 0.175, 0],
+      "overrides": {
+        "renderable": { "radius": 0.4, "height": 0.35 },
+        "rigidBody": { "shape": { "type": "cylinder", "halfHeight": 0.175, "radius": 0.4 } }
+      }
+    },
+    { "archetype": "banana", "pos": [0, 0.6, 5] },
+    { "archetype": "banana", "pos": [0, 0.6, -5] }
+  ]
+}

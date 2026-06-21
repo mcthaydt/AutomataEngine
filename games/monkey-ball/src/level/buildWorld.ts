@@ -3,10 +3,18 @@ import {
   type ArchetypeLibrary, type RenderableDef, type RigidBodyDef, type World
 } from '@automata/engine'
 import type { Entity } from '../entity'
-import type { Level } from '../data/level'
+import { entityUid, geometryUid, type Level } from '../data/level'
 
 const DEG = Math.PI / 180
 type Geometry = Level['geometry'][number]
+
+export interface PopulateLevelWorldOptions {
+  /** When true, tag renderable entities with the SceneItem id used by the editor. */
+  editorIds?: boolean
+}
+
+const editorId = (opts: PopulateLevelWorldOptions, id: string): string | undefined =>
+  opts.editorIds ? id : undefined
 
 function geometryRigidBody(g: Geometry): RigidBodyDef {
   if (g.shape === 'box') {
@@ -35,23 +43,30 @@ function rotationOf(g: Geometry) {
 
 /** Adds a level's geometry, ball, goal, and entities into an existing world. */
 export function populateLevelWorld(
-  world: World<Entity>, level: Level, lib: ArchetypeLibrary
+  world: World<Entity>,
+  level: Level,
+  lib: ArchetypeLibrary,
+  opts: PopulateLevelWorldOptions = {}
 ): { ball: Entity } {
-  for (const g of level.geometry) {
+  for (const [index, g] of level.geometry.entries()) {
     world.add({
+      editorId: editorId(opts, geometryUid(g, index)),
       transform: createTransform({ x: g.pos[0], y: g.pos[1], z: g.pos[2] }, rotationOf(g)),
       rigidBody: geometryRigidBody(g),
       renderable: geometryRenderable(g)
     })
   }
   const ball = spawnFromArchetype<Entity>(world, lib, 'ball', {
+    editorId: editorId(opts, 'marker:spawn'),
     transform: createTransform({ x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] })
   })
   spawnFromArchetype<Entity>(world, lib, 'goal', {
+    editorId: editorId(opts, 'marker:goal'),
     transform: createTransform({ x: level.goal.pos[0], y: level.goal.pos[1], z: level.goal.pos[2] })
   })
-  for (const e of level.entities) {
+  for (const [index, e] of level.entities.entries()) {
     spawnFromArchetype<Entity>(world, lib, e.archetype, {
+      editorId: editorId(opts, entityUid(e, index)),
       transform: createTransform({ x: e.pos[0], y: e.pos[1], z: e.pos[2] }),
       ...(e.overrides ?? {})
     })

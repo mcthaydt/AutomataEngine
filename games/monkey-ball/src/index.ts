@@ -1,0 +1,10 @@
+// Public API for the editor host. The game runtime never imports editor core.
+export { levelKind, levelSchema, worldsManifestKind, type Level, type WorldsManifest } from './data/level'
+export { physicsTuningKind, toPhysicsTuning, type PhysicsTuning } from './data/config'
+export { archetypeLibraryKind } from '@automata/engine'
+export { buildLevelWorld, populateLevelWorld } from './level/buildWorld'
+export { loadBootData, type BootData } from './scenes/boot'
+export type { Entity } from './entity'
+export { runHeadlessPlay } from './level/headlessPlay'
+export { levelSceneModel } from './editor/sceneModel'
+export { createMonkeyBallDefinition } from './editor/registration'
