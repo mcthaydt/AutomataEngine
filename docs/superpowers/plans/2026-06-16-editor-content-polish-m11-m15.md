@@ -4951,7 +4951,7 @@ npm run coverage
 ```
 Expected: `npm run ci` green; coverage ≥ 90% lines/branches on non-shim code across `packages/engine/src` and `packages/editor/src`. If editor coverage is short, add focused unit tests for the uncovered pure logic (not the shims).
 
-- [ ] **Step 2: Manual smoke (human gate)**
+- [x] **Step 2: Manual smoke (human gate)**
 
 ```bash
 npm run dev -w level-editor   # author a level, play it, export
@@ -4959,7 +4959,7 @@ npm run dev -w monkey-ball     # play the exported/shipped content on a narrow v
 ```
 Confirm mobile viewport behaves (dvh sizing, joystick dead-zone feel, capped pixel ratio), tab-away pauses test-play, and the release build serves. Stop the dev servers.
 
-- [ ] **Step 3: Update the board + commit**
+- [x] **Step 3: Update the board + commit**
 
 In `AGENTS.md`, mark M11–M15 complete. Then:
 ```bash

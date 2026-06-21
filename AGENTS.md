@@ -54,7 +54,7 @@ root unless a task explicitly says otherwise.
   panel.
 - [x] M13: Editor test-play, import/export, and autosave.
 - [x] M14: Author 2 worlds x 3 levels in the editor and complete a tuning pass.
-- [ ] M15: Mobile polish, visibility-pause, pixel-ratio cap, Playwright smokes,
+- [x] M15: Mobile polish, visibility-pause, pixel-ratio cap, Playwright smokes,
   and release build.
 - [ ] Plan 4 / M16: editor MCP server + tuning-agent loop + chat overlay
   (stub: docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md;
