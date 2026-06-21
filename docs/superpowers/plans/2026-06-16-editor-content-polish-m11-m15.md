@@ -4550,21 +4550,21 @@ git commit -m "docs: Plan 4 / M16 forward-pointer stub (editor MCP + tuning + ch
 
 ### Task 32: M14 checkpoint — play all six levels (human gate)
 
-- [ ] **Step 1: Full gate**
+- [x] **Step 1: Full gate**
 
 ```bash
 npm run ci
 ```
 Expected: green.
 
-- [ ] **Step 2: Manual checkpoint (human gate)**
+- [x] **Step 2: Manual checkpoint (human gate)**
 
 ```bash
 npm run dev -w monkey-ball
 ```
 From the menu, play through World 1 (3 levels) and World 2 (3 levels). Confirm: levels are completable, unlocks progress world-to-world, timers feel fair after tuning. Stop the dev server.
 
-- [ ] **Step 3: Commit (if any tuning changed)**
+- [x] **Step 3: Commit (if any tuning changed)**
 
 ```bash
 git add -A
