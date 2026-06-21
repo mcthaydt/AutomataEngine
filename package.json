@@ -16,7 +16,8 @@
     "ci": "npm run lint && npm run typecheck && npm run test",
     "dev:game": "npm run dev -w monkey-ball -- --host 127.0.0.1 --port 5174 --strictPort",
     "dev:editor": "npm run dev -w level-editor -- --host 127.0.0.1 --port 5175 --strictPort",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "build": "npm run build -w monkey-ball && npm run build -w level-editor"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",

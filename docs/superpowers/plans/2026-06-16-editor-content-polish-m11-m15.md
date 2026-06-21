@@ -4900,7 +4900,7 @@ git commit -m "test(e2e): Playwright smokes for game + editor"
 **Interfaces:**
 - Produces: `npm run build` producing `dist/` for both apps with a relative base path.
 
-- [ ] **Step 1: Add per-app vite configs (relative base for static hosting)**
+- [x] **Step 1: Add per-app vite configs (relative base for static hosting)**
 
 `games/monkey-ball/vite.config.ts`:
 ```ts
@@ -4919,14 +4919,14 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 2: Add the root build script**
+- [x] **Step 2: Add the root build script**
 
 In the root `package.json` scripts:
 ```json
     "build": "npm run build -w monkey-ball && npm run build -w level-editor"
 ```
 
-- [ ] **Step 3: Build + verify output**
+- [x] **Step 3: Build + verify output**
 
 ```bash
 npm run build
@@ -4934,7 +4934,7 @@ ls games/monkey-ball/dist/index.html tools/level-editor/dist/index.html
 ```
 Expected: both `dist/index.html` files exist; the build completes without type or bundling errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
