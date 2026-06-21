@@ -1,8 +1,13 @@
 # Editor MCP + Tuning Agent + Chat Overlay (M16) - Plan 4 (STUB)
 
-> **STATUS: STUB.** Full design pending. Write the spec
-> (`docs/superpowers/specs/YYYY-MM-DD-editor-mcp-tuning-design.md`) via the
-> brainstorming skill once M13's APIs are stable, then this plan.
+> **STATUS: Designed (2026-06-21).** Superseded by the design spec
+> [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
+> First implementation slice:
+> [`docs/superpowers/plans/2026-06-21-m16a-shared-contracts.md`](2026-06-21-m16a-shared-contracts.md)
+> (the `@automata/contracts` package). Follow-on slices: agent-core (providers + loop),
+> chat overlay preview/confirm, tuning loop, MCP server host.
+>
+> The notes below are the original framing, kept for context; the spec is authoritative.
 
 **Goal:** Add the AI-first authoring pass on top of the generic editor (M11-M15):
 an **editor MCP server**, a **tuning-agent loop**, and an in-editor **chat
