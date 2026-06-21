@@ -30,10 +30,16 @@ function asVec(value: unknown): VecLike {
   return value as VecLike
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  expect(value).toEqual(expect.any(Object))
+  return value as Record<string, unknown>
+}
+
 function movingPlatformSize(): VecLike {
-  const platform = lib['moving-platform']
-  const shape = platform?.rigidBody?.shape as { halfExtents?: unknown } | undefined
-  const halfExtents = asVec(shape?.halfExtents)
+  const platform = asRecord(lib['moving-platform'])
+  const rigidBody = asRecord(platform.rigidBody)
+  const shape = asRecord(rigidBody.shape)
+  const halfExtents = asVec(shape.halfExtents)
   return { x: halfExtents.x * 2, y: halfExtents.y * 2, z: halfExtents.z * 2 }
 }
 
