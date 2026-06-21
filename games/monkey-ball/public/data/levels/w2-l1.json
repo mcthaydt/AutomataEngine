@@ -12,10 +12,10 @@
   "entities": [
     {
       "archetype": "moving-platform",
-      "pos": [0, -0.25, 0],
+      "pos": [0, -0.2, 0],
       "overrides": {
         "movingPlatform": {
-          "waypoints": [{ "x": 0, "y": -0.25, "z": 2.5 }, { "x": 0, "y": -0.25, "z": -2.5 }],
+          "waypoints": [{ "x": 0, "y": -0.2, "z": 3.25 }, { "x": 0, "y": -0.2, "z": -3.25 }],
           "speed": 2.0,
           "mode": "pingpong"
         }
