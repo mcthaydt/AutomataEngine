@@ -5,7 +5,7 @@ export default defineConfig({
     projects: ['packages/*', 'games/*', 'tools/*'],
     coverage: {
       provider: 'v8',
-      include: ['packages/engine/src/**', 'packages/editor/src/**'],
+      include: ['packages/engine/src/**', 'packages/editor/src/**', 'packages/contracts/src/**'],
       exclude: ['**/browser.ts', '**/index.ts', '**/version.ts'],
       thresholds: { lines: 90, branches: 90 }
     }

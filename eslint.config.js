@@ -38,5 +38,25 @@ export default tseslint.config(
         }]
       }]
     }
+  },
+  {
+    // contracts is the dependency-free leaf; it must not depend on anything else in the repo.
+    files: ['packages/contracts/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: [
+            '@automata/engine',
+            '@automata/editor',
+            '@automata/editor/*',
+            'monkey-ball',
+            'monkey-ball/*',
+            'level-editor',
+            'level-editor/*'
+          ],
+          message: 'contracts is the dependency-free leaf; do not import editor, engine, games, or tools.'
+        }]
+      }]
+    }
   }
 )

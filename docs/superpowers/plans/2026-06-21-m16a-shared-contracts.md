@@ -38,7 +38,7 @@ This is the first slice of M16a. Follow-on plans (not in this document): M16a-2 
 - Consumes: nothing.
 - Produces: an installable workspace package `@automata/contracts` resolvable via `import ... from '@automata/contracts'`, with a working Vitest project named `contracts`.
 
-- [ ] **Step 1: Create the package manifest**
+- [x] **Step 1: Create the package manifest**
 
 `packages/contracts/package.json`:
 
@@ -55,7 +55,7 @@ This is the first slice of M16a. Follow-on plans (not in this document): M16a-2 
 }
 ```
 
-- [ ] **Step 2: Create the TS + Vitest config**
+- [x] **Step 2: Create the TS + Vitest config**
 
 `packages/contracts/tsconfig.json`:
 
@@ -76,7 +76,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Create an empty barrel and a smoke test**
+- [x] **Step 3: Create an empty barrel and a smoke test**
 
 `packages/contracts/src/index.ts`:
 
@@ -97,7 +97,7 @@ describe('contracts package', () => {
 })
 ```
 
-- [ ] **Step 4: Add the eslint leaf rule**
+- [x] **Step 4: Add the eslint leaf rule**
 
 In `eslint.config.js`, add a new config block (after the existing `packages/engine/**` block, before the closing `)`):
 
@@ -117,7 +117,7 @@ In `eslint.config.js`, add a new config block (after the existing `packages/engi
   }
 ```
 
-- [ ] **Step 5: Add contracts to coverage include**
+- [x] **Step 5: Add contracts to coverage include**
 
 In `vitest.config.ts`, change the `coverage.include` array to:
 
@@ -125,22 +125,22 @@ In `vitest.config.ts`, change the `coverage.include` array to:
       include: ['packages/engine/src/**', 'packages/editor/src/**', 'packages/contracts/src/**'],
 ```
 
-- [ ] **Step 6: Install workspaces so the new package resolves**
+- [x] **Step 6: Install workspaces so the new package resolves**
 
 Run: `npm install`
 Expected: completes without error; `node_modules/@automata/contracts` symlink exists.
 
-- [ ] **Step 7: Run the smoke test**
+- [x] **Step 7: Run the smoke test**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS (1 test).
 
-- [ ] **Step 8: Lint + typecheck the new package**
+- [x] **Step 8: Lint + typecheck the new package**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS (no errors).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/contracts eslint.config.js vitest.config.ts package-lock.json
