@@ -87,7 +87,11 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
       scheduler.runFixed({ world, store, input, dt, alpha: 0 })
     },
     render(alpha) {
-      scheduler.runStage('render', { world, store, input, dt: 0, alpha })
+      // While the sim is frozen (paused/complete/over) fixedUpdate no-ops, so prev/current
+      // poses stay fixed at two distinct points. The loop keeps sweeping alpha, which would
+      // interpolate the ball between them every frame (jitter). Pin to the settled pose.
+      const a = store.getState().scene === 'playing' ? alpha : 1
+      scheduler.runStage('render', { world, store, input, dt: 0, alpha: a })
     },
     dispose() {
       offRespawn()

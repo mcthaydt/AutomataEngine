@@ -82,4 +82,27 @@ describe('gameplay runner (real physics)', () => {
     expect(physics.readPose(ball)!.position.x).toBeCloseTo(frozen)
     game.dispose(); physics.dispose()
   })
+
+  it('renders a settled pose without interpolation jitter once frozen', async () => {
+    const { physics, render, store, game } = await startGame(stick({ x: 1, y: 0 }))
+    const ball = game.world.with('ball', 'transform').first!
+    // Roll so the ball carries velocity into the freeze: prevPosition != position.
+    for (let i = 0; i < 60; i++) game.fixedUpdate(1 / 60)
+    store.dispatch({ type: 'levelCompleted', levelId: level.id, timeMs: 1000, bananas: 0 })
+    expect(ball.transform.prevPosition.x).not.toBeCloseTo(ball.transform.position.x)
+
+    const ballPoseAt = (alpha: number) => {
+      const start = render.calls.length
+      game.render(alpha)
+      return render.calls
+        .slice(start)
+        .find((c) => c.op === 'setPose' && c.entity === ball)!.position!
+    }
+    // The render loop keeps sweeping alpha after the sim stops; rendered pose must not move.
+    const a0 = ballPoseAt(0)
+    const a1 = ballPoseAt(1)
+    expect(a0.x).toBeCloseTo(a1.x)
+    expect(a0.z).toBeCloseTo(a1.z)
+    game.dispose(); physics.dispose()
+  })
 })

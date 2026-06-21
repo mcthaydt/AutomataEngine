@@ -36,6 +36,8 @@ describe('level schema', () => {
 
   it('parses the shipped worlds.json manifest', () => {
     const manifest = parseData(worldsManifestKind, readDataFile('levels/worlds.json'), 'worlds.json')
-    expect(manifest.worlds[0]).toMatchObject({ id: 'w1', levels: ['w1-l1'] })
+    expect(manifest.worlds).toHaveLength(2)
+    expect(manifest.worlds[0]).toMatchObject({ id: 'w1', levels: ['w1-l1', 'w1-l2', 'w1-l3'] })
+    expect(manifest.worlds[1]).toMatchObject({ id: 'w2', levels: ['w2-l1', 'w2-l2', 'w2-l3'] })
   })
 })
