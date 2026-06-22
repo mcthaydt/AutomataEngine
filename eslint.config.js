@@ -58,5 +58,25 @@ export default tseslint.config(
         }]
       }]
     }
+  },
+  {
+    // agent-core depends only on @automata/contracts (+ provider SDKs); never editor/engine/games/tools.
+    files: ['packages/agent-core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: [
+            '@automata/engine',
+            '@automata/editor',
+            '@automata/editor/*',
+            'monkey-ball',
+            'monkey-ball/*',
+            'level-editor',
+            'level-editor/*'
+          ],
+          message: 'agent-core depends only on @automata/contracts and the provider SDKs.'
+        }]
+      }]
+    }
   }
 )
