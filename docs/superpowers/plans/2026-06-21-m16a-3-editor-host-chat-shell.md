@@ -35,7 +35,7 @@ This is the third slice of M16a, building on M16a-1 ([contracts](2026-06-21-m16a
   - Types: `EditorToolHostOptions<Doc>`, `EditorToolHost<Doc>`.
   - Value: `createEditorToolHost<Doc>(opts): EditorToolHost<Doc>`.
 
-- [ ] **Step 1: Add the agent-core dependency**
+- [x] **Step 1: Add the agent-core dependency**
 
 `packages/editor/package.json` `dependencies` becomes:
 
@@ -50,7 +50,7 @@ This is the third slice of M16a, building on M16a-1 ([contracts](2026-06-21-m16a
 Run: `npm install`
 Expected: completes; `node_modules/@automata/agent-core` resolves from the editor.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `packages/editor/tests/agent/editorToolHost.test.ts`:
 
@@ -98,12 +98,12 @@ describe('editorToolHost', () => {
 })
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/agent/editorToolHost.test.ts`
 Expected: FAIL ("Cannot find module '../../src/agent/editorToolHost'").
 
-- [ ] **Step 4: Implement the editor ToolHost**
+- [x] **Step 4: Implement the editor ToolHost**
 
 `packages/editor/src/agent/editorToolHost.ts`:
 
@@ -220,7 +220,7 @@ export function createEditorToolHost<Doc>(opts: EditorToolHostOptions<Doc>): Edi
 }
 ```
 
-- [ ] **Step 5: Export from the editor barrel**
+- [x] **Step 5: Export from the editor barrel**
 
 In `packages/editor/src/index.ts`, add after the `export * from './grid'` line:
 
@@ -228,7 +228,7 @@ In `packages/editor/src/index.ts`, add after the `export * from './grid'` line:
 export * from './agent/editorToolHost'
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/agent/editorToolHost.test.ts`
 Expected: PASS (4 tests).
