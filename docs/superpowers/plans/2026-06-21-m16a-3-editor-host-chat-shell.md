@@ -404,7 +404,7 @@ export * from './agent/settings'
 Run: `npx vitest run --project editor tests/agent/settings.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/editor/src/agent/settings.ts packages/editor/tests/agent/settings.test.ts \
@@ -427,7 +427,7 @@ git commit -m "feat(editor): agent settings (provider/key/model in localStorage)
   - Types: `ChatRunOutput<Doc>`, `ChatOverlayDeps<Doc>`, `DefaultChatDepsOptions`.
   - Values: `CHAT_SYSTEM_PROMPT`, `defaultChatDeps<Doc>(opts?)`, `mountChatOverlay<Doc>(core, parent, deps?)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/ui/chatOverlay.test.ts`:
 
@@ -531,12 +531,12 @@ describe('chat overlay', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: FAIL ("Cannot find module '../../src/ui/chatOverlay'").
 
-- [ ] **Step 3: Implement the chat overlay**
+- [x] **Step 3: Implement the chat overlay**
 
 `packages/editor/src/ui/chatOverlay.ts`:
 
@@ -694,7 +694,7 @@ export function mountChatOverlay<Doc>(
 }
 ```
 
-- [ ] **Step 4: Export from the editor barrel**
+- [x] **Step 4: Export from the editor barrel**
 
 In `packages/editor/src/index.ts`, add after the `settings` export:
 
@@ -702,7 +702,7 @@ In `packages/editor/src/index.ts`, add after the `settings` export:
 export { mountChatOverlay, defaultChatDeps, CHAT_SYSTEM_PROMPT } from './ui/chatOverlay'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: PASS (3 tests).
