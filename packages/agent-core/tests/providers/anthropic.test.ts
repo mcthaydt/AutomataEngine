@@ -15,6 +15,12 @@ function fakeClient(response: unknown): { client: AnthropicMessagesClient; bodie
 }
 
 describe('anthropic adapter', () => {
+  it('constructs the default browser-enabled client when none is injected', () => {
+    const adapter = createAnthropicAdapter({ apiKey: 'k' })
+    expect(adapter.id).toBe('anthropic')
+    expect(adapter.defaultModel).toBe('claude-opus-4-8')
+  })
+
   it('translates the request to messages.create body with adaptive thinking + tool schemas', async () => {
     const { client, bodies } = fakeClient({ content: [{ type: 'text', text: 'ok' }], stop_reason: 'end_turn' })
     const adapter = createAnthropicAdapter({ apiKey: 'k', client })
@@ -72,6 +78,21 @@ describe('anthropic adapter', () => {
       },
       { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_1', content: '{"ok":true}' }] }
     ])
+  })
+
+  it('encodes an assistant turn without text or tool calls as empty content', async () => {
+    const { client, bodies } = fakeClient({ content: [{ type: 'text', text: 'done' }], stop_reason: 'end_turn' })
+    const adapter = createAnthropicAdapter({ apiKey: 'k', client })
+    await adapter.send({ system: '', messages: [{ role: 'assistant', text: '' }], tools: [] })
+    const body = bodies[0] as { messages: unknown[] }
+    expect(body.messages).toEqual([{ role: 'assistant', content: [] }])
+  })
+
+  it('defaults missing tool metadata to empty strings', async () => {
+    const { client } = fakeClient({ content: [{ type: 'tool_use', input: { ok: true } }], stop_reason: 'tool_use' })
+    const adapter = createAnthropicAdapter({ apiKey: 'k', client })
+    const res = await adapter.send({ system: '', messages: [{ role: 'user', text: 'go' }], tools: [] })
+    expect(res.toolCalls).toEqual([{ id: '', name: '', args: { ok: true } }])
   })
 
   it('maps a refusal/length stop to "other"', async () => {

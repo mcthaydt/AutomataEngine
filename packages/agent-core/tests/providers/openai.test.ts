@@ -10,6 +10,12 @@ function fakeClient(response: unknown): { client: OpenAiChatClient; bodies: unkn
 }
 
 describe('openai adapter', () => {
+  it('constructs the default browser-enabled client when none is injected', () => {
+    const adapter = createOpenAiAdapter({ apiKey: 'k' })
+    expect(adapter.id).toBe('openai')
+    expect(adapter.defaultModel).toBe('gpt-5')
+  })
+
   it('translates the request to a chat.completions body with function tools', async () => {
     const { client, bodies } = fakeClient({
       choices: [{ message: { content: 'ok', tool_calls: [] }, finish_reason: 'stop' }]
@@ -72,5 +78,22 @@ describe('openai adapter', () => {
       },
       { role: 'tool', tool_call_id: 'call_1', content: '{"ok":true}' }
     ])
+  })
+
+  it('encodes an assistant turn without text or tool calls as null content', async () => {
+    const { client, bodies } = fakeClient({
+      choices: [{ message: { content: 'done', tool_calls: [] }, finish_reason: 'stop' }]
+    })
+    const adapter = createOpenAiAdapter({ apiKey: 'k', client })
+    await adapter.send({ system: '', messages: [{ role: 'assistant', text: '' }], tools: [] })
+    const body = bodies[0] as { messages: unknown[] }
+    expect(body.messages).toEqual([{ role: 'assistant', content: null }])
+  })
+
+  it('maps an empty choices response to an empty "other" result', async () => {
+    const { client } = fakeClient({ choices: [] })
+    const adapter = createOpenAiAdapter({ apiKey: 'k', client })
+    const res = await adapter.send({ system: '', messages: [{ role: 'user', text: 'go' }], tools: [] })
+    expect(res).toEqual({ text: '', toolCalls: [], stopReason: 'other' })
   })
 })

@@ -54,7 +54,11 @@ export function createOpenAiAdapter(opts: OpenAiAdapterOptions): ProviderAdapter
   const model = opts.model ?? DEFAULT_OPENAI_MODEL
   const client: OpenAiChatClient =
     opts.client ??
-    (new OpenAI({ apiKey: opts.apiKey, baseURL: opts.baseURL, dangerouslyAllowBrowser: true }) as OpenAiChatClient)
+    (new OpenAI({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseURL,
+      dangerouslyAllowBrowser: true
+    }) as unknown as OpenAiChatClient)
 
   return {
     id: opts.id ?? 'openai',

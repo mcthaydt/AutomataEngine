@@ -47,7 +47,8 @@ function toAnthropicMessages(messages: AgentMessage[]): unknown[] {
 export function createAnthropicAdapter(opts: AnthropicAdapterOptions): ProviderAdapter {
   const model = opts.model ?? DEFAULT_ANTHROPIC_MODEL
   const client: AnthropicMessagesClient =
-    opts.client ?? (new Anthropic({ apiKey: opts.apiKey, dangerouslyAllowBrowser: true }) as AnthropicMessagesClient)
+    opts.client ??
+    (new Anthropic({ apiKey: opts.apiKey, dangerouslyAllowBrowser: true }) as unknown as AnthropicMessagesClient)
 
   return {
     id: 'anthropic',
