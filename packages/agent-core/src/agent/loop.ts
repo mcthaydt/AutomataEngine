@@ -13,7 +13,7 @@ export interface AgentRunOptions {
 
 /** A tool call the loop actually ran, kept so the host can preview the batch. */
 export interface ExecutedToolCall {
-  name: ToolName
+  name: string
   args: unknown
   result: ToolResult
 }
@@ -34,7 +34,12 @@ export async function runAgent(opts: AgentRunOptions): Promise<AgentRunResult> {
 
   for (let turn = 0; turn < maxTurns; turn++) {
     const response = await opts.provider.send({ system: opts.system, messages, tools, model: opts.model })
-    messages.push({ role: 'assistant', text: response.text, toolCalls: response.toolCalls })
+    messages.push({
+      role: 'assistant',
+      text: response.text,
+      toolCalls: response.toolCalls,
+      providerMetadata: response.providerMetadata
+    })
 
     if (response.toolCalls.length === 0) {
       return { finalText: response.text, messages, executed, stoppedBy: 'end' }
@@ -44,8 +49,8 @@ export async function runAgent(opts: AgentRunOptions): Promise<AgentRunResult> {
       const result: ToolResult = known.has(call.name)
         ? await opts.host.executeTool(call.name as ToolName, call.args)
         : { ok: false, isError: true, content: `Unknown tool: ${call.name}` }
-      executed.push({ name: call.name as ToolName, args: call.args, result })
-      messages.push({ role: 'tool', text: JSON.stringify(result.content), toolCallId: call.id })
+      executed.push({ name: call.name, args: call.args, result })
+      messages.push({ role: 'tool', text: JSON.stringify(result), toolCallId: call.id, toolResult: result })
     }
   }
 

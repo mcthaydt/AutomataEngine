@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { AgentMessage, NormalizedToolCall, ProviderAdapter, ProviderResponse } from './provider'
+import type { AgentMessage, NormalizedToolCall, ProviderAdapter, ProviderResponse, ProviderMetadata } from './provider'
 
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-opus-4-8'
 
@@ -14,6 +14,7 @@ interface AnthropicBlock {
   id?: string
   name?: string
   input?: unknown
+  [key: string]: unknown
 }
 interface AnthropicResponse {
   content: AnthropicBlock[]
@@ -27,12 +28,30 @@ export interface AnthropicAdapterOptions {
   client?: AnthropicMessagesClient
 }
 
+interface AnthropicProviderMetadata {
+  content: AnthropicBlock[]
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function anthropicContent(metadata: ProviderMetadata | undefined): AnthropicBlock[] | undefined {
+  const candidate = metadata?.anthropic
+  if (!isRecord(candidate) || !Array.isArray(candidate.content)) return undefined
+  return candidate.content as AnthropicBlock[]
+}
+
 function toAnthropicMessages(messages: AgentMessage[]): unknown[] {
   return messages.map((m) => {
     if (m.role === 'tool') {
-      return { role: 'user', content: [{ type: 'tool_result', tool_use_id: m.toolCallId, content: m.text }] }
+      const block: Record<string, unknown> = { type: 'tool_result', tool_use_id: m.toolCallId, content: m.text }
+      if (m.toolResult?.isError === true || m.toolResult?.ok === false) block.is_error = true
+      return { role: 'user', content: [block] }
     }
     if (m.role === 'assistant') {
+      const contentFromMetadata = anthropicContent(m.providerMetadata)
+      if (contentFromMetadata) return { role: 'assistant', content: contentFromMetadata }
       const content: unknown[] = []
       if (m.text) content.push({ type: 'text', text: m.text })
       for (const call of m.toolCalls ?? []) {
@@ -72,8 +91,11 @@ export function createAnthropicAdapter(opts: AnthropicAdapterOptions): ProviderA
         .map((b) => ({ id: b.id ?? '', name: b.name ?? '', args: b.input }))
       const stopReason: ProviderResponse['stopReason'] =
         response.stop_reason === 'tool_use' ? 'tool_use' : response.stop_reason === 'end_turn' ? 'end' : 'other'
+      const providerMetadata: ProviderMetadata = {
+        anthropic: { content: response.content } satisfies AnthropicProviderMetadata
+      }
 
-      return { text, toolCalls, stopReason }
+      return { text, toolCalls, stopReason, providerMetadata }
     }
   }
 }

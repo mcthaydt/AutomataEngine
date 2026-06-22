@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { runAgent } from '../../src/agent/loop'
+import { describe, it, expect, expectTypeOf } from 'vitest'
+import { runAgent, type ExecutedToolCall } from '../../src/agent/loop'
 import type { ProviderAdapter, ProviderResponse } from '../../src/providers/provider'
 import type { ToolDef, ToolHost, ToolResult } from '@automata/contracts'
 
@@ -30,6 +30,10 @@ function scriptedProvider(responses: ProviderResponse[]): ProviderAdapter {
 }
 
 describe('runAgent', () => {
+  it('does not narrow executed call names to known ToolName values', () => {
+    expectTypeOf<ExecutedToolCall['name']>().toEqualTypeOf<string>()
+  })
+
   it('executes a tool call then stops when the model ends the turn', async () => {
     const { host, calls } = fakeHost()
     const provider = scriptedProvider([
@@ -57,6 +61,29 @@ describe('runAgent', () => {
     const provider = scriptedProvider([{ text: 'unused', toolCalls: [], stopReason: 'end' }])
     const result = await runAgent({ provider, host, system: 's', prompt: 'go', maxTurns: 0 })
     expect(result).toMatchObject({ finalText: '', stoppedBy: 'max-turns', executed: [] })
+  })
+
+  it('sends the complete tool result back to the provider', async () => {
+    const { host } = fakeHost()
+    const requests: unknown[] = []
+    const provider: ProviderAdapter = {
+      id: 'anthropic',
+      defaultModel: 'm',
+      send: async (req) => {
+        requests.push(JSON.parse(JSON.stringify(req)) as unknown)
+        return requests.length === 1
+          ? { text: 'placing', toolCalls: [{ id: 't1', name: 'addItem', args: { x: 1 } }], stopReason: 'tool_use' }
+          : { text: 'done', toolCalls: [], stopReason: 'end' }
+      }
+    }
+    await runAgent({ provider, host, system: 's', prompt: 'go' })
+    const secondRequest = requests[1] as { messages: unknown[] }
+    expect(secondRequest.messages.at(-1)).toEqual({
+      role: 'tool',
+      text: JSON.stringify({ ok: true, content: { applied: 'addItem' } }),
+      toolCallId: 't1',
+      toolResult: { ok: true, content: { applied: 'addItem' } }
+    })
   })
 
   it('returns an error tool result for an unknown tool name without throwing', async () => {

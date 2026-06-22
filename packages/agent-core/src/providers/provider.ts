@@ -1,6 +1,9 @@
-import type { ToolDef } from '@automata/contracts'
+import type { ToolDef, ToolResult } from '@automata/contracts'
 
 export type ProviderId = 'anthropic' | 'openai' | 'deepseek'
+
+/** Opaque provider-owned data needed to continue a normalized conversation. */
+export type ProviderMetadata = Record<string, unknown>
 
 /** A tool call requested by the model, normalized across providers. */
 export interface NormalizedToolCall {
@@ -20,6 +23,10 @@ export interface AgentMessage {
   toolCalls?: NormalizedToolCall[]
   /** Present on a `tool` turn: the id of the call this result answers. */
   toolCallId?: string
+  /** Present on a `tool` turn when structured result status is available. */
+  toolResult?: ToolResult
+  /** Provider-specific continuation data; adapters own its shape. */
+  providerMetadata?: ProviderMetadata
 }
 
 export interface ProviderRequest {
@@ -35,6 +42,8 @@ export interface ProviderResponse {
   toolCalls: NormalizedToolCall[]
   /** `tool_use` = wants tools; `end` = done; `other` = refusal/length/etc. */
   stopReason: 'tool_use' | 'end' | 'other'
+  /** Provider-specific continuation data; adapters own its shape. */
+  providerMetadata?: ProviderMetadata
 }
 
 export interface ProviderAdapter {
