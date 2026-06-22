@@ -1,13 +1,21 @@
 # Editor MCP + Tuning Agent + Chat Overlay (M16) - Plan 4 (STUB)
 
-> **STATUS: Designed (2026-06-21).** Superseded by the design spec
+> **STATUS: Planned (2026-06-21).** Superseded by the design spec
 > [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
-> First implementation slice:
-> [`docs/superpowers/plans/2026-06-21-m16a-shared-contracts.md`](2026-06-21-m16a-shared-contracts.md)
-> (the `@automata/contracts` package) — this is the only executable plan so far.
-> Follow-on slices are **designed in the spec but not yet written as plans**:
-> agent-core (providers + loop), chat overlay preview/confirm, tuning loop, MCP
-> server host. Each needs its own plan before it can be executed.
+> The work is now broken into six executable plans, to be implemented in order:
+>
+> 1. **M16a-1 — shared contracts** ✅ *implemented* —
+>    [`2026-06-21-m16a-shared-contracts.md`](2026-06-21-m16a-shared-contracts.md) (`@automata/contracts`).
+> 2. **M16a-2 — agent-core** (provider adapters + agent loop) —
+>    [`2026-06-21-m16a-2-agent-core.md`](2026-06-21-m16a-2-agent-core.md).
+> 3. **M16a-3 — editor ToolHost + chat overlay shell + settings** —
+>    [`2026-06-21-m16a-3-editor-host-chat-shell.md`](2026-06-21-m16a-3-editor-host-chat-shell.md).
+> 4. **M16c — chat overlay preview/confirm** (batch diff + undoable apply) —
+>    [`2026-06-21-m16c-preview-confirm.md`](2026-06-21-m16c-preview-confirm.md).
+> 5. **M16b — tuning loop** (+ headless input-seam widening) —
+>    [`2026-06-21-m16b-tuning-loop.md`](2026-06-21-m16b-tuning-loop.md).
+> 6. **M16d — MCP server host** (optional) —
+>    [`2026-06-21-m16d-mcp-server.md`](2026-06-21-m16d-mcp-server.md).
 >
 > The notes below are the original framing, kept for context; the spec is authoritative.
 
