@@ -233,7 +233,7 @@ export * from './agent/editorToolHost'
 Run: `npx vitest run --project editor tests/agent/editorToolHost.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/editor/src/agent/editorToolHost.ts packages/editor/tests/agent/editorToolHost.test.ts \
@@ -256,7 +256,7 @@ git commit -m "feat(editor): ToolHost over a sandbox doc (never mutates the live
   - Type: `AgentSettings`.
   - Values: `defaultAgentSettings()`, `loadAgentSettings(storage?)`, `saveAgentSettings(s, storage?)`, `createProvider(settings)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/agent/settings.test.ts`:
 
@@ -313,12 +313,12 @@ describe('agent settings', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/agent/settings.test.ts`
 Expected: FAIL ("Cannot find module '../../src/agent/settings'").
 
-- [ ] **Step 3: Implement settings**
+- [x] **Step 3: Implement settings**
 
 `packages/editor/src/agent/settings.ts`:
 
@@ -391,7 +391,7 @@ export function createProvider(settings: AgentSettings): ProviderAdapter {
 }
 ```
 
-- [ ] **Step 4: Export from the editor barrel**
+- [x] **Step 4: Export from the editor barrel**
 
 In `packages/editor/src/index.ts`, add after the `editorToolHost` export:
 
@@ -399,7 +399,7 @@ In `packages/editor/src/index.ts`, add after the `editorToolHost` export:
 export * from './agent/settings'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/agent/settings.test.ts`
 Expected: PASS (4 tests).
