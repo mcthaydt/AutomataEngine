@@ -7,6 +7,7 @@ import { mountPalette } from './palette'
 import { mountStatusBar } from './statusbar'
 import { injectTheme } from './theme.css'
 import { mountToolbar } from './toolbar'
+import { mountChatOverlay } from './chatOverlay'
 import { mountViewportRegion } from './viewportRegion'
 
 export interface EditorChromeHandle {
@@ -35,9 +36,10 @@ export function renderEditorChrome<Doc>(
   const rightcol = region('ed-rightcol')
   const inspectorHost = region('ed-inspector-host')
   const outlinerHost = region('ed-outliner-host')
+  const chatHost = region('ed-chat-host')
   const statusHost = region('ed-statusbar-host')
 
-  rightcol.append(inspectorHost, outlinerHost)
+  rightcol.append(inspectorHost, outlinerHost, chatHost)
   body.append(paletteHost, viewportHost, rightcol)
   shell.append(menubarHost, body, statusHost)
   root.append(shell)
@@ -50,6 +52,7 @@ export function renderEditorChrome<Doc>(
     mountPalette(core, paletteHost),
     mountInspector(core, inspectorHost),
     mountOutliner(core, outlinerHost),
+    mountChatOverlay(core, chatHost),
     mountViewportRegion(core, viewportHost, canvases)
   ]
   const status = mountStatusBar(core, statusHost)

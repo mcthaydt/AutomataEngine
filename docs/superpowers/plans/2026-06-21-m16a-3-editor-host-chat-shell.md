@@ -707,7 +707,7 @@ export { mountChatOverlay, defaultChatDeps, CHAT_SYSTEM_PROMPT } from './ui/chat
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/editor/src/ui/chatOverlay.ts packages/editor/tests/ui/chatOverlay.test.ts \
@@ -728,7 +728,7 @@ git commit -m "feat(editor): chat overlay shell (runs the agent against a sandbo
 - Consumes: `mountChatOverlay` from `./chatOverlay`.
 - Produces: a `.ed-chat` panel rendered inside the right column of the editor chrome, updated by the shell's single store subscription.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/editor/tests/ui/chrome.test.ts` a new test inside the existing `describe('editor chrome', ...)` block (keep the existing test). It reuses the file's `makeTestEditor` + `canvases` helpers and asserts the chat overlay mounts:
 
@@ -748,12 +748,12 @@ it('mounts the chat overlay panel in the chrome', () => {
 
 > `makeTestEditor` (imported from `../fixtures/editorHarness`), the local `canvases()` helper, and `renderEditorChrome` are all already present at the top of `chrome.test.ts` — no new imports are needed. The chat overlay mounts with default deps (`defaultChatDeps()`), which only reach the network on a Send click, so mounting it in this test makes no API call.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/ui/chrome.test.ts`
 Expected: FAIL (`.ed-chat` not found — the overlay isn't mounted yet).
 
-- [ ] **Step 3: Mount the overlay in chrome**
+- [x] **Step 3: Mount the overlay in chrome**
 
 In `packages/editor/src/ui/chrome.ts`:
 
@@ -796,7 +796,7 @@ to:
     mountViewportRegion(core, viewportHost, canvases)
 ```
 
-- [ ] **Step 4: Add chat panel styles**
+- [x] **Step 4: Add chat panel styles**
 
 In `packages/editor/src/ui/theme.css.ts`, append the following rules to the end of the `SLATE_PRO_CSS` template literal (immediately before its closing backtick):
 
@@ -819,7 +819,7 @@ In `packages/editor/src/ui/theme.css.ts`, append the following rules to the end 
   border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
 ```
 
-- [ ] **Step 5: Verify the chrome test + full editor suite pass**
+- [x] **Step 5: Verify the chrome test + full editor suite pass**
 
 Run: `npx vitest run --project editor tests/ui/chrome.test.ts`
 Expected: PASS (the existing `'mounts every region and reacts to a single dispatch'` test plus the new chat-overlay test).
@@ -827,12 +827,12 @@ Expected: PASS (the existing `'mounts every region and reacts to a single dispat
 Run: `npm run test`
 Expected: PASS. `chrome.test.ts` asserts on specific selectors (`.ed-menubar`, `[data-brush]`, `[data-vp="main"]`, `[data-valid]`, `.ed-status-coords`) and a single dispatch — none of which the chat panel disturbs — so adding the panel causes no fallout in that suite.
 
-- [ ] **Step 6: Full verification (typecheck, lint, coverage)**
+- [x] **Step 6: Full verification (typecheck, lint, coverage)**
 
 Run: `npm run typecheck && npm run lint && npm run coverage`
 Expected: PASS, coverage gate green. (The default `run` body in `defaultChatDeps` that calls the real `createProvider`/`runAgent` is exercised via the injected-fakes test in Task 3; only the live SDK network call is not — that path has no branch logic to cover.)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/editor/src/ui/chrome.ts packages/editor/src/ui/theme.css.ts \

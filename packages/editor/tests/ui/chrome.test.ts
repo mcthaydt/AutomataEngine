@@ -27,4 +27,16 @@ describe('editor chrome', () => {
     expect(root.querySelector('.ed-root')).toBeNull()
     editor.dispose()
   })
+
+  it('mounts the chat overlay panel in the chrome', () => {
+    const root = document.createElement('div')
+    const editor = makeTestEditor()
+    const chrome = renderEditorChrome(editor, root, canvases())
+
+    expect(root.querySelector('.ed-chat')).not.toBeNull()
+    expect(root.querySelector('.ed-chat-send')).not.toBeNull()
+
+    chrome.dispose()
+    editor.dispose()
+  })
 })
