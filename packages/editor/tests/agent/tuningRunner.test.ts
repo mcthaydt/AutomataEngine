@@ -72,6 +72,59 @@ describe('runTuning', () => {
     expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
   })
 
+  it('stops proposing once the target score is reached', async () => {
+    const definition = definitionScoring([1800, 600, 600, 600])
+    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
+    editor.store.dispatch({
+      type: 'loadDoc',
+      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
+    })
+    const runAgentFn = vi.fn(async ({ host }: AgentRunOptions): Promise<AgentRunResult> => {
+      await host.executeTool('addItem', { item: boxItem(`target-${runAgentFn.mock.calls.length}`) })
+      return { finalText: '', messages: [], executed: [], stoppedBy: 'end' as const }
+    })
+
+    const result = await runTuning<FakeDoc>({
+      core: editor,
+      provider,
+      prompt: 'make it easier',
+      target: { minSteps: 300, maxSteps: 900 },
+      targetScore: 1,
+      maxIterations: 5,
+      runAgentFn
+    })
+
+    expect(result.score).toBe(1)
+    expect(result.accepted).toBe(1)
+    expect(result.iterations).toBe(1)
+    expect(runAgentFn).toHaveBeenCalledOnce()
+  })
+
+  it('rejects incomplete agent proposals even when they mutated the sandbox', async () => {
+    const definition = definitionScoring([1800])
+    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
+    editor.store.dispatch({
+      type: 'loadDoc',
+      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
+    })
+    const runAgentFn = vi.fn(async ({ host }: AgentRunOptions): Promise<AgentRunResult> => {
+      await host.executeTool('addItem', { item: boxItem('partial') })
+      return { finalText: 'still working', messages: [], executed: [], stoppedBy: 'max-turns' as const }
+    })
+
+    await expect(
+      runTuning<FakeDoc>({
+        core: editor,
+        provider,
+        prompt: 'make it easier',
+        target: { minSteps: 300, maxSteps: 900 },
+        maxIterations: 1,
+        runAgentFn
+      })
+    ).rejects.toThrow('agent stopped before completing')
+    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
+  })
+
   it('throws when the definition has no test-play support', async () => {
     const { play, ...noPlay } = playableDefinition
     void play
@@ -82,7 +135,7 @@ describe('runTuning', () => {
   })
 
   it('uses the default agent loop when no runAgentFn is injected', async () => {
-    const definition = definitionScoring([600, 600])
+    const definition = definitionScoring([1800, 1800])
     const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
     editor.store.dispatch({
       type: 'loadDoc',

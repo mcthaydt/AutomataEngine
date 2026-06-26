@@ -27,9 +27,13 @@ export interface TuningRunOptions<Doc> {
   /** The tuning instruction handed to the LLM each proposal. */
   prompt: string
   target: FitnessTarget
+  /** Stop the optimizer once this score is reached. Default 1. */
+  targetScore?: number
   /** Headless play step cap per scoring run. Default 3000. */
   maxSteps?: number
   maxIterations?: number
+  /** Stop after this many consecutive invalid or non-improving proposals. */
+  patience?: number
   /** Injected for tests; defaults to the real agent-core loop. */
   runAgentFn?: typeof runAgent
 }
@@ -52,6 +56,7 @@ export async function runTuning<Doc>(opts: TuningRunOptions<Doc>): Promise<Tunin
   const maxSteps = opts.maxSteps ?? 3000
   const runAgentFn = opts.runAgentFn ?? runAgent
   const seek = createSeekGoalPlayer()
+  const targetScore = opts.targetScore ?? 1
 
   const score = async (state: TuningState<Doc>): Promise<number> => {
     const result = await play.runHeadlessPlay(state.doc, { maxSteps, input: seek })
@@ -60,7 +65,11 @@ export async function runTuning<Doc>(opts: TuningRunOptions<Doc>): Promise<Tunin
   const validate = (state: TuningState<Doc>): boolean => validateDoc(definition, state.doc).exportable
   const propose = async (best: TuningState<Doc>): Promise<TuningState<Doc>> => {
     const host = createEditorToolHost({ definition, initialDoc: best.doc })
-    await runAgentFn({ provider, host, system: TUNING_SYSTEM, prompt: opts.prompt })
+    const result = await runAgentFn({ provider, host, system: TUNING_SYSTEM, prompt: opts.prompt })
+    if (result.stoppedBy !== 'end') {
+      const reason = result.stoppedBy === 'max-turns' ? 'maximum turn limit' : 'provider stop'
+      throw new Error(`agent stopped before completing (${reason})`)
+    }
     return { doc: host.doc, commands: [...best.commands, ...host.commands] }
   }
 
@@ -69,7 +78,9 @@ export async function runTuning<Doc>(opts: TuningRunOptions<Doc>): Promise<Tunin
     propose,
     score,
     validate,
-    maxIterations: opts.maxIterations
+    target: targetScore,
+    maxIterations: opts.maxIterations,
+    patience: opts.patience
   })
 
   return {
