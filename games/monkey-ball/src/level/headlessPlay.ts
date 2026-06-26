@@ -3,13 +3,35 @@ import {
   createNullRenderer,
   createRapierPhysics,
   type ArchetypeLibrary,
-  type InputSource
+  type InputSource,
+  type Vec3,
+  type World
 } from '@automata/engine'
-import type { HeadlessOpts, TestPlayResult } from '@automata/editor'
+import type { HeadlessOpts, PlayObservation, TestPlayResult } from '@automata/editor'
 import type { PhysicsTuning } from '../data/config'
 import type { Level } from '../data/level'
+import type { Entity } from '../entity'
 import { createGameplay } from '../game/gameplay'
 import { createGameStore } from '../state/root'
+
+function readObservation(world: World<Entity>, goal: Vec3, step: number, dt: number): PlayObservation {
+  const ball = world.with('ball', 'transform').first
+  const position = ball ? ball.transform.position : { x: 0, y: 0, z: 0 }
+  const prev = ball ? ball.transform.prevPosition : position
+  const inv = 1 / dt
+  return {
+    step,
+    ball: {
+      position: { x: position.x, y: position.y, z: position.z },
+      velocity: {
+        x: (position.x - prev.x) * inv,
+        y: (position.y - prev.y) * inv,
+        z: (position.z - prev.z) * inv
+      }
+    },
+    goal
+  }
+}
 
 /** Runs real gameplay systems headless and returns deterministic play metrics. */
 export async function runHeadlessPlay(
@@ -23,9 +45,18 @@ export async function runHeadlessPlay(
   const audio = createNullAudio()
   const store = createGameStore()
 
+  const goal: Vec3 = { x: level.goal.pos[0], y: level.goal.pos[1], z: level.goal.pos[2] }
   let step = 0
+  let observation: PlayObservation = {
+    step: 0,
+    ball: {
+      position: { x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] },
+      velocity: { x: 0, y: 0, z: 0 }
+    },
+    goal
+  }
   const scripted: InputSource = {
-    read: () => (opts.input ? opts.input(step) : { x: 0, y: 0 }),
+    read: () => (opts.input ? opts.input(step, observation) : { x: 0, y: 0 }),
     dispose() {}
   }
 
@@ -48,6 +79,7 @@ export async function runHeadlessPlay(
     const scene = store.getState().scene
     if (scene === 'levelComplete' || scene === 'gameOver') break
 
+    observation = readObservation(game.world, goal, step, dt)
     game.fixedUpdate(dt)
     step++
   }

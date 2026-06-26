@@ -11,7 +11,7 @@ export const testPlayResultSchema = z.object({
 export type TestPlayResult = z.infer<typeof testPlayResultSchema>
 
 export interface HeadlessOpts {
-  input?: (step: number) => { x: number; y: number }
+  input?: (step: number, observation: PlayObservation) => { x: number; y: number }
   maxSteps: number
 }
 

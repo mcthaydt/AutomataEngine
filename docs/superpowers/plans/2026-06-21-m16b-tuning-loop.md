@@ -31,7 +31,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-2 ([ag
 - Consumes: `PlayObservation` (already defined in `eval.ts`).
 - Produces: `HeadlessOpts.input?: (step: number, observation: PlayObservation) => { x: number; y: number }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/contracts/tests/eval.test.ts`:
 
@@ -58,12 +58,12 @@ describe('HeadlessOpts.input', () => {
 
 > If `eval.test.ts` already imports `describe/it/expect`, do not re-import them; add only the type import.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project contracts tests/eval.test.ts`
 Expected: FAIL — typecheck error: `input` declared as `(step: number) => ...` cannot be called with two args / the `(step, o)` lambda's second param has no type. (Vitest surfaces this as a transform/type error.)
 
-- [ ] **Step 3: Widen the signature**
+- [x] **Step 3: Widen the signature**
 
 In `packages/contracts/src/eval.ts`, change the `HeadlessOpts` interface:
 
@@ -76,17 +76,17 @@ export interface HeadlessOpts {
 
 Leave `PlayObservation` (declared later in the file) unchanged; TypeScript hoists the interface so the forward reference resolves.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run --project contracts tests/eval.test.ts`
 Expected: PASS (existing eval tests + 2 new ones).
 
-- [ ] **Step 5: Confirm the whole repo still typechecks (existing callers unaffected)**
+- [x] **Step 5: Confirm the whole repo still typechecks (existing callers unaffected)**
 
 Run: `npm run typecheck && npm run test`
 Expected: PASS. The monkey-ball headless tests (`input: () => ({ x: 0, y: 1 })` and the no-input baseline) still compile and pass — `input` is still optional and the old lambda shape is assignable to the widened signature.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/contracts/src/eval.ts packages/contracts/tests/eval.test.ts
@@ -105,7 +105,7 @@ git commit -m "feat(contracts): widen HeadlessOpts.input to receive a PlayObserv
 - Consumes: `PlayObservation` from `@automata/editor` (re-exported from contracts); `World`, `Vec3` from `@automata/engine`; `Entity` from `../entity`.
 - Produces: `runHeadlessPlay` populates a per-step `PlayObservation` (ball pos from `world.with('ball','transform').first`, velocity from `position - prevPosition` over `dt`, goal from `level.goal.pos`) and passes it to `opts.input`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `games/monkey-ball/tests/level/headlessPlay.test.ts`:
 
@@ -126,12 +126,12 @@ it('exposes the ball position and goal to a closed-loop input policy', async () 
 }, 20000)
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project monkey-ball tests/level/headlessPlay.test.ts`
 Expected: FAIL — the current `input` is called with one argument, so `obs` is `undefined` and `obs.ball.position.z` throws.
 
-- [ ] **Step 3: Thread the observation**
+- [x] **Step 3: Thread the observation**
 
 Replace the whole of `games/monkey-ball/src/level/headlessPlay.ts` with:
 
@@ -241,12 +241,12 @@ export async function runHeadlessPlay(
 
 > The observation is read **before** each `game.fixedUpdate`, so the `scripted` input source (read inside `fixedUpdate` via `mergeInputs`) sees the current pose. `game.world` is the existing `readonly world` on the `Gameplay` handle; the `ball` tag + `transform.prevPosition` come from the engine `Entity`.
 
-- [ ] **Step 4: Run the new + existing headless tests**
+- [x] **Step 4: Run the new + existing headless tests**
 
 Run: `npx vitest run --project monkey-ball tests/level/headlessPlay.test.ts`
 Expected: PASS — the new observation test, plus the existing "no input rests" and "rolling forward reaches the goal" tests (the no-input and `() => ({ x: 0, y: 1 })` callers are unchanged in behavior).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add games/monkey-ball/src/level/headlessPlay.ts games/monkey-ball/tests/level/headlessPlay.test.ts
