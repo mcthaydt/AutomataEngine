@@ -309,17 +309,17 @@ Expected: FAIL ("Cannot find module '../src/mcpAdapter'").
 ```ts
 import { RESOURCE_URIS, type ResourceUri, type ToolHost, type ToolName } from '@automata/contracts'
 
-export interface McpToolsResult {
+export type McpToolsResult = {
   tools: { name: string; description: string; inputSchema: unknown }[]
 }
-export interface McpCallResult {
+export type McpCallResult = {
   content: { type: 'text'; text: string }[]
   isError: boolean
 }
-export interface McpResourcesResult {
+export type McpResourcesResult = {
   resources: { uri: string; name: string; mimeType: string }[]
 }
-export interface McpReadResult {
+export type McpReadResult = {
   contents: { uri: string; mimeType: string; text: string }[]
 }
 
@@ -374,7 +374,7 @@ git commit -m "feat(mcp): pure ToolHost → MCP request/response mapping"
 - Consumes: `@modelcontextprotocol/sdk` `Server`, `StdioServerTransport`, the request schemas; `ToolHost` from `@automata/contracts`; the `mcpAdapter` functions; `createHeadlessHost`.
 - Produces: `createMcpServer(host): Server`; an executable `main.ts` that boots the host and serves over stdio.
 
-- [ ] **Step 1: Wire the server**
+- [x] **Step 1: Wire the server**
 
 `tools/editor-mcp-server/src/server.ts`:
 
@@ -409,7 +409,7 @@ export function createMcpServer(host: ToolHost): Server {
 
 > The MCP SDK symbol names above (`Server`, the four `*RequestSchema`, `StdioServerTransport`) are from the official `@modelcontextprotocol/sdk` server API. If `npm run typecheck` flags a renamed export, fetch the exact name from the installed `node_modules/@modelcontextprotocol/sdk` package types — the `mcpAdapter` mapping (Task 3) is unaffected either way.
 
-- [ ] **Step 2: Add the entry point**
+- [x] **Step 2: Add the entry point**
 
 `tools/editor-mcp-server/src/main.ts`:
 
@@ -430,7 +430,7 @@ async function main(): Promise<void> {
 void main()
 ```
 
-- [ ] **Step 3: Document how to connect**
+- [x] **Step 3: Document how to connect**
 
 `tools/editor-mcp-server/README.md`:
 
@@ -475,7 +475,7 @@ export a level from the editor, pass it as `AUTOMATA_LEVEL_JSON`, edit via the a
 and re-import the result.
 ````
 
-- [ ] **Step 4: Typecheck, lint, and verify the tested core still passes**
+- [x] **Step 4: Typecheck, lint, and verify the tested core still passes**
 
 Run: `npm run typecheck && npm run lint`
 Expected: PASS. (If the SDK export names differ in the installed version, fix the imports in `server.ts`/`main.ts` per the note in Step 1 — no logic change.)
@@ -483,12 +483,12 @@ Expected: PASS. (If the SDK export names differ in the installed version, fix th
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS (smoke + headlessHost + mcpAdapter tests).
 
-- [ ] **Step 5: Manual smoke (optional, not part of CI)**
+- [x] **Step 5: Manual smoke (optional, not part of CI)**
 
 Run: `npm run start -w editor-mcp-server`
 Expected: prints `automata-editor MCP server ready` to stderr and waits on stdio. Connect Claude Desktop/Code per the README and confirm the tool list matches the 10 tools above and that a round-tripped `addItem` then `validate` reports no issues. Stop with Ctrl-C.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/server.ts tools/editor-mcp-server/src/main.ts tools/editor-mcp-server/README.md

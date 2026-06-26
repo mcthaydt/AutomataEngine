@@ -1,16 +1,16 @@
 import { RESOURCE_URIS, type ResourceUri, type ToolHost, type ToolName } from '@automata/contracts'
 
-export interface McpToolsResult {
+export type McpToolsResult = {
   tools: { name: string; description: string; inputSchema: unknown }[]
 }
-export interface McpCallResult {
+export type McpCallResult = {
   content: { type: 'text'; text: string }[]
   isError: boolean
 }
-export interface McpResourcesResult {
+export type McpResourcesResult = {
   resources: { uri: string; name: string; mimeType: string }[]
 }
-export interface McpReadResult {
+export type McpReadResult = {
   contents: { uri: string; mimeType: string; text: string }[]
 }
 
