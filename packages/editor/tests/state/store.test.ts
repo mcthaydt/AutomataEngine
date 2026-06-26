@@ -24,4 +24,34 @@ describe('editor store', () => {
     store.dispatch({ type: 'undo' })
     expect(selectItems(fakeDefinition, store.getState())).toEqual([])
   })
+
+  it('clears selection when a command batch deletes selected items', () => {
+    const store = createEditorStore<FakeDoc>(fakeDefinition)
+    store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('b') } })
+    store.dispatch({ type: 'select', ids: ['a', 'b'] })
+
+    store.dispatch({ type: 'commandBatch', commands: [{ type: 'deleteItems', ids: ['a'] }] })
+
+    expect(selectItems(fakeDefinition, store.getState()).map((item) => item.id)).toEqual(['b'])
+    expect(store.getState().selection).toEqual(['b'])
+  })
+
+  it('preserves selection when a command batch delete is rejected', () => {
+    const store = createEditorStore<FakeDoc>(fakeDefinition)
+    store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('b') } })
+    store.dispatch({ type: 'select', ids: ['a', 'b'] })
+
+    store.dispatch({
+      type: 'commandBatch',
+      commands: [
+        { type: 'deleteItems', ids: ['a'] },
+        { type: 'setItemField', id: 'b', path: 'pos.x', value: 1 }
+      ]
+    })
+
+    expect(selectItems(fakeDefinition, store.getState()).map((item) => item.id)).toEqual(['a', 'b'])
+    expect(store.getState().selection).toEqual(['a', 'b'])
+  })
 })

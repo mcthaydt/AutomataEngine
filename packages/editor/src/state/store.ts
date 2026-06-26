@@ -19,7 +19,7 @@ export interface EditorState<Doc> {
 export type EditorStore<Doc> = Store<EditorState<Doc>, EditorAction>
 
 export function createEditorStore<Doc>(definition: GameDefinition<Doc>): EditorStore<Doc> {
-  const root = combineReducers<EditorState<Doc>, EditorAction>({
+  const reduceSlices = combineReducers<EditorState<Doc>, EditorAction>({
     document: createDocumentReducer(definition.scene),
     selection: selectionReducer,
     tool: toolReducer,
@@ -32,6 +32,14 @@ export function createEditorStore<Doc>(definition: GameDefinition<Doc>): EditorS
     tool: initialTool,
     mode: initialMode,
     ui: initialUi
+  }
+  const root = (state: EditorState<Doc>, action: EditorAction): EditorState<Doc> => {
+    const next = reduceSlices(state, action)
+    if (action.type !== 'commandBatch' || next.document === state.document || next.selection.length === 0) return next
+
+    const itemIds = new Set(definition.scene.listItems(next.document.doc).map((item) => item.id))
+    const selection = next.selection.filter((id) => itemIds.has(id))
+    return selection.length === next.selection.length ? next : { ...next, selection }
   }
   return createStore(root, initial)
 }
