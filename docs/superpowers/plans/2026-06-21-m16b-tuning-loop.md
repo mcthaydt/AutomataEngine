@@ -517,7 +517,7 @@ git commit -m "feat(agent-core): seek-goal scoring player + monkey-ball integrat
 - Consumes: nothing (generic over `State`).
 - Produces: types `TuningLoopOptions<State>`, `TuningResult<State>`; value `runTuningLoop<State>(opts): Promise<TuningResult<State>>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/agent-core/tests/tuning/loop.test.ts`:
 
@@ -574,12 +574,12 @@ describe('runTuningLoop', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project agent-core tests/tuning/loop.test.ts`
 Expected: FAIL ("Cannot find module '../../src/tuning/loop'").
 
-- [ ] **Step 3: Implement the optimizer**
+- [x] **Step 3: Implement the optimizer**
 
 `packages/agent-core/src/tuning/loop.ts`:
 
@@ -645,7 +645,7 @@ export async function runTuningLoop<State>(opts: TuningLoopOptions<State>): Prom
 }
 ```
 
-- [ ] **Step 4: Export from the barrel**
+- [x] **Step 4: Export from the barrel**
 
 In `packages/agent-core/src/index.ts`, add:
 
@@ -653,12 +653,12 @@ In `packages/agent-core/src/index.ts`, add:
 export * from './tuning/loop'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project agent-core tests/tuning/loop.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/agent-core/src/tuning/loop.ts packages/agent-core/src/index.ts \
