@@ -103,6 +103,16 @@ export function mountChatOverlay<Doc>(
     appendMessage('proposal', `${n} proposed change${n === 1 ? '' : 's'} (apply/confirm coming in M16c)`)
   }
 
+  const renderRunStatus = (output: ChatRunOutput<Doc>): void => {
+    if (output.result.stoppedBy === 'end') {
+      renderProposal(output)
+      return
+    }
+
+    const reason = output.result.stoppedBy === 'max-turns' ? 'maximum turn limit' : 'provider stop'
+    appendMessage('error', `Agent stopped before completing (${reason}).`)
+  }
+
   const syncControls = (): void => {
     const settings = deps.loadSettings()
     provider.value = settings.provider
@@ -138,7 +148,7 @@ export function mountChatOverlay<Doc>(
     try {
       const output = await deps.run(currentDoc, prompt, core, deps.loadSettings())
       appendMessage('assistant', output.result.finalText || '(no reply)')
-      renderProposal(output)
+      renderRunStatus(output)
     } catch (error) {
       appendMessage('error', error instanceof Error ? error.message : String(error))
     } finally {

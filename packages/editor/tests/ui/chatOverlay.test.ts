@@ -75,6 +75,33 @@ describe('chat overlay', () => {
     panel.dispose()
   })
 
+  it('renders an incomplete agent run as an error status instead of a zero-change proposal', async () => {
+    const editor = makeEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const deps: ChatOverlayDeps<FakeDoc> = {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: async (doc) => ({
+        result: { finalText: 'partial reply', messages: [], executed: [], stoppedBy: 'max-turns' },
+        host: createEditorToolHost({ definition: playableDefinition, initialDoc: doc })
+      })
+    }
+    const panel = mountChatOverlay(editor, parent, deps)
+    panel.update(editor.store.getState())
+
+    const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
+    input.value = 'try something hard'
+    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+
+    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
+    expect(log).toContain('partial reply')
+    expect(log).toContain('Agent stopped before completing')
+    expect(log).not.toContain('0 proposed changes')
+    panel.dispose()
+  })
+
   it('persists a provider change through saveSettings', () => {
     const editor = makeEditor()
     const parent = document.createElement('div')

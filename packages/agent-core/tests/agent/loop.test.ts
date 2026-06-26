@@ -63,6 +63,17 @@ describe('runAgent', () => {
     expect(result).toMatchObject({ finalText: '', stoppedBy: 'max-turns', executed: [] })
   })
 
+  it('reports a provider stop separately from a clean end turn', async () => {
+    const { host } = fakeHost()
+    const provider = scriptedProvider([{ text: 'blocked by provider', toolCalls: [], stopReason: 'other' }])
+    const result = await runAgent({ provider, host, system: 's', prompt: 'go' })
+    expect(result).toMatchObject({
+      finalText: 'blocked by provider',
+      stoppedBy: 'provider-stop',
+      executed: []
+    })
+  })
+
   it('sends the complete tool result back to the provider', async () => {
     const { host } = fakeHost()
     const requests: unknown[] = []

@@ -40,6 +40,19 @@ describe('agent settings', () => {
     expect(loadAgentSettings(store)).toEqual(defaultAgentSettings())
   })
 
+  it('falls back to the default provider when stored provider is unknown', () => {
+    const store = memoryStorage()
+    store.setItem(
+      'automata-agent-settings',
+      JSON.stringify({ provider: 'unknown', apiKeys: { anthropic: 'k' }, models: { openai: 'custom' } })
+    )
+    const loaded = loadAgentSettings(store)
+    expect(loaded.provider).toBe('anthropic')
+    expect(loaded.apiKeys.anthropic).toBe('k')
+    expect(loaded.models.openai).toBe('custom')
+    expect(createProvider(loaded).id).toBe('anthropic')
+  })
+
   it('builds a provider adapter for each provider without making a network call', () => {
     for (const provider of ['anthropic', 'openai', 'deepseek'] as const) {
       const settings = { ...defaultAgentSettings(), provider, apiKeys: { anthropic: 'k', openai: 'k', deepseek: 'k' } }

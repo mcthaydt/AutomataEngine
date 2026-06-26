@@ -22,7 +22,7 @@ export interface AgentRunResult {
   finalText: string
   messages: AgentMessage[]
   executed: ExecutedToolCall[]
-  stoppedBy: 'end' | 'max-turns'
+  stoppedBy: 'end' | 'max-turns' | 'provider-stop'
 }
 
 export async function runAgent(opts: AgentRunOptions): Promise<AgentRunResult> {
@@ -42,7 +42,12 @@ export async function runAgent(opts: AgentRunOptions): Promise<AgentRunResult> {
     })
 
     if (response.toolCalls.length === 0) {
-      return { finalText: response.text, messages, executed, stoppedBy: 'end' }
+      return {
+        finalText: response.text,
+        messages,
+        executed,
+        stoppedBy: response.stopReason === 'end' ? 'end' : 'provider-stop'
+      }
     }
 
     for (const call of response.toolCalls) {

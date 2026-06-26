@@ -10,6 +10,7 @@ import {
 } from '@automata/agent-core'
 
 const STORAGE_KEY = 'automata-agent-settings'
+const PROVIDERS = ['anthropic', 'openai', 'deepseek'] as const
 
 export interface AgentSettings {
   provider: ProviderId
@@ -31,16 +32,38 @@ export function defaultAgentSettings(): AgentSettings {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isProviderId(value: unknown): value is ProviderId {
+  return typeof value === 'string' && (PROVIDERS as readonly string[]).includes(value)
+}
+
+function mergeProviderStrings(
+  fallback: Record<ProviderId, string>,
+  candidate: unknown
+): Record<ProviderId, string> {
+  const next = { ...fallback }
+  if (!isRecord(candidate)) return next
+  for (const provider of PROVIDERS) {
+    const value = candidate[provider]
+    if (typeof value === 'string') next[provider] = value
+  }
+  return next
+}
+
 export function loadAgentSettings(storage: Storage = localStorage): AgentSettings {
   const fallback = defaultAgentSettings()
   try {
     const raw = storage.getItem(STORAGE_KEY)
     if (!raw) return fallback
-    const parsed = JSON.parse(raw) as Partial<AgentSettings>
+    const parsed = JSON.parse(raw) as unknown
+    if (!isRecord(parsed)) return fallback
     return {
-      provider: parsed.provider ?? fallback.provider,
-      apiKeys: { ...fallback.apiKeys, ...parsed.apiKeys },
-      models: { ...fallback.models, ...parsed.models }
+      provider: isProviderId(parsed.provider) ? parsed.provider : fallback.provider,
+      apiKeys: mergeProviderStrings(fallback.apiKeys, parsed.apiKeys),
+      models: mergeProviderStrings(fallback.models, parsed.models)
     }
   } catch {
     return fallback
