@@ -679,7 +679,7 @@ git commit -m "feat(agent-core): keep/revert tuning optimizer (target + patience
 - Consumes: `createSeekGoalPlayer`, `runAgent`, `runTuningLoop`, `scoreFitness`, types `FitnessTarget`, `ProviderAdapter` from `@automata/agent-core`; `SceneCommand` from `@automata/contracts`; `EditorCore` from `../host`; `createEditorToolHost` from `./editorToolHost`; `validateDoc` from `../io/validation`.
 - Produces: types `TuningState<Doc>`, `TuningRunOptions<Doc>`, `TuningRunResult<Doc>`; value `runTuning<Doc>(opts): Promise<TuningRunResult<Doc>>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/agent/tuningRunner.test.ts`:
 
@@ -762,12 +762,12 @@ describe('runTuning', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/agent/tuningRunner.test.ts`
 Expected: FAIL ("Cannot find module '../../src/agent/tuningRunner'").
 
-- [ ] **Step 3: Implement the tuning runner**
+- [x] **Step 3: Implement the tuning runner**
 
 `packages/editor/src/agent/tuningRunner.ts`:
 
@@ -855,7 +855,7 @@ export async function runTuning<Doc>(opts: TuningRunOptions<Doc>): Promise<Tunin
 }
 ```
 
-- [ ] **Step 4: Export from the editor barrel**
+- [x] **Step 4: Export from the editor barrel**
 
 In `packages/editor/src/index.ts`, add after the `diff` export:
 
@@ -863,12 +863,12 @@ In `packages/editor/src/index.ts`, add after the `diff` export:
 export * from './agent/tuningRunner'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/agent/tuningRunner.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/editor/src/agent/tuningRunner.ts packages/editor/tests/agent/tuningRunner.test.ts \
