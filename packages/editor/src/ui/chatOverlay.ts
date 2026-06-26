@@ -1,6 +1,9 @@
 import { runAgent, type AgentRunResult, type ProviderAdapter, type ProviderId } from '@automata/agent-core'
+import type { SceneCommand } from '@automata/contracts'
+import { diffDocs } from '../agent/diff'
 import { createEditorToolHost, type EditorToolHost } from '../agent/editorToolHost'
 import { createProvider, loadAgentSettings, saveAgentSettings, type AgentSettings } from '../agent/settings'
+import { runTuning, type TuningRunResult } from '../agent/tuningRunner'
 import type { EditorCore } from '../host'
 import type { EditorState } from '../state/store'
 import type { PanelHandle } from './panel'
@@ -19,16 +22,20 @@ export interface ChatOverlayDeps<Doc> {
   loadSettings: () => AgentSettings
   saveSettings: (settings: AgentSettings) => void
   run: (doc: Doc, prompt: string, core: EditorCore<Doc>, settings: AgentSettings) => Promise<ChatRunOutput<Doc>>
+  /** Optional autonomous tuning pass; when present, a Tune button is shown. */
+  tune?: (prompt: string, core: EditorCore<Doc>, settings: AgentSettings) => Promise<TuningRunResult<Doc>>
 }
 
 export interface DefaultChatDepsOptions {
   createProviderFor?: (settings: AgentSettings) => ProviderAdapter
   runAgentFn?: typeof runAgent
+  runTuningFn?: typeof runTuning
 }
 
 export function defaultChatDeps<Doc>(opts: DefaultChatDepsOptions = {}): ChatOverlayDeps<Doc> {
   const makeProvider = opts.createProviderFor ?? createProvider
   const run = opts.runAgentFn ?? runAgent
+  const tuneRun = opts.runTuningFn ?? runTuning
   return {
     loadSettings: () => loadAgentSettings(),
     saveSettings: (settings) => saveAgentSettings(settings),
@@ -37,6 +44,10 @@ export function defaultChatDeps<Doc>(opts: DefaultChatDepsOptions = {}): ChatOve
       const provider = makeProvider(settings)
       const result = await run({ provider, host, system: CHAT_SYSTEM_PROMPT, prompt })
       return { result, host }
+    },
+    tune: async (prompt, core, settings) => {
+      const provider = makeProvider(settings)
+      return tuneRun<Doc>({ core, provider, prompt, target: { minSteps: 300, maxSteps: 900 } })
     }
   }
 }
@@ -84,8 +95,13 @@ export function mountChatOverlay<Doc>(
   send.type = 'button'
   send.className = 'ed-chat-send'
   send.textContent = 'Send'
+  const tuneButton = document.createElement('button')
+  tuneButton.type = 'button'
+  tuneButton.className = 'ed-chat-tune'
+  tuneButton.textContent = 'Tune'
+  tuneButton.hidden = deps.tune === undefined
 
-  root.append(head, controls, log, input, send)
+  root.append(head, controls, log, input, send, tuneButton)
 
   let currentDoc = core.store.getState().document.doc
   let busy = false
@@ -98,9 +114,47 @@ export function mountChatOverlay<Doc>(
     log.append(row)
   }
 
+  const appendDiffBlock = (commands: SceneCommand[], beforeDoc: Doc, afterDoc: Doc, extraLine?: string): void => {
+    const diff = diffDocs(core.definition, beforeDoc, afterDoc)
+    const block = document.createElement('div')
+    block.className = 'ed-chat-msg ed-chat-diff'
+    block.dataset.role = 'diff'
+
+    const summary = document.createElement('div')
+    summary.className = 'ed-chat-diff-summary'
+    summary.textContent =
+      commands.length === 0
+        ? `No changes proposed.${extraLine ? ` - ${extraLine}` : ''}`
+        : `${commands.length} command${commands.length === 1 ? '' : 's'}: +${diff.addedCount} ~${diff.modifiedCount} -${diff.removedCount}` +
+          (extraLine ? ` - ${extraLine}` : '')
+    block.append(summary)
+
+    for (const change of diff.changes) {
+      const row = document.createElement('div')
+      row.className = `ed-chat-diff-row ed-chat-diff-${change.kind}`
+      row.textContent = `${change.kind} ${change.label} (${change.id})`
+      block.append(row)
+    }
+
+    if (commands.length > 0) {
+      const apply = document.createElement('button')
+      apply.type = 'button'
+      apply.className = 'ed-chat-apply'
+      apply.textContent = 'Apply'
+      apply.addEventListener('click', () => {
+        core.store.dispatch({ type: 'commandBatch', commands })
+        currentDoc = core.store.getState().document.doc
+        apply.disabled = true
+        apply.textContent = 'Applied'
+      })
+      block.append(apply)
+    }
+
+    log.append(block)
+  }
+
   const renderProposal = (output: ChatRunOutput<Doc>): void => {
-    const n = output.host.commands.length
-    appendMessage('proposal', `${n} proposed change${n === 1 ? '' : 's'} (apply/confirm coming in M16c)`)
+    appendDiffBlock(output.host.commands, currentDoc, output.host.doc)
   }
 
   const renderRunStatus = (output: ChatRunOutput<Doc>): void => {
@@ -157,6 +211,25 @@ export function mountChatOverlay<Doc>(
     }
   }
   send.addEventListener('click', () => void submit())
+
+  const runTuningPass = async (): Promise<void> => {
+    if (!deps.tune || busy) return
+    busy = true
+    send.disabled = true
+    tuneButton.disabled = true
+    appendMessage('user', 'Tune for solvability')
+    try {
+      const result = await deps.tune('Improve this level\'s solvability.', core, deps.loadSettings())
+      appendDiffBlock(result.commands, currentDoc, result.doc, `score ${result.score.toFixed(2)}`)
+    } catch (error) {
+      appendMessage('error', error instanceof Error ? error.message : String(error))
+    } finally {
+      busy = false
+      send.disabled = false
+      tuneButton.disabled = false
+    }
+  }
+  tuneButton.addEventListener('click', () => void runTuningPass())
 
   syncControls()
 

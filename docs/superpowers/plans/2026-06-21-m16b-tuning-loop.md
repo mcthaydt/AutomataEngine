@@ -889,7 +889,7 @@ git commit -m "feat(editor): tuning runner (LLM propose + seek-goal score + keep
 - Consumes: `diffDocs` from `../agent/diff`; `TuningRunResult` from `../agent/tuningRunner`; `core.store.dispatch({ type: 'commandBatch', commands })`.
 - Produces: `ChatOverlayDeps<Doc>` gains an optional `tune` callback; a `.ed-chat-tune` button renders the net diff + `score N.NN` line + an `.ed-chat-apply` button.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/editor/tests/ui/chatOverlay.test.ts` a new test (reuse the file's `makeEditor`/`settings`/`flush` helpers):
 
@@ -923,12 +923,12 @@ it('runs a tuning pass, shows the net diff + score, and applies as one undo step
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: FAIL (`.ed-chat-tune` not found; `tune` is not a recognized dep).
 
-- [ ] **Step 3: Add the Tune affordance to the overlay**
+- [x] **Step 3: Add the Tune affordance to the overlay**
 
 In `packages/editor/src/ui/chatOverlay.ts`:
 
@@ -1015,7 +1015,7 @@ Add the Tune button to the controls. Where the `send` button is created and appe
 
 Append `tuneButton` next to `send` in the panel assembly (change `root.append(head, controls, log, input, send)` to `root.append(head, controls, log, input, send, tuneButton)`).
 
-- [ ] **Step 4: Add the Tune button style**
+- [x] **Step 4: Add the Tune button style**
 
 In `packages/editor/src/ui/theme.css.ts`, append to the `SLATE_PRO_CSS` template (before its closing backtick):
 
@@ -1025,17 +1025,17 @@ In `packages/editor/src/ui/theme.css.ts`, append to the `SLATE_PRO_CSS` template
 .ed-chat-tune[hidden] { display: none; }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: PASS (all overlay tests; the M16c send/diff/apply tests still pass because `renderProposal` now delegates to `appendDiffBlock`).
 
-- [ ] **Step 6: Full verification (typecheck, lint, coverage)**
+- [x] **Step 6: Full verification (typecheck, lint, coverage)**
 
 Run: `npm run typecheck && npm run lint && npm run coverage`
 Expected: PASS, coverage gate green across all four included packages.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/editor/src/ui/chatOverlay.ts packages/editor/src/ui/theme.css.ts \

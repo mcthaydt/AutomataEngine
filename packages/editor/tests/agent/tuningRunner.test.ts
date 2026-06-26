@@ -80,4 +80,29 @@ describe('runTuning', () => {
       runTuning<FakeDoc>({ core: editor, provider, prompt: 'x', target: { minSteps: 1, maxSteps: 2 } })
     ).rejects.toThrow()
   })
+
+  it('uses the default agent loop when no runAgentFn is injected', async () => {
+    const definition = definitionScoring([600, 600])
+    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
+    editor.store.dispatch({
+      type: 'loadDoc',
+      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
+    })
+    const localProvider: ProviderAdapter = {
+      id: 'anthropic',
+      defaultModel: 'm',
+      send: vi.fn(async () => ({ text: 'done', toolCalls: [], stopReason: 'end' as const }))
+    }
+
+    const result = await runTuning<FakeDoc>({
+      core: editor,
+      provider: localProvider,
+      prompt: 'make it easier',
+      target: { minSteps: 300, maxSteps: 900 },
+      maxIterations: 1
+    })
+
+    expect(localProvider.send).toHaveBeenCalledOnce()
+    expect(result.accepted).toBe(0)
+  })
 })

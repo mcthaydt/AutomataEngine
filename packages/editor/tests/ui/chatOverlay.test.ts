@@ -70,8 +70,50 @@ describe('chat overlay', () => {
     const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
     expect(log).toContain('add a box near the goal')
     expect(log).toContain('added a box')
-    expect(log).toContain('1 proposed change')
+    expect(parent.querySelector('.ed-chat-diff')).not.toBeNull()
+    expect(log).toContain('added box (b)')
     expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(1)
+
+    const pastBefore = editor.store.getState().document.past.length
+    parent.querySelector<HTMLButtonElement>('.ed-chat-apply')!.click()
+    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
+    expect(editor.store.getState().document.past.length).toBe(pastBefore + 1)
+    editor.store.dispatch({ type: 'undo' })
+    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(1)
+    panel.dispose()
+  })
+
+  it('runs a tuning pass, shows the net diff + score, and applies as one undo step', async () => {
+    const editor = makeEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const tune = vi.fn(async () => ({
+      doc: { title: 'lvl', items: [boxItem('a'), boxItem('tuned')] } as FakeDoc,
+      commands: [{ type: 'addItem' as const, item: boxItem('tuned') }],
+      score: 0.87,
+      iterations: 2,
+      accepted: 1
+    }))
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: vi.fn(),
+      tune
+    })
+    panel.update(editor.store.getState())
+
+    parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.click()
+    await flush()
+
+    expect(tune).toHaveBeenCalled()
+    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
+    expect(log).toContain('score 0.87')
+    expect(log).toContain('added box (tuned)')
+
+    const pastBefore = editor.store.getState().document.past.length
+    parent.querySelector<HTMLButtonElement>('.ed-chat-apply')!.click()
+    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
+    expect(editor.store.getState().document.past.length).toBe(pastBefore + 1)
     panel.dispose()
   })
 
@@ -102,6 +144,64 @@ describe('chat overlay', () => {
     panel.dispose()
   })
 
+  it('renders run errors in the chat log', async () => {
+    const editor = makeEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: vi.fn(async () => {
+        throw new Error('network down')
+      })
+    })
+    panel.update(editor.store.getState())
+
+    const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
+    input.value = 'try to edit'
+    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+
+    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
+    expect(log).toContain('network down')
+    panel.dispose()
+  })
+
+  it('keeps the Tune button hidden when no tune dependency is provided', () => {
+    const editor = makeEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: vi.fn()
+    })
+    expect(parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.hidden).toBe(true)
+    panel.dispose()
+  })
+
+  it('renders tune errors in the chat log', async () => {
+    const editor = makeEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: vi.fn(),
+      tune: vi.fn(async () => {
+        throw new Error('no valid proposal')
+      })
+    })
+    panel.update(editor.store.getState())
+
+    parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.click()
+    await flush()
+
+    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
+    expect(log).toContain('no valid proposal')
+    panel.dispose()
+  })
+
   it('persists a provider change through saveSettings', () => {
     const editor = makeEditor()
     const parent = document.createElement('div')
@@ -116,6 +216,25 @@ describe('chat overlay', () => {
     select.value = 'openai'
     select.dispatchEvent(new Event('change'))
     expect(saveSettings).toHaveBeenCalledWith(expect.objectContaining({ provider: 'openai' }))
+    panel.dispose()
+  })
+
+  it('persists an API key change for the active provider', () => {
+    const editor = makeEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const saveSettings = vi.fn()
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings,
+      run: vi.fn()
+    })
+    const key = parent.querySelector<HTMLInputElement>('.ed-chat-key')!
+    key.value = 'new-secret'
+    key.dispatchEvent(new Event('change'))
+    expect(saveSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKeys: expect.objectContaining({ anthropic: 'new-secret' }) })
+    )
     panel.dispose()
   })
 

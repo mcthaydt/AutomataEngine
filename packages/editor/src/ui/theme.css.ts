@@ -96,6 +96,18 @@ export const SLATE_PRO_CSS = `
   border: 1px solid #2f394e; border-radius: 5px; padding: 6px; font: inherit; }
 .ed-chat-send { align-self: flex-end; margin: 0 6px 6px; padding: 5px 12px; background: var(--panel-2);
   border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
+.ed-chat-diff { display: flex; flex-direction: column; gap: 3px; }
+.ed-chat-diff-summary { color: var(--ink-dim); font-size: 11px; }
+.ed-chat-diff-row { font-family: ui-monospace, monospace; font-size: 11px; padding-left: 6px; }
+.ed-chat-diff-added { color: var(--ok); }
+.ed-chat-diff-removed { color: var(--bad); }
+.ed-chat-diff-modified { color: var(--accent); }
+.ed-chat-apply { align-self: flex-start; margin-top: 4px; padding: 4px 12px; background: var(--panel-2);
+  border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
+.ed-chat-apply:disabled { color: var(--ink-dim); cursor: default; }
+.ed-chat-tune { align-self: flex-end; margin: 0 6px 6px; padding: 5px 12px; background: var(--panel-2);
+  border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
+.ed-chat-tune[hidden] { display: none; }
 `
 
 /** Injects the Slate Pro stylesheet once; only the creating call removes it. */

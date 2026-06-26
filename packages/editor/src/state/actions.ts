@@ -5,6 +5,7 @@ export interface ToolSelection { brushId: string | null; mode: 'select' | 'place
 
 export type EditorAction =
   | { type: 'command'; command: SceneCommand }
+  | { type: 'commandBatch'; commands: SceneCommand[] }
   | { type: 'loadDoc'; doc: unknown }
   | { type: 'undo' }
   | { type: 'redo' }

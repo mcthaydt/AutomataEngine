@@ -47,4 +47,18 @@ describe('runTuningLoop', () => {
     expect(result.bestScore).toBeGreaterThanOrEqual(50)
     expect(calls).toBe(1)
   })
+
+  it('stops after patience when valid proposals do not improve the score', async () => {
+    const result = await runTuningLoop<number>({
+      initial: 10,
+      score: async (s) => s,
+      propose: async () => 9,
+      validate: () => true,
+      maxIterations: 5,
+      patience: 1
+    })
+    expect(result.best).toBe(10)
+    expect(result.accepted).toBe(0)
+    expect(result.iterations).toBe(1)
+  })
 })
