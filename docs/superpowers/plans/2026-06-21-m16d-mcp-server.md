@@ -253,7 +253,7 @@ git commit -m "feat(mcp): headless host (monkey-ball boot data + reused editor T
 - Consumes: `RESOURCE_URIS`, types `ToolHost`, `ToolName`, `ResourceUri` from `@automata/contracts`.
 - Produces: `listToolsResult(host)`, `callToolResult(host, name, args)`, `listResourcesResult()`, `readResourceResult(host, uri)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tools/editor-mcp-server/tests/mcpAdapter.test.ts`:
 
@@ -297,12 +297,12 @@ describe('mcp adapter', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor-mcp-server tests/mcpAdapter.test.ts`
 Expected: FAIL ("Cannot find module '../src/mcpAdapter'").
 
-- [ ] **Step 3: Implement the adapter**
+- [x] **Step 3: Implement the adapter**
 
 `tools/editor-mcp-server/src/mcpAdapter.ts`:
 
@@ -349,12 +349,12 @@ export async function readResourceResult(host: ToolHost, uri: string): Promise<M
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor-mcp-server tests/mcpAdapter.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/mcpAdapter.ts tools/editor-mcp-server/tests/mcpAdapter.test.ts
