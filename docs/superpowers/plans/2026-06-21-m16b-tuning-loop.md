@@ -266,7 +266,7 @@ git commit -m "feat(monkey-ball): thread PlayObservation through runHeadlessPlay
 - Consumes: `TestPlayResult` from `@automata/contracts`.
 - Produces: type `FitnessTarget`; value `scoreFitness(result, target): number`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/agent-core/tests/tuning/fitness.test.ts`:
 
@@ -306,12 +306,12 @@ describe('scoreFitness', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project agent-core tests/tuning/fitness.test.ts`
 Expected: FAIL ("Cannot find module '../../src/tuning/fitness'").
 
-- [ ] **Step 3: Implement fitness**
+- [x] **Step 3: Implement fitness**
 
 `packages/agent-core/src/tuning/fitness.ts`:
 
@@ -338,7 +338,7 @@ export function scoreFitness(result: TestPlayResult, target: FitnessTarget): num
 }
 ```
 
-- [ ] **Step 4: Export from the barrel**
+- [x] **Step 4: Export from the barrel**
 
 In `packages/agent-core/src/index.ts`, add:
 
@@ -346,12 +346,12 @@ In `packages/agent-core/src/index.ts`, add:
 export * from './tuning/fitness'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project agent-core tests/tuning/fitness.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/agent-core/src/tuning/fitness.ts packages/agent-core/src/index.ts \
