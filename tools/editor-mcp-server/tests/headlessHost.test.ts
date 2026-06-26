@@ -26,7 +26,9 @@ describe('headless MCP host', () => {
     expect(res.ok).toBe(true)
     const after = ((await host.executeTool('listItems', {})).content as unknown[]).length
     expect(after).toBe(before + 1)
-    expect((await host.executeTool('validate', {})).ok).toBe(true)
+    const validation = await host.executeTool('validate', {})
+    expect(validation.ok).toBe(true)
+    expect(validation.content).toEqual({ issues: [], exportable: true })
   })
 
   it('runs a deterministic headless test-play through the reused runHeadlessPlay', async () => {
