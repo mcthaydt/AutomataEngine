@@ -31,7 +31,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-2 ([ag
 - Consumes: `SceneCommand` (already imported in `actions.ts`); `CommandError`, `UNDO_LIMIT`, `dirtyOf` semantics from `document.ts`.
 - Produces: `EditorAction` variant `{ type: 'commandBatch'; commands: SceneCommand[] }`, handled by `createDocumentReducer`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/editor/tests/state/document.test.ts` (keep existing tests; add the imports it needs if absent):
 
@@ -85,12 +85,12 @@ describe('document reducer — commandBatch', () => {
 
 > If `document.test.ts` already imports `describe/it/expect`, do not re-import them; add only the `createDocumentReducer`/`initialDocument`/fixtures imports it lacks.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/state/document.test.ts`
 Expected: FAIL (the reducer ignores `commandBatch`, so `addItem` items are not added and `past` is empty; the type also errors until Step 3).
 
-- [ ] **Step 3: Add the action type**
+- [x] **Step 3: Add the action type**
 
 In `packages/editor/src/state/actions.ts`, add the variant to the `EditorAction` union, immediately after the `command` line:
 
@@ -99,7 +99,7 @@ In `packages/editor/src/state/actions.ts`, add the variant to the `EditorAction`
   | { type: 'commandBatch'; commands: SceneCommand[] }
 ```
 
-- [ ] **Step 4: Handle it in the document reducer**
+- [x] **Step 4: Handle it in the document reducer**
 
 In `packages/editor/src/state/document.ts`, add a `case 'commandBatch'` to the reducer switch, immediately after the existing `case 'command'` block:
 
@@ -121,12 +121,12 @@ In `packages/editor/src/state/document.ts`, add a `case 'commandBatch'` to the r
 
 > `scene`, `CommandError`, `UNDO_LIMIT`, and the `dirtyOf` helper are already in scope in `document.ts` (used by the existing `command` case). No new imports are needed.
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/state/document.test.ts`
 Expected: PASS (existing tests + 4 new `commandBatch` tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/editor/src/state/actions.ts packages/editor/src/state/document.ts \
@@ -149,7 +149,7 @@ git commit -m "feat(editor): commandBatch action — atomic, single undo step"
   - Types: `ItemChange`, `DocDiff`.
   - Value: `diffDocs<Doc>(definition, before, after): DocDiff`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/editor/tests/agent/diff.test.ts`:
 
@@ -182,12 +182,12 @@ describe('diffDocs', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/agent/diff.test.ts`
 Expected: FAIL ("Cannot find module '../../src/agent/diff'").
 
-- [ ] **Step 3: Implement the diff**
+- [x] **Step 3: Implement the diff**
 
 `packages/editor/src/agent/diff.ts`:
 
@@ -237,7 +237,7 @@ export function diffDocs<Doc>(definition: GameDefinition<Doc>, before: Doc, afte
 }
 ```
 
-- [ ] **Step 4: Export from the editor barrel**
+- [x] **Step 4: Export from the editor barrel**
 
 In `packages/editor/src/index.ts`, add after the `editorToolHost` export:
 
@@ -245,12 +245,12 @@ In `packages/editor/src/index.ts`, add after the `editorToolHost` export:
 export * from './agent/diff'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/agent/diff.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/editor/src/agent/diff.ts packages/editor/tests/agent/diff.test.ts packages/editor/src/index.ts
@@ -270,7 +270,7 @@ git commit -m "feat(editor): diffDocs — item-level before/after diff"
 - Consumes: `diffDocs` from `../agent/diff`; `core.store.dispatch({ type: 'commandBatch', commands })`.
 - Produces: the chat overlay renders a `.ed-chat-diff` block with per-item rows and an `.ed-chat-apply` button that applies the batch on the undoable path.
 
-- [ ] **Step 1: Update the test to expect the diff + Apply**
+- [x] **Step 1: Update the test to expect the diff + Apply**
 
 In `packages/editor/tests/ui/chatOverlay.test.ts`, replace the tail of the first test (`'sends a prompt and renders the assistant reply + proposed-change count'`). Replace this block:
 
@@ -304,12 +304,12 @@ with:
     panel.dispose()
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: FAIL (`.ed-chat-diff` / `.ed-chat-apply` not found — the old `renderProposal` only prints a count).
 
-- [ ] **Step 3: Replace `renderProposal` in the overlay**
+- [x] **Step 3: Replace `renderProposal` in the overlay**
 
 In `packages/editor/src/ui/chatOverlay.ts`, add the diff import after the existing `../agent/settings` import:
 
@@ -371,7 +371,7 @@ with:
   }
 ```
 
-- [ ] **Step 4: Add diff + apply styles**
+- [x] **Step 4: Add diff + apply styles**
 
 In `packages/editor/src/ui/theme.css.ts`, append the following rules to the end of the `SLATE_PRO_CSS` template literal (immediately before its closing backtick):
 
@@ -387,17 +387,17 @@ In `packages/editor/src/ui/theme.css.ts`, append the following rules to the end 
 .ed-chat-apply:disabled { color: var(--ink-dim); cursor: default; }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor tests/ui/chatOverlay.test.ts`
 Expected: PASS (3 tests; the second and third overlay tests are unchanged and still pass).
 
-- [ ] **Step 6: Full verification (typecheck, lint, coverage)**
+- [x] **Step 6: Full verification (typecheck, lint, coverage)**
 
 Run: `npm run typecheck && npm run lint && npm run coverage`
 Expected: PASS, coverage gate green.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/editor/src/ui/chatOverlay.ts packages/editor/src/ui/theme.css.ts \

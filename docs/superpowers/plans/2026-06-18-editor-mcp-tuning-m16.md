@@ -10,7 +10,7 @@
 >    [`2026-06-21-m16a-2-agent-core.md`](2026-06-21-m16a-2-agent-core.md).
 > 3. **M16a-3 — editor ToolHost + chat overlay shell + settings** —
 >    [`2026-06-21-m16a-3-editor-host-chat-shell.md`](2026-06-21-m16a-3-editor-host-chat-shell.md).
-> 4. **M16c — chat overlay preview/confirm** (batch diff + undoable apply) —
+> 4. **M16c — chat overlay preview/confirm** ✅ *implemented* (batch diff + undoable apply) —
 >    [`2026-06-21-m16c-preview-confirm.md`](2026-06-21-m16c-preview-confirm.md).
 > 5. **M16b — tuning loop** (+ headless input-seam widening) —
 >    [`2026-06-21-m16b-tuning-loop.md`](2026-06-21-m16b-tuning-loop.md).
