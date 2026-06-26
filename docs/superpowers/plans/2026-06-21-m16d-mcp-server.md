@@ -129,7 +129,7 @@ git commit -m "feat(mcp): scaffold editor-mcp-server package"
 - Consumes: `parseData` from `@automata/engine`; `createEditorToolHost`, type `EditorToolHost`, type `GameDefinition` from `@automata/editor`; `archetypeLibraryKind`, `createMonkeyBallDefinition`, `physicsTuningKind`, `toPhysicsTuning`, type `Level` from `monkey-ball`.
 - Produces: types `HeadlessHostOptions`, `HeadlessHost`; value `createHeadlessHost(opts?): Promise<HeadlessHost>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tools/editor-mcp-server/tests/headlessHost.test.ts`:
 
@@ -174,12 +174,12 @@ describe('headless MCP host', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor-mcp-server tests/headlessHost.test.ts`
 Expected: FAIL ("Cannot find module '../src/headlessHost'").
 
-- [ ] **Step 3: Implement the headless host**
+- [x] **Step 3: Implement the headless host**
 
 `tools/editor-mcp-server/src/headlessHost.ts`:
 
@@ -229,12 +229,12 @@ export async function createHeadlessHost(opts: HeadlessHostOptions = {}): Promis
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor-mcp-server tests/headlessHost.test.ts`
 Expected: PASS (3 tests; the `testPlay` test boots rapier headless and returns a `TestPlayResult`).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/headlessHost.ts tools/editor-mcp-server/tests/headlessHost.test.ts
