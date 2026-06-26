@@ -32,7 +32,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-3 ([ed
 - Consumes: nothing yet.
 - Produces: an installable workspace package with a Vitest project named `editor-mcp-server`.
 
-- [ ] **Step 1: Create the package manifest**
+- [x] **Step 1: Create the package manifest**
 
 `tools/editor-mcp-server/package.json`:
 
@@ -62,7 +62,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-3 ([ed
 
 > The MCP SDK's subpath entry points used here (`/server/index.js`, `/server/stdio.js`, `/types.js`) are stable across the `1.x` line. If `npm install` resolves a different major, confirm those paths still exist before Task 4.
 
-- [ ] **Step 2: Create the TS + Vitest config**
+- [x] **Step 2: Create the TS + Vitest config**
 
 `tools/editor-mcp-server/tsconfig.json`:
 
@@ -83,7 +83,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Create a smoke test**
+- [x] **Step 3: Create a smoke test**
 
 `tools/editor-mcp-server/tests/smoke.test.ts`:
 
@@ -97,7 +97,7 @@ describe('editor-mcp-server package', () => {
 })
 ```
 
-- [ ] **Step 4: Install + run the smoke test**
+- [x] **Step 4: Install + run the smoke test**
 
 Run: `npm install`
 Expected: completes; `node_modules/@modelcontextprotocol/sdk` and `node_modules/tsx` exist.
@@ -105,12 +105,12 @@ Expected: completes; `node_modules/@modelcontextprotocol/sdk` and `node_modules/
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Lint + typecheck**
+- [x] **Step 5: Lint + typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tools/editor-mcp-server package-lock.json
