@@ -5,6 +5,7 @@
   "type": "module",
   "exports": { ".": "./src/index.ts" },
   "dependencies": { "@automata/engine": "*", "@automata/editor": "*" },
+  "devDependencies": { "@automata/agent-core": "*" },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

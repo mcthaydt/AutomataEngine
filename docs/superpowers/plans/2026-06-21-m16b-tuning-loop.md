@@ -374,7 +374,7 @@ git commit -m "feat(agent-core): difficulty-band fitness function"
 - Consumes: `PlayObservation` from `@automata/contracts`.
 - Produces: type `SeekGoalOptions`; value `createSeekGoalPlayer(opts?): (step, observation) => { x: number; y: number }`.
 
-- [ ] **Step 1: Write the failing unit test (agent-core)**
+- [x] **Step 1: Write the failing unit test (agent-core)**
 
 `packages/agent-core/tests/tuning/seekGoalPlayer.test.ts`:
 
@@ -404,12 +404,12 @@ describe('createSeekGoalPlayer', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project agent-core tests/tuning/seekGoalPlayer.test.ts`
 Expected: FAIL ("Cannot find module '../../src/tuning/seekGoalPlayer'").
 
-- [ ] **Step 3: Implement the seek-goal player**
+- [x] **Step 3: Implement the seek-goal player**
 
 `packages/agent-core/src/tuning/seekGoalPlayer.ts`:
 
@@ -442,12 +442,12 @@ export function createSeekGoalPlayer(opts: SeekGoalOptions = {}): (step: number,
 
 > The `input.x` sign is not exercised by the `w1-l1` integration test below (its goal sits at `x = 0`, same as spawn, so `dx ≈ 0`). If a future laterally-offset level steers the wrong way, flip the `x` term to `-dx / dist`.
 
-- [ ] **Step 4: Run the unit test to verify it passes**
+- [x] **Step 4: Run the unit test to verify it passes**
 
 Run: `npx vitest run --project agent-core tests/tuning/seekGoalPlayer.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Export from the barrel**
+- [x] **Step 5: Export from the barrel**
 
 In `packages/agent-core/src/index.ts`, add:
 
@@ -455,7 +455,7 @@ In `packages/agent-core/src/index.ts`, add:
 export * from './tuning/seekGoalPlayer'
 ```
 
-- [ ] **Step 6: Add the integration test (monkey-ball)**
+- [x] **Step 6: Add the integration test (monkey-ball)**
 
 In `games/monkey-ball/package.json`, add `"@automata/agent-core": "*"` to the `devDependencies` object (create the object if absent), then run `npm install`.
 
@@ -490,12 +490,12 @@ describe('seek-goal player drives headless play', () => {
 })
 ```
 
-- [ ] **Step 7: Run the integration test**
+- [x] **Step 7: Run the integration test**
 
 Run: `npx vitest run --project monkey-ball tests/level/seekGoalPlay.test.ts`
 Expected: PASS (2 tests). The solvable run rolls straight down `-z` (goal at `x=0`) and reaches the goal; the unreachable run never overlaps the lifted goal sensor.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/agent-core/src/tuning/seekGoalPlayer.ts packages/agent-core/src/index.ts \
