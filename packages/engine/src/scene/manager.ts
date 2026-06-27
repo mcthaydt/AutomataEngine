@@ -1,8 +1,13 @@
 import type { AnyAction, Store } from '../state/store'
 
-export interface Scene {
-  onEnter?(): void
-  onExit?(): void
+export interface SceneTransition<Id> {
+  from: Id | null
+  to: Id | null
+}
+
+export interface Scene<Id extends PropertyKey = string> {
+  onEnter?(transition: SceneTransition<Id>): void
+  onExit?(transition: SceneTransition<Id>): void
 }
 
 export interface SceneManager {
@@ -14,28 +19,35 @@ export interface SceneManager {
  * Drives scene transitions from a store. On each change of the selected scene
  * id, runs the previous scene's onExit then the next scene's onEnter.
  */
-export function createSceneManager<S, A extends AnyAction>(
+export function createSceneManager<S, A extends AnyAction, Id extends PropertyKey>(
   store: Store<S, A>,
-  selectScene: (state: S) => string,
-  scenes: Record<string, Scene>
+  selectScene: (state: S) => Id,
+  scenes: Record<Id, Scene<Id>>,
+  options: { onTransition?: (transition: SceneTransition<Id>) => void } = {}
 ): SceneManager {
   return {
     start() {
       let current = selectScene(store.getState())
-      scenes[current]?.onEnter?.()
+      const initial = { from: null, to: current }
+      options.onTransition?.(initial)
+      scenes[current].onEnter?.(initial)
 
       const unsubscribe = store.subscribe((state) => {
         const next = selectScene(state)
         if (next === current) return
 
-        scenes[current]?.onExit?.()
+        const transition = { from: current, to: next }
+        scenes[current].onExit?.(transition)
+        options.onTransition?.(transition)
         current = next
-        scenes[current]?.onEnter?.()
+        scenes[current].onEnter?.(transition)
       })
 
       return () => {
         unsubscribe()
-        scenes[current]?.onExit?.()
+        const transition = { from: current, to: null }
+        scenes[current].onExit?.(transition)
+        options.onTransition?.(transition)
       }
     }
   }

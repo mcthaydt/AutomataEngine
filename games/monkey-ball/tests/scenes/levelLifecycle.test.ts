@@ -1,9 +1,34 @@
 import { describe, expect, it } from 'vitest'
 import type { DataLoader } from '@automata/engine'
-import { loadRequestedLevel, shouldMountLoadedLevel } from '../../src/scenes/levelLifecycle'
+import * as lifecycle from '../../src/scenes/levelLifecycle'
 import { createGameStore } from '../../src/state/root'
+import type { SceneId } from '../../src/state/actions'
+
+const { loadRequestedLevel, shouldMountLoadedLevel } = lifecycle
 
 describe('shouldMountLoadedLevel', () => {
+  it('classifies transitions for one retained level session', () => {
+    type LevelSessionAction = (
+      from: SceneId | null,
+      to: SceneId | null,
+      hasActive: boolean,
+      hasPending: boolean
+    ) => 'enter' | 'leave' | 'keep' | 'none'
+    const levelSessionAction = (
+      lifecycle as unknown as { levelSessionAction?: LevelSessionAction }
+    ).levelSessionAction
+    expect(typeof levelSessionAction).toBe('function')
+    if (!levelSessionAction) return
+
+    expect(levelSessionAction('playing', 'paused', true, false)).toBe('keep')
+    expect(levelSessionAction('paused', 'playing', true, false)).toBe('keep')
+    expect(levelSessionAction('levelComplete', 'levelSelect', true, false)).toBe('leave')
+    expect(levelSessionAction('gameOver', 'menu', true, false)).toBe('leave')
+    expect(levelSessionAction('levelSelect', 'playing', false, false)).toBe('enter')
+    expect(levelSessionAction('paused', 'playing', false, false)).toBe('enter')
+    expect(levelSessionAction('playing', null, false, true)).toBe('leave')
+  })
+
   it('rejects a loaded level when the session switched to another level while loading', () => {
     const store = createGameStore()
     store.dispatch({ type: 'levelStarted', levelId: 'w1-l1' })

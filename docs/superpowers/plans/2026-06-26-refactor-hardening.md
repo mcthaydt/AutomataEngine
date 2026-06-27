@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 23% (21/90 steps complete)
+**Overall Progress:** 38% (34/90 steps complete)
 
 ---
 
@@ -253,7 +253,7 @@ git commit -m "refactor(loop): make visual updates time based"
 - Modify: `games/monkey-ball/src/main.ts`
 - Modify: `tools/level-editor/src/main.ts`
 
-- [ ] **Step 1: Add failing cleanup-stack tests**
+- [x] **Step 1: Add failing cleanup-stack tests**
 
 Import the existing engine index as a namespace, obtain `createCleanupStack`
 through a local optional structural cast, and first assert that it is a
@@ -286,21 +286,21 @@ cleanup.defer(() => calls.push('late'))
 expect(calls.at(-1)).toBe('late')
 ```
 
-- [ ] **Step 2: Run cleanup tests and verify RED**
+- [x] **Step 2: Run cleanup tests and verify RED**
 
 Run: `npx vitest run packages/engine/tests/lifecycle/cleanup.test.ts`
 
 Expected: FAIL because the engine index does not yet export
 `createCleanupStack`.
 
-- [ ] **Step 3: Implement `CleanupStack`**
+- [x] **Step 3: Implement `CleanupStack`**
 
 Expose `readonly disposed`, `defer(cleanup: () => void): void`, and
 `dispose(): void`. Mark disposed before draining, run callbacks in reverse
 registration order, retain the first thrown error, finish draining, then throw
 that error. If `defer` runs after disposal, invoke its callback immediately.
 
-- [ ] **Step 4: Add failing generic SceneManager compile/runtime coverage**
+- [x] **Step 4: Add failing generic SceneManager compile/runtime coverage**
 
 Update tests to use a literal scene union and a complete scene record. Cast the
 existing factory locally to the desired generic/fourth-argument signature so
@@ -308,7 +308,7 @@ the pre-production RED run compiles; assert hooks and one manager-level
 `onTransition` callback receive `{ from, to }`, including the initial `null ->
 current` transition and the final `current -> null` transition on stop.
 
-- [ ] **Step 5: Implement typed scene transitions**
+- [x] **Step 5: Implement typed scene transitions**
 
 Make `Scene` and `createSceneManager` generic in `Id extends PropertyKey`:
 
@@ -324,18 +324,18 @@ Require `scenes: Record<Id, Scene<Id>>`; remove optional scene lookups. Add an
 optional fourth argument `{ onTransition?: (transition) => void }` and invoke it
 exactly once per initial entry, state transition, and stop.
 
-- [ ] **Step 6: Add failing browser-audio disposal tests**
+- [x] **Step 6: Add failing browser-audio disposal tests**
 
 Read `dispose` through a local optional structural cast and first assert it is a
 function. Then assert the real-context path calls `context.close()` once and the
 null fallback has an idempotent no-op `dispose()`; the initial RED run therefore
 fails an assertion rather than typechecking.
 
-- [ ] **Step 7: Implement browser-audio disposal**
+- [x] **Step 7: Implement browser-audio disposal**
 
 Add `dispose()` to `BrowserAudio`, invoking `void context.close()` on the real path.
 
-- [ ] **Step 8: Add failing level-session transition tests**
+- [x] **Step 8: Add failing level-session transition tests**
 
 Extend `levelLifecycle.test.ts`. Import the existing module as a namespace, read
 `levelSessionAction` through a local structural cast, and first assert that it is
@@ -363,20 +363,20 @@ expect(levelSessionAction('paused', 'playing', false, false)).toBe('enter')
 expect(levelSessionAction('playing', null, false, true)).toBe('leave')
 ```
 
-- [ ] **Step 9: Run the level-session test and verify RED**
+- [x] **Step 9: Run the level-session test and verify RED**
 
 Run: `npx vitest run games/monkey-ball/tests/scenes/levelLifecycle.test.ts`
 
 Expected: FAIL because the level-session transition helper does not exist.
 
-- [ ] **Step 10: Implement the explicit level-session matrix**
+- [x] **Step 10: Implement the explicit level-session matrix**
 
 Define `LevelScene = 'playing' | 'paused' | 'levelComplete' | 'gameOver'` and
 return `enter` only when `to === 'playing'` with neither active nor pending
 resources, `leave` when leaving that set or shutting down, `keep` for internal
 transitions with active/pending resources, and `none` otherwise.
 
-- [ ] **Step 11: Wire composition-root cleanup and cancellation**
+- [x] **Step 11: Wire composition-root cleanup and cancellation**
 
 Register every acquired disposer immediately in each `main.ts`: input handles,
 active gameplay, store subscriptions, named DOM listener removals, scene-manager
@@ -394,13 +394,13 @@ false`. A late resource registered after disposal is immediately cleaned by the
 stack. During boot-error handling, catch cleanup errors separately so the
 original boot error panel is still rendered.
 
-- [ ] **Step 12: Verify Task 3 green**
+- [x] **Step 12: Verify Task 3 green**
 
 Run: `npx vitest run packages/engine/tests/lifecycle packages/engine/tests/scene games/monkey-ball/tests/audio games/monkey-ball/tests/scenes/levelLifecycle.test.ts && npm run typecheck`
 
 Expected: all selected tests and workspace typecheck PASS.
 
-- [ ] **Step 13: Commit Task 3**
+- [x] **Step 13: Commit Task 3**
 
 ```bash
 git add packages/engine/src/lifecycle/cleanup.ts packages/engine/tests/lifecycle/cleanup.test.ts packages/engine/src/scene/manager.ts packages/engine/tests/scene/manager.test.ts packages/engine/src/index.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/tests/audio/browserAudio.test.ts games/monkey-ball/src/scenes/levelLifecycle.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/src/main.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md

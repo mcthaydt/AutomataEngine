@@ -3,6 +3,7 @@ import { createNullAudio, createWebAudio, type AudioPort } from '@automata/engin
 export interface BrowserAudio {
   audio: AudioPort
   resume(): void
+  dispose(): void
 }
 
 export function createBrowserAudio(
@@ -10,14 +11,21 @@ export function createBrowserAudio(
 ): BrowserAudio {
   try {
     const context = createContext()
+    let disposed = false
     return {
       audio: createWebAudio(context),
-      resume() { void context.resume() }
+      resume() { void context.resume() },
+      dispose() {
+        if (disposed) return
+        disposed = true
+        void context.close()
+      }
     }
   } catch {
     return {
       audio: createNullAudio().port,
-      resume() {}
+      resume() {},
+      dispose() {}
     }
   }
 }
