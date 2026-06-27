@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   archetypeLibraryKind, createNullRenderer, parseData, type PhysicsPort
 } from '@automata/engine'
+import { CommandError } from '@automata/editor'
 import { physicsTuningKind, toPhysicsTuning } from '../../src/data/config'
 import { levelKind } from '../../src/data/level'
 import { createMonkeyBallDefinition } from '../../src/editor/registration'
@@ -29,6 +30,31 @@ interface EditorIdWorld {
 }
 
 describe('monkey-ball level SceneModel', () => {
+  it('rejects commands that target missing or duplicate ids', () => {
+    const doc = levelSceneModel.emptyDoc()
+    const existing = levelSceneModel.listItems(doc).find((item) => item.id === 'geometry:0')!
+
+    expect(() => levelSceneModel.apply(doc, {
+      type: 'setSurface',
+      id: 'missing',
+      surface: { kind: 'color', value: '#fff' }
+    })).toThrow(CommandError)
+    expect(() => levelSceneModel.apply(doc, {
+      type: 'addItem',
+      item: existing
+    })).toThrow(CommandError)
+  })
+
+  it('returns the original document for an effective no-op', () => {
+    const doc = levelSceneModel.emptyDoc()
+
+    expect(levelSceneModel.apply(doc, {
+      type: 'setMetadata',
+      path: 'name',
+      value: doc.name
+    })).toBe(doc)
+  })
+
   it('lists geometry, entities, and synthesized spawn + goal markers', () => {
     const items = levelSceneModel.listItems(level)
     const kinds = items.map((item) => item.kind)

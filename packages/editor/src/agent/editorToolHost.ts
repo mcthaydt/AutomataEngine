@@ -66,12 +66,19 @@ export function createEditorToolHost<Doc>(opts: EditorToolHostOptions<Doc>): Edi
       if (WRITE_TOOLS.has(name)) {
         const command = { type: name, ...(parsed as object) } as SceneCommand
         try {
-          doc = definition.scene.apply(doc, command)
+          const next = definition.scene.apply(doc, command)
+          const changed = next !== doc
+          if (changed) {
+            doc = next
+            commands.push(command)
+          }
+          return {
+            ok: true,
+            content: { applied: name, changed, items: definition.scene.listItems(doc).length }
+          }
         } catch (error) {
           return errorResult(error)
         }
-        commands.push(command)
-        return { ok: true, content: { applied: name, items: definition.scene.listItems(doc).length } }
       }
 
       switch (name) {

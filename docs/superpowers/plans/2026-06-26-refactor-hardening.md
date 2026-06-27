@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
+**Overall Progress:** 9% (8/90 steps complete)
+
 ---
 
 ### Task 1: Make editor commands report real effects
@@ -21,7 +23,7 @@
 - Modify: `packages/editor/src/agent/editorToolHost.ts`
 - Modify: `packages/editor/tests/fixtures/fakeDefinition.ts`
 
-- [ ] **Step 1: Add failing scene-model effect tests**
+- [x] **Step 1: Add failing scene-model effect tests**
 
 Add tests proving missing IDs and duplicate IDs are rejected, while same-value updates preserve identity:
 
@@ -45,13 +47,13 @@ it('returns the original document for an effective no-op', () => {
 })
 ```
 
-- [ ] **Step 2: Run the scene-model tests and verify RED**
+- [x] **Step 2: Run the scene-model tests and verify RED**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/sceneModel.test.ts`
 
 Expected: FAIL because missing/duplicate targets currently succeed and same-value metadata returns a new object.
 
-- [ ] **Step 3: Implement strict target validation and no-op identity**
+- [x] **Step 3: Implement strict target validation and no-op identity**
 
 In `levelSceneModel.apply`, compute the current stable ID set once per targeted command. Throw `CommandError` for missing IDs and duplicate `addItem` IDs. Before cloning, compare the requested value/delta to the current value; return `level` for empty ID arrays, zero deltas, same surfaces, same metadata, same fields, and empty deletes.
 
@@ -63,7 +65,7 @@ const sameVec = (a: Vec3, b: Vec3): boolean =>
 const zeroDelta = (v: Vec3): boolean => sameVec(v, { x: 0, y: 0, z: 0 })
 ```
 
-- [ ] **Step 4: Add failing reducer and ToolHost no-op tests**
+- [x] **Step 4: Add failing reducer and ToolHost no-op tests**
 
 Add a single-command reducer test whose `SceneModel.apply` returns the same doc and assert the entire `DocumentState` reference is unchanged. Add a ToolHost test whose scene returns the same doc and assert:
 
@@ -73,13 +75,13 @@ expect(host.commands).toEqual([])
 expect(host.doc).toBe(seedDoc)
 ```
 
-- [ ] **Step 5: Run the editor tests and verify RED**
+- [x] **Step 5: Run the editor tests and verify RED**
 
 Run: `npx vitest run packages/editor/tests/state/document.test.ts packages/editor/tests/agent/editorToolHost.test.ts`
 
 Expected: FAIL because single commands create history and ToolHost records every parsed write.
 
-- [ ] **Step 6: Implement effect-aware reducer and ToolHost behavior**
+- [x] **Step 6: Implement effect-aware reducer and ToolHost behavior**
 
 In the single-command reducer branch, return `state` when `next === state.doc`. In ToolHost, apply into `next`, record only when `next !== doc`, and return:
 
@@ -92,13 +94,13 @@ return {
 
 Update the fake scene model to return its original document for same-value operations so fixture behavior matches the production contract.
 
-- [ ] **Step 7: Verify Task 1 green**
+- [x] **Step 7: Verify Task 1 green**
 
 Run: `npx vitest run games/monkey-ball/tests/editor packages/editor/tests/state/document.test.ts packages/editor/tests/agent/editorToolHost.test.ts`
 
 Expected: all selected tests PASS.
 
-- [ ] **Step 8: Commit Task 1**
+- [x] **Step 8: Commit Task 1**
 
 ```bash
 git add games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/tests/editor/sceneModel.test.ts packages/editor/src/state/document.ts packages/editor/src/agent/editorToolHost.ts packages/editor/tests/state/document.test.ts packages/editor/tests/agent/editorToolHost.test.ts packages/editor/tests/fixtures/fakeDefinition.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md

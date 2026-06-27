@@ -22,6 +22,24 @@ describe('editorToolHost', () => {
     expect(res.isError).toBe(true)
   })
 
+  it('reports and omits a valid command that has no effect', async () => {
+    const doc = seed()
+    const definition = {
+      ...playableDefinition,
+      scene: { ...playableDefinition.scene, apply: (current: FakeDoc) => current }
+    }
+    const host = createEditorToolHost({ definition, initialDoc: doc })
+
+    const result = await host.executeTool('setMetadata', { path: 'title', value: doc.title })
+
+    expect(result).toMatchObject({
+      ok: true,
+      content: { applied: 'setMetadata', changed: false }
+    })
+    expect(host.commands).toEqual([])
+    expect(host.doc).toBe(doc)
+  })
+
   it('reads items, validation, doc, and runs testPlay', async () => {
     const host = createEditorToolHost({ definition: playableDefinition, initialDoc: seed() })
     expect((await host.executeTool('listItems', {})).content).toHaveLength(1)

@@ -35,6 +35,16 @@ describe('document slice', () => {
     expect(next.future).toEqual([])
   })
 
+  it('preserves the document state when a single command has no effect', () => {
+    const before = start()
+    const reduceSame = createDocumentReducer<FakeDoc>({ ...scene, apply: (doc) => doc })
+
+    expect(reduceSame(before, {
+      type: 'command',
+      command: { type: 'setMetadata', path: 'title', value: before.doc.title }
+    })).toBe(before)
+  })
+
   it('undo restores the prior doc; redo re-applies', () => {
     let state = reduce(start(), { type: 'command', command: { type: 'addItem', item: boxItem('a') } })
     state = reduce(state, { type: 'undo' })

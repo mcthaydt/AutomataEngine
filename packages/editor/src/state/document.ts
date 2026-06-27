@@ -35,6 +35,7 @@ export function createDocumentReducer<Doc>(
           if (error instanceof CommandError) return state
           throw error
         }
+        if (next === state.doc) return state
         const past = [...state.past, state.doc].slice(-UNDO_LIMIT)
         return { ...state, doc: next, dirty: dirtyOf(state, next), past, future: [] }
       }
