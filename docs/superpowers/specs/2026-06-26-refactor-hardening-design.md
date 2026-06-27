@@ -133,8 +133,9 @@ new adapter methods. Selection highlighting is re-applied after synchronization.
 `packages/engine/src/ecs/world.ts` stops re-exporting Miniplex's `World` type.
 It exposes engine-owned `World` and `EntityQuery` interfaces containing only the
 operations used by engine/game/editor code: `add`, `remove`, `clear`, `has`,
-`entities`, `with`, iteration, `first`, and add/remove subscriptions. Miniplex
-is instantiated and adapted only inside that module.
+`addComponent`, `removeComponent`, `entities`, `with`, iteration, `first`, and
+add/remove subscriptions. Miniplex is instantiated and adapted only inside that
+module.
 
 Backward-compatible root exports remain, while package export maps add narrow
 entry points for headless consumers:
