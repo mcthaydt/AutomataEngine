@@ -10,9 +10,11 @@ export default defineConfig({
         'packages/editor/src/**',
         'packages/editor-agent/src/**',
         'packages/contracts/src/**',
-        'packages/agent-core/src/**'
+        'packages/agent-core/src/**',
+        'games/monkey-ball/src/**',
+        'tools/editor-mcp-server/src/**'
       ],
-      exclude: ['**/browser.ts', '**/index.ts', '**/version.ts'],
+      exclude: ['**/main.ts', '**/browser.ts', '**/index.ts', '**/version.ts'],
       thresholds: { lines: 90, branches: 90 }
     }
   }

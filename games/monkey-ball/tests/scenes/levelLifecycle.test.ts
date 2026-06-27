@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest'
-import type { DataLoader } from '@automata/engine'
+import { describe, expect, it, vi } from 'vitest'
+import { parseData, type DataLoader } from '@automata/engine'
 import * as lifecycle from '../../src/scenes/levelLifecycle'
+import { levelKind } from '../../src/data/level'
 import { createGameStore } from '../../src/state/root'
 import type { SceneId } from '../../src/state/actions'
+import { readDataFile } from '../helpers/data'
 
 const { loadRequestedLevel, shouldMountLoadedLevel } = lifecycle
+const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
 
 describe('shouldMountLoadedLevel', () => {
   it('classifies transitions for one retained level session', () => {
@@ -58,5 +61,30 @@ describe('shouldMountLoadedLevel', () => {
 
     await expect(loadRequestedLevel(loader, store, 'missing', false)).resolves.toBeNull()
     expect(store.getState().scene).toBe('levelSelect')
+  })
+
+  it('returns a successfully loaded current level', async () => {
+    const store = createGameStore()
+    store.dispatch({ type: 'levelStarted', levelId: level.id })
+    const loader = { load: async () => level } as unknown as DataLoader
+
+    await expect(loadRequestedLevel(loader, store, level.id, false)).resolves.toBe(level)
+  })
+
+  it('ignores a failed stale request without dispatching', async () => {
+    const store = createGameStore()
+    store.dispatch({ type: 'levelStarted', levelId: 'stale' })
+    let reject!: (error: Error) => void
+    const loader = {
+      load: () => new Promise((_resolve, rejectPromise) => { reject = rejectPromise })
+    } as unknown as DataLoader
+    const pending = loadRequestedLevel(loader, store, 'stale', false)
+    store.dispatch({ type: 'openedMenu' })
+    const dispatch = vi.spyOn(store, 'dispatch')
+
+    reject(new Error('404'))
+
+    await expect(pending).resolves.toBeNull()
+    expect(dispatch).not.toHaveBeenCalled()
   })
 })

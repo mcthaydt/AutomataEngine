@@ -4,6 +4,10 @@ import { pathPosition } from '../../src/systems/path'
 const line = [{ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }]
 
 describe('pathPosition', () => {
+  it('returns the origin for an empty path', () => {
+    expect(pathPosition([], 5, 'loop')).toEqual({ x: 0, y: 0, z: 0 })
+  })
+
   it('returns the single waypoint when there is only one', () => {
     expect(pathPosition([{ x: 1, y: 2, z: 3 }], 5, 'loop')).toEqual({ x: 1, y: 2, z: 3 })
   })
@@ -23,5 +27,15 @@ describe('pathPosition', () => {
   it('treats degenerate (zero-length) paths as the first point', () => {
     const dot = [{ x: 4, y: 0, z: 0 }, { x: 4, y: 0, z: 0 }]
     expect(pathPosition(dot, 9, 'pingpong')).toEqual({ x: 4, y: 0, z: 0 })
+  })
+
+  it('wraps negative distances in loop and ping-pong modes', () => {
+    expect(pathPosition(line, -2, 'loop')).toEqual({ x: 8, y: 0, z: 0 })
+    expect(pathPosition(line, -2, 'pingpong')).toEqual({ x: 2, y: 0, z: 0 })
+  })
+
+  it('skips a zero-length segment before a non-zero segment', () => {
+    const withDuplicate = [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }]
+    expect(pathPosition(withDuplicate, 5, 'loop')).toEqual({ x: 5, y: 0, z: 0 })
   })
 })

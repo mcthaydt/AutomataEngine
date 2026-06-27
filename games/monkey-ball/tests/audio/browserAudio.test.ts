@@ -24,9 +24,11 @@ describe('createBrowserAudio', () => {
 
     expect(typeof dispose).toBe('function')
     if (!dispose) return
+    runtime.resume()
     dispose()
     dispose()
     expect(close).toHaveBeenCalledTimes(1)
+    expect(context.resume).toHaveBeenCalledTimes(1)
   })
 
   it('provides an idempotent no-op disposer on the fallback path', () => {

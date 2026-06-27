@@ -42,4 +42,16 @@ describe('runHeadlessPlay', () => {
     expect(seen[0]!.goalZ).toBe(-6)
     expect(seen[0]!.ballZ).toBeGreaterThan(0)
   }, 20000)
+
+  it('maps an exhausted-life run to gameOver', async () => {
+    const result = await runHeadlessPlay(
+      { ...level, timeLimitS: 0.001 },
+      lib,
+      tuning,
+      { maxSteps: 10 }
+    )
+
+    expect(result.outcome).toBe('gameOver')
+    expect(result.steps).toBe(3)
+  })
 })

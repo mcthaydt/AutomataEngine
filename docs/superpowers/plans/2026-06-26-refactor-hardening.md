@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 84% (76/90 steps complete)
+**Overall Progress:** 91% (82/90 steps complete)
 
 ---
 
@@ -1105,11 +1105,11 @@ git commit -m "refactor(editor): extract optional @automata/editor-agent layer"
 - Modify: `tools/editor-mcp-server/tests/mcpAdapter.test.ts`
 - Modify: `tools/editor-mcp-server/tests/server.test.ts`
 
-- [ ] **Step 1: Expand coverage includes**
+- [x] **Step 1: Expand coverage includes**
 
 Add `games/monkey-ball/src/**` and `tools/editor-mcp-server/src/**`. Extend exclusions with `**/main.ts` while retaining `**/browser.ts`, barrels, and version files.
 
-- [ ] **Step 2: Run coverage and verify the expanded gate RED**
+- [x] **Step 2: Run coverage and verify the expanded gate RED**
 
 Run: `npm run coverage`
 
@@ -1119,7 +1119,7 @@ browser-audio/editor-registration/scene-model branches, small game guard
 branches, and the MCP valid-resource path. Earlier tasks will raise this number,
 but this step remains the authoritative expanded gate.
 
-- [ ] **Step 3: Close the known game coverage gaps with focused behavior tests**
+- [x] **Step 3: Close the known game coverage gaps with focused behavior tests**
 
 Add these explicit cases:
 
@@ -1140,7 +1140,7 @@ Run: `npx vitest run games/monkey-ball/tests/editor games/monkey-ball/tests/leve
 
 Expected: all game tests PASS.
 
-- [ ] **Step 4: Close the known MCP coverage gaps**
+- [x] **Step 4: Close the known MCP coverage gaps**
 
 Add an MCP adapter case with undefined arguments to exercise the `{}` fallback. Add an in-memory server integration case that reads `editor://doc` successfully and asserts the host result, complementing the existing invalid-resource test.
 
@@ -1148,13 +1148,13 @@ Run: `npx vitest run tools/editor-mcp-server/tests`
 
 Expected: all MCP server tests PASS.
 
-- [ ] **Step 5: Verify expanded coverage green**
+- [x] **Step 5: Verify expanded coverage green**
 
 Run: `npm run coverage`
 
 Expected: at least 90% lines and 90% branches across the expanded include set.
 
-- [ ] **Step 6: Commit Task 9**
+- [x] **Step 6: Commit Task 9**
 
 ```bash
 git add vitest.config.ts games/monkey-ball/tests/editor/registrationPlay.test.ts games/monkey-ball/tests/editor/registrationBrowser.test.ts games/monkey-ball/tests/editor/sceneModel.test.ts games/monkey-ball/tests/level/buildWorld.test.ts games/monkey-ball/tests/level/headlessPlay.test.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/tests/state/persist.test.ts games/monkey-ball/tests/state/unlocks.test.ts games/monkey-ball/tests/systems/goal.test.ts games/monkey-ball/tests/systems/path.test.ts games/monkey-ball/tests/ui/overlays.test.ts tools/editor-mcp-server/tests/mcpAdapter.test.ts tools/editor-mcp-server/tests/server.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md

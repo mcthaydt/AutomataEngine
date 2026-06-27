@@ -44,4 +44,28 @@ describe('buildLevelWorld', () => {
     const floor = [...world.with('rigidBody', 'transform')].find((e) => e.rigidBody!.shape.type === 'box')!
     expect(floor.transform!.rotation).toEqual(quat.fromEuler(0, 0, (90 * Math.PI) / 180))
   })
+
+  it('maps cylinder geometry to matching collider and render dimensions', () => {
+    const cylinderLevel = {
+      ...level,
+      entities: [],
+      geometry: [{
+        shape: 'cylinder' as const,
+        radius: 2,
+        height: 6,
+        pos: [1, 2, 3] as [number, number, number],
+        color: '#123456',
+        friction: 0.4
+      }]
+    }
+    const { world } = buildLevelWorld(cylinderLevel, lib)
+    const cylinder = [...world.with('rigidBody', 'renderable')].find(
+      (entity) => entity.rigidBody.shape.type === 'cylinder'
+    )!
+
+    expect(cylinder.rigidBody.shape).toEqual({ type: 'cylinder', halfHeight: 3, radius: 2 })
+    expect(cylinder.renderable).toEqual({
+      primitive: 'cylinder', radius: 2, height: 6, color: '#123456'
+    })
+  })
 })

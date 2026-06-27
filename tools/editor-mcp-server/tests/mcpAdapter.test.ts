@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { ToolHost } from '@automata/contracts'
 import { callToolResult, listResourcesResult, listToolsResult, readResourceResult } from '../src/mcpAdapter'
 
@@ -29,6 +29,15 @@ describe('mcp adapter', () => {
   it('reports isError true when ok is false without an explicit error flag', async () => {
     const erroring: ToolHost = { ...fakeHost, executeTool: async () => ({ ok: false, content: 'bad' }) }
     expect((await callToolResult(erroring, 'addItem', {})).isError).toBe(true)
+  })
+
+  it('defaults undefined tool arguments to an empty object', async () => {
+    const executeTool = vi.fn(async () => ({ ok: true, content: null }))
+    const host: ToolHost = { ...fakeHost, executeTool }
+
+    await callToolResult(host, 'getDoc', undefined)
+
+    expect(executeTool).toHaveBeenCalledWith('getDoc', {})
   })
 
   it('lists the editor resource uris', () => {

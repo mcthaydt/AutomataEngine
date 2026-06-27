@@ -18,6 +18,31 @@ const fakeHost: ToolHost = {
 }
 
 describe('MCP server', () => {
+  it('reads a valid editor resource through the in-memory server', async () => {
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+    const host: ToolHost = {
+      ...fakeHost,
+      readResource: async (uri) => ({ uri, title: 'Current document' })
+    }
+    const server = createMcpServer(host)
+    const client = new Client({ name: 'editor-mcp-server-test', version: '0.0.0' })
+
+    await server.connect(serverTransport)
+    await client.connect(clientTransport)
+    try {
+      const result = await client.readResource({ uri: 'editor://doc' })
+      const content = result.contents[0]!
+      expect(content).toMatchObject({ uri: 'editor://doc', mimeType: 'application/json' })
+      expect(JSON.parse((content as { text: string }).text)).toEqual({
+        uri: 'editor://doc',
+        title: 'Current document'
+      })
+    } finally {
+      await client.close()
+      await server.close()
+    }
+  })
+
   it('rejects an unknown resource URI as invalid params', async () => {
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
     const server = createMcpServer(fakeHost)
