@@ -4,11 +4,18 @@
 > hardening pass over the completed M0-M16 implementation. Every behavior change
 > lands test-first; performance changes must preserve the existing ports and
 > gameplay/editor contracts.
+>
+> **Amended 2026-06-27.** Added gap 8 and architecture item 8: extract the AI
+> agent tooling into a new `@automata/editor-agent` package so AI becomes an
+> optional, opt-in layer instead of a mandatory editor dependency. Item 6's
+> editor export map is extended to `.` / `./headless` / `./ui` / `./viewport`.
+> This stays behavior-preserving: the level-editor app still mounts the chat
+> panel by composing the new package.
 
 ## Context
 
 The completed project passes its current CI and coverage gates, but the final
-architecture audit found seven gaps:
+architecture audit found eight gaps:
 
 1. camera and editor movement depend on render frequency;
 2. editor commands can report success without changing the document;
@@ -17,10 +24,14 @@ architecture audit found seven gaps:
 5. repeated renderables allocate and destroy duplicate Three.js resources;
 6. every editor document edit rebuilds the entire preview world; and
 7. package barrels and the ECS wrapper expose broader implementation detail than
-   headless consumers need.
+   headless consumers need; and
+8. the editor package hard-depends on `@automata/agent-core` and mounts the chat
+   agent inside its own chrome, so AI tooling cannot be omitted from an editor
+   embed.
 
-This pass fixes all seven. It does not replace the store, scheduler, ECS model,
-renderer, physics engine, editor command model, or agent loop.
+This pass fixes all eight. It does not replace the store, scheduler, ECS model,
+renderer, physics engine, editor command model, or agent loop; the agent loop is
+relocated into its own package, not rewritten.
 
 ## Goals
 
@@ -30,6 +41,8 @@ renderer, physics engine, editor command model, or agent loop.
 - Reuse render resources across entity churn.
 - Synchronize changed editor entities without rebuilding unaffected entities.
 - Keep Miniplex and browser/provider-heavy modules behind explicit package seams.
+- Make the AI agent tooling an optional, separately-packaged layer instead of a
+  mandatory editor dependency.
 - Enforce coverage over all testable production code.
 
 ## Architecture
@@ -83,13 +96,24 @@ Both browser composition roots use one stack for subscriptions, DOM listeners,
 scene-manager stop functions, fly controls, loop drivers, editor/game handles,
 canvas renderers, renderer ports, and physics ports. Boot failure disposes the
 partially-created stack before rendering the error panel. `beforeunload` invokes
-the same idempotent cleanup path.
+the same idempotent cleanup path. Registering a cleanup after the stack has
+already been disposed runs that cleanup immediately; this prevents a late async
+acquisition from escaping teardown. Cleanup failures never replace the primary
+boot error shown to the user.
 
 `SceneManager` becomes generic in its scene ID and requires a complete scene
 record. Unknown scene IDs are therefore compile-time errors instead of silent
-optional lookups. Monkey Ball keeps async level loading in its existing guarded
-lifecycle helper, while the playing scene owns mounting and unmounting the
-active level.
+optional lookups. It also owns one typed transition callback, so overlays and
+the level session react to the same transition instead of separate store
+subscriptions.
+
+The level session spans `playing`, `paused`, `levelComplete`, and `gameOver`.
+Transitions within that set retain the active gameplay world. A transition from
+the set to `menu`, `levelSelect`, or shutdown cancels any pending load and
+disposes the active level; a transition to `playing` with no active or pending
+level starts loading. Each async load captures a monotonically increasing epoch
+and checks the epoch plus `CleanupStack.disposed` after `await`, so a stale load
+cannot mount resources after navigation or teardown.
 
 ### 4. Flyweight geometry and pooled meshes
 
@@ -112,9 +136,10 @@ The public `RenderPort` does not change.
 ### 5. ID-keyed incremental editor world synchronization
 
 `GameDefinition` gains an optional `syncWorld(world, previousDoc, nextDoc)` hook.
-When present, `createWorldSync` calls it for document changes and only falls back
-to a full rebuild when the hook reports that incremental synchronization is not
-supported.
+When present, `createWorldSync` calls it for changed document references; when
+absent, it performs the existing full rebuild. Calling `syncNow()` with the same
+document reference only reapplies selection highlighting and never invokes the
+hook.
 
 Monkey Ball extracts level entity construction into deterministic, stable-ID
 seeds. Its sync hook builds previous/next seed maps keyed by `editorId`:
@@ -123,6 +148,11 @@ seeds. Its sync hook builds previous/next seed maps keyed by `editorId`:
 - added IDs add one seed;
 - changed seeds replace only that entity; and
 - metadata-only changes leave the world untouched.
+
+Seeds are plain data created by one deterministic constructor. The Monkey Ball
+adapter compares them with `JSON.stringify(previousSeed) ===
+JSON.stringify(nextSeed)`; property insertion order is stable because both sides
+come from that same constructor.
 
 World query subscriptions already connect entity add/remove operations to the
 physics and render ports, so replacing one entity updates both adapters without
@@ -137,17 +167,34 @@ operations used by engine/game/editor code: `add`, `remove`, `clear`, `has`,
 add/remove subscriptions. Miniplex is instantiated and adapted only inside that
 module.
 
-Backward-compatible root exports remain, while package export maps add narrow
-entry points for headless consumers:
+The engine root becomes platform-neutral: it no longer re-exports browser loop,
+DOM input, canvas-renderer, or WebAudio shims. Those move to
+`@automata/engine/browser`, and browser composition roots import them explicitly.
+Package export maps also add narrow entry points for headless consumers:
 
 - `@automata/engine/data` for parsing/data contracts;
 - `@automata/editor/headless` for `GameDefinition`, validation, and ToolHost;
-- `monkey-ball/editor` for the Monkey Ball editor registration; and
+- `monkey-ball/headless` for a ToolHost-compatible definition that does not
+  import live gameplay registration, DOM input, or browser composition; and
 - `@automata/contracts` directly for headless evaluation types.
+
+The editor's flat barrel is replaced by a curated export map with no `export *`:
+
+- `.` for core authoring (`model`, `state`, `host`, `tools`, `io`, `grid`);
+- `./headless` for `GameDefinition`, validation, and `editorToolHost`;
+- `./ui` for `renderEditorChrome` and theming; and
+- `./viewport` for the 2D and 3D viewport helpers.
+
+Each subpath re-exports an explicit, named surface. `./ui` and `./viewport`
+isolate the browser-facing surface from headless consumers, and `editorToolHost`
+moves behind `./headless` because only its `contracts` types are public.
 
 The MCP server migrates to these entry points. Monkey Ball headless play imports
 evaluation types directly from `@automata/contracts`. Browser/provider modules
-are no longer instantiated through a headless import path.
+are no longer instantiated through a headless import path. The existing browser
+`createMonkeyBallDefinition` composes the shared scene/palette definition with
+live gameplay; the new headless definition composes the same shared data with
+only `runHeadlessPlay`.
 
 ### 7. Coverage as a refactoring gate
 
@@ -162,6 +209,30 @@ The intended browser-only shims remain excluded: app `main.ts` files,
 closed with focused behavior tests; thresholds remain at 90% lines and 90%
 branches.
 
+### 8. Optional, separately-packaged AI layer
+
+A new `@automata/editor-agent` package owns the provider-backed agent tooling:
+agent settings and provider adapters, the tuning runner, the document-diff
+display helper, and the chat overlay panel. It depends on `@automata/editor`,
+`@automata/agent-core`, and `@automata/contracts`.
+
+`@automata/editor` no longer depends on `@automata/agent-core`. The
+agent-agnostic `editorToolHost` stays in the editor behind
+`@automata/editor/headless`, since the MCP server and the new agent package both
+consume it through `contracts` types only.
+
+`renderEditorChrome` stops importing the chat overlay directly. Its options gain
+an optional `mountAgentPanel(core, host)` hook; chrome creates and mounts the
+agent region only when the hook is supplied, and omits it otherwise.
+`@automata/editor-agent` exposes the factory that builds that hook from provider
+settings, and the level-editor composition root passes it in. An editor embedded
+without the hook has no agent UI and no provider-SDK dependency.
+
+An ESLint boundary forbids any `@automata/agent-core` import under
+`packages/editor/**`, mirroring the existing engine/agent-core guards so the
+decoupling cannot silently regress. The new package inherits the standard
+"third-party libraries only through `@automata/engine`" boundary.
+
 ## Error handling
 
 - Negative or repeated loop timestamps produce `frameDt = 0`.
@@ -173,6 +244,8 @@ branches.
   to structured ToolHost failures at the host boundary.
 - Incremental world synchronization falls back to a full rebuild only when a
   game definition explicitly lacks the hook; a throwing hook is not hidden.
+- A missing `mountAgentPanel` hook is not an error: editor chrome renders with no
+  agent region and no provider-SDK dependency.
 
 ## Testing strategy
 
@@ -191,10 +264,18 @@ Every production change follows red-green-refactor.
   and item changes replace only the affected entity.
 - **Boundaries:** engine facade tests preserve query/add/remove behavior;
   package typecheck/build verifies narrow exports and headless imports.
+- **Agent layer:** the chat-overlay and tuning-runner tests move to
+  `@automata/editor-agent`; an editor typecheck/build proves it resolves with no
+  `@automata/agent-core` dependency; an ESLint check proves `packages/editor/**`
+  cannot import `@automata/agent-core`; and a chrome test proves the agent region
+  mounts when `mountAgentPanel` is supplied and is absent otherwise.
 - **Coverage:** the expanded coverage command is the red gate; focused tests are
   added until the unchanged thresholds pass.
 
-Final verification is `npm run ci`, `npm run coverage`, and `npm run build`.
+Final automated verification is `npm run ci`, `npm run coverage`, `npm run
+build`, and `npm run e2e`. A manual browser checkpoint then covers Monkey Ball
+camera/pause/retry/quit behavior and level-editor fly controls, editing, play
+mode, and teardown before the plan is marked complete.
 
 ## Sequencing
 
@@ -204,7 +285,10 @@ Final verification is `npm run ci`, `npm run coverage`, and `npm run build`.
 4. Renderer flyweights and mesh pooling.
 5. Incremental editor world synchronization.
 6. ECS facade and narrow package entry points.
-7. Expanded coverage and final verification.
+7. Optional AI layer extraction into `@automata/editor-agent`.
+8. Expanded coverage and final verification.
 
 This order lands correctness and safety seams before the broader internal
-refactors, while keeping each checkpoint independently testable.
+refactors, while keeping each checkpoint independently testable. The AI
+extraction follows the entry-point work because `@automata/editor-agent` consumes
+`@automata/editor/headless`.

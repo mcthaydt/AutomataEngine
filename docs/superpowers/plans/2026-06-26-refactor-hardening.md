@@ -28,11 +28,12 @@ Add tests proving missing IDs and duplicate IDs are rejected, while same-value u
 ```ts
 it('rejects commands that target missing or duplicate ids', () => {
   const doc = levelSceneModel.emptyDoc()
+  const existing = levelSceneModel.listItems(doc).find((item) => item.id === 'geometry:0')!
   expect(() => levelSceneModel.apply(doc, {
     type: 'setSurface', id: 'missing', surface: { kind: 'color', value: '#fff' }
   })).toThrow(CommandError)
   expect(() => levelSceneModel.apply(doc, {
-    type: 'addItem', item: { ...boxItem('geometry:0'), id: 'geometry:0' }
+    type: 'addItem', item: existing
   })).toThrow(CommandError)
 })
 
@@ -114,6 +115,7 @@ git commit -m "fix(editor): reject ineffective scene commands"
 - Modify: `games/monkey-ball/src/game/context.ts`
 - Modify: `games/monkey-ball/src/game/gameplay.ts`
 - Modify: `games/monkey-ball/src/main.ts`
+- Modify: `games/monkey-ball/src/editor/registration.ts`
 - Modify: `packages/editor/src/model/gameDefinition.ts`
 - Modify: `packages/editor/src/host.ts`
 - Create: `packages/editor/src/viewport3d/flyControls.ts`
@@ -121,7 +123,6 @@ git commit -m "fix(editor): reject ineffective scene commands"
 - Modify: `packages/editor/src/viewport3d/browser.ts`
 - Modify: `packages/editor/src/index.ts`
 - Modify: `tools/level-editor/src/main.ts`
-- Modify: affected gameplay/editor tests and fixtures for the new render signature
 
 - [ ] **Step 1: Add failing `frameDt` loop tests**
 
@@ -143,7 +144,11 @@ Change `LoopHooks.render` to `render(alpha: number, frameDt: number)`. In `tick`
 
 - [ ] **Step 4: Add failing refresh-rate camera tests**
 
-Run the same camera target for one second using 60 calls at `1/60` and 120 calls at `1/120`; assert camera/look-at positions agree within five decimal places.
+Run the same camera target for one second using 60 calls at `1/60` and 120 calls
+at `1/120`; assert camera/look-at positions agree within five decimal places.
+Type the test context as `GameCtx & { frameDt: number }` so the pre-production
+RED run compiles while the current camera implementation ignores the extra
+field.
 
 - [ ] **Step 5: Run the camera test and verify RED**
 
@@ -153,26 +158,52 @@ Expected: FAIL because the current 0.1 lerp runs once per frame.
 
 - [ ] **Step 6: Implement time-based camera response**
 
-Add `frameDt` to `GameCtx`, thread it through gameplay render calls, and replace fixed lerp factors with:
+Add optional `frameDt` to `GameCtx`, thread it through gameplay render calls,
+and replace fixed lerp factors with:
 
 ```ts
 const RESPONSE = -Math.log(1 - 0.1) * 60
 const follow = 1 - Math.exp(-RESPONSE * Math.max(0, ctx.frameDt))
 ```
 
-Keep initial `cam`/`look` assignment exact. Update `Gameplay.render`, `PlayHandle.render`, `EditorCore.tick`, the game/editor composition roots, and test fixtures to pass `frameDt`.
+Keep initial `cam`/`look` assignment exact. Make `Gameplay.render`,
+`PlayHandle.render`, and `EditorCore.tick` accept `frameDt = 0` so existing
+one-argument callers remain source-compatible; the two composition roots pass
+the real value supplied by `GameLoop`.
 
-- [ ] **Step 7: Add failing pure fly-control timing tests**
+- [ ] **Step 7: Add a failing fly-control ownership test**
 
-Create `flyControls.test.ts` that advances the same initial camera for one second at 60 Hz and 120 Hz with `W` pressed and asserts identical positions.
+Create `flyControls.test.ts` against the existing `attachFlyControls` export.
+Stub `requestAnimationFrame`, attach controls, and assert no rAF was requested and
+the returned value exposes `update(dt)` plus `dispose()`. Cast the current return
+value to the desired handle shape inside the test so RED is an assertion failure,
+not a TypeScript/module-resolution error.
 
 - [ ] **Step 8: Run the fly-control test and verify RED**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/flyControls.test.ts`
 
-Expected: FAIL because `advanceFlyControls` does not exist.
+Expected: FAIL because attachment currently starts a private rAF and returns a
+bare disposer function.
 
-- [ ] **Step 9: Implement loop-driven fly controls**
+- [ ] **Step 9: Remove private rAF with the minimal handle implementation**
+
+Change `attachFlyControls` to return `{ update() {}, dispose() }`, move its
+existing listener cleanup into `dispose`, and remove its private rAF. Rerun the
+focused test and confirm the ownership assertion passes.
+
+- [ ] **Step 10: Add a failing elapsed-time movement test**
+
+In the same test file, press `W`, advance one attached controller for one second
+using 60 calls at `1/60`, advance another using 120 calls at `1/120`, and assert
+equal camera positions plus non-zero forward movement.
+
+Run: `npx vitest run packages/editor/tests/viewport3d/flyControls.test.ts`
+
+Expected: FAIL on non-zero/equal movement because `update()` is still the
+minimal no-op.
+
+- [ ] **Step 11: Implement time-based fly controls**
 
 Create a pure helper:
 
@@ -192,16 +223,16 @@ export function advanceFlyControls(
 
 Change `attachFlyControls` to return `{ update(dt), dispose() }`, remove its private rAF, and have `tools/level-editor/src/main.ts` call `flyControls.update(dt)` inside the existing fixed update.
 
-- [ ] **Step 10: Verify Task 2 green**
+- [ ] **Step 12: Verify Task 2 green**
 
 Run: `npx vitest run packages/engine/tests/loop games/monkey-ball/tests/systems/cameraFollow.test.ts games/monkey-ball/tests/game packages/editor/tests/play packages/editor/tests/viewport3d/flyControls.test.ts`
 
 Expected: all selected tests PASS.
 
-- [ ] **Step 11: Commit Task 2**
+- [ ] **Step 13: Commit Task 2**
 
 ```bash
-git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts games/monkey-ball/src games/monkey-ball/tests packages/editor/src packages/editor/tests tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts games/monkey-ball/src/game/context.ts games/monkey-ball/src/game/gameplay.ts games/monkey-ball/src/systems/cameraFollow.ts games/monkey-ball/src/main.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/systems/cameraFollow.test.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/src/viewport3d/flyControls.ts packages/editor/src/viewport3d/browser.ts packages/editor/src/index.ts packages/editor/tests/viewport3d/flyControls.test.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
 git commit -m "refactor(loop): make visual updates time based"
 ```
 
@@ -215,14 +246,31 @@ git commit -m "refactor(loop): make visual updates time based"
 - Modify: `packages/engine/tests/scene/manager.test.ts`
 - Modify: `games/monkey-ball/src/audio/browserAudio.ts`
 - Modify: `games/monkey-ball/tests/audio/browserAudio.test.ts`
+- Modify: `games/monkey-ball/src/scenes/levelLifecycle.ts`
+- Modify: `games/monkey-ball/tests/scenes/levelLifecycle.test.ts`
 - Modify: `games/monkey-ball/src/main.ts`
 - Modify: `tools/level-editor/src/main.ts`
 
 - [ ] **Step 1: Add failing cleanup-stack tests**
 
-Test LIFO execution, idempotence, and continuing after one callback throws:
+Import the existing engine index as a namespace, obtain `createCleanupStack`
+through a local optional structural cast, and first assert that it is a
+function. If absent, return after that assertion so RED is behavioral rather
+than an unresolved-module error. Once present, test LIFO execution, idempotence,
+continuing after one callback throws, and immediate cleanup when `defer()` is
+called after disposal:
 
 ```ts
+type CleanupStack = {
+  readonly disposed: boolean
+  defer(cleanup: () => void): void
+  dispose(): void
+}
+const createCleanupStack = (
+  engine as unknown as { createCleanupStack?: () => CleanupStack }
+).createCleanupStack
+expect(typeof createCleanupStack).toBe('function')
+if (!createCleanupStack) return
 const cleanup = createCleanupStack()
 cleanup.defer(() => calls.push('first'))
 cleanup.defer(() => { calls.push('second'); throw new Error('boom') })
@@ -231,21 +279,32 @@ expect(() => cleanup.dispose()).toThrow('boom')
 expect(calls).toEqual(['third', 'second', 'first'])
 cleanup.dispose()
 expect(calls).toHaveLength(3)
+expect(cleanup.disposed).toBe(true)
+cleanup.defer(() => calls.push('late'))
+expect(calls.at(-1)).toBe('late')
 ```
 
 - [ ] **Step 2: Run cleanup tests and verify RED**
 
 Run: `npx vitest run packages/engine/tests/lifecycle/cleanup.test.ts`
 
-Expected: FAIL because the lifecycle module does not exist.
+Expected: FAIL because the engine index does not yet export
+`createCleanupStack`.
 
 - [ ] **Step 3: Implement `CleanupStack`**
 
-Expose `defer(cleanup: () => void): () => void` and `dispose(): void`. Mark disposed before draining, run callbacks in reverse registration order, retain the first thrown error, finish draining, then throw that error.
+Expose `readonly disposed`, `defer(cleanup: () => void): void`, and
+`dispose(): void`. Mark disposed before draining, run callbacks in reverse
+registration order, retain the first thrown error, finish draining, then throw
+that error. If `defer` runs after disposal, invoke its callback immediately.
 
 - [ ] **Step 4: Add failing generic SceneManager compile/runtime coverage**
 
-Update tests to use a literal scene union and a complete `Record<SceneId, Scene<SceneId>>`; assert hooks receive `{ from, to }` and stop exits to `null`.
+Update tests to use a literal scene union and a complete scene record. Cast the
+existing factory locally to the desired generic/fourth-argument signature so
+the pre-production RED run compiles; assert hooks and one manager-level
+`onTransition` callback receive `{ from, to }`, including the initial `null ->
+current` transition and the final `current -> null` transition on stop.
 
 - [ ] **Step 5: Implement typed scene transitions**
 
@@ -259,30 +318,90 @@ export interface Scene<Id> {
 }
 ```
 
-Require `scenes: Record<Id, Scene<Id>>`; remove optional scene lookups.
+Require `scenes: Record<Id, Scene<Id>>`; remove optional scene lookups. Add an
+optional fourth argument `{ onTransition?: (transition) => void }` and invoke it
+exactly once per initial entry, state transition, and stop.
 
 - [ ] **Step 6: Add failing browser-audio disposal tests**
 
-Assert the real-context path calls `context.close()` once and the null fallback has an idempotent no-op `dispose()`.
+Read `dispose` through a local optional structural cast and first assert it is a
+function. Then assert the real-context path calls `context.close()` once and the
+null fallback has an idempotent no-op `dispose()`; the initial RED run therefore
+fails an assertion rather than typechecking.
 
 - [ ] **Step 7: Implement browser-audio disposal**
 
 Add `dispose()` to `BrowserAudio`, invoking `void context.close()` on the real path.
 
-- [ ] **Step 8: Wire composition-root cleanup**
+- [ ] **Step 8: Add failing level-session transition tests**
 
-Register every acquired disposer immediately in each `main.ts`: input handles, active gameplay, store subscriptions, named DOM listener removals, scene-manager stop, fly controls, loop driver, autosave, chrome/editor, canvas renderer, renderer port, audio runtime, and physics. Use the same stack for boot-failure rollback and `beforeunload`. Route active-level mount/unmount through typed scene transition hooks so no second scene subscription remains.
+Extend `levelLifecycle.test.ts`. Import the existing module as a namespace, read
+`levelSessionAction` through a local structural cast, and first assert that it is
+a function; this makes RED an assertion failure rather than an unresolved-module
+error. Once present, cover:
 
-- [ ] **Step 9: Verify Task 3 green**
+```ts
+type LevelSessionAction = (
+  from: SceneId | null,
+  to: SceneId | null,
+  hasActive: boolean,
+  hasPending: boolean
+) => 'enter' | 'leave' | 'keep' | 'none'
+const levelSessionAction = (
+  lifecycle as unknown as { levelSessionAction?: LevelSessionAction }
+).levelSessionAction
+expect(typeof levelSessionAction).toBe('function')
+if (!levelSessionAction) return
+expect(levelSessionAction('playing', 'paused', true, false)).toBe('keep')
+expect(levelSessionAction('paused', 'playing', true, false)).toBe('keep')
+expect(levelSessionAction('levelComplete', 'levelSelect', true, false)).toBe('leave')
+expect(levelSessionAction('gameOver', 'menu', true, false)).toBe('leave')
+expect(levelSessionAction('levelSelect', 'playing', false, false)).toBe('enter')
+expect(levelSessionAction('paused', 'playing', false, false)).toBe('enter')
+expect(levelSessionAction('playing', null, false, true)).toBe('leave')
+```
 
-Run: `npx vitest run packages/engine/tests/lifecycle packages/engine/tests/scene games/monkey-ball/tests/audio && npm run typecheck`
+- [ ] **Step 9: Run the level-session test and verify RED**
+
+Run: `npx vitest run games/monkey-ball/tests/scenes/levelLifecycle.test.ts`
+
+Expected: FAIL because the level-session transition helper does not exist.
+
+- [ ] **Step 10: Implement the explicit level-session matrix**
+
+Define `LevelScene = 'playing' | 'paused' | 'levelComplete' | 'gameOver'` and
+return `enter` only when `to === 'playing'` with neither active nor pending
+resources, `leave` when leaving that set or shutting down, `keep` for internal
+transitions with active/pending resources, and `none` otherwise.
+
+- [ ] **Step 11: Wire composition-root cleanup and cancellation**
+
+Register every acquired disposer immediately in each `main.ts`: input handles,
+active gameplay, store subscriptions, named DOM listener removals, scene-manager
+stop, fly controls, loop driver, autosave, chrome/editor, canvas renderer,
+renderer port, audio runtime, and physics. Use the same stack for boot-failure
+rollback and `beforeunload`.
+
+In Monkey Ball, replace the separate scene subscription with the scene
+manager's typed `onTransition` callback and `levelSessionAction`. Keep the active
+world across `playing`, `paused`, `levelComplete`, and `gameOver`; leave it only
+for `menu`, `levelSelect`, or shutdown. Maintain `loadEpoch` plus a `pendingLoad`
+flag: increment the epoch on every leave/shutdown, capture it before awaiting a
+level, and mount only when the epoch still matches and `cleanup.disposed ===
+false`. A late resource registered after disposal is immediately cleaned by the
+stack. During boot-error handling, catch cleanup errors separately so the
+original boot error panel is still rendered.
+
+- [ ] **Step 12: Verify Task 3 green**
+
+Run: `npx vitest run packages/engine/tests/lifecycle packages/engine/tests/scene games/monkey-ball/tests/audio games/monkey-ball/tests/scenes/levelLifecycle.test.ts && npm run typecheck`
 
 Expected: all selected tests and workspace typecheck PASS.
 
-- [ ] **Step 10: Commit Task 3**
+- [ ] **Step 13: Commit Task 3**
 
 ```bash
-git add packages/engine/src/lifecycle packages/engine/tests/lifecycle packages/engine/src/scene packages/engine/tests/scene packages/engine/src/index.ts games/monkey-ball/src/audio games/monkey-ball/tests/audio games/monkey-ball/src/main.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/lifecycle/cleanup.ts packages/engine/tests/lifecycle/cleanup.test.ts packages/engine/src/scene/manager.ts packages/engine/tests/scene/manager.test.ts packages/engine/src/index.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/tests/audio/browserAudio.test.ts games/monkey-ball/src/scenes/levelLifecycle.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/src/main.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
 git commit -m "refactor(runtime): centralize resource cleanup"
 ```
 
@@ -343,7 +462,13 @@ git commit -m "refactor(render): reuse geometry and mesh resources"
 
 - [ ] **Step 1: Add failing generic world-sync tests**
 
-Extend the fake definition with a `syncWorld` spy. After the initial build, change only metadata and assert `syncWorld` receives `(world, previousDoc, nextDoc)` without another `buildWorld` call. Also assert selection-only updates do not call either function.
+Create a local fake-definition value with a `syncWorld` spy and pass it through
+the existing `GameDefinition` parameter (structural typing permits the extra
+property without changing the production interface first). After the initial
+build, change only metadata and assert `syncWorld` receives `(world,
+previousDoc, nextDoc)` without another `buildWorld` call. Also call `syncNow()`
+again with the identical document reference and assert neither sync nor rebuild
+runs; selection highlighting still updates.
 
 - [ ] **Step 2: Run generic world-sync tests and verify RED**
 
@@ -359,7 +484,11 @@ Add:
 syncWorld?(world: World<object>, previous: Doc, next: Doc): void
 ```
 
-Track the document used to build the current world. On a later `syncNow`, call the hook when present; otherwise rebuild. Always update the stored document and reapply highlighting.
+Track the document used to build the current world. On a later `syncNow`, return
+after highlighting when `nextDoc === previousDoc`; otherwise call the hook when
+present and rebuild only when it is absent. Always update the stored document
+after a successful sync/rebuild and reapply highlighting. A throwing hook is
+allowed to propagate.
 
 - [ ] **Step 4: Add failing Monkey Ball identity tests**
 
@@ -377,7 +506,12 @@ Refactor `buildWorld.ts` to expose a game-internal `levelEntitySeeds(level, lib,
 
 - [ ] **Step 7: Implement Monkey Ball incremental synchronization**
 
-Build old/new maps keyed by `editorId`. Compare seeds structurally with a deterministic deep comparison. Remove missing/changed live entities, then add added/changed seeds. Register this function as `GameDefinition.syncWorld`. Metadata-only edits produce no world mutations.
+Build old/new maps keyed by `editorId`. Because both maps come from the same
+plain-data seed constructor, compare a pair with
+`JSON.stringify(previousSeed) === JSON.stringify(nextSeed)`. Remove
+missing/changed live entities, then add added/changed seeds. Register this
+function as `GameDefinition.syncWorld`. Metadata-only edits produce no world
+mutations.
 
 - [ ] **Step 8: Verify Task 5 green**
 
@@ -399,19 +533,33 @@ git commit -m "refactor(editor): sync changed world entities by id"
 - Modify: `packages/engine/src/ecs/world.ts`
 - Modify: `packages/engine/src/physics/systems.ts`
 - Modify: `packages/engine/src/render/systems.ts`
-- Modify: dependent type annotations exposed by typecheck
+- Modify: `eslint.config.js`
 
-- [ ] **Step 1: Add failing facade contract tests**
+- [ ] **Step 1: Add facade characterization tests**
 
-Extend `world.test.ts` to cover `entities`, `has`, `clear`, `first`, add/remove subscriptions, and component add/remove through the exported engine interfaces. Add a type assertion that exported query methods return `EntityQuery`, not a Miniplex type.
+Extend `world.test.ts` to cover `entities`, `has`, `clear`, `first`, add/remove
+subscriptions, and component add/remove through the existing public engine
+module. These tests characterize behavior that the wrapper must preserve.
 
-- [ ] **Step 2: Run ECS tests as the baseline**
+- [ ] **Step 2: Run characterization tests green before refactoring**
 
 Run: `npx vitest run packages/engine/tests/ecs/world.test.ts`
 
-Expected: runtime assertions pass, while the new `EntityQuery` import/type assertion fails because it is not defined.
+Expected: all runtime characterization assertions PASS against the current
+Miniplex-backed export.
 
-- [ ] **Step 3: Implement the facade**
+- [ ] **Step 3: Add a failing Miniplex-boundary lint rule**
+
+Add a flat ESLint block covering `packages/engine/src/**/*.ts` while ignoring
+`packages/engine/src/ecs/world.ts`; forbid direct `miniplex` imports with a
+message that all ECS access must go through the engine facade.
+
+Run: `npm run lint`
+
+Expected: FAIL only at the current direct imports in
+`physics/systems.ts` and `render/systems.ts`.
+
+- [ ] **Step 4: Implement the facade**
 
 Define engine-owned interfaces:
 
@@ -420,6 +568,10 @@ export interface EntityQuery<E extends object> extends Iterable<E> {
   readonly first: E | undefined
   readonly onEntityAdded: QuerySignal<E>
   readonly onEntityRemoved: QuerySignal<E>
+}
+
+export interface QuerySignal<E extends object> {
+  subscribe(listener: (entity: E) => void): () => void
 }
 
 export interface World<E extends object> {
@@ -436,70 +588,131 @@ export interface World<E extends object> {
 
 Wrap Miniplex internally in `createWorld`; adapt query iteration, `first`, and signals. Remove all exported Miniplex types and remove engine-internal `Query` casts/imports.
 
-- [ ] **Step 4: Run ECS, physics, and render system tests**
+- [ ] **Step 5: Run ECS, physics, render, and lint verification**
 
-Run: `npx vitest run packages/engine/tests/ecs packages/engine/tests/physics/systems.test.ts packages/engine/tests/render/systems.test.ts`
+Run: `npx vitest run packages/engine/tests/ecs packages/engine/tests/physics/systems.test.ts packages/engine/tests/render/systems.test.ts && npm run lint`
 
 Expected: all selected tests PASS.
 
-- [ ] **Step 5: Run workspace typecheck and repair only facade fallout**
+- [ ] **Step 6: Run workspace typecheck**
 
 Run: `npm run typecheck`
 
-Expected: PASS after updating any dependent generic constraints; no consumer imports Miniplex.
+Expected: PASS without consumer changes because the facade preserves the existing
+engine-owned `World` surface; no module outside `ecs/world.ts` imports Miniplex.
 
-- [ ] **Step 6: Commit Task 6**
+- [ ] **Step 7: Commit Task 6**
 
 ```bash
-git add packages/engine/src/ecs/world.ts packages/engine/tests/ecs/world.test.ts packages/engine/src/physics/systems.ts packages/engine/src/render/systems.ts packages games tools docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/ecs/world.ts packages/engine/tests/ecs/world.test.ts packages/engine/src/physics/systems.ts packages/engine/src/render/systems.ts eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md
 git commit -m "refactor(ecs): hide miniplex behind engine facade"
 ```
 
 ### Task 7: Add narrow headless package entry points
 
 **Files:**
+- Create: `packages/engine/src/browser.ts`
 - Create: `packages/engine/src/data.ts`
+- Modify: `packages/engine/src/index.ts`
 - Modify: `packages/engine/package.json`
 - Create: `packages/editor/src/headless.ts`
+- Modify: `packages/editor/src/model/gameDefinition.ts`
+- Modify: `packages/editor/src/host.ts`
+- Modify: `packages/editor/tests/host.test.ts`
 - Modify: `packages/editor/package.json`
-- Create: `games/monkey-ball/src/editor.ts`
+- Create: `games/monkey-ball/src/headless.ts`
+- Create: `games/monkey-ball/src/editor/headlessRegistration.ts`
+- Modify: `games/monkey-ball/src/editor/registration.ts`
+- Modify: `games/monkey-ball/src/editor/sceneModel.ts`
+- Modify: `games/monkey-ball/src/main.ts`
+- Modify: `games/monkey-ball/src/audio/browserAudio.ts`
 - Modify: `games/monkey-ball/package.json`
 - Modify: `games/monkey-ball/src/level/headlessPlay.ts`
+- Modify: `tools/level-editor/src/main.ts`
 - Modify: `tools/editor-mcp-server/src/headlessHost.ts`
 - Modify: `tools/editor-mcp-server/package.json`
+- Modify: `tools/editor-mcp-server/tests/headlessHost.test.ts`
 - Modify: `eslint.config.js`
 
-- [ ] **Step 1: Add narrow entry files and migrate imports**
+- [ ] **Step 1: Add a failing headless-boundary lint rule**
 
-`engine/data` exports only data kind/parser/loader/archetype APIs. `editor/headless` exports `GameDefinition`, validation, and `createEditorToolHost`. `monkey-ball/editor` exports its editor definition plus required data kinds. Change headless play to import `HeadlessOpts`, `PlayObservation`, and `TestPlayResult` directly from `@automata/contracts`.
+For `tools/editor-mcp-server/**/*.ts`, forbid root `@automata/engine`, root
+`@automata/editor`, and root `monkey-ball` imports with messages directing
+callers to narrow headless subpaths.
 
-- [ ] **Step 2: Add export-map entries and direct dependencies**
+Run: `npm run lint`
+
+Expected: FAIL at the three root imports in
+`tools/editor-mcp-server/src/headlessHost.ts` and nowhere else.
+
+- [ ] **Step 2: Split platform-neutral and browser engine exports**
+
+Create `packages/engine/src/browser.ts` re-exporting only
+`loop/browser`, `input/keyboard`, `input/joystick`, `render/browser`, and
+`audio/browser`. Remove those five exports from the root index and add
+`"./browser": "./src/browser.ts"` to the package export map. Migrate browser
+imports in Monkey Ball main/audio/editor registration and level-editor main to
+`@automata/engine/browser`; keep platform-neutral imports at the root.
+
+- [ ] **Step 3: Add narrow data/editor entry points**
+
+`engine/data` exports only data kind/parser/loader/archetype APIs.
+`editor/headless` exports model types, `GameDefinition`, validation, and
+`createEditorToolHost`, without importing UI, settings, tuning, or provider
+adapters. Add both subpaths to their package export maps. Change
+`sceneModel.ts` to import `parseData` from `@automata/engine/data` and structural
+`Vec3` from `@automata/contracts`; import `CommandError` and editor model types
+from `@automata/editor/headless`. Change `headlessPlay.ts` to import
+`HeadlessOpts`, `PlayObservation`, and `TestPlayResult` directly from
+`@automata/contracts`.
+
+- [ ] **Step 4: Add a headless Monkey Ball definition**
+
+Make `PlayDefinition.createGameplay` optional. In `EditorCore.enterPlay`, require
+`definition.play?.createGameplay` and keep the existing descriptive error when
+live play is unavailable; add a focused host test for a definition that has
+headless play but no live factory.
+
+Create `headlessRegistration.ts` containing the current shared palette,
+surface, build-world, and `runHeadlessPlay` wiring but no keyboard import and no
+live `createGameplay`. Refactor the browser `registration.ts` to compose that
+base with `createKeyboardInput` and live gameplay. Export the headless factory
+and required data kinds from `games/monkey-ball/src/headless.ts`.
+
+- [ ] **Step 5: Add export maps and direct dependencies**
 
 Add subpath exports such as:
 
 ```json
 "exports": {
   ".": "./src/index.ts",
+  "./browser": "./src/browser.ts",
   "./data": "./src/data.ts"
 }
 ```
 
-Declare `@automata/contracts` in Monkey Ball dependencies. Migrate the MCP server to narrow subpaths and remove any dependency that is no longer directly imported.
+Add `"./headless": "./src/headless.ts"` to Monkey Ball and declare
+`@automata/contracts` as its direct dependency. Keep the MCP server's existing
+engine/editor/monkey-ball dependencies because it still imports each through a
+narrow subpath.
 
-- [ ] **Step 3: Add lint guards against headless root barrels**
+- [ ] **Step 6: Migrate and test the MCP headless graph**
 
-For `tools/editor-mcp-server/**/*.ts`, forbid root `@automata/engine`, root `@automata/editor`, and root `monkey-ball` imports with a message directing callers to the new subpaths.
+Use `@automata/engine/data`, `@automata/editor/headless`, and
+`monkey-ball/headless` in `headlessHost.ts`. Extend its Node-environment test to
+import the headless subpath, create the definition, list tools, and run
+headless play without defining `window`, `document`, or `localStorage`.
 
-- [ ] **Step 4: Verify package boundaries**
+- [ ] **Step 7: Verify package boundaries**
 
-Run: `npm run lint && npm run typecheck && npx vitest run tools/editor-mcp-server/tests games/monkey-ball/tests/level/headlessPlay.test.ts`
+Run: `npm run lint && npm run typecheck && npx vitest run packages/editor/tests/host.test.ts tools/editor-mcp-server/tests games/monkey-ball/tests/level/headlessPlay.test.ts`
 
 Expected: lint, typecheck, and selected tests PASS.
 
-- [ ] **Step 5: Commit Task 7**
+- [ ] **Step 8: Commit Task 7**
 
 ```bash
-git add packages/engine/src/data.ts packages/engine/package.json packages/editor/src/headless.ts packages/editor/package.json games/monkey-ball/src/editor.ts games/monkey-ball/package.json games/monkey-ball/src/level/headlessPlay.ts tools/editor-mcp-server/src/headlessHost.ts tools/editor-mcp-server/package.json eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/browser.ts packages/engine/src/data.ts packages/engine/src/index.ts packages/engine/package.json packages/editor/src/headless.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/tests/host.test.ts packages/editor/package.json games/monkey-ball/src/headless.ts games/monkey-ball/src/editor/headlessRegistration.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/src/main.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/package.json games/monkey-ball/src/level/headlessPlay.ts tools/level-editor/src/main.ts tools/editor-mcp-server/src/headlessHost.ts tools/editor-mcp-server/package.json tools/editor-mcp-server/tests/headlessHost.test.ts eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md
 git commit -m "refactor(packages): expose narrow headless entry points"
 ```
 
@@ -508,6 +721,7 @@ git commit -m "refactor(packages): expose narrow headless entry points"
 **Files:**
 - Modify: `vitest.config.ts`
 - Modify: `games/monkey-ball/tests/editor/registrationPlay.test.ts`
+- Create: `games/monkey-ball/tests/editor/registrationBrowser.test.ts`
 - Modify: `games/monkey-ball/tests/editor/sceneModel.test.ts`
 - Modify: `games/monkey-ball/tests/level/buildWorld.test.ts`
 - Modify: `games/monkey-ball/tests/level/headlessPlay.test.ts`
@@ -528,16 +742,21 @@ Add `games/monkey-ball/src/**` and `tools/editor-mcp-server/src/**`. Extend excl
 
 Run: `npm run coverage`
 
-Expected baseline: FAIL near 77.73% branches. The uncovered concentration is Monkey Ball browser-audio/editor-registration/scene-model branches, small game guard branches, and the MCP valid-resource path.
+Audited pre-refactor baseline: all 569 tests pass, then the expanded gate FAILS
+at 86.74% branches. The uncovered concentration is Monkey Ball
+browser-audio/editor-registration/scene-model branches, small game guard
+branches, and the MCP valid-resource path. Earlier tasks will raise this number,
+but this step remains the authoritative expanded gate.
 
 - [ ] **Step 3: Close the known game coverage gaps with focused behavior tests**
 
 Add these explicit cases:
 
-- `registrationPlay.test.ts`: resolve a color surface, reject a texture surface, create/dispose live gameplay with recording ports;
+- `registrationPlay.test.ts` (Node): resolve a color surface, reject a texture surface, and verify the headless-only definition runs test play without browser globals;
+- new `registrationBrowser.test.ts` (default happy-dom environment): create/dispose live gameplay with recording ports and exercise the keyboard-backed browser definition;
 - `sceneModel.test.ts`: add cylinder/archetype items, reject marker addition, edit box axes and cylinder radius/height, and parse `loadDoc`;
 - `buildWorld.test.ts`: build cylinder geometry and assert its collider/renderable dimensions;
-- `headlessPlay.test.ts`: cover game-over and completed result mapping plus the no-ball observation fallback through an exported pure observation helper;
+- `headlessPlay.test.ts`: cover game-over result mapping in addition to the existing completed and incomplete cases;
 - `levelLifecycle.test.ts`: return a successfully loaded current level and ignore a failed stale request without dispatch;
 - `persist.test.ts`: reject non-finite and out-of-range persisted settings;
 - `unlocks.test.ts`: reject missing/empty worlds and unknown levels;
@@ -567,7 +786,7 @@ Expected: at least 90% lines and 90% branches across the expanded include set.
 - [ ] **Step 6: Commit Task 8**
 
 ```bash
-git add vitest.config.ts games/monkey-ball/tests tools/editor-mcp-server/tests games/monkey-ball/src tools/editor-mcp-server/src docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add vitest.config.ts games/monkey-ball/tests/editor/registrationPlay.test.ts games/monkey-ball/tests/editor/registrationBrowser.test.ts games/monkey-ball/tests/editor/sceneModel.test.ts games/monkey-ball/tests/level/buildWorld.test.ts games/monkey-ball/tests/level/headlessPlay.test.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/tests/state/persist.test.ts games/monkey-ball/tests/state/unlocks.test.ts games/monkey-ball/tests/systems/goal.test.ts games/monkey-ball/tests/systems/path.test.ts games/monkey-ball/tests/ui/overlays.test.ts tools/editor-mcp-server/tests/mcpAdapter.test.ts tools/editor-mcp-server/tests/server.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
 git commit -m "test: cover game and MCP production code"
 ```
 
@@ -596,7 +815,14 @@ Run: `npm run build`
 
 Expected: Monkey Ball and level-editor Vite production builds PASS.
 
-- [ ] **Step 4: Audit architecture assertions mechanically**
+- [ ] **Step 4: Run browser end-to-end coverage**
+
+Run: `npm run e2e`
+
+Expected: Playwright game and editor flows PASS against the configured local
+servers.
+
+- [ ] **Step 5: Audit architecture assertions mechanically**
 
 Run:
 
@@ -604,17 +830,29 @@ Run:
 rg -n "from ['\"]miniplex['\"]" games tools packages -g '*.ts'
 rg -n "requestAnimationFrame" packages/editor games/monkey-ball tools/level-editor -g '*.ts'
 rg -n "from ['\"]@automata/(engine|editor)['\"]|from ['\"]monkey-ball['\"]" tools/editor-mcp-server/src -g '*.ts'
+rg -n "from ['\"]@automata/engine/browser['\"]" games/monkey-ball/src tools/level-editor/src -g '*.ts'
 ```
 
 Expected: Miniplex imports exist only inside `packages/engine/src/ecs/world.ts`; editor/game/tool code owns no extra rAF loop; MCP headless code uses narrow subpaths.
 
-- [ ] **Step 5: Mark every plan checkbox complete and inspect the tree**
+- [ ] **Step 6: Hold the manual browser checkpoint**
+
+Run `npm run dev:game` and verify: start `w1-l1`, camera motion remains smooth,
+pause/resume retains the same world, level-complete and game-over overlays retain
+the world, retry works, and quit removes HUD/joystick without duplicates.
+
+Run `npm run dev:editor` and verify: WASD/E/Q fly movement, 2D/3D editing,
+metadata-only edits, play/edit toggling, import/export, and closing/reloading the
+page all behave normally. Stop here for explicit user confirmation before
+marking the plan complete.
+
+- [ ] **Step 7: Mark every plan checkbox complete and inspect the tree**
 
 Run: `rg -n "^- \[ \]" docs/superpowers/plans/2026-06-26-refactor-hardening.md` and `git status --short`.
 
 Expected: no unchecked tasks and only intentional final documentation changes.
 
-- [ ] **Step 6: Commit final plan completion**
+- [ ] **Step 8: Commit final plan completion**
 
 ```bash
 git add docs/superpowers/plans/2026-06-26-refactor-hardening.md docs/superpowers/specs/2026-06-26-refactor-hardening-design.md
