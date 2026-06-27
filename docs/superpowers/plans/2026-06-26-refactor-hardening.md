@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 91% (82/90 steps complete)
+**Overall Progress:** 100% (90/90 steps complete)
 
 ---
 
@@ -1168,32 +1168,32 @@ git commit -m "test: cover game and MCP production code"
 - Verify: `docs/superpowers/specs/2026-06-26-refactor-hardening-design.md`
 - Verify: root worktree and all changed package boundaries
 
-- [ ] **Step 1: Run the complete repository gate**
+- [x] **Step 1: Run the complete repository gate**
 
 Run: `npm run ci`
 
 Expected: lint, all workspace typechecks, and all Vitest projects PASS.
 
-- [ ] **Step 2: Run expanded coverage fresh**
+- [x] **Step 2: Run expanded coverage fresh**
 
 Run: `npm run coverage`
 
 Expected: global lines and branches remain at or above 90%.
 
-- [ ] **Step 3: Build both browser applications**
+- [x] **Step 3: Build both browser applications**
 
 Run: `npm run build`
 
 Expected: Monkey Ball and level-editor Vite production builds PASS.
 
-- [ ] **Step 4: Run browser end-to-end coverage**
+- [x] **Step 4: Run browser end-to-end coverage**
 
 Run: `npm run e2e`
 
 Expected: Playwright game and editor flows PASS against the configured local
 servers.
 
-- [ ] **Step 5: Audit architecture assertions mechanically**
+- [x] **Step 5: Audit architecture assertions mechanically**
 
 Run:
 
@@ -1207,7 +1207,7 @@ rg -n "@automata/agent-core" packages/editor/src -g '*.ts'
 
 Expected: Miniplex imports exist only inside `packages/engine/src/ecs/world.ts`; editor/game/tool code owns no extra rAF loop; MCP headless code uses narrow subpaths; and `packages/editor/src` contains no `@automata/agent-core` import (the agent layer lives only in `@automata/editor-agent`).
 
-- [ ] **Step 6: Hold the manual browser checkpoint**
+- [x] **Step 6: Hold the manual browser checkpoint**
 
 Run `npm run dev:game` and verify: start `w1-l1`, camera motion remains smooth,
 pause/resume retains the same world, level-complete and game-over overlays retain
@@ -1218,13 +1218,13 @@ metadata-only edits, play/edit toggling, import/export, and closing/reloading th
 page all behave normally. Stop here for explicit user confirmation before
 marking the plan complete.
 
-- [ ] **Step 7: Mark every plan checkbox complete and inspect the tree**
+- [x] **Step 7: Mark every plan checkbox complete and inspect the tree**
 
 Run: `rg -n "^- \[ \]" docs/superpowers/plans/2026-06-26-refactor-hardening.md` and `git status --short`.
 
 Expected: no unchecked tasks and only intentional final documentation changes.
 
-- [ ] **Step 8: Commit final plan completion**
+- [x] **Step 8: Commit final plan completion**
 
 ```bash
 git add docs/superpowers/plans/2026-06-26-refactor-hardening.md docs/superpowers/specs/2026-06-26-refactor-hardening-design.md
