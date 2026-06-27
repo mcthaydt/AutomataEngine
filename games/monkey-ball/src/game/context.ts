@@ -10,6 +10,8 @@ export interface GameCtx {
   input: InputVector
   dt: number
   alpha: number
+  /** Clamped wall-clock seconds since the previous rendered frame. */
+  frameDt?: number
 }
 
 /**

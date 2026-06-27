@@ -35,7 +35,7 @@ export interface GameplayDeps {
 export interface Gameplay {
   readonly world: World<Entity>
   fixedUpdate(dt: number): void
-  render(alpha: number): void
+  render(alpha: number, frameDt?: number): void
   dispose(): void
 }
 
@@ -87,12 +87,12 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
       feedback.clear()
       scheduler.runFixed({ world, store, input, dt, alpha: 0 })
     },
-    render(alpha) {
+    render(alpha, frameDt = 0) {
       // While the sim is frozen (paused/complete/over) fixedUpdate no-ops, so prev/current
       // poses stay fixed at two distinct points. The loop keeps sweeping alpha, which would
       // interpolate the ball between them every frame (jitter). Pin to the settled pose.
       const a = store.getState().scene === 'playing' ? alpha : 1
-      scheduler.runStage('render', { world, store, input, dt: 0, alpha: a })
+      scheduler.runStage('render', { world, store, input, dt: 0, alpha: a, frameDt })
     },
     dispose() {
       offRespawn()

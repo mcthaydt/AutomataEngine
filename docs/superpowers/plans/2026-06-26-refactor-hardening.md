@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 9% (8/90 steps complete)
+**Overall Progress:** 23% (21/90 steps complete)
 
 ---
 
@@ -126,7 +126,7 @@ git commit -m "fix(editor): reject ineffective scene commands"
 - Modify: `packages/editor/src/index.ts`
 - Modify: `tools/level-editor/src/main.ts`
 
-- [ ] **Step 1: Add failing `frameDt` loop tests**
+- [x] **Step 1: Add failing `frameDt` loop tests**
 
 Assert the first render receives `(0, 0)`, a 15 ms tick receives `frameDt = 0.015`, negative time receives zero, and a huge gap is capped at `fixedDt * maxSubSteps`:
 
@@ -134,17 +134,17 @@ Assert the first render receives `(0, 0)`, a 15 ms tick receives `frameDt = 0.01
 expect(render).toHaveBeenLastCalledWith(expect.closeTo(0.5), 0.015)
 ```
 
-- [ ] **Step 2: Run the loop test and verify RED**
+- [x] **Step 2: Run the loop test and verify RED**
 
 Run: `npx vitest run packages/engine/tests/loop/gameLoop.test.ts`
 
 Expected: FAIL because render currently receives only interpolation alpha.
 
-- [ ] **Step 3: Implement the loop timing contract**
+- [x] **Step 3: Implement the loop timing contract**
 
 Change `LoopHooks.render` to `render(alpha: number, frameDt: number)`. In `tick`, derive raw elapsed once, clamp it to `[0, fixedDt * maxSubSteps]`, use the clamped value for both the accumulator and render `frameDt`, and pass zero on the baseline tick.
 
-- [ ] **Step 4: Add failing refresh-rate camera tests**
+- [x] **Step 4: Add failing refresh-rate camera tests**
 
 Run the same camera target for one second using 60 calls at `1/60` and 120 calls
 at `1/120`; assert camera/look-at positions agree within five decimal places.
@@ -152,13 +152,13 @@ Type the test context as `GameCtx & { frameDt: number }` so the pre-production
 RED run compiles while the current camera implementation ignores the extra
 field.
 
-- [ ] **Step 5: Run the camera test and verify RED**
+- [x] **Step 5: Run the camera test and verify RED**
 
 Run: `npx vitest run games/monkey-ball/tests/systems/cameraFollow.test.ts`
 
 Expected: FAIL because the current 0.1 lerp runs once per frame.
 
-- [ ] **Step 6: Implement time-based camera response**
+- [x] **Step 6: Implement time-based camera response**
 
 Add optional `frameDt` to `GameCtx`, thread it through gameplay render calls,
 and replace fixed lerp factors with:
@@ -173,7 +173,7 @@ Keep initial `cam`/`look` assignment exact. Make `Gameplay.render`,
 one-argument callers remain source-compatible; the two composition roots pass
 the real value supplied by `GameLoop`.
 
-- [ ] **Step 7: Add a failing fly-control ownership test**
+- [x] **Step 7: Add a failing fly-control ownership test**
 
 Create `flyControls.test.ts` against the existing `attachFlyControls` export.
 Stub `requestAnimationFrame`, attach controls, and assert no rAF was requested and
@@ -181,20 +181,20 @@ the returned value exposes `update(dt)` plus `dispose()`. Cast the current retur
 value to the desired handle shape inside the test so RED is an assertion failure,
 not a TypeScript/module-resolution error.
 
-- [ ] **Step 8: Run the fly-control test and verify RED**
+- [x] **Step 8: Run the fly-control test and verify RED**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/flyControls.test.ts`
 
 Expected: FAIL because attachment currently starts a private rAF and returns a
 bare disposer function.
 
-- [ ] **Step 9: Remove private rAF with the minimal handle implementation**
+- [x] **Step 9: Remove private rAF with the minimal handle implementation**
 
 Change `attachFlyControls` to return `{ update() {}, dispose() }`, move its
 existing listener cleanup into `dispose`, and remove its private rAF. Rerun the
 focused test and confirm the ownership assertion passes.
 
-- [ ] **Step 10: Add a failing elapsed-time movement test**
+- [x] **Step 10: Add a failing elapsed-time movement test**
 
 In the same test file, press `W`, advance one attached controller for one second
 using 60 calls at `1/60`, advance another using 120 calls at `1/120`, and assert
@@ -205,7 +205,7 @@ Run: `npx vitest run packages/editor/tests/viewport3d/flyControls.test.ts`
 Expected: FAIL on non-zero/equal movement because `update()` is still the
 minimal no-op.
 
-- [ ] **Step 11: Implement time-based fly controls**
+- [x] **Step 11: Implement time-based fly controls**
 
 Create a pure helper:
 
@@ -225,13 +225,13 @@ export function advanceFlyControls(
 
 Change `attachFlyControls` to return `{ update(dt), dispose() }`, remove its private rAF, and have `tools/level-editor/src/main.ts` call `flyControls.update(dt)` inside the existing fixed update.
 
-- [ ] **Step 12: Verify Task 2 green**
+- [x] **Step 12: Verify Task 2 green**
 
 Run: `npx vitest run packages/engine/tests/loop games/monkey-ball/tests/systems/cameraFollow.test.ts games/monkey-ball/tests/game packages/editor/tests/play packages/editor/tests/viewport3d/flyControls.test.ts`
 
 Expected: all selected tests PASS.
 
-- [ ] **Step 13: Commit Task 2**
+- [x] **Step 13: Commit Task 2**
 
 ```bash
 git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts games/monkey-ball/src/game/context.ts games/monkey-ball/src/game/gameplay.ts games/monkey-ball/src/systems/cameraFollow.ts games/monkey-ball/src/main.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/systems/cameraFollow.test.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/src/viewport3d/flyControls.ts packages/editor/src/viewport3d/browser.ts packages/editor/src/index.ts packages/editor/tests/viewport3d/flyControls.test.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md

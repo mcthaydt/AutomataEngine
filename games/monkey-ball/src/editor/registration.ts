@@ -71,7 +71,7 @@ export function createMonkeyBallDefinition(
 
         return {
           fixedUpdate: (dt: number) => game.fixedUpdate(dt),
-          render: (alpha: number) => game.render(alpha),
+          render: (alpha: number, frameDt = 0) => game.render(alpha, frameDt),
           dispose: () => {
             game.dispose()
             for (const input of inputs) input.dispose()

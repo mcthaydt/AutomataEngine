@@ -27,7 +27,7 @@ export interface EditorCore<Doc> {
   camera: FlyCamera
   mapView: MapView
   /** Re-sync the 3D world from the doc and render a frame. */
-  tick(alpha: number): void
+  tick(alpha: number, frameDt?: number): void
   fixedUpdate(dt: number): void
   enterPlay(): void
   exitPlay(): void
@@ -72,9 +72,9 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
     get camera() { return camera },
     set camera(next: FlyCamera) { camera = next },
     mapView,
-    tick(alpha) {
+    tick(alpha, frameDt = 0) {
       if (play) {
-        play.render(alpha)
+        play.render(alpha, frameDt)
         return
       }
 

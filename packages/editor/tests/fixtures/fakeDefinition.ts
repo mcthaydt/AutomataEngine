@@ -6,6 +6,12 @@ import type { SceneItem, Surface } from '../../src/model/types'
 /** A minimal non-game document: a flat item list plus a title. */
 export interface FakeDoc { title: string; items: SceneItem[] }
 
+function sameSurface(a: Surface, b: Surface): boolean {
+  if (a.kind === 'color' && b.kind === 'color') return a.value === b.value
+  if (a.kind === 'texture' && b.kind === 'texture') return a.textureId === b.textureId
+  return false
+}
+
 const fakeScene: SceneModel<FakeDoc> = {
   parse: (input) => input as FakeDoc,
   emptyDoc: () => ({ title: 'untitled', items: [] }),
@@ -47,7 +53,7 @@ const fakeScene: SceneModel<FakeDoc> = {
       }
       case 'setSurface': {
         const item = doc.items.find((candidate) => candidate.id === cmd.id)
-        if (item?.surface.kind === cmd.surface.kind && item.surface.value === cmd.surface.value) return doc
+        if (item && sameSurface(item.surface, cmd.surface)) return doc
         const items = doc.items.map((candidate) =>
           candidate.id === cmd.id ? { ...candidate, surface: cmd.surface } : candidate)
         return items.every((candidate, index) => candidate === doc.items[index]) ? doc : {

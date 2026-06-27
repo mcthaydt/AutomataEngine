@@ -159,8 +159,8 @@ async function main(): Promise<void> {
 
   const loop = new GameLoop({
     fixedUpdate: (dt) => active?.game.fixedUpdate(dt),
-    render: (alpha) => {
-      active?.game.render(alpha)
+    render: (alpha, frameDt) => {
+      active?.game.render(alpha, frameDt)
       canvasRenderer.renderFrame()
     }
   })

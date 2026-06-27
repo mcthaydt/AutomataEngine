@@ -24,7 +24,7 @@ export interface SceneModel<Doc> {
 /** Live in-viewport gameplay handle. */
 export interface PlayHandle {
   fixedUpdate(dt: number): void
-  render(alpha: number): void
+  render(alpha: number, frameDt?: number): void
   dispose(): void
 }
 

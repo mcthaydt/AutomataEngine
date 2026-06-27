@@ -55,7 +55,7 @@ async function main(): Promise<void> {
     if (result.ok) editor.store.dispatch({ type: 'loadDoc', doc: result.doc })
     fileInput.value = ''
   })
-  attachFlyControls(canvas3d, () => editor.camera, (camera) => { editor.camera = camera })
+  const flyControls = attachFlyControls(canvas3d, () => editor.camera, (camera) => { editor.camera = camera })
 
   const context2d = canvas2d.getContext('2d')
   if (!context2d) throw new Error('2D canvas context unavailable')
@@ -142,9 +142,12 @@ async function main(): Promise<void> {
   })
 
   const loop = new GameLoop({
-    fixedUpdate: (dt) => editor.fixedUpdate(dt),
-    render: (alpha) => {
-      editor.tick(alpha)
+    fixedUpdate: (dt) => {
+      flyControls.update(dt)
+      editor.fixedUpdate(dt)
+    },
+    render: (alpha, frameDt) => {
+      editor.tick(alpha, frameDt)
       canvasRenderer.renderFrame()
       const mapSize = fit(canvas2d)
       paintMap(context2d, editor.drawModel(mapSize), mapSize)

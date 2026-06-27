@@ -7,7 +7,7 @@ describe('GameLoop', () => {
     const loop = new GameLoop({ fixedUpdate, render })
     loop.tick(1000)
     expect(fixedUpdate).not.toHaveBeenCalled()
-    expect(render).toHaveBeenCalledWith(0)
+    expect(render).toHaveBeenCalledWith(0, 0)
   })
 
   it('runs fixedUpdate once per fixedDt of elapsed time', () => {
@@ -25,7 +25,18 @@ describe('GameLoop', () => {
     loop.tick(0)
     loop.tick(15)
     expect(fixedUpdate).toHaveBeenCalledTimes(1)
-    expect(render).toHaveBeenLastCalledWith(expect.closeTo(0.5))
+    expect(render).toHaveBeenLastCalledWith(expect.closeTo(0.5), 0.015)
+  })
+
+  it('clamps frameDt to a non-negative, bounded interval', () => {
+    const fixedUpdate = vi.fn(), render = vi.fn()
+    const loop = new GameLoop({ fixedUpdate, render }, { fixedDt: 0.01, maxSubSteps: 5 })
+    loop.tick(1000)
+    loop.tick(900)
+    expect(render).toHaveBeenLastCalledWith(0, 0)
+
+    loop.tick(10_000)
+    expect(render).toHaveBeenLastCalledWith(0, 0.05)
   })
 
   it('clamps huge frame gaps to maxSubSteps (no spiral of death)', () => {
