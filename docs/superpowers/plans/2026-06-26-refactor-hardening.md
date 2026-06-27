@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 38% (34/90 steps complete)
+**Overall Progress:** 44% (40/90 steps complete)
 
 ---
 
@@ -413,7 +413,7 @@ git commit -m "refactor(runtime): centralize resource cleanup"
 - Modify: `packages/engine/tests/render/three-meshes.test.ts`
 - Modify: `packages/engine/src/render/three.ts`
 
-- [ ] **Step 1: Replace disposal-on-remove coverage with failing reuse tests**
+- [x] **Step 1: Replace disposal-on-remove coverage with failing reuse tests**
 
 Add tests proving identical shapes share one geometry, a removed mesh is reused by identity for the same full definition, reused meshes reset transform/highlight, and geometry/material disposal occurs only during renderer disposal.
 
@@ -424,27 +424,27 @@ port.add(replacement, def)
 expect(scene.children.at(-1)).toBe(first)
 ```
 
-- [ ] **Step 2: Run renderer tests and verify RED**
+- [x] **Step 2: Run renderer tests and verify RED**
 
 Run: `npx vitest run packages/engine/tests/render/three-meshes.test.ts`
 
 Expected: FAIL because geometry is per mesh and removal disposes resources.
 
-- [ ] **Step 3: Implement renderer-lifetime caches**
+- [x] **Step 3: Implement renderer-lifetime caches**
 
 Create stable `geometryKey(def)` and `meshKey(def)` functions. Store geometry by primitive dimensions and detached meshes by full definition. `add` pops from the matching pool or creates a mesh with cached geometry. `remove` resets emissive state, position, rotation, and scale before pooling. Track each mesh's pool key by entity while active.
 
-- [ ] **Step 4: Implement exact final disposal**
+- [x] **Step 4: Implement exact final disposal**
 
 On `port.dispose()`, detach active meshes without returning them to the pool, dispose every active/pooled material once, dispose every cached geometry once, clear pools/maps/groups/grids, and remove scene lights.
 
-- [ ] **Step 5: Verify Task 4 green**
+- [x] **Step 5: Verify Task 4 green**
 
 Run: `npx vitest run packages/engine/tests/render`
 
 Expected: all renderer tests PASS.
 
-- [ ] **Step 6: Commit Task 4**
+- [x] **Step 6: Commit Task 4**
 
 ```bash
 git add packages/engine/src/render/three.ts packages/engine/tests/render/three-meshes.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
