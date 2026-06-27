@@ -12,6 +12,7 @@ export default defineConfig({
         'packages/contracts/src/**',
         'packages/agent-core/src/**',
         'games/monkey-ball/src/**',
+        'games/pulsebreak/src/**',
         'tools/editor-mcp-server/src/**'
       ],
       exclude: ['**/main.ts', '**/browser.ts', '**/index.ts', '**/version.ts'],
