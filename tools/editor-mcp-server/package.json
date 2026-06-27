@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "bin": { "automata-editor-mcp": "./src/main.ts" },
+  "bin": { "automata-editor-mcp": "./bin/automata-editor-mcp.js" },
   "scripts": {
     "start": "tsx src/main.ts",
     "typecheck": "tsc --noEmit"
@@ -13,9 +13,7 @@
     "@automata/editor": "*",
     "@automata/engine": "*",
     "monkey-ball": "*",
-    "@modelcontextprotocol/sdk": "^1.0.0"
-  },
-  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "tsx": "^4.20.0"
   }
 }

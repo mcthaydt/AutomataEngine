@@ -14,7 +14,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-3 ([ed
 
 - The MCP server reuses the existing seams — **no new editing logic**. The host is `createEditorToolHost({ definition, initialDoc })`; the server only maps that host to MCP.
 - `tools/**` may use third-party libs only through `@automata/engine`, except libs not in the lint block — `@modelcontextprotocol/sdk` is allowed (it is not in the blocked group `three/@dimforge/miniplex/smol-toml/yaml/zod`). Do not import `zod` directly here; tool-arg validation goes through `parseToolArgs` inside the reused host.
-- `tools/**` is **not** in the coverage `include`, so the 90% gate does not measure this package — but the tested core (`headlessHost`, `mcpAdapter`) must have passing unit tests. `server.ts` / `main.ts` are thin SDK/stdio glue and are not unit-tested.
+- `tools/**` is **not** in the coverage `include`, so the 90% gate does not measure this package — but the tested core (`headlessHost`, `mcpAdapter`) must have passing unit tests. `server.ts` and the executable launcher are covered by focused SDK integration tests; `main.ts` remains thin stdio glue.
 - Boot data is read from monkey-ball's shipped files (`games/monkey-ball/public/data/{archetypes/standard.yaml,config/physics.toml}`) with Node `fs`; the server keeps keys server-side by construction (there are none — the MCP *client* is the brain).
 - Tests live in `tools/editor-mcp-server/tests/**`; Vitest project name `editor-mcp-server`, `environment: 'node'`.
 
@@ -42,7 +42,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-3 ([ed
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "bin": { "automata-editor-mcp": "./src/main.ts" },
+  "bin": { "automata-editor-mcp": "./bin/automata-editor-mcp.js" },
   "scripts": {
     "start": "tsx src/main.ts",
     "typecheck": "tsc --noEmit"
@@ -52,9 +52,7 @@ Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-3 ([ed
     "@automata/editor": "*",
     "@automata/engine": "*",
     "monkey-ball": "*",
-    "@modelcontextprotocol/sdk": "^1.0.0"
-  },
-  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "tsx": "^4.20.0"
   }
 }
@@ -288,6 +286,11 @@ describe('mcp adapter', () => {
     expect((await callToolResult(erroring, 'addItem', {})).isError).toBe(true)
   })
 
+  it('reports isError true when ok is false without an explicit error flag', async () => {
+    const erroring: ToolHost = { ...fakeHost, executeTool: async () => ({ ok: false, content: 'bad' }) }
+    expect((await callToolResult(erroring, 'addItem', {})).isError).toBe(true)
+  })
+
   it('lists the editor resource uris', () => {
     expect(listResourcesResult().resources.map((r) => r.uri)).toContain('editor://doc')
   })
@@ -335,7 +338,7 @@ export async function callToolResult(host: ToolHost, name: string, args: unknown
   const result = await host.executeTool(name as ToolName, args ?? {})
   return {
     content: [{ type: 'text', text: JSON.stringify(result.content) }],
-    isError: result.isError === true
+    isError: !result.ok || result.isError === true
   }
 }
 
@@ -345,8 +348,12 @@ export function listResourcesResult(): McpResourcesResult {
   }
 }
 
-export async function readResourceResult(host: ToolHost, uri: string): Promise<McpReadResult> {
-  const content = await host.readResource(uri as ResourceUri)
+export function isResourceUri(uri: string): uri is ResourceUri {
+  return Object.values(RESOURCE_URIS).some((candidate) => candidate === uri)
+}
+
+export async function readResourceResult(host: ToolHost, uri: ResourceUri): Promise<McpReadResult> {
+  const content = await host.readResource(uri)
   return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(content) }] }
 }
 ```
@@ -354,7 +361,7 @@ export async function readResourceResult(host: ToolHost, uri: string): Promise<M
 - [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run --project editor-mcp-server tests/mcpAdapter.test.ts`
-Expected: PASS (5 tests).
+Expected: PASS (6 tests).
 
 - [x] **Step 5: Commit**
 
@@ -370,6 +377,8 @@ git commit -m "feat(mcp): pure ToolHost → MCP request/response mapping"
 **Files:**
 - Create: `tools/editor-mcp-server/src/server.ts`
 - Create: `tools/editor-mcp-server/src/main.ts`
+- Create: `tools/editor-mcp-server/bin/automata-editor-mcp.js`
+- Create: `tools/editor-mcp-server/tests/server.test.ts`
 - Create: `tools/editor-mcp-server/README.md` (how to connect Claude Desktop / Code)
 
 **Interfaces:**
@@ -384,12 +393,14 @@ git commit -m "feat(mcp): pure ToolHost → MCP request/response mapping"
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import {
   CallToolRequestSchema,
+  ErrorCode,
   ListResourcesRequestSchema,
   ListToolsRequestSchema,
+  McpError,
   ReadResourceRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
 import type { ToolHost } from '@automata/contracts'
-import { callToolResult, listResourcesResult, listToolsResult, readResourceResult } from './mcpAdapter'
+import { callToolResult, isResourceUri, listResourcesResult, listToolsResult, readResourceResult } from './mcpAdapter'
 
 /** Binds a contracts ToolHost to an MCP Server exposing the registry as tools + resources. */
 export function createMcpServer(host: ToolHost): Server {
@@ -403,7 +414,11 @@ export function createMcpServer(host: ToolHost): Server {
     callToolResult(host, req.params.name, req.params.arguments)
   )
   server.setRequestHandler(ListResourcesRequestSchema, async () => listResourcesResult())
-  server.setRequestHandler(ReadResourceRequestSchema, async (req) => readResourceResult(host, req.params.uri))
+  server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
+    const { uri } = req.params
+    if (!isResourceUri(uri)) throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`)
+    return readResourceResult(host, uri)
+  })
 
   return server
 }
@@ -430,6 +445,15 @@ async function main(): Promise<void> {
 }
 
 void main()
+```
+
+`tools/editor-mcp-server/bin/automata-editor-mcp.js`:
+
+```js
+#!/usr/bin/env node
+import { tsImport } from 'tsx/esm/api'
+
+await tsImport('../src/main.ts', import.meta.url)
 ```
 
 - [x] **Step 3: Document how to connect**
@@ -465,8 +489,7 @@ Add to the MCP client config (adjust the absolute path):
 {
   "mcpServers": {
     "automata-editor": {
-      "command": "<repo>/node_modules/.bin/tsx",
-      "args": ["<repo>/tools/editor-mcp-server/src/main.ts"]
+      "command": "<repo>/tools/editor-mcp-server/bin/automata-editor-mcp.js"
     }
   }
 }
@@ -483,7 +506,7 @@ Run: `npm run typecheck && npm run lint`
 Expected: PASS. (If the SDK export names differ in the installed version, fix the imports in `server.ts`/`main.ts` per the note in Step 1 — no logic change.)
 
 Run: `npx vitest run --project editor-mcp-server`
-Expected: PASS (smoke + headlessHost + mcpAdapter tests).
+Expected: PASS (smoke + headlessHost + mcpAdapter + server integration tests).
 
 - [x] **Step 5: Manual smoke (optional, not part of CI)**
 
@@ -496,6 +519,14 @@ Expected: prints `automata-editor MCP server ready` to stderr and waits on stdio
 git add tools/editor-mcp-server/src/server.ts tools/editor-mcp-server/src/main.ts tools/editor-mcp-server/README.md
 git commit -m "feat(mcp): MCP server wiring + stdio entry point"
 ```
+
+---
+
+## Post-review hardening
+
+- [x] Derive MCP `isError` from the authoritative `ToolResult.ok`, including hosts that omit `isError`.
+- [x] Reject unknown resource URIs with MCP `InvalidParams` before calling the typed `ToolHost`.
+- [x] Replace the raw TypeScript `bin` target with an executable launcher and verify it through a real stdio MCP client.
 
 ---
 

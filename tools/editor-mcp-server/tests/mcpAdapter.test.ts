@@ -26,6 +26,11 @@ describe('mcp adapter', () => {
     expect((await callToolResult(erroring, 'addItem', {})).isError).toBe(true)
   })
 
+  it('reports isError true when ok is false without an explicit error flag', async () => {
+    const erroring: ToolHost = { ...fakeHost, executeTool: async () => ({ ok: false, content: 'bad' }) }
+    expect((await callToolResult(erroring, 'addItem', {})).isError).toBe(true)
+  })
+
   it('lists the editor resource uris', () => {
     expect(listResourcesResult().resources.map((r) => r.uri)).toContain('editor://doc')
   })

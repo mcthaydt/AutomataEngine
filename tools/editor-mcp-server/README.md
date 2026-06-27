@@ -26,8 +26,7 @@ Add to the MCP client config (adjust the absolute path):
 {
   "mcpServers": {
     "automata-editor": {
-      "command": "<repo>/node_modules/.bin/tsx",
-      "args": ["<repo>/tools/editor-mcp-server/src/main.ts"]
+      "command": "<repo>/tools/editor-mcp-server/bin/automata-editor-mcp.js"
     }
   }
 }

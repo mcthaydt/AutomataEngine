@@ -24,7 +24,7 @@ export async function callToolResult(host: ToolHost, name: string, args: unknown
   const result = await host.executeTool(name as ToolName, args ?? {})
   return {
     content: [{ type: 'text', text: JSON.stringify(result.content) }],
-    isError: result.isError === true
+    isError: !result.ok || result.isError === true
   }
 }
 
@@ -34,7 +34,11 @@ export function listResourcesResult(): McpResourcesResult {
   }
 }
 
-export async function readResourceResult(host: ToolHost, uri: string): Promise<McpReadResult> {
-  const content = await host.readResource(uri as ResourceUri)
+export function isResourceUri(uri: string): uri is ResourceUri {
+  return Object.values(RESOURCE_URIS).some((candidate) => candidate === uri)
+}
+
+export async function readResourceResult(host: ToolHost, uri: ResourceUri): Promise<McpReadResult> {
+  const content = await host.readResource(uri)
   return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(content) }] }
 }
