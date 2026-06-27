@@ -1154,6 +1154,13 @@ Run: `npm run coverage`
 
 Expected: at least 90% lines and 90% branches across the expanded include set.
 
+Note: under the `v8` provider the global threshold summary undercounted
+branches covered across `projects` boundaries (958/1082 = 88.53%) while every
+per-file report showed 986/1082 = 91.13% — a false gate failure. Switched the
+coverage provider to `istanbul`, which computes the threshold from one merged
+map, so the summary now matches the per-file reports (90.38% branches, gate
+green).
+
 - [x] **Step 6: Commit Task 9**
 
 ```bash

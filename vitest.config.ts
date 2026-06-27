@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     projects: ['packages/*', 'games/*', 'tools/*'],
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       include: [
         'packages/engine/src/**',
         'packages/editor/src/**',
