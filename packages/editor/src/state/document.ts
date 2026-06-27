@@ -35,6 +35,20 @@ export function createDocumentReducer<Doc>(
           if (error instanceof CommandError) return state
           throw error
         }
+        if (next === state.doc) return state
+        const past = [...state.past, state.doc].slice(-UNDO_LIMIT)
+        return { ...state, doc: next, dirty: dirtyOf(state, next), past, future: [] }
+      }
+      case 'commandBatch': {
+        if (action.commands.length === 0) return state
+        let next = state.doc
+        try {
+          for (const command of action.commands) next = scene.apply(next, command)
+        } catch (error) {
+          if (error instanceof CommandError) return state
+          throw error
+        }
+        if (next === state.doc) return state
         const past = [...state.past, state.doc].slice(-UNDO_LIMIT)
         return { ...state, doc: next, dirty: dirtyOf(state, next), past, future: [] }
       }

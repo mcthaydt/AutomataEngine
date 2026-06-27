@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Mesh, MeshStandardMaterial, SphereGeometry } from 'three'
 import { createThreeRenderer } from '../../src/render/three'
 import { quat } from '../../src/math/quat'
@@ -31,17 +31,60 @@ describe('createThreeRenderer: meshes', () => {
     expect(mesh.quaternion.w).toBeCloseTo(Math.SQRT1_2)
   })
 
-  it('remove disposes geometry and material and detaches the mesh', () => {
+  it('shares primitive geometry and reuses an exact detached mesh', () => {
+    const { port, scene } = createThreeRenderer()
+    const definition = { primitive: 'sphere' as const, radius: 0.5, color: '#ffffff' }
+    const firstEntity = { id: 'first' }
+    const secondEntity = { id: 'second' }
+    port.add(firstEntity, definition)
+    const first = scene.children.at(-1) as Mesh
+    port.add(secondEntity, { ...definition, color: '#ff0000' })
+    const second = scene.children.at(-1) as Mesh
+
+    expect(first.geometry).toBe(second.geometry)
+    port.remove(firstEntity)
+    expect(port.objectCount).toBe(1)
+    const replacement = { id: 'replacement' }
+    port.add(replacement, definition)
+    expect(scene.children.at(-1)).toBe(first)
+  })
+
+  it('resets transform and highlight state before reusing a mesh', () => {
+    const { port, scene } = createThreeRenderer()
+    const definition = { primitive: 'box' as const, size: { x: 1, y: 2, z: 3 }, color: '#ffffff' }
+    const entity = { id: 'first' }
+    port.add(entity, definition)
+    const mesh = scene.children.at(-1) as Mesh
+    port.setPose(entity, { x: 4, y: 5, z: 6 }, quat.fromEuler(0.5, 1, 1.5))
+    port.setHighlight(entity, true)
+
+    port.remove(entity)
+    port.add({ id: 'second' }, definition)
+
+    expect(mesh.position.toArray()).toEqual([0, 0, 0])
+    expect(mesh.quaternion.toArray()).toEqual([0, 0, 0, 1])
+    expect(mesh.scale.toArray()).toEqual([1, 1, 1])
+    expect((mesh.material as MeshStandardMaterial).emissive.getHex()).toBe(0)
+    expect((mesh.material as MeshStandardMaterial).emissiveIntensity).toBe(0)
+  })
+
+  it('defers geometry and material disposal until final renderer teardown', () => {
     const { port, scene } = createThreeRenderer()
     const entity = { id: 'ball' }
     port.add(entity, { primitive: 'sphere', radius: 0.5, color: '#ffffff' })
-    const mesh = scene.children[scene.children.length - 1] as Mesh
-    let geometryDisposed = false
-    mesh.geometry.addEventListener('dispose', () => { geometryDisposed = true })
+    const mesh = scene.children.at(-1) as Mesh
+    const geometryDisposed = vi.fn()
+    const materialDisposed = vi.fn()
+    mesh.geometry.addEventListener('dispose', geometryDisposed)
+    ;(mesh.material as MeshStandardMaterial).addEventListener('dispose', materialDisposed)
+
     port.remove(entity)
-    expect(port.objectCount).toBe(0)
-    expect(mesh.parent).toBeNull()
-    expect(geometryDisposed).toBe(true)
+    expect(geometryDisposed).not.toHaveBeenCalled()
+    expect(materialDisposed).not.toHaveBeenCalled()
+
+    port.dispose()
+    expect(geometryDisposed).toHaveBeenCalledTimes(1)
+    expect(materialDisposed).toHaveBeenCalledTimes(1)
   })
 
   it('setPose and remove for unknown entities are safe no-ops', () => {

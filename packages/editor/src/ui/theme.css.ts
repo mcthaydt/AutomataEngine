@@ -80,6 +80,34 @@ export const SLATE_PRO_CSS = `
 .ed-snap { background: var(--panel-2); border: 1px solid #2f394e; border-radius: 4px; padding: 2px 8px; }
 .ed-status-valid.is-invalid { color: var(--bad); } .ed-status-valid:not(.is-invalid) { color: var(--ok); }
 .ed-status-tool { margin-left: auto; }
+.ed-chat-host { display: flex; min-height: 0; }
+.ed-chat { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
+.ed-chat-controls { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 6px 0; }
+.ed-chat-provider, .ed-chat-model, .ed-chat-key { flex: 1 1 68px; min-width: 0; background: var(--panel-2); color: var(--ink);
+  border: 1px solid #2f394e; border-radius: 5px; padding: 4px 6px; }
+.ed-chat-log { flex: 1; min-height: 80px; overflow: auto; display: flex; flex-direction: column; gap: 4px;
+  margin: 0 6px; background: var(--edge); border-radius: 5px; padding: 6px; }
+.ed-chat-msg { padding: 4px 6px; border-radius: 4px; background: var(--panel-2); white-space: pre-wrap; }
+.ed-chat-user { box-shadow: inset 2px 0 0 var(--accent); }
+.ed-chat-assistant { box-shadow: inset 2px 0 0 var(--ok); }
+.ed-chat-proposal { color: var(--ink-dim); }
+.ed-chat-error { box-shadow: inset 2px 0 0 var(--bad); }
+.ed-chat-input { resize: vertical; min-height: 44px; margin: 0 6px; background: var(--panel-2); color: var(--ink);
+  border: 1px solid #2f394e; border-radius: 5px; padding: 6px; font: inherit; }
+.ed-chat-send { align-self: flex-end; margin: 0 6px 6px; padding: 5px 12px; background: var(--panel-2);
+  border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
+.ed-chat-diff { display: flex; flex-direction: column; gap: 3px; }
+.ed-chat-diff-summary { color: var(--ink-dim); font-size: 11px; }
+.ed-chat-diff-row { font-family: ui-monospace, monospace; font-size: 11px; padding-left: 6px; }
+.ed-chat-diff-added { color: var(--ok); }
+.ed-chat-diff-removed { color: var(--bad); }
+.ed-chat-diff-modified { color: var(--accent); }
+.ed-chat-apply { align-self: flex-start; margin-top: 4px; padding: 4px 12px; background: var(--panel-2);
+  border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
+.ed-chat-apply:disabled { color: var(--ink-dim); cursor: default; }
+.ed-chat-tune { align-self: flex-end; margin: 0 6px 6px; padding: 5px 12px; background: var(--panel-2);
+  border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
+.ed-chat-tune[hidden] { display: none; }
 `
 
 /** Injects the Slate Pro stylesheet once; only the creating call removes it. */

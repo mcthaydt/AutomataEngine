@@ -5,8 +5,12 @@ import { createGameStore } from '../../src/state/root'
 import type { Entity } from '../../src/entity'
 import type { GameCtx } from '../../src/game/context'
 
-const ctxFor = (world: ReturnType<typeof createWorld<Entity>>, alpha = 1): GameCtx => ({
-  world, store: createGameStore(), input: { x: 0, y: 0 }, dt: 1 / 60, alpha
+const ctxFor = (
+  world: ReturnType<typeof createWorld<Entity>>,
+  alpha = 1,
+  frameDt = 1 / 60
+): GameCtx & { frameDt: number } => ({
+  world, store: createGameStore(), input: { x: 0, y: 0 }, dt: 1 / 60, alpha, frameDt
 })
 
 describe('cameraFollow', () => {
@@ -98,5 +102,28 @@ describe('cameraFollow', () => {
     expect(first).toBeCloseTo(0)
     expect(second).toBeGreaterThan(0)
     expect(second).toBeLessThan(20)
+  })
+
+  it('reaches the same camera pose after equal time at different refresh rates', () => {
+    const simulate = (frames: number) => {
+      const render = createNullRenderer()
+      const world = createWorld<Entity>()
+      const ball = world.add({ ball: {}, transform: createTransform({ x: 0, y: 0.5, z: 0 }) })
+      const system = createCameraFollow(render.port)
+      system.run(ctxFor(world, 1, 0))
+      ball.transform.prevPosition = ball.transform.position
+      ball.transform.position = { x: 20, y: 0.5, z: -10 }
+      for (let frame = 0; frame < frames; frame++) {
+        system.run(ctxFor(world, 1, 1 / frames))
+      }
+      return render.calls.filter((call) => call.op === 'setCamera').at(-1)!
+    }
+
+    const at60Hz = simulate(60)
+    const at120Hz = simulate(120)
+    expect(at60Hz.position!.x).toBeCloseTo(at120Hz.position!.x, 5)
+    expect(at60Hz.position!.z).toBeCloseTo(at120Hz.position!.z, 5)
+    expect(at60Hz.lookAt!.x).toBeCloseTo(at120Hz.lookAt!.x, 5)
+    expect(at60Hz.lookAt!.z).toBeCloseTo(at120Hz.lookAt!.z, 5)
   })
 })

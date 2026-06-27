@@ -56,9 +56,9 @@ root unless a task explicitly says otherwise.
 - [x] M14: Author 2 worlds x 3 levels in the editor and complete a tuning pass.
 - [x] M15: Mobile polish, visibility-pause, pixel-ratio cap, Playwright smokes,
   and release build.
-- [ ] Plan 4 / M16: editor MCP server + tuning-agent loop + chat overlay
-  (stub: docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md;
-  spec pending after M13).
+- [x] Plan 4 / M16: editor MCP server + tuning-agent loop + chat overlay
+  (spec: docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md;
+  completed plans: M16a-M16d).
 
 ## Verification Commands
 

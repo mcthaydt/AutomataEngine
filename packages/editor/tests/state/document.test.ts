@@ -35,6 +35,16 @@ describe('document slice', () => {
     expect(next.future).toEqual([])
   })
 
+  it('preserves the document state when a single command has no effect', () => {
+    const before = start()
+    const reduceSame = createDocumentReducer<FakeDoc>({ ...scene, apply: (doc) => doc })
+
+    expect(reduceSame(before, {
+      type: 'command',
+      command: { type: 'setMetadata', path: 'title', value: before.doc.title }
+    })).toBe(before)
+  })
+
   it('undo restores the prior doc; redo re-applies', () => {
     let state = reduce(start(), { type: 'command', command: { type: 'addItem', item: boxItem('a') } })
     state = reduce(state, { type: 'undo' })
@@ -83,5 +93,58 @@ describe('document slice', () => {
       state = reduce(state, { type: 'command', command: { type: 'addItem', item: boxItem(`i${i}`) } })
     }
     expect(state.past.length).toBeLessThanOrEqual(200)
+  })
+
+  it('applies a command batch as a single undo step', () => {
+    const next = reduce(start(), {
+      type: 'commandBatch',
+      commands: [
+        { type: 'addItem', item: boxItem('a') },
+        { type: 'addItem', item: boxItem('b') }
+      ]
+    })
+    expect(scene.listItems(next.doc)).toHaveLength(2)
+    expect(next.past).toHaveLength(1)
+  })
+
+  it('aborts a command batch when any command fails', () => {
+    const before = start()
+    const next = reduce(before, {
+      type: 'commandBatch',
+      commands: [
+        { type: 'addItem', item: boxItem('a') },
+        { type: 'setItemField', id: 'a', path: 'pos.x', value: 1 }
+      ]
+    })
+    expect(next).toBe(before)
+  })
+
+  it('rethrows a non-CommandError raised by a command batch', () => {
+    const reduceThrow = createDocumentReducer<FakeDoc>({
+      ...scene,
+      apply: () => { throw new Error('boom') }
+    })
+    expect(() =>
+      reduceThrow(start(), { type: 'commandBatch', commands: [{ type: 'addItem', item: boxItem('a') }] })
+    ).toThrow('boom')
+  })
+
+  it('is a no-op when a command batch is empty or returns the same doc', () => {
+    const before = start()
+    expect(reduce(before, { type: 'commandBatch', commands: [] })).toBe(before)
+
+    const reduceSame = createDocumentReducer<FakeDoc>({ ...scene, apply: (doc) => doc })
+    expect(reduceSame(before, { type: 'commandBatch', commands: [{ type: 'addItem', item: boxItem('a') }] })).toBe(before)
+  })
+
+  it('undo reverts an entire command batch in one step', () => {
+    const applied = reduce(start(), {
+      type: 'commandBatch',
+      commands: [
+        { type: 'addItem', item: boxItem('a') },
+        { type: 'addItem', item: boxItem('b') }
+      ]
+    })
+    expect(scene.listItems(reduce(applied, { type: 'undo' }).doc)).toHaveLength(0)
   })
 })

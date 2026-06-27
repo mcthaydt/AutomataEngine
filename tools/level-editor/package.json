@@ -3,7 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "dependencies": { "@automata/engine": "*", "@automata/editor": "*", "monkey-ball": "*" },
+  "dependencies": {
+    "@automata/editor": "*",
+    "@automata/editor-agent": "*",
+    "@automata/engine": "*",
+    "monkey-ball": "*"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

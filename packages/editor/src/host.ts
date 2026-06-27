@@ -27,7 +27,7 @@ export interface EditorCore<Doc> {
   camera: FlyCamera
   mapView: MapView
   /** Re-sync the 3D world from the doc and render a frame. */
-  tick(alpha: number): void
+  tick(alpha: number, frameDt?: number): void
   fixedUpdate(dt: number): void
   enterPlay(): void
   exitPlay(): void
@@ -72,9 +72,9 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
     get camera() { return camera },
     set camera(next: FlyCamera) { camera = next },
     mapView,
-    tick(alpha) {
+    tick(alpha, frameDt = 0) {
       if (play) {
-        play.render(alpha)
+        play.render(alpha, frameDt)
         return
       }
 
@@ -99,7 +99,7 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
     },
     enterPlay() {
       if (play) return
-      if (!definition.play) throw new Error('this definition has no play support')
+      if (!definition.play?.createGameplay) throw new Error('this definition has no play support')
 
       const validation = validateDoc(definition, store.getState().document.doc)
       if (!validation.exportable) throw new Error(`invalid document: ${validation.issues.join('; ')}`)

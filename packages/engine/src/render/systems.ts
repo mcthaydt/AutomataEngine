@@ -1,6 +1,6 @@
-import type { Query, World } from 'miniplex'
 import type { EngineEntity } from '../ecs/components'
 import type { System } from '../ecs/scheduler'
+import type { World } from '../ecs/world'
 import { vec3 } from '../math/vec3'
 import { quat } from '../math/quat'
 import type { GroupId, RenderPort } from './port'
@@ -15,7 +15,7 @@ export function registerRenderables<E extends EngineEntity>(
   port: RenderPort,
   group?: GroupId
 ): () => void {
-  const query = world.with('renderable', 'transform') as Query<RenderEntity<E>>
+  const query = world.with('renderable', 'transform')
   const add = (entity: RenderEntity<E>): void => {
     port.add(entity, entity.renderable, group)
   }

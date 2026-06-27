@@ -6,6 +6,12 @@ import type { SceneItem, Surface } from '../../src/model/types'
 /** A minimal non-game document: a flat item list plus a title. */
 export interface FakeDoc { title: string; items: SceneItem[] }
 
+function sameSurface(a: Surface, b: Surface): boolean {
+  if (a.kind === 'color' && b.kind === 'color') return a.value === b.value
+  if (a.kind === 'texture' && b.kind === 'texture') return a.textureId === b.textureId
+  return false
+}
+
 const fakeScene: SceneModel<FakeDoc> = {
   parse: (input) => input as FakeDoc,
   emptyDoc: () => ({ title: 'untitled', items: [] }),
@@ -18,33 +24,48 @@ const fakeScene: SceneModel<FakeDoc> = {
       case 'addItem':
         return { ...doc, items: [...doc.items, cmd.item] }
       case 'deleteItems':
-        return { ...doc, items: doc.items.filter((item) => !cmd.ids.includes(item.id)) }
-      case 'moveSelected':
-        return {
-          ...doc,
-          items: doc.items.map((item) =>
-            cmd.ids.includes(item.id)
-              ? {
-                  ...item,
-                  transform: {
-                    ...item.transform,
-                    position: {
-                      x: item.transform.position.x + cmd.delta.x,
-                      y: item.transform.position.y + cmd.delta.y,
-                      z: item.transform.position.z + cmd.delta.z
-                    }
+      {
+        const items = doc.items.filter((item) => !cmd.ids.includes(item.id))
+        return items.length === doc.items.length ? doc : { ...doc, items }
+      }
+      case 'moveSelected': {
+        if (cmd.ids.length === 0 || (cmd.delta.x === 0 && cmd.delta.y === 0 && cmd.delta.z === 0)) {
+          return doc
+        }
+        const items = doc.items.map((item) =>
+          cmd.ids.includes(item.id)
+            ? {
+                ...item,
+                transform: {
+                  ...item.transform,
+                  position: {
+                    x: item.transform.position.x + cmd.delta.x,
+                    y: item.transform.position.y + cmd.delta.y,
+                    z: item.transform.position.z + cmd.delta.z
                   }
                 }
-              : item)
-        }
-      case 'setSurface':
-        return {
+              }
+            : item)
+        return items.every((item, index) => item === doc.items[index]) ? doc : {
           ...doc,
-          items: doc.items.map((item) =>
-            item.id === cmd.id ? { ...item, surface: cmd.surface } : item)
+          items
         }
+      }
+      case 'setSurface': {
+        const item = doc.items.find((candidate) => candidate.id === cmd.id)
+        if (item && sameSurface(item.surface, cmd.surface)) return doc
+        const items = doc.items.map((candidate) =>
+          candidate.id === cmd.id ? { ...candidate, surface: cmd.surface } : candidate)
+        return items.every((candidate, index) => candidate === doc.items[index]) ? doc : {
+          ...doc,
+          items
+        }
+      }
       case 'setMetadata':
-        if (cmd.path === 'title') return { ...doc, title: String(cmd.value) }
+        if (cmd.path === 'title') {
+          const title = String(cmd.value)
+          return title === doc.title ? doc : { ...doc, title }
+        }
         throw new CommandError(`unknown metadata ${cmd.path}`)
       case 'setItemField':
         throw new CommandError('fake has no item fields')

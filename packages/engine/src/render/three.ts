@@ -15,12 +15,24 @@ export interface ThreeRenderer {
   camera: PerspectiveCamera
 }
 
-function geometryFor(def: RenderableDef): BufferGeometry {
+function createGeometry(def: RenderableDef): BufferGeometry {
   switch (def.primitive) {
     case 'sphere': return new SphereGeometry(def.radius, 24, 16)
     case 'box': return new BoxGeometry(def.size.x, def.size.y, def.size.z)
     case 'cylinder': return new CylinderGeometry(def.radius, def.radius, def.height, 24)
   }
+}
+
+function geometryKey(def: RenderableDef): string {
+  switch (def.primitive) {
+    case 'sphere': return `sphere:${def.radius}`
+    case 'box': return `box:${def.size.x}:${def.size.y}:${def.size.z}`
+    case 'cylinder': return `cylinder:${def.radius}:${def.height}`
+  }
+}
+
+function meshKey(def: RenderableDef): string {
+  return `${geometryKey(def)}:${def.color}`
 }
 
 export function createThreeRenderer(): ThreeRenderer {
@@ -36,10 +48,23 @@ export function createThreeRenderer(): ThreeRenderer {
   scene.add(sun)
 
   const meshes = new Map<object, Mesh>()
+  const activeMeshKeys = new Map<object, string>()
+  const geometryCache = new Map<string, BufferGeometry>()
+  const meshPool = new Map<string, Mesh[]>()
   const groups = new Map<GroupId, Group>()
   const grids = new Map<GridId, GridHelper>()
   let nextGroupId: GroupId = 1
   let nextGridId: GridId = 1
+
+  const geometryFor = (def: RenderableDef): BufferGeometry => {
+    const key = geometryKey(def)
+    let geometry = geometryCache.get(key)
+    if (!geometry) {
+      geometry = createGeometry(def)
+      geometryCache.set(key, geometry)
+    }
+    return geometry
+  }
 
   const parentOf = (group?: GroupId): Object3D => {
     if (group === undefined) return scene
@@ -99,9 +124,15 @@ export function createThreeRenderer(): ThreeRenderer {
 
     add(entity, def, group) {
       if (meshes.has(entity)) return
-      const mesh = new Mesh(geometryFor(def), new MeshStandardMaterial({ color: def.color }))
+      const key = meshKey(def)
+      const pool = meshPool.get(key)
+      const mesh = pool?.pop() ?? new Mesh(
+        geometryFor(def),
+        new MeshStandardMaterial({ color: def.color })
+      )
       parentOf(group).add(mesh)
       meshes.set(entity, mesh)
+      activeMeshKeys.set(entity, key)
     },
 
     setPose(entity, position, rotation) {
@@ -115,9 +146,18 @@ export function createThreeRenderer(): ThreeRenderer {
       const mesh = meshes.get(entity)
       if (!mesh) return
       mesh.removeFromParent()
-      mesh.geometry.dispose()
-      ;(mesh.material as Material).dispose()
+      mesh.position.set(0, 0, 0)
+      mesh.quaternion.identity()
+      mesh.scale.set(1, 1, 1)
+      const material = mesh.material as MeshStandardMaterial
+      material.emissive.set('#000000')
+      material.emissiveIntensity = 0
+      const key = activeMeshKeys.get(entity)!
       meshes.delete(entity)
+      activeMeshKeys.delete(entity)
+      const pool = meshPool.get(key) ?? []
+      pool.push(mesh)
+      meshPool.set(key, pool)
     },
 
     setCamera(position, lookAt) {
@@ -126,7 +166,20 @@ export function createThreeRenderer(): ThreeRenderer {
     },
 
     dispose() {
-      for (const entity of [...meshes.keys()]) port.remove(entity)
+      const materials = new Set<Material>()
+      for (const mesh of meshes.values()) {
+        mesh.removeFromParent()
+        materials.add(mesh.material as Material)
+      }
+      for (const pool of meshPool.values()) {
+        for (const mesh of pool) materials.add(mesh.material as Material)
+      }
+      for (const material of materials) material.dispose()
+      for (const geometry of geometryCache.values()) geometry.dispose()
+      meshes.clear()
+      activeMeshKeys.clear()
+      meshPool.clear()
+      geometryCache.clear()
       for (const group of groups.values()) group.removeFromParent()
       groups.clear()
       for (const grid of grids.values()) {

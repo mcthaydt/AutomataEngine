@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./headless": "./src/headless.ts",
+    "./ui": "./src/ui/index.ts",
+    "./viewport": "./src/viewport.ts"
+  },
   "types": "./src/index.ts",
   "scripts": { "typecheck": "tsc --noEmit" },
-  "dependencies": { "@automata/engine": "*" }
+  "dependencies": { "@automata/engine": "*", "@automata/contracts": "*" }
 }

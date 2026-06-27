@@ -1,7 +1,8 @@
-import { parseData, type Vec3 } from '@automata/engine'
+import { parseData } from '@automata/engine/data'
+import type { Vec3 } from '@automata/contracts'
 import {
   CommandError, type Field, type SceneItem, type SceneModel, type Surface
-} from '@automata/editor'
+} from '@automata/editor/headless'
 import { entityUid, geometryUid, levelKind, type Level } from '../data/level'
 
 type Geometry = Level['geometry'][number]
@@ -65,6 +66,25 @@ function entityItem(entity: Level['entities'][number], id: string): SceneItem {
 
 const addDelta = (tuple: Tuple3, delta: Vec3): Tuple3 =>
   [tuple[0] + delta.x, tuple[1] + delta.y, tuple[2] + delta.z]
+const sameVec = (a: Vec3, b: Vec3): boolean =>
+  a.x === b.x && a.y === b.y && a.z === b.z
+const zeroDelta = (value: Vec3): boolean => sameVec(value, { x: 0, y: 0, z: 0 })
+
+function stableIds(level: Level): Set<string> {
+  return new Set([
+    ...level.geometry.map((geometry, index) => geometryUid(geometry, index)),
+    ...level.entities.map((entity, index) => entityUid(entity, index)),
+    'marker:spawn',
+    'marker:goal'
+  ])
+}
+
+function requireTargets(level: Level, ids: readonly string[]): void {
+  const currentIds = stableIds(level)
+  for (const id of ids) {
+    if (!currentIds.has(id)) throw new CommandError(`unknown item ${id}`)
+  }
+}
 
 export const levelSceneModel: SceneModel<Level> = {
   parse: (input) => ensureUids(typeof input === 'string'
@@ -110,6 +130,9 @@ export const levelSceneModel: SceneModel<Level> = {
   apply(level, cmd) {
     switch (cmd.type) {
       case 'moveSelected': {
+        if (cmd.ids.length === 0) return level
+        requireTargets(level, cmd.ids)
+        if (zeroDelta(cmd.delta)) return level
         const ids = new Set(cmd.ids)
         let next = level
         if (ids.has('marker:spawn')) next = { ...next, spawn: addDelta(next.spawn, cmd.delta) }
@@ -125,19 +148,34 @@ export const levelSceneModel: SceneModel<Level> = {
       case 'setSurface': {
         const surface = cmd.surface
         if (surface.kind !== 'color') throw new CommandError('only color surfaces supported')
+        requireTargets(level, [cmd.id])
+        const index = level.geometry.findIndex((geometry, gi) => geometryUid(geometry, gi) === cmd.id)
+        if (index < 0) throw new CommandError(`surface edit unsupported for ${cmd.id}`)
+        if (level.geometry[index]!.color === surface.value) return level
         return {
           ...level,
           geometry: level.geometry.map((geometry, gi) =>
-            geometryUid(geometry, gi) === cmd.id ? { ...geometry, color: surface.value } : geometry)
+            gi === index ? { ...geometry, color: surface.value } : geometry)
         }
       }
       case 'setMetadata': {
-        if (cmd.path === 'name') return { ...level, name: String(cmd.value) }
-        if (cmd.path === 'timeLimitS') return { ...level, timeLimitS: Number(cmd.value) }
-        if (cmd.path === 'fallY') return { ...level, fallY: Number(cmd.value) }
+        if (cmd.path === 'name') {
+          const value = String(cmd.value)
+          return value === level.name ? level : { ...level, name: value }
+        }
+        if (cmd.path === 'timeLimitS') {
+          const value = Number(cmd.value)
+          return value === level.timeLimitS ? level : { ...level, timeLimitS: value }
+        }
+        if (cmd.path === 'fallY') {
+          const value = Number(cmd.value)
+          return value === level.fallY ? level : { ...level, fallY: value }
+        }
         throw new CommandError(`unknown metadata ${cmd.path}`)
       }
       case 'deleteItems': {
+        if (cmd.ids.length === 0) return level
+        requireTargets(level, cmd.ids)
         const remove = new Set(cmd.ids)
         const deletable = new Set([
           ...level.geometry.map((g, i) => geometryUid(g, i)),
@@ -154,6 +192,7 @@ export const levelSceneModel: SceneModel<Level> = {
       }
       case 'addItem': {
         const { shape, id } = cmd.item
+        if (stableIds(level).has(id)) throw new CommandError(`duplicate item ${id}`)
         const pos: Tuple3 = [cmd.item.transform.position.x, cmd.item.transform.position.y, cmd.item.transform.position.z]
         const color = cmd.item.surface.kind === 'color' ? cmd.item.surface.value : '#ffffff'
         // The editor owns id allocation; the model adopts it as the stable uid so
@@ -175,25 +214,33 @@ export const levelSceneModel: SceneModel<Level> = {
         throw new CommandError('markers are singletons and cannot be added')
       }
       case 'setItemField': {
+        requireTargets(level, [cmd.id])
         const index = level.geometry.findIndex((g, i) => geometryUid(g, i) === cmd.id)
         if (index < 0) throw new CommandError(`field edit unsupported for ${cmd.id}`)
-        const axis = { x: 0, y: 1, z: 2 }[cmd.path.split('.')[1] as 'x' | 'y' | 'z']
+        const geometry = level.geometry[index]!
+        const axisName = cmd.path.split('.')[1]
+        const axis = axisName === 'x' ? 0 : axisName === 'y' ? 1 : axisName === 'z' ? 2 : undefined
+        const value = Number(cmd.value)
+        if (cmd.path.startsWith('pos.') && axis !== undefined && geometry.pos[axis] === value) return level
+        if (cmd.path.startsWith('size.') && axis !== undefined && geometry.shape === 'box' && geometry.size[axis] === value) return level
+        if (cmd.path === 'radius' && geometry.shape === 'cylinder' && geometry.radius === value) return level
+        if (cmd.path === 'height' && geometry.shape === 'cylinder' && geometry.height === value) return level
         return {
           ...level,
           geometry: level.geometry.map((geometry, gi) => {
             if (gi !== index) return geometry
-            if (cmd.path.startsWith('pos.')) {
+            if (cmd.path.startsWith('pos.') && axis !== undefined) {
               const pos = [...geometry.pos] as Tuple3
-              pos[axis] = Number(cmd.value)
+              pos[axis] = value
               return { ...geometry, pos }
             }
-            if (cmd.path.startsWith('size.') && geometry.shape === 'box') {
+            if (cmd.path.startsWith('size.') && axis !== undefined && geometry.shape === 'box') {
               const size = [...geometry.size] as Tuple3
-              size[axis] = Number(cmd.value)
+              size[axis] = value
               return { ...geometry, size }
             }
-            if (cmd.path === 'radius' && geometry.shape === 'cylinder') return { ...geometry, radius: Number(cmd.value) }
-            if (cmd.path === 'height' && geometry.shape === 'cylinder') return { ...geometry, height: Number(cmd.value) }
+            if (cmd.path === 'radius' && geometry.shape === 'cylinder') return { ...geometry, radius: value }
+            if (cmd.path === 'height' && geometry.shape === 'cylinder') return { ...geometry, height: value }
             throw new CommandError(`unsupported field ${cmd.path}`)
           })
         }

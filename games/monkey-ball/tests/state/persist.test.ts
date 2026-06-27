@@ -55,4 +55,16 @@ describe('persisted game store', () => {
     expect(store.getState().progress).toEqual({})
     expect(store.getState().settings).toEqual({ volume: 0.7, joystickSide: 'left' })
   })
+
+  it('rejects non-finite and out-of-range persisted settings', () => {
+    for (const volume of ['1e999', '-0.1', '1.1']) {
+      const storage = memoryStorage()
+      storage.set('monkey-ball/settings', `{"version":1,"data":{"volume":${volume},"joystickSide":"right"}}`)
+
+      expect(createGameStore({ storage }).getState().settings).toEqual({
+        volume: 0.7,
+        joystickSide: 'left'
+      })
+    }
+  })
 })

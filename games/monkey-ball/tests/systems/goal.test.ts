@@ -54,4 +54,35 @@ describe('goal', () => {
     createGoal(events, feedback).run(ctx)
     expect(store.getState().scene).toBe('playing')
   })
+
+  it('ignores goal events while paused', () => {
+    const events = new EventQueue()
+    events.emit({ type: 'sensorEnter', a: { ball: {} } as Entity, b: { goal: {} } as Entity })
+    const { ctx, store, feedback } = playingCtx()
+    store.dispatch({ type: 'paused' })
+
+    createGoal(events, feedback).run(ctx)
+
+    expect(store.getState().scene).toBe('paused')
+  })
+
+  it('ignores a goal when no level is active', () => {
+    const events = new EventQueue()
+    events.emit({ type: 'sensorEnter', a: { ball: {} } as Entity, b: { goal: {} } as Entity })
+    const store = createGameStore()
+    store.dispatch({ type: 'resumed' })
+    const ctx: GameCtx = {
+      world: createWorld<Entity>(),
+      store,
+      input: { x: 0, y: 0 },
+      dt: 1 / 60,
+      alpha: 0
+    }
+    const feedback = new EventQueue()
+
+    createGoal(events, feedback).run(ctx)
+
+    expect(store.getState().scene).toBe('playing')
+    expect(feedback.read('feedback')).toEqual([])
+  })
 })

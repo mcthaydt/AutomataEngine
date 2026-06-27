@@ -27,4 +27,32 @@ describe('editor chrome', () => {
     expect(root.querySelector('.ed-root')).toBeNull()
     editor.dispose()
   })
+
+  it('mounts the agent region only when a mountAgentPanel hook is supplied', () => {
+    const root = document.createElement('div')
+    const editor = makeTestEditor()
+    const seen: HTMLElement[] = []
+    const chrome = renderEditorChrome(editor, root, canvases(), {
+      mountAgentPanel: (_core, host) => {
+        seen.push(host)
+        return { update() {}, dispose() {} }
+      }
+    })
+
+    expect(seen).toHaveLength(1)
+    expect(root.querySelector('.ed-chat-host')).not.toBeNull()
+
+    chrome.dispose()
+    expect(root.querySelector('.ed-chat-host')).toBeNull()
+    editor.dispose()
+  })
+
+  it('omits the agent region when no hook is supplied', () => {
+    const root = document.createElement('div')
+    const editor = makeTestEditor()
+    renderEditorChrome(editor, root, canvases())
+
+    expect(root.querySelector('.ed-chat-host')).toBeNull()
+    editor.dispose()
+  })
 })

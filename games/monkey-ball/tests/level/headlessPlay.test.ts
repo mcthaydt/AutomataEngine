@@ -27,4 +27,31 @@ describe('runHeadlessPlay', () => {
     expect(result.outcome).toBe('completed')
     expect(result.steps).toBeLessThan(3000)
   }, 20000)
+
+  it('exposes the ball position and goal to a closed-loop input policy', async () => {
+    const seen: { ballZ: number; goalZ: number }[] = []
+    await runHeadlessPlay(level, lib, tuning, {
+      input: (_step, obs) => {
+        seen.push({ ballZ: obs.ball.position.z, goalZ: obs.goal.z })
+        return { x: 0, y: 1 }
+      },
+      maxSteps: 30
+    })
+    expect(seen.length).toBeGreaterThan(0)
+    // w1-l1: ball spawns near z=6, goal sits at z=-6.
+    expect(seen[0]!.goalZ).toBe(-6)
+    expect(seen[0]!.ballZ).toBeGreaterThan(0)
+  }, 20000)
+
+  it('maps an exhausted-life run to gameOver', async () => {
+    const result = await runHeadlessPlay(
+      { ...level, timeLimitS: 0.001 },
+      lib,
+      tuning,
+      { maxSteps: 10 }
+    )
+
+    expect(result.outcome).toBe('gameOver')
+    expect(result.steps).toBe(3)
+  })
 })

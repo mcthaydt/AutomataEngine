@@ -3,9 +3,8 @@ import type { GameCtx } from '../game/context'
 
 /** Fixed camera offset behind the stage's forward axis (+z), raised above the ball. */
 const OFFSET = { x: 0, y: 6, z: 9 }
-const FOLLOW = 0.1
-/** Look-at lag. Lower => the ball drifts further off-center while moving. */
-const LOOK_FOLLOW = 0.1
+/** Continuous response calibrated to preserve the former 0.1-per-frame feel at 60 Hz. */
+const RESPONSE = -Math.log(1 - 0.1) * 60
 
 /**
  * Follows the ball's position from a fixed orientation. The view never rotates with
@@ -27,8 +26,9 @@ export function createCameraFollow(render: RenderPort): System<GameCtx> {
       if (!ball) return
       const pos = vec3.lerp(ball.transform.prevPosition, ball.transform.position, ctx.alpha)
       const target = { x: pos.x + OFFSET.x, y: pos.y + OFFSET.y, z: pos.z + OFFSET.z }
-      cam = cam === null ? target : vec3.lerp(cam, target, FOLLOW)
-      look = look === null ? pos : vec3.lerp(look, pos, LOOK_FOLLOW)
+      const follow = 1 - Math.exp(-RESPONSE * Math.max(0, ctx.frameDt ?? 0))
+      cam = cam === null ? target : vec3.lerp(cam, target, follow)
+      look = look === null ? pos : vec3.lerp(look, pos, follow)
       render.setCamera(cam, look)
     }
   }

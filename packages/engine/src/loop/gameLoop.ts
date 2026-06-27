@@ -1,6 +1,6 @@
 export interface LoopHooks {
   fixedUpdate(dt: number): void
-  render(alpha: number): void
+  render(alpha: number, frameDt: number): void
 }
 
 export interface LoopOptions {
@@ -20,10 +20,12 @@ export class GameLoop {
   }
 
   tick(nowMs: number): void {
+    let frameDt = 0
     if (this.lastMs !== null) {
-      const elapsed = Math.max(0, (nowMs - this.lastMs) / 1000)
+      const rawElapsed = (nowMs - this.lastMs) / 1000
+      frameDt = Math.min(Math.max(0, rawElapsed), this.fixedDt * this.maxSubSteps)
       this.accumulator = Math.min(
-        this.accumulator + elapsed,
+        this.accumulator + frameDt,
         this.fixedDt * this.maxSubSteps
       )
       while (this.accumulator >= this.fixedDt - 1e-9) {
@@ -32,6 +34,6 @@ export class GameLoop {
       }
     }
     this.lastMs = nowMs
-    this.hooks.render(this.accumulator / this.fixedDt)
+    this.hooks.render(this.accumulator / this.fixedDt, frameDt)
   }
 }
