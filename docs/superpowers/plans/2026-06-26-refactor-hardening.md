@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 54% (49/90 steps complete)
+**Overall Progress:** 62% (56/90 steps complete)
 
 ---
 
@@ -537,20 +537,20 @@ git commit -m "refactor(editor): sync changed world entities by id"
 - Modify: `packages/engine/src/render/systems.ts`
 - Modify: `eslint.config.js`
 
-- [ ] **Step 1: Add facade characterization tests**
+- [x] **Step 1: Add facade characterization tests**
 
 Extend `world.test.ts` to cover `entities`, `has`, `clear`, `first`, add/remove
 subscriptions, and component add/remove through the existing public engine
 module. These tests characterize behavior that the wrapper must preserve.
 
-- [ ] **Step 2: Run characterization tests green before refactoring**
+- [x] **Step 2: Run characterization tests green before refactoring**
 
 Run: `npx vitest run packages/engine/tests/ecs/world.test.ts`
 
 Expected: all runtime characterization assertions PASS against the current
 Miniplex-backed export.
 
-- [ ] **Step 3: Add a failing Miniplex-boundary lint rule**
+- [x] **Step 3: Add a failing Miniplex-boundary lint rule**
 
 Add a flat ESLint block covering `packages/engine/src/**/*.ts` while ignoring
 `packages/engine/src/ecs/world.ts`; forbid direct `miniplex` imports with a
@@ -561,7 +561,7 @@ Run: `npm run lint`
 Expected: FAIL only at the current direct imports in
 `physics/systems.ts` and `render/systems.ts`.
 
-- [ ] **Step 4: Implement the facade**
+- [x] **Step 4: Implement the facade**
 
 Define engine-owned interfaces:
 
@@ -590,20 +590,20 @@ export interface World<E extends object> {
 
 Wrap Miniplex internally in `createWorld`; adapt query iteration, `first`, and signals. Remove all exported Miniplex types and remove engine-internal `Query` casts/imports.
 
-- [ ] **Step 5: Run ECS, physics, render, and lint verification**
+- [x] **Step 5: Run ECS, physics, render, and lint verification**
 
 Run: `npx vitest run packages/engine/tests/ecs packages/engine/tests/physics/systems.test.ts packages/engine/tests/render/systems.test.ts && npm run lint`
 
 Expected: all selected tests PASS.
 
-- [ ] **Step 6: Run workspace typecheck**
+- [x] **Step 6: Run workspace typecheck**
 
 Run: `npm run typecheck`
 
 Expected: PASS without consumer changes because the facade preserves the existing
 engine-owned `World` surface; no module outside `ecs/world.ts` imports Miniplex.
 
-- [ ] **Step 7: Commit Task 6**
+- [x] **Step 7: Commit Task 6**
 
 ```bash
 git add packages/engine/src/ecs/world.ts packages/engine/tests/ecs/world.test.ts packages/engine/src/physics/systems.ts packages/engine/src/render/systems.ts eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md

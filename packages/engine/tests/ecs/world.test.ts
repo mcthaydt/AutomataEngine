@@ -29,6 +29,40 @@ describe('createWorld', () => {
     world.removeComponent(entity, 'collectible')
     expect([...collectibles].length).toBe(0)
   })
+
+  it('exposes entities, membership, first query matches, and clear', () => {
+    const world = createWorld<TestEntity>()
+    const plain = world.add({ transform: createTransform() })
+    const banana = world.add({ collectible: { value: 1 } })
+
+    expect([...world.entities]).toEqual([plain, banana])
+    expect(world.has(plain)).toBe(true)
+    expect(world.with('collectible').first).toBe(banana)
+
+    world.clear()
+    expect([...world.entities]).toEqual([])
+    expect(world.has(plain)).toBe(false)
+    expect(world.with('collectible').first).toBeUndefined()
+  })
+
+  it('forwards query add and remove subscriptions', () => {
+    const world = createWorld<TestEntity>()
+    const query = world.with('collectible')
+    const added: TestEntity[] = []
+    const removed: TestEntity[] = []
+    const offAdd = query.onEntityAdded.subscribe((entity) => added.push(entity))
+    const offRemove = query.onEntityRemoved.subscribe((entity) => removed.push(entity))
+    const banana = world.add({ collectible: { value: 1 } })
+
+    world.remove(banana)
+    expect(added).toEqual([banana])
+    expect(removed).toEqual([banana])
+
+    offAdd()
+    offRemove()
+    world.add({ collectible: { value: 2 } })
+    expect(added).toHaveLength(1)
+  })
 })
 
 describe('createTransform', () => {

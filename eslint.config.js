@@ -40,6 +40,25 @@ export default tseslint.config(
     }
   },
   {
+    // Miniplex is an implementation detail of the engine-owned ECS facade.
+    files: ['packages/engine/src/**/*.ts'],
+    ignores: ['packages/engine/src/ecs/world.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['monkey-ball', 'monkey-ball/*', 'level-editor', 'level-editor/*', '@automata/editor'],
+            message: 'Engine must not import games or tools.'
+          },
+          {
+            group: ['miniplex'],
+            message: 'All ECS access must go through the engine facade.'
+          }
+        ]
+      }]
+    }
+  },
+  {
     // contracts is the dependency-free leaf; it must not depend on anything else in the repo.
     files: ['packages/contracts/**/*.ts'],
     rules: {

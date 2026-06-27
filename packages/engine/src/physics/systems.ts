@@ -1,7 +1,7 @@
-import type { Query, World } from 'miniplex'
 import type { EngineEntity } from '../ecs/components'
 import type { EventQueue } from '../ecs/events'
 import type { System } from '../ecs/scheduler'
+import type { World } from '../ecs/world'
 import type { PhysicsPort } from './port'
 
 type PhysicsEntity<E extends EngineEntity> = E & {
@@ -13,7 +13,7 @@ export function registerPhysicsBodies<E extends EngineEntity>(
   world: World<E>,
   port: PhysicsPort
 ): () => void {
-  const query = world.with('rigidBody', 'transform') as Query<PhysicsEntity<E>>
+  const query = world.with('rigidBody', 'transform')
   const add = (entity: PhysicsEntity<E>): void => {
     port.addBody(entity, entity.rigidBody, {
       position: entity.transform.position,
