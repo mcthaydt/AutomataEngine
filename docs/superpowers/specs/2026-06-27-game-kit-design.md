@@ -25,8 +25,9 @@ authoring.
   consume it and delete their copies.
 - Preserve every existing gate: `npm run ci`, `npm run coverage` (90% lines +
   branches), `npm run build`, `npm run e2e` stay green.
-- Lay out, but gate, two follow-on workflow improvements so the full direction
-  is visible without committing to execute it now.
+- Deliver two follow-on workflow improvements (auto coverage + `new-game`
+  scaffold, then testing primitives) as subsequent phased commits in the same
+  effort.
 
 ## Non-goals
 
@@ -110,7 +111,7 @@ Repoint imports (verified against current source) and delete the moved files:
 - The `gameplay.ts` fixed-loop shell (scene-guarded `fixedUpdate`, alpha-pin
   `render`): same reasoning.
 
-## Phase 2 — authoring workflow (planned, gated)
+## Phase 2 — authoring workflow
 
 Make the *next* game cheap to stand up:
 
@@ -126,13 +127,14 @@ Make the *next* game cheap to stand up:
   `package.json` scripts, coverage, and `playwright.config.ts` web server,
   removing the "forgot to wire it in" failure mode.
 
-## Phase 3 — testing primitives (planned, gated)
+## Phase 3 — testing primitives
 
 A `@automata/game-kit/testing` entry with generic helpers: an input `stick(v)`
 stub and a Null renderer/audio runtime bundle. **Limitation:** a full
 `playingCtx` cannot be fully generic — it references each game's `Entity`/store —
 so the per-game ctx builder stays, merely built on these primitives. Scope is
-therefore modest; this phase is the most speculative and stays gated.
+therefore modest: generic primitives only, with each game's ctx builder rebuilt
+on top.
 
 ## Verification
 
@@ -155,6 +157,8 @@ Each phase is one independently shippable commit, validated by:
 
 ## Rollout
 
-1. Phase 1: create kit, migrate both games, delete dupes, wire coverage. Commit.
-2. Phase 2 (on approval): coverage glob + scaffold. Commit.
-3. Phase 3 (on approval): testing primitives. Commit.
+All three phases execute in this effort, each as its own commit behind the gates:
+
+1. Phase 1: create kit, migrate both games, delete dupes, wire coverage.
+2. Phase 2: coverage auto-glob + `new-game` scaffold.
+3. Phase 3: testing primitives, adopted by both games' tests.
