@@ -1,0 +1,201 @@
+/* PULSEBREAK — neon arena. Palette:
+   void #05070f · panel #0a1230 · cyan #27e0ff · magenta #ff2e88 · amber #ffb84a · violet #b14cff */
+
+:root {
+  --void: #05070f;
+  --cyan: #27e0ff;
+  --magenta: #ff2e88;
+  --amber: #ffb84a;
+  --ink: #cfe7ff;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #app {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #0a1330 0%, var(--void) 60%);
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+canvas { display: block; touch-action: none; }
+canvas:focus { outline: none; }
+
+/* ---- HUD -------------------------------------------------------------- */
+.hud {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 2;
+}
+.hud-health {
+  position: relative;
+  flex: 0 0 220px;
+  max-width: 38vw;
+  height: 14px;
+  border: 1px solid rgba(39, 224, 255, 0.5);
+  border-radius: 7px;
+  background: rgba(39, 224, 255, 0.08);
+  box-shadow: 0 0 12px rgba(39, 224, 255, 0.25);
+  overflow: hidden;
+}
+.hud-health-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--magenta), var(--cyan));
+  transition: width 120ms linear;
+}
+.hud-wave { color: var(--cyan); text-shadow: 0 0 10px rgba(39, 224, 255, 0.7); }
+.hud-score { margin-left: auto; color: #fff; }
+.hud-best { color: var(--amber); text-shadow: 0 0 8px rgba(255, 184, 74, 0.6); }
+
+/* ---- Joystick --------------------------------------------------------- */
+.joystick {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+  left: 28px;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 1px solid rgba(39, 224, 255, 0.4);
+  background: radial-gradient(circle, rgba(39, 224, 255, 0.12), rgba(39, 224, 255, 0.02));
+  box-shadow: 0 0 24px rgba(39, 224, 255, 0.2), inset 0 0 18px rgba(39, 224, 255, 0.15);
+  touch-action: none;
+  z-index: 2;
+}
+.joystick.right { left: auto; right: 28px; }
+.joystick-nub {
+  position: absolute;
+  top: 37px;
+  left: 37px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cyan), #0b6c86);
+  box-shadow: 0 0 18px rgba(39, 224, 255, 0.8);
+}
+
+/* ---- Overlays --------------------------------------------------------- */
+#overlays { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+  pointer-events: auto;
+  background:
+    linear-gradient(rgba(5, 7, 15, 0.82), rgba(5, 7, 15, 0.92)),
+    repeating-linear-gradient(0deg, rgba(39, 224, 255, 0.05) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(39, 224, 255, 0.05) 0 1px, transparent 1px 3px);
+}
+
+.overlay h1 {
+  font-size: clamp(40px, 11vw, 88px);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 28px rgba(39, 224, 255, 0.8),
+    0 0 60px rgba(39, 224, 255, 0.5);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.overlay h2 {
+  font-size: clamp(24px, 6vw, 40px);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(39, 224, 255, 0.7);
+}
+.overlay p { max-width: 52ch; line-height: 1.6; letter-spacing: 0.06em; color: var(--ink); }
+.title-tagline { color: var(--magenta); letter-spacing: 0.4em; text-transform: uppercase; font-size: 13px; }
+.title-instructions { opacity: 0.85; }
+.title-best, .result-best { color: var(--amber); letter-spacing: 0.2em; }
+.result-score { font-size: 22px; letter-spacing: 0.24em; color: #fff; }
+.defeat h1 { text-shadow: 0 0 8px var(--magenta), 0 0 28px rgba(255, 46, 136, 0.8), 0 0 60px rgba(255, 46, 136, 0.5); }
+
+.overlay button {
+  min-width: 240px;
+  padding: 14px 22px;
+  border: 1px solid var(--cyan);
+  border-radius: 10px;
+  background: rgba(39, 224, 255, 0.08);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(39, 224, 255, 0.18);
+  transition: background 140ms ease, box-shadow 140ms ease, transform 80ms ease;
+}
+.overlay button:hover { background: rgba(39, 224, 255, 0.2); box-shadow: 0 0 28px rgba(39, 224, 255, 0.5); }
+.overlay button:active { transform: translateY(1px); }
+.overlay button:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+/* ---- Upgrade cards ---------------------------------------------------- */
+.upgrade-prompt { color: var(--magenta); letter-spacing: 0.24em; text-transform: uppercase; }
+.upgrade-choices { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+.upgrade-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 200px;
+  min-height: 120px;
+  padding: 18px;
+  border: 1px solid rgba(177, 76, 255, 0.6);
+  border-radius: 12px;
+  background: rgba(177, 76, 255, 0.08);
+  color: var(--ink);
+  font-family: var(--mono);
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(177, 76, 255, 0.2);
+  transition: background 140ms ease, box-shadow 140ms ease, transform 80ms ease;
+}
+.upgrade-choice:hover { background: rgba(177, 76, 255, 0.22); box-shadow: 0 0 30px rgba(177, 76, 255, 0.5); transform: translateY(-2px); }
+.upgrade-choice:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.upgrade-label { font-size: 18px; letter-spacing: 0.18em; text-transform: uppercase; color: #fff; }
+.upgrade-desc { font-size: 13px; opacity: 0.8; }
+
+.boot-error {
+  background: rgba(42, 14, 20, 0.95);
+  color: var(--magenta);
+  padding: 24px;
+  font-size: 16px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.78; }
+}
+
+@media (max-width: 640px) {
+  .hud { font-size: 12px; gap: 12px; letter-spacing: 0.12em; }
+  .hud-health { flex-basis: 130px; }
+  .overlay h1 { font-size: clamp(30px, 8.5vw, 52px); letter-spacing: 0.1em; }
+  .overlay button { min-width: 80vw; }
+  .upgrade-choices { flex-direction: column; align-items: center; }
+  .upgrade-choice { width: 80vw; min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay h1 { animation: none; }
+  .hud-health-fill, .overlay button, .upgrade-choice { transition: none; }
+}
