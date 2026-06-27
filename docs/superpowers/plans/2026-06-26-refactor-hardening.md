@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 62% (56/90 steps complete)
+**Overall Progress:** 71% (64/90 steps complete)
 
 ---
 
@@ -636,7 +636,7 @@ git commit -m "refactor(ecs): hide miniplex behind engine facade"
 - Modify: `tools/editor-mcp-server/tests/headlessHost.test.ts`
 - Modify: `eslint.config.js`
 
-- [ ] **Step 1: Add a failing headless-boundary lint rule**
+- [x] **Step 1: Add a failing headless-boundary lint rule**
 
 For `tools/editor-mcp-server/**/*.ts`, forbid root `@automata/engine`, root
 `@automata/editor`, and root `monkey-ball` imports with messages directing
@@ -647,7 +647,7 @@ Run: `npm run lint`
 Expected: FAIL at the three root imports in
 `tools/editor-mcp-server/src/headlessHost.ts` and nowhere else.
 
-- [ ] **Step 2: Split platform-neutral and browser engine exports**
+- [x] **Step 2: Split platform-neutral and browser engine exports**
 
 Create `packages/engine/src/browser.ts` re-exporting only
 `loop/browser`, `input/keyboard`, `input/joystick`, `render/browser`, and
@@ -656,7 +656,7 @@ Create `packages/engine/src/browser.ts` re-exporting only
 imports in Monkey Ball main/audio/editor registration and level-editor main to
 `@automata/engine/browser`; keep platform-neutral imports at the root.
 
-- [ ] **Step 3: Add narrow data/editor entry points**
+- [x] **Step 3: Add narrow data/editor entry points**
 
 `engine/data` exports only data kind/parser/loader/archetype APIs.
 `editor/headless` exports model types, `GameDefinition`, validation, and
@@ -668,7 +668,7 @@ from `@automata/editor/headless`. Change `headlessPlay.ts` to import
 `HeadlessOpts`, `PlayObservation`, and `TestPlayResult` directly from
 `@automata/contracts`.
 
-- [ ] **Step 4: Add a headless Monkey Ball definition**
+- [x] **Step 4: Add a headless Monkey Ball definition**
 
 Make `PlayDefinition.createGameplay` optional. In `EditorCore.enterPlay`, require
 `definition.play?.createGameplay` and keep the existing descriptive error when
@@ -681,7 +681,7 @@ live `createGameplay`. Refactor the browser `registration.ts` to compose that
 base with `createKeyboardInput` and live gameplay. Export the headless factory
 and required data kinds from `games/monkey-ball/src/headless.ts`.
 
-- [ ] **Step 5: Add export maps and direct dependencies**
+- [x] **Step 5: Add export maps and direct dependencies**
 
 Add subpath exports such as:
 
@@ -698,20 +698,20 @@ Add `"./headless": "./src/headless.ts"` to Monkey Ball and declare
 engine/editor/monkey-ball dependencies because it still imports each through a
 narrow subpath.
 
-- [ ] **Step 6: Migrate and test the MCP headless graph**
+- [x] **Step 6: Migrate and test the MCP headless graph**
 
 Use `@automata/engine/data`, `@automata/editor/headless`, and
 `monkey-ball/headless` in `headlessHost.ts`. Extend its Node-environment test to
 import the headless subpath, create the definition, list tools, and run
 headless play without defining `window`, `document`, or `localStorage`.
 
-- [ ] **Step 7: Verify package boundaries**
+- [x] **Step 7: Verify package boundaries**
 
 Run: `npm run lint && npm run typecheck && npx vitest run packages/editor/tests/host.test.ts tools/editor-mcp-server/tests games/monkey-ball/tests/level/headlessPlay.test.ts`
 
 Expected: lint, typecheck, and selected tests PASS.
 
-- [ ] **Step 8: Commit Task 7**
+- [x] **Step 8: Commit Task 7**
 
 ```bash
 git add packages/engine/src/browser.ts packages/engine/src/data.ts packages/engine/src/index.ts packages/engine/package.json packages/editor/src/headless.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/tests/host.test.ts packages/editor/package.json games/monkey-ball/src/headless.ts games/monkey-ball/src/editor/headlessRegistration.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/src/main.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/package.json games/monkey-ball/src/level/headlessPlay.ts tools/level-editor/src/main.ts tools/editor-mcp-server/src/headlessHost.ts tools/editor-mcp-server/package.json tools/editor-mcp-server/tests/headlessHost.test.ts eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md

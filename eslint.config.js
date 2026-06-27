@@ -28,6 +28,23 @@ export default tseslint.config(
     }
   },
   {
+    // Headless MCP code must use narrow package entry points only.
+    files: ['tools/editor-mcp-server/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: '@automata/engine', message: 'Use @automata/engine/data in the headless MCP graph.' },
+          { name: '@automata/editor', message: 'Use @automata/editor/headless in the headless MCP graph.' },
+          { name: 'monkey-ball', message: 'Use monkey-ball/headless in the headless MCP graph.' }
+        ],
+        patterns: [{
+          group: ['three', 'three/*', '@dimforge/*', 'miniplex', 'smol-toml', 'yaml', 'zod'],
+          message: 'Import the engine-wrapped API from @automata/engine instead.'
+        }]
+      }]
+    }
+  },
+  {
     // Engine must never depend on games or tools.
     files: ['packages/engine/**/*.ts'],
     rules: {

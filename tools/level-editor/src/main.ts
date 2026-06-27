@@ -1,7 +1,8 @@
 import {
-  GameLoop, attachCanvasRenderer, createCleanupStack, createLoader, createRapierPhysics, createThreeRenderer,
-  fetchTextViaFetch, localStorageAdapter, startLoopDriver
+  GameLoop, createCleanupStack, createLoader, createRapierPhysics, createThreeRenderer,
+  fetchTextViaFetch, localStorageAdapter
 } from '@automata/engine'
+import { attachCanvasRenderer, startLoopDriver } from '@automata/engine/browser'
 import {
   attachFlyControls, createEditor, importDoc, installAutosave, loadAutosave, paintMap, renderEditorChrome,
   screenToWorldXZ, type ScreenSize

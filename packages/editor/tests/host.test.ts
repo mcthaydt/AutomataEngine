@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import { createEditor } from '../src/host'
-import { boxItem, renderDefinition, type FakeDoc } from './fixtures/fakeDefinition'
+import type { GameDefinition } from '../src/model/gameDefinition'
+import { boxItem, markerItem, renderDefinition, type FakeDoc } from './fixtures/fakeDefinition'
 
 const nullPhysics = (): PhysicsPort => ({
   addBody() {},
@@ -79,6 +80,30 @@ describe('createEditor core', () => {
     editor.tick(0)
     const addsAfter = render.calls.filter((call) => call.op === 'add').length
     expect(addsAfter).toBeGreaterThan(addsBefore)
+    editor.dispose()
+  })
+
+  it('rejects live play when a definition supports headless play only', () => {
+    const definition = {
+      ...renderDefinition,
+      play: {
+        runHeadlessPlay: async () => ({
+          outcome: 'incomplete' as const,
+          timeMs: 0,
+          fallCount: 0,
+          bananas: 0,
+          steps: 0
+        })
+      }
+    } as unknown as GameDefinition<FakeDoc>
+    const editor = createEditor({
+      definition,
+      render: createNullRenderer().port,
+      physics: nullPhysics()
+    })
+    editor.store.dispatch({ type: 'command', command: { type: 'addItem', item: markerItem('start') } })
+
+    expect(() => editor.enterPlay()).toThrow('this definition has no play support')
     editor.dispose()
   })
 })

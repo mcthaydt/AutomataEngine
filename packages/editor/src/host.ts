@@ -99,7 +99,7 @@ export function createEditor<Doc>(opts: EditorCoreOpts<Doc>): EditorCore<Doc> {
     },
     enterPlay() {
       if (play) return
-      if (!definition.play) throw new Error('this definition has no play support')
+      if (!definition.play?.createGameplay) throw new Error('this definition has no play support')
 
       const validation = validateDoc(definition, store.getState().document.doc)
       if (!validation.exportable) throw new Error(`invalid document: ${validation.issues.join('; ')}`)

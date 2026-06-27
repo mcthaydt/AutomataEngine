@@ -1,4 +1,5 @@
-import { createNullAudio, createWebAudio, type AudioPort } from '@automata/engine'
+import { createNullAudio, type AudioPort } from '@automata/engine'
+import { createWebAudio } from '@automata/engine/browser'
 
 export interface BrowserAudio {
   audio: AudioPort

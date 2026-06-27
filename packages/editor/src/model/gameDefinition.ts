@@ -30,7 +30,7 @@ export interface PlayHandle {
 
 /** Optional test-play members; present from M13 onward. */
 export interface PlayDefinition<Doc> {
-  createGameplay(doc: Doc, render: RenderPort, physics: PhysicsPort): PlayHandle
+  createGameplay?(doc: Doc, render: RenderPort, physics: PhysicsPort): PlayHandle
   runHeadlessPlay(doc: Doc, opts: HeadlessOpts): Promise<TestPlayResult>
 }
 

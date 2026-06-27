@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseData } from '@automata/engine'
-import { createEditorToolHost, type EditorToolHost, type GameDefinition } from '@automata/editor'
+import { parseData } from '@automata/engine/data'
+import { createEditorToolHost, type EditorToolHost, type GameDefinition } from '@automata/editor/headless'
 import {
   archetypeLibraryKind,
-  createMonkeyBallDefinition,
+  createHeadlessMonkeyBallDefinition,
   physicsTuningKind,
   toPhysicsTuning,
   type Level
-} from 'monkey-ball'
+} from 'monkey-ball/headless'
 
 /** src → up three → repo root → monkey-ball's shipped data. */
 const DEFAULT_DATA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../../games/monkey-ball/public/data')
@@ -32,7 +32,7 @@ export async function createHeadlessHost(opts: HeadlessHostOptions = {}): Promis
 
   const lib = parseData(archetypeLibraryKind, read('archetypes/standard.yaml'), 'standard.yaml')
   const tuning = toPhysicsTuning(parseData(physicsTuningKind, read('config/physics.toml'), 'physics.toml'))
-  const definition = createMonkeyBallDefinition(lib, tuning)
+  const definition = createHeadlessMonkeyBallDefinition(lib, tuning)
 
   const initialDoc = opts.levelJson
     ? definition.scene.parse(JSON.parse(opts.levelJson))

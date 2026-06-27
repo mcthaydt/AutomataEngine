@@ -3,8 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "@automata/engine": "*", "@automata/editor": "*" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./headless": "./src/headless.ts"
+  },
+  "dependencies": {
+    "@automata/contracts": "*",
+    "@automata/engine": "*",
+    "@automata/editor": "*"
+  },
   "devDependencies": { "@automata/agent-core": "*" },
   "scripts": {
     "dev": "vite",

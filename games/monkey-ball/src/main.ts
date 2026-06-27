@@ -1,21 +1,20 @@
 import {
   GameLoop,
-  attachCanvasRenderer,
-  createKeyboardInput,
   createCleanupStack,
   createLoader,
   createRapierPhysics,
   createSceneManager,
   createThreeRenderer,
-  createVirtualJoystick,
   fetchTextViaFetch,
   localStorageAdapter,
-  startLoopDriver,
   subscribeSelector,
   type CleanupStack,
   type InputSource,
   type Scene
 } from '@automata/engine'
+import {
+  attachCanvasRenderer, createKeyboardInput, createVirtualJoystick, startLoopDriver
+} from '@automata/engine/browser'
 import './style.css'
 import { createBrowserAudio } from './audio/browserAudio'
 import { registerSounds } from './audio/sounds'

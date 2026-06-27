@@ -1,7 +1,8 @@
-import { parseData, type Vec3 } from '@automata/engine'
+import { parseData } from '@automata/engine/data'
+import type { Vec3 } from '@automata/contracts'
 import {
   CommandError, type Field, type SceneItem, type SceneModel, type Surface
-} from '@automata/editor'
+} from '@automata/editor/headless'
 import { entityUid, geometryUid, levelKind, type Level } from '../data/level'
 
 type Geometry = Level['geometry'][number]

@@ -7,7 +7,7 @@ import {
   type Vec3,
   type World
 } from '@automata/engine'
-import type { HeadlessOpts, PlayObservation, TestPlayResult } from '@automata/editor'
+import type { HeadlessOpts, PlayObservation, TestPlayResult } from '@automata/contracts'
 import type { PhysicsTuning } from '../data/config'
 import type { Level } from '../data/level'
 import type { Entity } from '../entity'

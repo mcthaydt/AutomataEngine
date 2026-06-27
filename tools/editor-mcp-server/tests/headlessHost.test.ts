@@ -37,4 +37,19 @@ describe('headless MCP host', () => {
     expect(res.ok).toBe(true)
     expect(res.content).toMatchObject({ outcome: expect.any(String), steps: expect.any(Number) })
   }, 20000)
+
+  it('loads the narrow headless package graph without browser globals', async () => {
+    const headless = await import('monkey-ball/headless')
+    expect('window' in globalThis).toBe(false)
+    expect('document' in globalThis).toBe(false)
+    expect('localStorage' in globalThis).toBe(false)
+    expect(headless.createHeadlessMonkeyBallDefinition).toBeTypeOf('function')
+
+    const { host, definition } = await createHeadlessHost()
+    expect(host.listTools()).not.toHaveLength(0)
+    await expect(definition.play!.runHeadlessPlay(host.doc, { maxSteps: 1 })).resolves.toMatchObject({
+      outcome: expect.any(String),
+      steps: expect.any(Number)
+    })
+  }, 20000)
 })
