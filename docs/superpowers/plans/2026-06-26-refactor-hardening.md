@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 44% (40/90 steps complete)
+**Overall Progress:** 54% (49/90 steps complete)
 
 ---
 
@@ -462,7 +462,7 @@ git commit -m "refactor(render): reuse geometry and mesh resources"
 - Modify: `games/monkey-ball/src/editor/registration.ts`
 - Create: `games/monkey-ball/tests/editor/worldSync.test.ts`
 
-- [ ] **Step 1: Add failing generic world-sync tests**
+- [x] **Step 1: Add failing generic world-sync tests**
 
 Create a local fake-definition value with a `syncWorld` spy and pass it through
 the existing `GameDefinition` parameter (structural typing permits the extra
@@ -472,13 +472,13 @@ previousDoc, nextDoc)` without another `buildWorld` call. Also call `syncNow()`
 again with the identical document reference and assert neither sync nor rebuild
 runs; selection highlighting still updates.
 
-- [ ] **Step 2: Run generic world-sync tests and verify RED**
+- [x] **Step 2: Run generic world-sync tests and verify RED**
 
 Run: `npx vitest run packages/editor/tests/viewport3d/worldSync.test.ts`
 
 Expected: FAIL because `GameDefinition.syncWorld` and previous-document tracking do not exist.
 
-- [ ] **Step 3: Add the optional sync hook and use it**
+- [x] **Step 3: Add the optional sync hook and use it**
 
 Add:
 
@@ -492,21 +492,21 @@ present and rebuild only when it is absent. Always update the stored document
 after a successful sync/rebuild and reapply highlighting. A throwing hook is
 allowed to propagate.
 
-- [ ] **Step 4: Add failing Monkey Ball identity tests**
+- [x] **Step 4: Add failing Monkey Ball identity tests**
 
 Build an editor world, capture entities by `editorId`, then apply a metadata edit and a one-item move. Assert metadata preserves every entity object; moving one geometry replaces exactly that ID while every other entity retains object identity. Assert render/physics registration receives one remove/add pair.
 
-- [ ] **Step 5: Run Monkey Ball sync tests and verify RED**
+- [x] **Step 5: Run Monkey Ball sync tests and verify RED**
 
 Run: `npx vitest run games/monkey-ball/tests/editor/worldSync.test.ts`
 
 Expected: FAIL because Monkey Ball has no incremental hook or seed map.
 
-- [ ] **Step 6: Extract stable-ID entity seeds**
+- [x] **Step 6: Extract stable-ID entity seeds**
 
 Refactor `buildWorld.ts` to expose a game-internal `levelEntitySeeds(level, lib, { editorIds: true })`. Keep `populateLevelWorld` as a loop over those seeds and retain its returned ball reference.
 
-- [ ] **Step 7: Implement Monkey Ball incremental synchronization**
+- [x] **Step 7: Implement Monkey Ball incremental synchronization**
 
 Build old/new maps keyed by `editorId`. Because both maps come from the same
 plain-data seed constructor, compare a pair with
@@ -515,13 +515,13 @@ missing/changed live entities, then add added/changed seeds. Register this
 function as `GameDefinition.syncWorld`. Metadata-only edits produce no world
 mutations.
 
-- [ ] **Step 8: Verify Task 5 green**
+- [x] **Step 8: Verify Task 5 green**
 
 Run: `npx vitest run packages/editor/tests/viewport3d games/monkey-ball/tests/editor games/monkey-ball/tests/level/buildWorld.test.ts`
 
 Expected: all selected tests PASS.
 
-- [ ] **Step 9: Commit Task 5**
+- [x] **Step 9: Commit Task 5**
 
 ```bash
 git add packages/editor/src/model/gameDefinition.ts packages/editor/src/viewport3d/worldSync.ts packages/editor/tests/viewport3d/worldSync.test.ts packages/editor/tests/fixtures/fakeDefinition.ts games/monkey-ball/src/level/buildWorld.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/editor/worldSync.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md

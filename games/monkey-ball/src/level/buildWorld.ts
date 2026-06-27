@@ -16,6 +16,12 @@ export interface PopulateLevelWorldOptions {
 const editorId = (opts: PopulateLevelWorldOptions, id: string): string | undefined =>
   opts.editorIds ? id : undefined
 
+const archetypeSeed = (
+  lib: ArchetypeLibrary,
+  name: string,
+  overrides: Record<string, unknown>
+): Entity => spawnFromArchetype<Entity>({ add: (entity) => entity }, lib, name, overrides)
+
 function geometryRigidBody(g: Geometry): RigidBodyDef {
   if (g.shape === 'box') {
     return {
@@ -41,36 +47,85 @@ function rotationOf(g: Geometry) {
   return g.rot ? quat.fromEuler(g.rot[0] * DEG, g.rot[1] * DEG, g.rot[2] * DEG) : quat.identity()
 }
 
-/** Adds a level's geometry, ball, goal, and entities into an existing world. */
-export function populateLevelWorld(
-  world: World<Entity>,
+/** Build deterministic, world-independent entity data keyed by editor IDs when requested. */
+export function levelEntitySeeds(
   level: Level,
   lib: ArchetypeLibrary,
   opts: PopulateLevelWorldOptions = {}
-): { ball: Entity } {
+): Entity[] {
+  const seeds: Entity[] = []
   for (const [index, g] of level.geometry.entries()) {
-    world.add({
+    seeds.push({
       editorId: editorId(opts, geometryUid(g, index)),
       transform: createTransform({ x: g.pos[0], y: g.pos[1], z: g.pos[2] }, rotationOf(g)),
       rigidBody: geometryRigidBody(g),
       renderable: geometryRenderable(g)
     })
   }
-  const ball = spawnFromArchetype<Entity>(world, lib, 'ball', {
+  seeds.push(archetypeSeed(lib, 'ball', {
     editorId: editorId(opts, 'marker:spawn'),
     transform: createTransform({ x: level.spawn[0], y: level.spawn[1], z: level.spawn[2] })
-  })
-  spawnFromArchetype<Entity>(world, lib, 'goal', {
+  }))
+  seeds.push(archetypeSeed(lib, 'goal', {
     editorId: editorId(opts, 'marker:goal'),
     transform: createTransform({ x: level.goal.pos[0], y: level.goal.pos[1], z: level.goal.pos[2] })
-  })
+  }))
   for (const [index, e] of level.entities.entries()) {
-    spawnFromArchetype<Entity>(world, lib, e.archetype, {
+    seeds.push(archetypeSeed(lib, e.archetype, {
       editorId: editorId(opts, entityUid(e, index)),
       transform: createTransform({ x: e.pos[0], y: e.pos[1], z: e.pos[2] }),
       ...(e.overrides ?? {})
-    })
+    }))
   }
+  return seeds
+}
+
+/** Reconcile an editor-built world by stable document item identity. */
+export function syncLevelWorld(
+  world: World<Entity>,
+  previous: Level,
+  next: Level,
+  lib: ArchetypeLibrary
+): void {
+  const seedMap = (level: Level): Map<string, Entity> => new Map(
+    levelEntitySeeds(level, lib, { editorIds: true }).map((seed) => [seed.editorId!, seed])
+  )
+  const previousSeeds = seedMap(previous)
+  const nextSeeds = seedMap(next)
+  const liveById = new Map([...world.with('editorId')].map((entity) => [entity.editorId, entity]))
+  const changed = new Set<string>()
+
+  for (const [id, previousSeed] of previousSeeds) {
+    const nextSeed = nextSeeds.get(id)
+    if (!nextSeed || JSON.stringify(previousSeed) !== JSON.stringify(nextSeed)) changed.add(id)
+  }
+  for (const id of nextSeeds.keys()) {
+    if (!previousSeeds.has(id)) changed.add(id)
+  }
+
+  for (const id of changed) {
+    const live = liveById.get(id)
+    if (live) world.remove(live)
+  }
+  for (const id of changed) {
+    const seed = nextSeeds.get(id)
+    if (seed) world.add(seed)
+  }
+}
+
+/** Adds a level's deterministic seeds into an existing world. */
+export function populateLevelWorld(
+  world: World<Entity>,
+  level: Level,
+  lib: ArchetypeLibrary,
+  opts: PopulateLevelWorldOptions = {}
+): { ball: Entity } {
+  let ball: Entity | undefined
+  for (const seed of levelEntitySeeds(level, lib, opts)) {
+    const entity = world.add(seed)
+    if (entity.ball) ball = entity
+  }
+  if (!ball) throw new Error('ball archetype did not produce a ball entity')
   return { ball }
 }
 

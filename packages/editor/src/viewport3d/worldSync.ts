@@ -23,6 +23,7 @@ export function createWorldSync<Doc>(
 ): WorldSync {
   const stage = render.createGroup()
   let world: World<EditorEntity> | null = null
+  let worldDoc: Doc | undefined
   let offRender: (() => void) | null = null
   const renderStep = renderSystem<{ world: World<EngineEntity>; alpha: number }>(render)
 
@@ -35,9 +36,9 @@ export function createWorldSync<Doc>(
     world = null
   }
 
-  function rebuild(): void {
+  function rebuild(doc: Doc): void {
     teardown()
-    world = definition.buildWorld(store.getState().document.doc, render, physics) as World<EditorEntity>
+    world = definition.buildWorld(doc, render, physics) as World<EditorEntity>
     offRender = registerRenderables(world, render, stage)
   }
 
@@ -51,7 +52,18 @@ export function createWorldSync<Doc>(
 
   return {
     syncNow() {
-      rebuild()
+      const nextDoc = store.getState().document.doc
+      if (!world) {
+        rebuild(nextDoc)
+        worldDoc = nextDoc
+      } else if (nextDoc !== worldDoc) {
+        if (definition.syncWorld) {
+          definition.syncWorld(world as World<object>, worldDoc!, nextDoc)
+        } else {
+          rebuild(nextDoc)
+        }
+        worldDoc = nextDoc
+      }
       applyHighlight()
     },
     applyHighlight,

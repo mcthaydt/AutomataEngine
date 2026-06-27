@@ -41,6 +41,8 @@ export interface GameDefinition<Doc> {
   /** What the "change surface" tool cycles through. */
   surfacePalette: Surface[]
   buildWorld(doc: Doc, render: RenderPort, physics: PhysicsPort): World<object>
+  /** Incrementally reconcile an already-built editor world when supported. */
+  syncWorld?(world: World<object>, previous: Doc, next: Doc): void
   /** Maps a Surface to how it paints; throws on unsupported kinds. */
   resolveSurface(s: Surface): { color: string }
   /** Test-play; added in M13. The play controller requires this. */

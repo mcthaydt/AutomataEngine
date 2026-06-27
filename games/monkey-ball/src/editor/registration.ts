@@ -4,14 +4,15 @@ import {
   registerPhysicsBodies,
   type ArchetypeLibrary,
   type PhysicsPort,
-  type RenderPort
+  type RenderPort,
+  type World
 } from '@automata/engine'
 import type { GameDefinition, Surface } from '@automata/editor'
 import type { PhysicsTuning } from '../data/config'
 import type { Level } from '../data/level'
 import type { Entity } from '../entity'
 import { createGameplay } from '../game/gameplay'
-import { populateLevelWorld } from '../level/buildWorld'
+import { populateLevelWorld, syncLevelWorld } from '../level/buildWorld'
 import { runHeadlessPlay } from '../level/headlessPlay'
 import { createGameStore } from '../state/root'
 import { levelSceneModel } from './sceneModel'
@@ -57,6 +58,9 @@ export function createMonkeyBallDefinition(
       populateLevelWorld(world, level, lib, { editorIds: true })
       void render
       return world
+    },
+    syncWorld(world, previous, next) {
+      syncLevelWorld(world as World<Entity>, previous, next, lib)
     },
     resolveSurface(surface) {
       if (surface.kind === 'color') return { color: surface.value }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import { createEditorStore } from '../../src/state/store'
 import { createWorldSync } from '../../src/viewport3d/worldSync'
@@ -18,6 +18,36 @@ const nullPhysics = (): PhysicsPort => ({
 }) as PhysicsPort
 
 describe('worldSync', () => {
+  it('uses an incremental hook only for changed document references', () => {
+    const buildWorld = vi.fn(renderDefinition.buildWorld)
+    const syncWorld = vi.fn()
+    const definition = { ...renderDefinition, buildWorld, syncWorld }
+    const store = createEditorStore<FakeDoc>(definition)
+    const render = createNullRenderer()
+    const sync = createWorldSync(definition, store, render.port, nullPhysics())
+    store.dispatch({ type: 'command', command: { type: 'addItem', item: boxItem('a') } })
+    const previousDoc = store.getState().document.doc
+    sync.syncNow()
+
+    store.dispatch({
+      type: 'command',
+      command: { type: 'setMetadata', path: 'title', value: 'renamed' }
+    })
+    const nextDoc = store.getState().document.doc
+    sync.syncNow()
+
+    expect(buildWorld).toHaveBeenCalledTimes(1)
+    expect(syncWorld).toHaveBeenCalledWith(expect.anything(), previousDoc, nextDoc)
+
+    const highlightsBefore = render.calls.filter((call) => call.op === 'setHighlight').length
+    store.dispatch({ type: 'select', ids: ['a'] })
+    sync.syncNow()
+    expect(buildWorld).toHaveBeenCalledTimes(1)
+    expect(syncWorld).toHaveBeenCalledTimes(1)
+    expect(render.calls.filter((call) => call.op === 'setHighlight').length).toBeGreaterThan(highlightsBefore)
+    sync.dispose()
+  })
+
   it('adds a render object per item and highlights the selection', () => {
     const store = createEditorStore<FakeDoc>(renderDefinition)
     const render = createNullRenderer()
