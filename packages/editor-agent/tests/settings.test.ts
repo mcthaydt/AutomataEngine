@@ -4,7 +4,7 @@ import {
   defaultAgentSettings,
   loadAgentSettings,
   saveAgentSettings
-} from '../../src/agent/settings'
+} from '../src/settings'
 
 function memoryStorage(): Storage {
   const map = new Map<string, string>()

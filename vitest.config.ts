@@ -8,6 +8,7 @@ export default defineConfig({
       include: [
         'packages/engine/src/**',
         'packages/editor/src/**',
+        'packages/editor-agent/src/**',
         'packages/contracts/src/**',
         'packages/agent-core/src/**'
       ],

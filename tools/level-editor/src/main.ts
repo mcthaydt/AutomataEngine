@@ -3,10 +3,12 @@ import {
   fetchTextViaFetch, localStorageAdapter
 } from '@automata/engine'
 import { attachCanvasRenderer, startLoopDriver } from '@automata/engine/browser'
+import { createEditor, importDoc, installAutosave, loadAutosave } from '@automata/editor'
+import { createAgentPanelMount } from '@automata/editor-agent'
+import { renderEditorChrome } from '@automata/editor/ui'
 import {
-  attachFlyControls, createEditor, importDoc, installAutosave, loadAutosave, paintMap, renderEditorChrome,
-  screenToWorldXZ, type ScreenSize
-} from '@automata/editor'
+  attachFlyControls, paintMap, screenToWorldXZ, type ScreenSize
+} from '@automata/editor/viewport'
 import { createMonkeyBallDefinition, loadBootData, type Level } from 'monkey-ball'
 
 function bootError(error: unknown): HTMLElement {
@@ -57,7 +59,12 @@ async function main(): Promise<void> {
     })
     cleanup.defer(stopAutosave)
 
-    const chrome = renderEditorChrome<Level>(editor, app, { '2d': canvas2d, '3d': canvas3d })
+    const chrome = renderEditorChrome<Level>(
+      editor,
+      app,
+      { '2d': canvas2d, '3d': canvas3d },
+      { mountAgentPanel: createAgentPanelMount<Level>() }
+    )
     cleanup.defer(() => chrome.dispose())
     const fileInput = document.createElement('input')
     fileInput.type = 'file'

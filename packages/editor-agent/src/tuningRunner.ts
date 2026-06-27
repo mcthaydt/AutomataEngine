@@ -7,9 +7,8 @@ import {
   type ProviderAdapter
 } from '@automata/agent-core'
 import type { SceneCommand } from '@automata/contracts'
-import type { EditorCore } from '../host'
-import { validateDoc } from '../io/validation'
-import { createEditorToolHost } from './editorToolHost'
+import type { EditorCore } from '@automata/editor'
+import { createEditorToolHost, validateDoc } from '@automata/editor/headless'
 
 const TUNING_SYSTEM =
   'You tune a game level for solvability. Use the tools to make small layout/tuning edits that ' +

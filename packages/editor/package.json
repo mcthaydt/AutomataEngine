@@ -5,9 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./headless": "./src/headless.ts"
+    "./headless": "./src/headless.ts",
+    "./ui": "./src/ui/index.ts",
+    "./viewport": "./src/viewport.ts"
   },
   "types": "./src/index.ts",
   "scripts": { "typecheck": "tsc --noEmit" },
-  "dependencies": { "@automata/engine": "*", "@automata/contracts": "*", "@automata/agent-core": "*" }
+  "dependencies": { "@automata/engine": "*", "@automata/contracts": "*" }
 }

@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import type { AgentRunOptions, AgentRunResult, ProviderAdapter } from '@automata/agent-core'
 import type { TestPlayResult } from '@automata/contracts'
-import { createEditor } from '../../src/host'
-import { runTuning } from '../../src/agent/tuningRunner'
-import { boxItem, markerItem, playableDefinition, type FakeDoc } from '../fixtures/fakeDefinition'
+import { createEditor } from '@automata/editor'
+import { runTuning } from '../src/tuningRunner'
+import { boxItem, markerItem, playableDefinition, type FakeDoc } from './fixtures/fakeDefinition'
 
 const nullPhysics = (): PhysicsPort =>
   ({

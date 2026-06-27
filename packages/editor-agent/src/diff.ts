@@ -1,5 +1,4 @@
-import type { GameDefinition } from '../model/gameDefinition'
-import type { SceneItem } from '../model/types'
+import type { GameDefinition, SceneItem } from '@automata/editor/headless'
 
 export interface ItemChange {
   id: string

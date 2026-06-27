@@ -5,7 +5,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     // Game, tools, and editor may only use third-party libs through @automata/engine.
-    files: ['games/**/*.ts', 'tools/**/*.ts', 'packages/editor/**/*.ts'],
+    files: ['games/**/*.ts', 'tools/**/*.ts', 'packages/editor/**/*.ts', 'packages/editor-agent/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [{
@@ -16,14 +16,20 @@ export default tseslint.config(
     }
   },
   {
-    // The generic editor core must not depend on any game.
+    // The generic editor core must not depend on any game or on the optional AI layer.
     files: ['packages/editor/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', {
-        patterns: [{
-          group: ['monkey-ball', 'monkey-ball/*'],
-          message: 'The editor core is generic; the game registers itself via GameDefinition.'
-        }]
+        patterns: [
+          {
+            group: ['monkey-ball', 'monkey-ball/*'],
+            message: 'The editor core is generic; the game registers itself via GameDefinition.'
+          },
+          {
+            group: ['@automata/agent-core', '@automata/agent-core/*'],
+            message: 'AI is optional; the agent layer lives in @automata/editor-agent, not the editor core.'
+          }
+        ]
       }]
     }
   },

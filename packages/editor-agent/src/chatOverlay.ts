@@ -1,12 +1,11 @@
 import { runAgent, type AgentRunResult, type ProviderAdapter, type ProviderId } from '@automata/agent-core'
 import type { SceneCommand } from '@automata/contracts'
-import { diffDocs } from '../agent/diff'
-import { createEditorToolHost, type EditorToolHost } from '../agent/editorToolHost'
-import { createProvider, loadAgentSettings, saveAgentSettings, type AgentSettings } from '../agent/settings'
-import { runTuning, type TuningRunResult } from '../agent/tuningRunner'
-import type { EditorCore } from '../host'
-import type { EditorState } from '../state/store'
-import type { PanelHandle } from './panel'
+import { createEditorToolHost, type EditorToolHost } from '@automata/editor/headless'
+import type { EditorCore, EditorState } from '@automata/editor'
+import type { PanelHandle } from '@automata/editor/ui'
+import { diffDocs } from './diff'
+import { createProvider, loadAgentSettings, saveAgentSettings, type AgentSettings } from './settings'
+import { runTuning, type TuningRunResult } from './tuningRunner'
 
 export const CHAT_SYSTEM_PROMPT =
   'You are a level-editing assistant. Use the provided tools to edit the level document. ' +

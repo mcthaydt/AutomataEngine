@@ -1,10 +1,10 @@
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import { describe, expect, it, vi } from 'vitest'
-import { createEditor } from '../../src/host'
-import { createEditorToolHost } from '../../src/agent/editorToolHost'
-import { defaultChatDeps, mountChatOverlay, type ChatOverlayDeps } from '../../src/ui/chatOverlay'
-import type { AgentSettings } from '../../src/agent/settings'
-import { boxItem, playableDefinition, type FakeDoc } from '../fixtures/fakeDefinition'
+import { createEditor } from '@automata/editor'
+import { createEditorToolHost } from '@automata/editor/headless'
+import { defaultChatDeps, mountChatOverlay, type ChatOverlayDeps } from '../src/chatOverlay'
+import type { AgentSettings } from '../src/settings'
+import { boxItem, playableDefinition, type FakeDoc } from './fixtures/fakeDefinition'
 
 const nullPhysics = (): PhysicsPort =>
   ({

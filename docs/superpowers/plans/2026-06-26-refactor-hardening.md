@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, Miniplex 2, Three.js 0.184, Rapier 0.19, npm workspaces, Vite 8.
 
-**Overall Progress:** 71% (64/90 steps complete)
+**Overall Progress:** 84% (76/90 steps complete)
 
 ---
 
@@ -752,7 +752,7 @@ git commit -m "refactor(packages): expose narrow headless entry points"
 - Produces (`@automata/editor/viewport`): `attachFlyControls`, `paintMap`, `screenToWorldXZ`, `worldToScreen`, `MapView`, `ScreenSize`, `DrawOp`, `buildDrawModel`, `hitTestMap`, `FlyCamera`, `initialFlyCamera`, `cameraView`, `buildRay`, `rayPlaneY`, `Aabb`, `itemAabb`, `pickItem`, `EDITOR_FOV_Y`.
 - Produces (`@automata/editor-agent`): `mountChatOverlay<Doc>(core, parent, deps?)`, `defaultChatDeps<Doc>(opts?)`, `CHAT_SYSTEM_PROMPT`, `createAgentPanelMount<Doc>(deps?): (core: EditorCore<Doc>, host: HTMLElement) => PanelHandle<Doc>`, plus re-exports `runTuning`, `TuningRunResult<Doc>`, `loadAgentSettings`, `saveAgentSettings`, `createProvider`, `AgentSettings`, `ChatOverlayDeps<Doc>`.
 
-- [ ] **Step 1: Replace the default-chat assertion with the agent-panel hook tests**
+- [x] **Step 1: Replace the default-chat assertion with the agent-panel hook tests**
 
 `packages/editor/tests/ui/chrome.test.ts` already exists: it mounts the full chrome with the shared `makeTestEditor()` harness (from `tests/fixtures/editorHarness.ts`, which already provides `nullPhysics`) and asserts the chat overlay mounts by default. After this task the overlay no longer lives in the editor, so replace **only** the second `it(...)` block (`'mounts the chat overlay panel in the chrome'`) with two hook-based cases. Leave the file's imports, its first test, and the `canvases()` helper unchanged:
 
@@ -786,13 +786,13 @@ git commit -m "refactor(packages): expose narrow headless entry points"
   })
 ```
 
-- [ ] **Step 2: Run the chrome test and verify RED**
+- [x] **Step 2: Run the chrome test and verify RED**
 
 Run: `npx vitest run packages/editor/tests/ui/chrome.test.ts`
 
 Expected: FAIL — vitest strips types and runs, but the unchanged 3-parameter `renderEditorChrome` still creates `.ed-chat-host` unconditionally and ignores the 4th argument, so the hook is never called (`seen` stays empty) and the no-hook case still finds `.ed-chat-host`. Both new cases fail.
 
-- [ ] **Step 3: Add the mountAgentPanel seam and stop importing the chat overlay**
+- [x] **Step 3: Add the mountAgentPanel seam and stop importing the chat overlay**
 
 In `packages/editor/src/ui/chrome.ts`, delete the chat-overlay import line `import { mountChatOverlay } from './chatOverlay'`. Add a panel-type import and an options interface:
 
@@ -838,7 +838,7 @@ Run: `npx vitest run packages/editor/tests/ui/chrome.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 4: Add the failing agent-core boundary and register the new package**
+- [x] **Step 4: Add the failing agent-core boundary and register the new package**
 
 In `eslint.config.js`, add `'packages/editor-agent/**/*.ts'` to the `files` array of the first block (the "third-party libs only through `@automata/engine`" block). Then replace the generic-editor block so it also forbids the AI layer:
 
@@ -867,7 +867,7 @@ Run: `npm run lint`
 
 Expected: FAIL at `packages/editor/src/agent/settings.ts`, `packages/editor/src/agent/tuningRunner.ts`, and `packages/editor/src/ui/chatOverlay.ts` (still importing `@automata/agent-core` before the move).
 
-- [ ] **Step 5: Scaffold the @automata/editor-agent package**
+- [x] **Step 5: Scaffold the @automata/editor-agent package**
 
 Create `packages/editor-agent/package.json`:
 
@@ -912,7 +912,7 @@ Create a temporary `packages/editor-agent/src/index.ts` containing `export {}` s
 
 Expected: npm links `@automata/editor-agent` with no errors.
 
-- [ ] **Step 6: Move the agent modules and rewrite their imports**
+- [x] **Step 6: Move the agent modules and rewrite their imports**
 
 ```bash
 git mv packages/editor/src/agent/settings.ts packages/editor-agent/src/settings.ts
@@ -951,7 +951,7 @@ import type { PanelHandle } from '@automata/editor/ui'
 
 The `runAgent`/provider imports from `@automata/agent-core` and `SceneCommand` from `@automata/contracts` stay. `editorToolHost.ts` remains at `packages/editor/src/agent/editorToolHost.ts` (exported via `@automata/editor/headless` from Task 7).
 
-- [ ] **Step 7: Write the editor-agent barrel and the panel-mount factory**
+- [x] **Step 7: Write the editor-agent barrel and the panel-mount factory**
 
 Replace `packages/editor-agent/src/index.ts`:
 
@@ -973,7 +973,7 @@ export function createAgentPanelMount<Doc>(
 }
 ```
 
-- [ ] **Step 8: Curate the editor surface and add the ./ui and ./viewport subpaths**
+- [x] **Step 8: Curate the editor surface and add the ./ui and ./viewport subpaths**
 
 Replace `packages/editor/src/index.ts` with the core-only barrel (agent, chrome/theme, and viewport exports removed):
 
@@ -1026,7 +1026,7 @@ In `packages/editor/package.json`, remove `"@automata/agent-core": "*"` from `de
 },
 ```
 
-- [ ] **Step 9: Move the agent tests and add the editor-agent fixture**
+- [x] **Step 9: Move the agent tests and add the editor-agent fixture**
 
 ```bash
 git mv packages/editor/tests/agent/settings.test.ts packages/editor-agent/tests/settings.test.ts
@@ -1052,7 +1052,7 @@ Repoint imports in each moved test (the tests' own inline `nullPhysics` helpers 
 - `tuningRunner.test.ts`: `import { runTuning } from '../../src/tuningRunner'`, `import { createEditor } from '@automata/editor'`, and `from './fixtures/fakeDefinition'`.
 - `chatOverlay.test.ts`: `import { defaultChatDeps, mountChatOverlay, type ChatOverlayDeps } from '../../src/chatOverlay'`, `import type { AgentSettings } from '../../src/settings'`, `import { createEditor } from '@automata/editor'`, `import { createEditorToolHost } from '@automata/editor/headless'`, and `from './fixtures/fakeDefinition'`.
 
-- [ ] **Step 10: Wire the optional panel into the editor app and include the package in coverage**
+- [x] **Step 10: Wire the optional panel into the editor app and include the package in coverage**
 
 In `tools/level-editor/src/main.ts`, split the editor imports across the new subpaths and add the agent factory:
 
@@ -1074,13 +1074,13 @@ Pass the hook when rendering chrome:
 
 Add `"@automata/editor-agent": "*"` to `tools/level-editor/package.json` dependencies. In `vitest.config.ts`, add `'packages/editor-agent/src/**'` to `coverage.include`. Then run `npm install`.
 
-- [ ] **Step 11: Verify Task 8 green**
+- [x] **Step 11: Verify Task 8 green**
 
 Run: `npm run lint && npm run typecheck && npx vitest run packages/editor packages/editor-agent tools/level-editor tools/editor-mcp-server`
 
 Expected: lint clean (no `@automata/agent-core` import under `packages/editor/`), all typechecks pass, and every selected suite PASSES.
 
-- [ ] **Step 12: Commit Task 8**
+- [x] **Step 12: Commit Task 8**
 
 ```bash
 git add packages/editor-agent packages/editor/src packages/editor/package.json packages/editor/tests eslint.config.js vitest.config.ts tools/level-editor/src/main.ts tools/level-editor/package.json package-lock.json docs/superpowers/plans/2026-06-26-refactor-hardening.md

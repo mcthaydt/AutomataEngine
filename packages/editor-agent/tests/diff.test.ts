@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { diffDocs } from '../../src/agent/diff'
-import { boxItem, fakeDefinition, type FakeDoc } from '../fixtures/fakeDefinition'
+import { diffDocs } from '../src/diff'
+import { boxItem, fakeDefinition, type FakeDoc } from './fixtures/fakeDefinition'
 
 describe('diffDocs', () => {
   it('classifies added, removed, and modified items', () => {
