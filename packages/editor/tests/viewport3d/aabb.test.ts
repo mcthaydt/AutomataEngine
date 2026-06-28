@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { itemAabb, pickItem, rayAabb } from '../../src/viewport3d/aabb'
+import { boundedAabb, itemAabb, pickBounded, pickItem, rayAabb } from '../../src/viewport3d/aabb'
 import { boxItem, cylinderItem, markerItem } from '../fixtures/fakeDefinition'
 
 describe('AABB + picking', () => {
@@ -36,5 +36,19 @@ describe('AABB + picking', () => {
     const aabb = itemAabb(markerItem('m'))
     expect(aabb.min.x).toBeCloseTo(-0.4)
     expect(aabb.max.x).toBeCloseTo(0.4)
+  })
+
+  it('builds bounds for the generic { id, position, bounds } shape and picks the nearest', () => {
+    expect(boundedAabb({ x: 1, y: 0, z: 0 }, { kind: 'box', half: { x: 0.5, y: 1, z: 2 } })).toEqual({
+      min: { x: 0.5, y: -1, z: -2 }, max: { x: 1.5, y: 1, z: 2 }
+    })
+    expect(boundedAabb({ x: 0, y: 0, z: 0 }, { kind: 'cylinder', radius: 2, halfHeight: 3 })).toEqual({
+      min: { x: -2, y: -3, z: -2 }, max: { x: 2, y: 3, z: 2 }
+    })
+    expect(boundedAabb({ x: 0, y: 0, z: 0 }, { kind: 'point', half: 0.4 }).min.x).toBeCloseTo(-0.4)
+
+    const near = { id: 'near', position: { x: 0, y: 0, z: 0 }, bounds: { kind: 'box', half: { x: 0.5, y: 0.5, z: 0.5 } } } as const
+    const far = { id: 'far', position: { x: 0, y: 0, z: -5 }, bounds: { kind: 'box', half: { x: 0.5, y: 0.5, z: 0.5 } } } as const
+    expect(pickBounded([far, near], { origin: { x: 0, y: 0, z: 10 }, dir: { x: 0, y: 0, z: -1 } })).toBe('near')
   })
 })

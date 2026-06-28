@@ -1,18 +1,11 @@
 import type { GameDefinition } from '../model/gameDefinition'
 import type { SceneItem } from '../model/types'
 import { worldToScreen, type MapView, type ScreenSize } from './projection'
+import type { DrawOp } from './projectDraw'
 
-export interface DrawOp {
-  id: string
-  shape: 'rect' | 'circle' | 'icon'
-  x: number
-  y: number
-  w?: number
-  h?: number
-  r?: number
-  color: string
-  selected: boolean
-}
+// The shared draw-op shape now lives with the generic project draw model; the
+// legacy painter and tests still import `DrawOp` from here.
+export type { DrawOp }
 
 export function buildDrawModel<Doc>(
   definition: GameDefinition<Doc>,

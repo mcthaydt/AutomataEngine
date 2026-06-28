@@ -1,4 +1,4 @@
-import type { DrawOp } from './draw'
+import type { DrawOp } from './projectDraw'
 
 /** Paints the pure draw model onto a 2D canvas. Untested shim, keep trivially thin. */
 export function paintMap(ctx: CanvasRenderingContext2D, ops: DrawOp[], size: { w: number; h: number }): void {
@@ -17,6 +17,8 @@ export function paintMap(ctx: CanvasRenderingContext2D, ops: DrawOp[], size: { w
     ctx.stroke()
   }
   for (const op of ops) {
+    // Gizmos (zones/points) paint translucent so they read as overlays, not geometry.
+    ctx.globalAlpha = op.gizmo ? 0.4 : 1
     ctx.fillStyle = op.color
     ctx.strokeStyle = op.selected ? '#fff' : '#000'
     if (op.shape === 'rect') {
@@ -29,4 +31,5 @@ export function paintMap(ctx: CanvasRenderingContext2D, ops: DrawOp[], size: { w
       ctx.stroke()
     }
   }
+  ctx.globalAlpha = 1
 }

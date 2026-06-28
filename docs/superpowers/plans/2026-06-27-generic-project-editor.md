@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 26% — 5 of 19 tasks complete (Tasks 1–5 ✓). (Updated 2026-06-28)
+**Progress:** 32% — 6 of 19 tasks complete (Tasks 1–6 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -647,7 +647,7 @@ git commit -m "feat(editor): add generic project session"
 - Modify: `packages/editor/src/index.ts`
 - Modify: `packages/editor/src/viewport.ts`
 
-- [ ] **Step 1: Write failing spatial projection tests**
+- [x] **Step 1: Write failing spatial projection tests**
 
 Build a fake scene with nested entities and assert:
 
@@ -657,7 +657,7 @@ Build a fake scene with nested entities and assert:
 - Moving a nested entity from a world target produces a `setProperty` command for its local `/position`.
 - Picking and 2D drawing use entity IDs, not component IDs.
 
-- [ ] **Step 2: Write failing host lifecycle tests**
+- [x] **Step 2: Write failing host lifecycle tests**
 
 Use NullRenderer/null physics and the fake registration. Assert edit render, selection highlight, prefab placement, move/delete, compile-before-dispose play entry, fixed/render forwarding, exit-play rebuild, and compiler/preview failure preserving edit mode/world.
 
@@ -669,21 +669,21 @@ editor.exitPlay()
 expect(editor.store.getState().mode).toBe('edit')
 ```
 
-- [ ] **Step 3: Run focused tests and observe red**
+- [x] **Step 3: Run focused tests and observe red**
 
 Run: `npx vitest run --project editor --testNamePattern="project spatial|project world sync|project editor host|project draw"`
 
 Expected: FAIL because the new project host/viewport modules do not exist.
 
-- [ ] **Step 4: Implement spatial projection and generic draw/hit models**
+- [x] **Step 4: Implement spatial projection and generic draw/hit models**
 
 Define a `SpatialItem` with entity ID, world transform, bounds shape, renderable definition, color, and gizmo flag. Resolve standard components through `resolveWorldTransform`; derive primitive sizes after world scale. Registration gizmos use the entity transform plus `core.zone` dimensions. `buildProjectDrawModel` and `hitTestProjectMap` accept `SpatialItem[]` directly and contain no game/registration branching. Move the shared `DrawOp` type to `projectDraw.ts` and repoint the thin canvas painter to it while leaving legacy draw output structurally compatible. Generalize `itemAabb`/`pickItem` to a minimal `{ id, position, bounds }` input so project picking does not depend on legacy `SceneItem`.
 
-- [ ] **Step 5: Implement project world sync**
+- [x] **Step 5: Implement project world sync**
 
 Create one render group and a world of `{ editorId, transform, renderable }`. Reconcile by stable entity ID: remove deleted/changed seeds, add changed/new seeds, then reapply highlight from project selection. Keep the current world if only selection changes. Use `registerRenderables` and `renderSystem` exactly as the legacy sync does.
 
-- [ ] **Step 6: Implement `createProjectEditor`**
+- [x] **Step 6: Implement `createProjectEditor`**
 
 Match the useful legacy `EditorCore` surface with project semantics:
 
@@ -709,13 +709,13 @@ export interface ProjectEditorCore {
 
 Placement creates a stable entity ID, clones prefab components, writes snapped `core.transform.position`, and dispatches one `addEntity`. Play validates and compiles the current snapshot, creates the next preview handle, then disposes edit sync; failure leaves edit sync live.
 
-- [ ] **Step 7: Run focused and full editor tests**
+- [x] **Step 7: Run focused and full editor tests**
 
 Run: `npx vitest run --project editor && npm run typecheck -w @automata/editor`
 
 Expected: all editor tests PASS, including legacy tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/editor/src/project packages/editor/src/viewport2d packages/editor/src/index.ts packages/editor/src/viewport.ts packages/editor/tests/project packages/editor/tests/viewport2d

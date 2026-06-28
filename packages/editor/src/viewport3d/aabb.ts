@@ -4,22 +4,39 @@ import type { Ray } from './ray'
 
 export interface Aabb { min: Vec3; max: Vec3 }
 
+/**
+ * A minimal, game-agnostic picking footprint. The generic project picker works
+ * purely from `{ id, position, bounds }`, so it never depends on the legacy
+ * `SceneItem`; the legacy helpers below adapt `SceneItem` onto the same path.
+ */
+export type Bounds =
+  | { kind: 'box'; half: Vec3 }
+  | { kind: 'cylinder'; radius: number; halfHeight: number }
+  | { kind: 'point'; half: number }
+
+export interface BoundedItem {
+  id: string
+  position: Vec3
+  bounds: Bounds
+}
+
 const MARKER_HALF = 0.4
 
-/** Axis-aligned bounds of an item. Rotation is ignored as a deliberate pick approximation. */
-export function itemAabb(item: SceneItem): Aabb {
-  const position = item.transform.position
-  let hx = MARKER_HALF
-  let hy = MARKER_HALF
-  let hz = MARKER_HALF
-  if (item.shape.type === 'box') {
-    hx = item.shape.size.x / 2
-    hy = item.shape.size.y / 2
-    hz = item.shape.size.z / 2
-  } else if (item.shape.type === 'cylinder') {
-    hx = item.shape.radius
-    hy = item.shape.height / 2
-    hz = item.shape.radius
+/** Axis-aligned bounds from a position + bounds shape (rotation deliberately ignored). */
+export function boundedAabb(position: Vec3, bounds: Bounds): Aabb {
+  let hx: number
+  let hy: number
+  let hz: number
+  switch (bounds.kind) {
+    case 'box':
+      hx = bounds.half.x; hy = bounds.half.y; hz = bounds.half.z
+      break
+    case 'cylinder':
+      hx = bounds.radius; hy = bounds.halfHeight; hz = bounds.radius
+      break
+    case 'point':
+      hx = bounds.half; hy = bounds.half; hz = bounds.half
+      break
   }
   return {
     min: { x: position.x - hx, y: position.y - hy, z: position.z - hz },
@@ -50,11 +67,32 @@ export function rayAabb(ray: Ray, box: Aabb): number | null {
   return tmax < 0 ? null : Math.max(tmin, 0)
 }
 
-export function pickItem(items: SceneItem[], ray: Ray): string | null {
+/** Pick the nearest bounded item under the ray by stable id. */
+export function pickBounded(items: readonly BoundedItem[], ray: Ray): string | null {
   let best: { id: string; t: number } | null = null
   for (const item of items) {
-    const t = rayAabb(ray, itemAabb(item))
+    const t = rayAabb(ray, boundedAabb(item.position, item.bounds))
     if (t !== null && (best === null || t < best.t)) best = { id: item.id, t }
   }
   return best?.id ?? null
+}
+
+/** Legacy `SceneItem` → bounds adapter so old and new picking share one path. */
+function sceneItemBounds(item: SceneItem): Bounds {
+  if (item.shape.type === 'box') {
+    return { kind: 'box', half: { x: item.shape.size.x / 2, y: item.shape.size.y / 2, z: item.shape.size.z / 2 } }
+  }
+  if (item.shape.type === 'cylinder') {
+    return { kind: 'cylinder', radius: item.shape.radius, halfHeight: item.shape.height / 2 }
+  }
+  return { kind: 'point', half: MARKER_HALF }
+}
+
+/** Axis-aligned bounds of a legacy item. Rotation is ignored as a pick approximation. */
+export function itemAabb(item: SceneItem): Aabb {
+  return boundedAabb(item.transform.position, sceneItemBounds(item))
+}
+
+export function pickItem(items: SceneItem[], ray: Ray): string | null {
+  return pickBounded(items.map((item) => ({ id: item.id, position: item.transform.position, bounds: sceneItemBounds(item) })), ray)
 }
