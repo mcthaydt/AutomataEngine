@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 37% — 7 of 19 tasks complete (Tasks 1–7 ✓). (Updated 2026-06-28)
+**Progress:** 42% — 8 of 19 tasks complete (Tasks 1–8 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -797,7 +797,7 @@ git commit -m "feat(editor): generate project property controls"
 - Modify: `packages/editor/src/ui/theme.css.ts`
 - Modify: `packages/editor/src/ui/index.ts`
 
-- [ ] **Step 1: Write failing panel tests**
+- [x] **Step 1: Write failing panel tests**
 
 Assert scene switching, nested hierarchy indentation, entity selection, cascading delete confirmation hook, resource type grouping, singleton resource disablement, prefab placement tool selection, add-component cardinality, validation issue focus, dirty/save states, undo/redo buttons, and play/stop status.
 
@@ -811,31 +811,31 @@ expect(root.textContent).not.toContain('Monkey Ball')
 expect(root.textContent).not.toContain('Pulsebreak')
 ```
 
-- [ ] **Step 2: Run focused tests and confirm red**
+- [x] **Step 2: Run focused tests and confirm red**
 
 Run: `npx vitest run --project editor --testNamePattern="project hierarchy|project resources|project palette|project validation panel|project chrome"`
 
 Expected: FAIL because the panels do not exist.
 
-- [ ] **Step 3: Implement hierarchy/resources/palette panels**
+- [x] **Step 3: Implement hierarchy/resources/palette panels**
 
 Hierarchy renders manifest scenes then a depth-first entity tree ordered by scene array order. Reparenting is exposed through explicit Move Up/Down/Into Parent actions rather than HTML drag-and-drop in v1. Resources render registered types and current documents. Palette renders registration prefabs plus an Add Component menu generated from component registrations/cardinality. Narrow `viewportRegion.ts` to a shared interface containing only project/legacy-compatible UI state and store dispatch so both chrome paths compile during migration.
 
-- [ ] **Step 4: Implement validation and toolbar**
+- [x] **Step 4: Implement validation and toolbar**
 
 Validation calls the shared layered validator, renders severity/code/message, and dispatches the issue's typed selection when clicked. Toolbar exposes project switch, Save, Export Bundle, Import Bundle, Undo, Redo, Play/Stop and save status. Its callbacks are injected through `ProjectChromeOptions`; UI code never invokes browser file APIs directly.
 
-- [ ] **Step 5: Compose project chrome and theme**
+- [x] **Step 5: Compose project chrome and theme**
 
 Reuse the existing docked shell and dual viewport. Replace Outliner with Hierarchy, add Resources below it, retain the schema inspector in the right column, keep the agent panel mount optional, and add stable `data-*` selectors used by tests/e2e. Keep `renderEditorChrome` untouched until final cutover; export `renderProjectChrome` alongside it.
 
-- [ ] **Step 6: Run all editor tests and typecheck**
+- [x] **Step 6: Run all editor tests and typecheck**
 
 Run: `npx vitest run --project editor && npm run typecheck -w @automata/editor`
 
 Expected: all editor tests PASS; typecheck exits 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/editor/src/ui packages/editor/tests/ui

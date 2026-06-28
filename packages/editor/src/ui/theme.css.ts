@@ -108,6 +108,36 @@ export const SLATE_PRO_CSS = `
 .ed-chat-tune { align-self: flex-end; margin: 0 6px 6px; padding: 5px 12px; background: var(--panel-2);
   border: 1px solid #2f394e; border-radius: 5px; box-shadow: inset 0 1px 0 var(--bevel); }
 .ed-chat-tune[hidden] { display: none; }
+
+/* Generic project chrome */
+.ed-toolbar { display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: #1e2433; }
+.ed-save-status { margin-left: auto; color: var(--ink-dim); }
+.ed-panel-head { padding: 4px 8px; color: var(--ink-dim); text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+.ed-hierarchy, .ed-resources, .ed-validation, .ed-palette { overflow: auto; }
+.ed-tree-scene { display: block; width: 100%; text-align: left; padding: 3px 8px; background: none; border: 0; }
+.ed-tree-scene.is-active { background: var(--panel-2); color: var(--accent); }
+.ed-tree-entity { display: flex; align-items: center; gap: 4px; padding: 2px 8px; }
+.ed-tree-entity.is-selected { background: var(--panel-2); }
+.ed-tree-label { flex: 1; text-align: left; background: none; border: 0; }
+.ed-component-card { margin: 4px 6px; padding: 4px; background: var(--panel-2); border-radius: 4px; }
+.ed-component-title { color: var(--accent); font-size: 11px; margin-bottom: 2px; }
+.ed-resource-group { padding: 2px 8px; }
+.ed-resource-title { color: var(--ink-dim); font-size: 11px; }
+.ed-resource-row { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 2px 0; }
+.ed-resource-row.is-selected { color: var(--accent); }
+.ed-prefab { display: block; width: 100%; text-align: left; padding: 4px 8px; background: none; border: 0; }
+.ed-prefab.is-active { background: var(--panel-2); color: var(--accent); }
+.ed-add-component { margin-top: 6px; padding: 4px 8px; }
+.ed-add-component-title { color: var(--ink-dim); font-size: 11px; }
+.ed-table { padding: 2px 6px; }
+.ed-table table { width: 100%; border-collapse: collapse; }
+.ed-table th { color: var(--ink-dim); font-weight: 400; font-size: 11px; text-align: left; }
+.ed-issue { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 2px 8px; }
+.ed-issue-error { color: var(--bad); }
+.ed-issue-warning { color: var(--accent); }
+.ed-field { display: flex; align-items: center; gap: 6px; padding: 2px 8px; }
+.ed-field-label { min-width: 72px; color: var(--ink-dim); }
+.ed-vec3 .ed-field-num { width: 48px; }
 `
 
 /** Injects the Slate Pro stylesheet once; only the creating call removes it. */

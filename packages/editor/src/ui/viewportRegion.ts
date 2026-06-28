@@ -5,11 +5,32 @@ import type { PanelHandle } from './panel'
 
 const other = (view: PrimaryView): PrimaryView => (view === '2d' ? '3d' : '2d')
 
-export function mountViewportRegion<Doc>(
-  core: EditorCore<Doc>,
+/** The minimal viewport UI state shared by the legacy and project chromes. */
+export interface ViewportRegionView {
+  primaryView: PrimaryView
+  insetVisible: boolean
+}
+
+/** Dispatch surface the region needs; satisfied by either store. */
+export interface ViewportRegionController {
+  setPrimaryView(view: PrimaryView): void
+  toggleInset(): void
+}
+
+export interface ViewportRegionHandle {
+  update(view: ViewportRegionView): void
+  dispose(): void
+}
+
+/**
+ * Store-shape-agnostic dual-viewport region (main + swappable inset). Both chrome
+ * paths build this with a thin controller and feed it `{ primaryView, insetVisible }`.
+ */
+export function createViewportRegion(
   parent: HTMLElement,
-  canvases: Record<PrimaryView, HTMLCanvasElement>
-): PanelHandle<Doc> {
+  canvases: Record<PrimaryView, HTMLCanvasElement>,
+  controller: ViewportRegionController
+): ViewportRegionHandle {
   const main = document.createElement('div')
   main.className = 'ed-vp-main'
   main.dataset.vp = 'main'
@@ -35,30 +56,48 @@ export function mountViewportRegion<Doc>(
 
   swap.addEventListener('click', (event) => {
     event.stopPropagation()
-    core.store.dispatch({ type: 'setPrimaryView', view: other(core.store.getState().ui.primaryView) })
+    controller.setPrimaryView(other(currentPrimary))
   })
   hide.addEventListener('click', (event) => {
     event.stopPropagation()
-    core.store.dispatch({ type: 'toggleInset' })
+    controller.toggleInset()
   })
 
-  function update(state: EditorState<Doc>): void {
-    const primary = state.ui.primaryView
-    const primaryCanvas = canvases[primary]
-    const insetCanvas = canvases[other(primary)]
-    if (primaryCanvas.parentElement !== main) main.insertBefore(primaryCanvas, main.firstChild)
-    if (insetCanvas.parentElement !== inset) inset.insertBefore(insetCanvas, inset.firstChild)
-    inset.classList.toggle('is-hidden', !state.ui.insetVisible)
-    main.dataset.view = primary
-    inset.dataset.view = other(primary)
-  }
+  let currentPrimary: PrimaryView = '2d'
 
-  update(core.store.getState())
   return {
-    update,
+    update(view) {
+      currentPrimary = view.primaryView
+      const primaryCanvas = canvases[view.primaryView]
+      const insetCanvas = canvases[other(view.primaryView)]
+      if (primaryCanvas.parentElement !== main) main.insertBefore(primaryCanvas, main.firstChild)
+      if (insetCanvas.parentElement !== inset) inset.insertBefore(insetCanvas, inset.firstChild)
+      inset.classList.toggle('is-hidden', !view.insetVisible)
+      main.dataset.view = view.primaryView
+      inset.dataset.view = other(view.primaryView)
+    },
     dispose() {
       main.remove()
       inset.remove()
     }
+  }
+}
+
+/** Legacy adapter: drives the shared region from `EditorCore` + `EditorState`. */
+export function mountViewportRegion<Doc>(
+  core: EditorCore<Doc>,
+  parent: HTMLElement,
+  canvases: Record<PrimaryView, HTMLCanvasElement>
+): PanelHandle<Doc> {
+  const region = createViewportRegion(parent, canvases, {
+    setPrimaryView: (view) => core.store.dispatch({ type: 'setPrimaryView', view }),
+    toggleInset: () => core.store.dispatch({ type: 'toggleInset' })
+  })
+  region.update({ primaryView: core.store.getState().ui.primaryView, insetVisible: core.store.getState().ui.insetVisible })
+  return {
+    update(state: EditorState<Doc>) {
+      region.update({ primaryView: state.ui.primaryView, insetVisible: state.ui.insetVisible })
+    },
+    dispose() { region.dispose() }
   }
 }
