@@ -6,17 +6,11 @@ export default defineConfig({
     coverage: {
       provider: 'istanbul',
       include: [
-        'packages/engine/src/**',
-        'packages/editor/src/**',
-        'packages/editor-agent/src/**',
-        'packages/contracts/src/**',
-        'packages/agent-core/src/**',
-        'packages/game-kit/src/**',
-        'games/monkey-ball/src/**',
-        'games/pulsebreak/src/**',
-        'tools/editor-mcp-server/src/**'
+        'packages/*/src/**',
+        'games/*/src/**',
+        'tools/*/src/**'
       ],
-      exclude: ['**/main.ts', '**/browser.ts', '**/index.ts', '**/version.ts'],
+      exclude: ['**/main.ts', '**/browser.ts', '**/index.ts', '**/version.ts', 'tools/level-editor/**'],
       thresholds: { lines: 90, branches: 90 }
     }
   }
