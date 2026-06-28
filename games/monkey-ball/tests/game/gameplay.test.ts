@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   archetypeLibraryKind, createNullRenderer, createRapierPhysics, parseData, type InputSource
 } from '@automata/engine'
+import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
 import { levelKind } from '../../src/data/level'
 import { createGameStore } from '../../src/state/root'
@@ -17,8 +18,6 @@ const tuning: PhysicsTuning = {
 const shippedTuning = toPhysicsTuning(
   parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml')
 )
-const stick = (v: { x: number; y: number }): InputSource => ({ read: () => v, dispose() {} })
-
 async function startGame(input: InputSource) {
   const physics = await createRapierPhysics()
   const render = createNullRenderer()

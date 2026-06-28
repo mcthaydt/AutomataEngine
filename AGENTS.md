@@ -65,10 +65,10 @@ root unless a task explicitly says otherwise.
 - [x] PULSEBREAK (`games/pulsebreak`): the engine's second game, a neon
   fixed-camera arena roguelite. Built only on `@automata/engine` (kinematic
   deterministic sim, no Rapier); see its `README.md`.
-- Designs written, not yet executed:
-  - `@automata/game-kit` — shared game-shell layer extracted from both games
-    (spec: `docs/superpowers/specs/2026-06-27-game-kit-design.md`; plan:
-    `docs/superpowers/plans/2026-06-27-game-kit.md`).
+- [x] `@automata/game-kit` — shared game-shell layer extracted from both games,
+  with auto-globbed coverage, a `new-game` scaffold, and shared test primitives
+  (spec: `docs/superpowers/specs/2026-06-27-game-kit-design.md`; completed plan:
+  `docs/superpowers/plans/2026-06-27-game-kit.md`).
 - Direction agreed, spec pending:
   - PULSEBREAK data-driven tuning — move `config.ts` balance knobs to engine
     data files, then extend the MCP/tuning-agent loop to balance it. The level

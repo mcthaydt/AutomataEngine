@@ -2,8 +2,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   archetypeLibraryKind, createNullRenderer, createRapierPhysics, parseData,
-  type InputSource, type PhysicsEvent, type PhysicsPort, type Vec3
+  type PhysicsEvent, type PhysicsPort, type Vec3
 } from '@automata/engine'
+import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
 import { levelKind, type Level } from '../../src/data/level'
 import { createGameStore } from '../../src/state/root'
@@ -16,7 +17,6 @@ const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.jso
 const tuning: PhysicsTuning = {
   maxTiltRad: (12 * Math.PI) / 180, tiltSmooth: 1, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 }
 }
-const stick = (v: { x: number; y: number }): InputSource => ({ read: () => v, dispose() {} })
 const levelWithPlatform: Level = {
   ...level,
   entities: [

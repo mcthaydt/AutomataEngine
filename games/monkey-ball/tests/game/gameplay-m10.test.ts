@@ -5,9 +5,9 @@ import {
   createNullAudio,
   createNullRenderer,
   createRapierPhysics,
-  parseData,
-  type InputSource
+  parseData
 } from '@automata/engine'
+import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
 import { registerSounds } from '../../src/audio/sounds'
 import { levelKind } from '../../src/data/level'
@@ -20,8 +20,6 @@ const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.jso
 const tuning: PhysicsTuning = {
   maxTiltRad: (12 * Math.PI) / 180, tiltSmooth: 1, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 }
 }
-const stick = (v: { x: number; y: number }): InputSource => ({ read: () => v, dispose() {} })
-
 describe('gameplay runner — M10 effects', () => {
   it('plays the pickup sound through the runner on collection', async () => {
     const physics = await createRapierPhysics()
