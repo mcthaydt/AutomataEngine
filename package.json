@@ -17,6 +17,7 @@
     "dev:game": "npm run dev -w monkey-ball -- --host 127.0.0.1 --port 5174 --strictPort",
     "dev:editor": "npm run dev -w level-editor -- --host 127.0.0.1 --port 5175 --strictPort",
     "dev:pulsebreak": "npm run dev -w pulsebreak -- --host 127.0.0.1 --port 5176 --strictPort",
+    "new-game": "node tools/scaffold/src/main.ts",
     "e2e": "playwright test",
     "build": "npm run build -w monkey-ball && npm run build -w level-editor && npm run build -w pulsebreak"
   },
