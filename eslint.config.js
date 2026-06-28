@@ -139,5 +139,32 @@ export default tseslint.config(
         }]
       }]
     }
+  },
+  {
+    // project is the new persisted-model leaf: it may import zod directly, but must
+    // not depend on engine, editor, contracts, games, or tools.
+    files: ['packages/project/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: [
+            '@automata/engine',
+            '@automata/editor',
+            '@automata/editor/*',
+            '@automata/editor-agent',
+            '@automata/agent-core',
+            '@automata/contracts',
+            '@automata/contracts/*',
+            'monkey-ball',
+            'monkey-ball/*',
+            'pulsebreak',
+            'pulsebreak/*',
+            'level-editor',
+            'level-editor/*'
+          ],
+          message: 'project is the persisted-model leaf; do not import editor, engine, contracts, games, or tools.'
+        }]
+      }]
+    }
   }
 )

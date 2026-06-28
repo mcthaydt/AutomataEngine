@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
+**Progress:** 5% — 1 of 19 tasks complete (Task 1 ✓). (Updated 2026-06-28)
+
 ---
 
 ## Source of truth and execution rules
@@ -75,7 +77,7 @@ tools/level-editor/src/{projectCatalog,editorApp,browserWorkspace,main}.ts
 - Modify: `eslint.config.js`
 - Modify: `package-lock.json` via `npm install`
 
-- [ ] **Step 1: Create package metadata and the failing model test**
+- [x] **Step 1: Create package metadata and the failing model test**
 
 Use the same workspace shape as `packages/contracts`, with this package manifest:
 
@@ -135,13 +137,13 @@ describe('projectSnapshotSchema', () => {
 })
 ```
 
-- [ ] **Step 2: Run the focused test and observe the red state**
+- [x] **Step 2: Run the focused test and observe the red state**
 
 Run: `npx vitest run --config packages/project/vitest.config.ts`
 
 Expected: FAIL because `packages/project/src/model.ts` does not exist.
 
-- [ ] **Step 3: Implement the persisted model schemas**
+- [x] **Step 3: Implement the persisted model schemas**
 
 Create `packages/project/src/model.ts` with exported zod schemas and inferred types for:
 
@@ -206,23 +208,23 @@ export type ProjectSnapshot = z.infer<typeof projectSnapshotSchema>
 
 Export `model.ts` from `src/index.ts`.
 
-- [ ] **Step 4: Run model tests and package typecheck**
+- [x] **Step 4: Run model tests and package typecheck**
 
 Run: `npx vitest run --config packages/project/vitest.config.ts && npm run typecheck -w @automata/project`
 
 Expected: model tests PASS; typecheck exits 0.
 
-- [ ] **Step 5: Wire workspace, lint boundary, and coverage**
+- [x] **Step 5: Wire workspace, lint boundary, and coverage**
 
 Run `npm install` so `package-lock.json` records the workspace. Root `vitest.config.ts` already derives `projects` and coverage `include` from workspace globs (`packages/*`, `packages/*/src/**`), so the new package is auto-registered and auto-covered — confirm this rather than editing the root config. Add an ESLint block for `packages/project/**/*.ts` that forbids imports from `@automata/engine`, `@automata/editor`, `@automata/contracts`, games, and tools; allow direct `zod` because project is the new persisted-model leaf.
 
-- [ ] **Step 6: Verify the package boundary**
+- [x] **Step 6: Verify the package boundary**
 
 Run: `npx eslint packages/project && npm run typecheck -w @automata/project && npx vitest run --project project`
 
 Expected: all three commands exit 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/project eslint.config.js package-lock.json
