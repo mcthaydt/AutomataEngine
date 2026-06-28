@@ -1,0 +1,56 @@
+import { describe, expect, it } from 'vitest'
+import { loadProjectFiles, projectFileDocuments } from '../src'
+import { sampleSnapshot } from './fixtures/sampleProject'
+
+function readerFor(snapshot = sampleSnapshot()) {
+  const files = new Map<string, string>([
+    ['automata.project.json', JSON.stringify(snapshot.manifest)],
+    ['scenes/main.scene.json', JSON.stringify(snapshot.scenes.main)],
+    ['resources/tuning.resource.json', JSON.stringify(snapshot.resources.tuning)]
+  ])
+  return { files, reader: { readText: async (path: string) => files.get(path) ?? Promise.reject(new Error(`missing ${path}`)) } }
+}
+
+describe('project files', () => {
+  it('loads a project folder back into a snapshot', async () => {
+    const snapshot = sampleSnapshot()
+    const { reader } = readerFor(snapshot)
+    expect(await loadProjectFiles(reader)).toEqual(snapshot)
+  })
+
+  it('emits documents manifest-first then scenes and resources in manifest order', () => {
+    const docs = projectFileDocuments(sampleSnapshot())
+    expect(docs.map((doc) => [doc.kind, doc.path])).toEqual([
+      ['manifest', 'automata.project.json'],
+      ['scene', 'scenes/main.scene.json'],
+      ['resource', 'resources/tuning.resource.json']
+    ])
+    expect(docs[0]!.text.endsWith('\n')).toBe(true)
+  })
+
+  it('round-trips documents back through the loader', async () => {
+    const snapshot = sampleSnapshot()
+    const docs = projectFileDocuments(snapshot)
+    const map = new Map(docs.map((doc) => [doc.path, doc.text]))
+    const loaded = await loadProjectFiles({ readText: async (path) => map.get(path)! })
+    expect(loaded).toEqual(snapshot)
+  })
+
+  it('rejects path traversal before touching the reader', async () => {
+    const snapshot = sampleSnapshot()
+    snapshot.manifest.scenes[0]!.path = '../escape.json'
+    const reader = { readText: async () => { throw new Error('reader should not be called') } }
+    const files = new Map([['automata.project.json', JSON.stringify(snapshot.manifest)]])
+    await expect(loadProjectFiles({ readText: async (path) => files.get(path) ?? reader.readText() })).rejects.toThrow(/path/i)
+  })
+
+  it('throws when a referenced document is missing or mismatched', async () => {
+    const { files, reader } = readerFor()
+    files.delete('resources/tuning.resource.json')
+    await expect(loadProjectFiles(reader)).rejects.toThrow()
+
+    const mismatched = readerFor()
+    mismatched.files.set('scenes/main.scene.json', JSON.stringify({ ...sampleSnapshot().scenes.main, id: 'other' }))
+    await expect(loadProjectFiles(mismatched.reader)).rejects.toThrow(/mismatch|id/i)
+  })
+})

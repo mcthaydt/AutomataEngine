@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 16% — 3 of 19 tasks complete (Tasks 1–3 ✓). (Updated 2026-06-28)
+**Progress:** 21% — 4 of 19 tasks complete (Tasks 1–4 ✓; Phase 1 done). (Updated 2026-06-28)
 
 ---
 
@@ -446,7 +446,7 @@ git commit -m "feat(project): add immutable project commands"
 - Create: `packages/project/tests/files.test.ts`
 - Modify: `packages/project/src/index.ts`
 
-- [ ] **Step 1: Write failing validation and serialization tests**
+- [x] **Step 1: Write failing validation and serialization tests**
 
 Cover duplicate IDs, manifest/map mismatches, missing entry scene, path traversal, missing parent, cycles, duplicate component IDs, unknown registered types, component cardinality, bad references, game validation issues, canonical ordering, bundle round-trip, folder read ordering, missing files, and `gameId` mismatch.
 
@@ -462,23 +462,23 @@ const loaded = await loadProjectFiles({ readText: async (path) => files.get(path
 expect(loaded).toEqual(snapshot)
 ```
 
-- [ ] **Step 2: Run focused tests and confirm red**
+- [x] **Step 2: Run focused tests and confirm red**
 
 Run: `npx vitest run --project project --testNamePattern="project validation|project bundle|project files"`
 
 Expected: FAIL because validation/bundle/files modules do not exist.
 
-- [ ] **Step 3: Implement layered validation**
+- [x] **Step 3: Implement layered validation**
 
 Export `validateProject(definition, snapshot): ValidationIssue[]`. Run format/identity/path checks first, schema and registration checks second, hierarchy/reference checks third, `definition.validate` fourth, and compile preflight last. Catch compile errors as `compile.failed` issues. Sort issues by severity, location IDs, pointer, then code for deterministic UI/tests.
 
 References are resolved by walking registered schemas: entity references must name an entity in the target/current scene; resource references must exist and match any allowed `typeIds`.
 
-- [ ] **Step 4: Implement canonical bundle I/O**
+- [x] **Step 4: Implement canonical bundle I/O**
 
 Define `ProjectBundle` as `{ formatVersion: 1; manifest; scenes: SceneDocument[]; resources: ResourceDocument[] }`. `toProjectBundle` sorts scenes/resources/entities/components by stable ID without mutating the snapshot. `stringifyProjectBundle` uses two-space JSON plus trailing newline. `parseProjectBundle` reconstructs maps, validates the snapshot, and never silently fixes invalid IDs.
 
-- [ ] **Step 5: Implement folder reader/writer documents**
+- [x] **Step 5: Implement folder reader/writer documents**
 
 Define:
 
@@ -491,13 +491,13 @@ export function projectFileDocuments(snapshot: ProjectSnapshot): ProjectFileDocu
 
 Normalize relative POSIX paths, reject absolute/backslash/empty/`.`/`..` segments, load manifest first, then referenced documents in manifest order, and verify every loaded document ID/type matches its reference.
 
-- [ ] **Step 6: Run package and root boundary checks**
+- [x] **Step 6: Run package and root boundary checks**
 
 Run: `npx vitest run --project project && npm run typecheck -w @automata/project && npx eslint packages/project`
 
 Expected: all commands exit 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/project/src packages/project/tests
