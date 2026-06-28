@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 11% — 2 of 19 tasks complete (Tasks 1–2 ✓). (Updated 2026-06-28)
+**Progress:** 16% — 3 of 19 tasks complete (Tasks 1–3 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -362,7 +362,7 @@ git commit -m "feat(project): add declarative schemas and registrations"
 - Create: `packages/project/tests/edit.test.ts`
 - Modify: `packages/project/src/index.ts`
 
-- [ ] **Step 1: Write failing pointer and command tests**
+- [x] **Step 1: Write failing pointer and command tests**
 
 Test RFC 6901 escaping (`~0`, `~1`), immutable nested replacement, array insertion/removal/move, semantic no-ops, descendant deletion, reparent cycle rejection, component cardinality, missing IDs, entry-scene protection, and referenced-resource protection.
 
@@ -383,17 +383,17 @@ expect(() => applyProjectCommand(definition, withChild, {
 })).toThrow(/cycle/)
 ```
 
-- [ ] **Step 2: Run focused tests and confirm red**
+- [x] **Step 2: Run focused tests and confirm red**
 
 Run: `npx vitest run --project project --testNamePattern="JSON Pointer|project commands"`
 
 Expected: FAIL because pointer/edit modules do not exist.
 
-- [ ] **Step 3: Implement pointer helpers**
+- [x] **Step 3: Implement pointer helpers**
 
 Export `escapePointerToken`, `parsePointer`, `getAtPointer`, `setAtPointer`, `insertAtPointer`, `removeAtPointer`, and `moveAtPointer`. Reject non-root paths without a leading `/`, invalid array indices, `-` outside insertion, missing object keys, and descent through primitives. Every write clones only containers on the path and returns the original root for deep-equal primitive no-ops.
 
-- [ ] **Step 4: Define the command contract**
+- [x] **Step 4: Define the command contract**
 
 In `command.ts`, export the zod-backed `ProjectCommand` union for:
 
@@ -417,17 +417,17 @@ type ProjectCommand =
 
 `ProjectTarget` is discriminated across manifest, scene, entity, component, and resource IDs.
 
-- [ ] **Step 5: Implement the immutable command reducer**
+- [x] **Step 5: Implement the immutable command reducer**
 
 `applyProjectCommand(definition, snapshot, command)` must locate targets by stable ID, validate structural operations, validate modified component/resource data through its registered schema, preserve original references for no-ops, and throw `ProjectCommandError` with `code` plus `target` for expected failures. `applyProjectCommands` reduces into a local snapshot and throws on the first failure; because inputs are immutable, the caller's original snapshot remains unchanged and no partial result escapes.
 
-- [ ] **Step 6: Run project tests, typecheck, and coverage for the package**
+- [x] **Step 6: Run project tests, typecheck, and coverage for the package**
 
 Run: `npx vitest run --project project --coverage.enabled=false && npm run typecheck -w @automata/project`
 
 Expected: all tests PASS; typecheck exits 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/project/src packages/project/tests

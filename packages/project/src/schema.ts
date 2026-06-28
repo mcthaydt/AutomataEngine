@@ -200,6 +200,36 @@ export function defaultObject(schema: ObjectSchema): Record<string, unknown> {
   return out
 }
 
+/**
+ * Walk a schema/value pair and collect every non-empty reference id whose
+ * field targets `target` ('entity' or 'resource'). Used for reference
+ * resolution during validation and referenced-document removal protection.
+ */
+export function collectReferences(schema: ObjectSchema | PropertySchema, value: unknown, target: 'entity' | 'resource'): string[] {
+  const out: string[] = []
+  const walk = (node: PropertySchema, current: unknown): void => {
+    switch (node.kind) {
+      case 'reference':
+        if (node.target === target && typeof current === 'string' && current !== '') out.push(current)
+        return
+      case 'object':
+        if (!isRecord(current)) return
+        for (const field of node.fields) {
+          if (field.key !== undefined && field.key in current) walk(field, current[field.key])
+        }
+        return
+      case 'array':
+        if (!Array.isArray(current)) return
+        for (const item of current) walk(node.item, item)
+        return
+      default:
+        return
+    }
+  }
+  walk(schema, value)
+  return out
+}
+
 function defaultValue(schema: PropertySchema): unknown {
   switch (schema.kind) {
     case 'number': return schema.min ?? 0
