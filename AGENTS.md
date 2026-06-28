@@ -60,6 +60,20 @@ root unless a task explicitly says otherwise.
   (spec: docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md;
   completed plans: M16a-M16d).
 
+## Second Game + Current Designs
+
+- [x] PULSEBREAK (`games/pulsebreak`): the engine's second game, a neon
+  fixed-camera arena roguelite. Built only on `@automata/engine` (kinematic
+  deterministic sim, no Rapier); see its `README.md`.
+- Designs written, not yet executed:
+  - `@automata/game-kit` — shared game-shell layer extracted from both games
+    (spec: `docs/superpowers/specs/2026-06-27-game-kit-design.md`; plan:
+    `docs/superpowers/plans/2026-06-27-game-kit.md`).
+- Direction agreed, spec pending:
+  - PULSEBREAK data-driven tuning — move `config.ts` balance knobs to engine
+    data files, then extend the MCP/tuning-agent loop to balance it. The level
+    editor stays spatial; pulsebreak is a tuning target, not a level-editing one.
+
 ## Verification Commands
 
 ```bash
