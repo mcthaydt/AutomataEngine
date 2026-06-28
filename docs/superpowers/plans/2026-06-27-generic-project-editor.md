@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 5% — 1 of 19 tasks complete (Task 1 ✓). (Updated 2026-06-28)
+**Progress:** 11% — 2 of 19 tasks complete (Tasks 1–2 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -244,7 +244,7 @@ git commit -m "feat(project): add persisted project model"
 - Create: `packages/project/tests/transform.test.ts`
 - Modify: `packages/project/src/index.ts`
 
-- [ ] **Step 1: Write failing schema and registration tests**
+- [x] **Step 1: Write failing schema and registration tests**
 
 Cover every property kind and the registration invariants:
 
@@ -297,13 +297,13 @@ expect(resolveWorldTransform(scene, 'child').position).toEqual({ x: 10, y: 0, z:
 expect(worldToLocalPosition(parentWorld, { x: 10, y: 0, z: -2 })).toEqual({ x: 0, y: 0, z: 2 })
 ```
 
-- [ ] **Step 2: Run tests and observe missing-module failures**
+- [x] **Step 2: Run tests and observe missing-module failures**
 
 Run: `npx vitest run --project project --testNamePattern="property schemas|defineGameProject|world transform"`
 
 Expected: FAIL because schema/registration/transform exports do not exist.
 
-- [ ] **Step 3: Implement the finite schema language**
+- [x] **Step 3: Implement the finite schema language**
 
 In `schema.ts`, define `ObjectSchema` and the discriminated `PropertySchema` union with these exact kinds: `number`, `string`, `boolean`, `enum`, `color`, `vec3`, `reference`, `object`, `array`. Common property fields are `key`, `label`, `description?`, and `required`; number adds `min?`, `max?`, `step?`; reference adds `target: 'entity' | 'resource'` and `typeIds?`; array adds `item`, `presentation: 'list' | 'table'`, `minItems?`, `maxItems?`.
 
@@ -317,7 +317,7 @@ export function defaultObject(schema: ObjectSchema): Record<string, unknown>
 
 `validateProperty` must recurse, escape JSON Pointer tokens, reject unknown object keys, enforce required fields/ranges/enums/array lengths, and validate references as non-empty strings without resolving them yet.
 
-- [ ] **Step 4: Add standard authoring component registrations**
+- [x] **Step 4: Add standard authoring component registrations**
 
 In `core.ts`, export `CORE_TYPE_IDS` and registrations for:
 
@@ -330,21 +330,21 @@ export const CORE_TYPE_IDS = {
 
 `core.transform` defaults to position/rotation `{x:0,y:0,z:0}` and scale `{x:1,y:1,z:1}`. Primitive supports `box | cylinder | sphere | plane`; surface supports color plus optional texture reference; collider supports `none | box | cylinder | sphere`; zone supports `box | circle`, dimensions, and editor color; camera supports perspective FOV plus eye target settings.
 
-- [ ] **Step 5: Implement runtime-safe registration validation**
+- [x] **Step 5: Implement runtime-safe registration validation**
 
 In `registration.ts`, define `ComponentTypeRegistration`, `ResourceTypeRegistration`, `GameProjectDefinition<Compiled>`, `ValidationIssue`, and `defineGameProject`. The helper must verify non-empty/unique component and resource type IDs, cardinality (`min >= 0`, `max >= min`), valid defaults, and that a template's `gameId` matches the registration.
 
-- [ ] **Step 6: Implement hierarchy transform resolution**
+- [x] **Step 6: Implement hierarchy transform resolution**
 
 In `transform.ts`, implement pure authoring math without importing engine. Positions are local to `parentId`. Compose parent scale, quaternion rotation from Euler radians, and translation. Detect a missing parent or cycle and throw `ProjectTransformError`. Export `resolveWorldTransform`, `worldToLocalPosition`, and structural `Vec3`/`WorldTransform` types.
 
-- [ ] **Step 7: Run the complete project tests and typecheck**
+- [x] **Step 7: Run the complete project tests and typecheck**
 
 Run: `npx vitest run --project project && npm run typecheck -w @automata/project`
 
 Expected: all project tests PASS; typecheck exits 0.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/project/src packages/project/tests
