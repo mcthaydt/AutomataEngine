@@ -29,3 +29,16 @@ export {
   type EditorToolHost,
   type EditorToolHostOptions
 } from './agent/editorToolHost'
+
+// Generic project registration surface for headless hosts (MCP, agent).
+export {
+  registerEditorProject,
+  type EditorProjectRegistration,
+  type RegisteredEditorProject,
+  type ProjectPlayHandle,
+  type ProjectPreviewAdapter,
+  type ProjectEvaluationAdapter,
+  type ProjectEvaluationResult,
+  type PrefabRegistration
+} from './project/registration'
+export type { ProjectSelection } from './project/selection'

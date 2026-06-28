@@ -97,7 +97,8 @@ const zone: ComponentTypeRegistration = {
     ]
   },
   defaultData: { shape: 'box', size: { ...UNIT }, color: '#39ff14' },
-  cardinality: { min: 0, max: 1 }
+  cardinality: { min: 0, max: 1 },
+  gizmo: { kind: 'zone' }
 }
 
 /** Perspective camera with an eye/target rig. */

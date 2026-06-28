@@ -11,5 +11,5 @@
   },
   "types": "./src/index.ts",
   "scripts": { "typecheck": "tsc --noEmit" },
-  "dependencies": { "@automata/engine": "*", "@automata/contracts": "*" }
+  "dependencies": { "@automata/engine": "*", "@automata/contracts": "*", "@automata/project": "*" }
 }

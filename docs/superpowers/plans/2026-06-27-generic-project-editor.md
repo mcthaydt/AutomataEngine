@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 21% — 4 of 19 tasks complete (Tasks 1–4 ✓; Phase 1 done). (Updated 2026-06-28)
+**Progress:** 26% — 5 of 19 tasks complete (Tasks 1–5 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -523,11 +523,11 @@ git commit -m "feat(project): validate and serialize project workspaces"
 - Modify: `packages/editor/src/index.ts`
 - Modify: `packages/editor/src/headless.ts`
 
-- [ ] **Step 1: Add `@automata/project` to editor dependencies**
+- [x] **Step 1: Add `@automata/project` to editor dependencies**
 
 Add `"@automata/project": "*"` to `packages/editor/package.json`. Run `npm install` only if the workspace link is not already present from Task 1.
 
-- [ ] **Step 2: Write a fake third-game registration fixture**
+- [x] **Step 2: Write a fake third-game registration fixture**
 
 `fakeProject.ts` must create one project with a main scene, a root box entity, and a `fake.tuning` resource. Register `fake.spawn` as a point-gizmo component and `fake.tuning` as an object with number/enum/color plus an object-array table. The compiler returns `{ snapshot }`; preview/evaluation spies append calls to exported arrays.
 
@@ -543,7 +543,7 @@ expect(await erased.evaluate(fakeSnapshot, { maxSteps: 10 })).toEqual({
 })
 ```
 
-- [ ] **Step 3: Write failing project-store tests**
+- [x] **Step 3: Write failing project-store tests**
 
 Assert command dispatch, batch atomicity, 200-entry undo cap, undo/redo, typed selection, active scene, dirty document paths, partial `markSaved`, play mode, and save error state:
 
@@ -560,13 +560,13 @@ store.dispatch({ type: 'undo' })
 expect(store.getState().dirtyPaths).toEqual(['resources/tuning.resource.json'])
 ```
 
-- [ ] **Step 4: Run the tests and observe the red state**
+- [x] **Step 4: Run the tests and observe the red state**
 
 Run: `npx vitest run --project editor --testNamePattern="editor project registration|project editor store"`
 
 Expected: FAIL because the project editor modules do not exist.
 
-- [ ] **Step 5: Implement the browser/headless registration boundary**
+- [x] **Step 5: Implement the browser/headless registration boundary**
 
 Define:
 
@@ -598,7 +598,7 @@ export interface EditorProjectRegistration<Compiled> {
 
 `registerEditorProject` returns a non-generic `RegisteredEditorProject` whose compile/preview/evaluate closures preserve the concrete type internally. Validate unique prefab IDs and that prefab component defaults satisfy the project registration.
 
-- [ ] **Step 6: Implement project state and actions**
+- [x] **Step 6: Implement project state and actions**
 
 Selection is exactly:
 
@@ -615,13 +615,13 @@ State contains `snapshot`, `savedSnapshot`, `dirtyPaths`, `past`, `future`, `act
 
 Dirty-path computation compares manifest, scenes, and resources by identity/content and uses manifest paths. `markSaved` copies only successful documents from current into `savedSnapshot`; it must not clear failed dirty documents.
 
-- [ ] **Step 7: Run editor project-store tests and typecheck**
+- [x] **Step 7: Run editor project-store tests and typecheck**
 
 Run: `npx vitest run --project editor --testNamePattern="editor project registration|project editor store" && npm run typecheck -w @automata/editor`
 
 Expected: focused tests PASS; typecheck exits 0; legacy editor tests still compile.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/editor/package.json packages/editor/src/project packages/editor/src/index.ts packages/editor/src/headless.ts packages/editor/tests/fixtures/fakeProject.ts packages/editor/tests/project package-lock.json

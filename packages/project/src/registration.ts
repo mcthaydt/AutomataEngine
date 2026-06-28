@@ -12,6 +12,19 @@ import type { ProjectSnapshot } from './model'
  * trust a registration without re-checking it.
  */
 
+/**
+ * Declarative viewport gizmo for a component. Pure data (no editor dependency):
+ * a `point` gizmo marks an entity placeable/visible even without a primitive; a
+ * `zone` gizmo is drawn translucently from the component's own dimensions.
+ */
+export interface ComponentGizmo {
+  kind: 'point' | 'zone'
+  /** Editor-only display color; the viewport falls back to a default. */
+  color?: string
+  /** Point gizmo radius in world units. */
+  size?: number
+}
+
 /** One authoring component type a game exposes. */
 export interface ComponentTypeRegistration {
   typeId: string
@@ -20,6 +33,8 @@ export interface ComponentTypeRegistration {
   defaultData: Record<string, unknown>
   /** How many of this component an entity may carry. `max` may be `Infinity`. */
   cardinality: { min: number; max: number }
+  /** Optional viewport gizmo so the generic editor can place/draw the entity. */
+  gizmo?: ComponentGizmo
 }
 
 /** One authoring resource type a game exposes. */

@@ -12,3 +12,8 @@ export * from './io/exportDoc'
 export * from './io/importDoc'
 export * from './io/autosave'
 export * from './grid'
+// Generic project editor (coexists with the legacy GameDefinition path until cutover).
+export * from './project/registration'
+export * from './project/selection'
+export * from './project/actions'
+export * from './project/store'
