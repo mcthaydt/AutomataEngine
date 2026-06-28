@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { createNullAudio, createNullRenderer, type InputVector, type InputSource } from '@automata/engine'
+import { createNullAudio, createNullRenderer, type InputVector } from '@automata/engine'
+import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
 import { createRng } from '../../src/sim/rng'
 import { createGameStore } from '../../src/state/root'
 import { WAVES } from '../../src/config'
-
-const stick = (v: InputVector = { x: 0, y: 0 }): InputSource => ({ read: () => v, dispose() {} })
 
 function setup(opts: { seed?: number; input?: InputVector } = {}) {
   const store = createGameStore()
