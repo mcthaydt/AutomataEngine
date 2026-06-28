@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 42% — 8 of 19 tasks complete (Tasks 1–8 ✓). (Updated 2026-06-28)
+**Progress:** 47% — 9 of 19 tasks complete (Tasks 1–9 ✓; Phase 2 done). (Updated 2026-06-28)
 
 ---
 
@@ -859,7 +859,7 @@ git commit -m "feat(editor): add generic project chrome"
 - Create: `packages/editor/tests/project/storage/recent.test.ts`
 - Modify: `packages/editor/src/index.ts`
 
-- [ ] **Step 1: Write failing port and memory-storage tests**
+- [x] **Step 1: Write failing port and memory-storage tests**
 
 Define expected capabilities and per-path save results:
 
@@ -872,35 +872,35 @@ interface ProjectSaveResult {
 
 Test opening, saving only dirty paths, preserving failed paths, importing/exporting an invalid work-in-progress bundle, autosave debounce/flush-on-stop, and memory round-trip.
 
-- [ ] **Step 2: Write failing filesystem ordering tests**
+- [x] **Step 2: Write failing filesystem ordering tests**
 
 Use structural fake directory/file handles. Assert new/changed scene/resource files write first, manifest writes after referenced files, orphan deletion runs last, path traversal never calls the handle, and a write failure skips manifest/orphan deletion while returning exact failures.
 
-- [ ] **Step 3: Write failing recent-handle registry tests**
+- [x] **Step 3: Write failing recent-handle registry tests**
 
 Inject an `IDBFactory`-shaped fake. Assert put/list/get/delete, stale handle removal, permission `prompt`/`denied` behavior, and deterministic recent ordering. Do not add a browser database dependency.
 
-- [ ] **Step 4: Run focused tests and confirm red**
+- [x] **Step 4: Run focused tests and confirm red**
 
 Run: `npx vitest run --project editor --testNamePattern="project storage|filesystem project storage|recent project handles"`
 
 Expected: FAIL because storage modules do not exist.
 
-- [ ] **Step 5: Implement storage ports and bundle/autosave adapters**
+- [x] **Step 5: Implement storage ports and bundle/autosave adapters**
 
 `ProjectStoragePort` exposes capabilities, `open`, `save(snapshot, dirtyPaths)`, `importBundle`, and `exportBundle`. Bundle export always works for parseable snapshots and returns current validation issues. Autosave uses `StoragePort`, key `automata/project-autosave/<projectId>`, version 1, and flushes only a pending write on stop.
 
-- [ ] **Step 6: Implement injected filesystem and IndexedDB adapters**
+- [x] **Step 6: Implement injected filesystem and IndexedDB adapters**
 
 Define structural `DirectoryHandleLike`, `FileHandleLike`, and `WritableLike` interfaces so tests do not require browser globals. For recent projects, accept `IDBFactory` and store directory handles in database `automata-editor`, object store `project-handles`, keyed by project ID. Permission checks remain injected callbacks so happy-dom tests are deterministic.
 
-- [ ] **Step 7: Run editor tests, typecheck, and focused coverage**
+- [x] **Step 7: Run editor tests, typecheck, and focused coverage**
 
 Run: `npx vitest run --project editor && npm run typecheck -w @automata/editor`
 
 Expected: all editor tests PASS; typecheck exits 0.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/editor/src/project packages/editor/src/index.ts packages/editor/tests/project
