@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 32% — 6 of 19 tasks complete (Tasks 1–6 ✓). (Updated 2026-06-28)
+**Progress:** 37% — 7 of 19 tasks complete (Tasks 1–7 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -734,7 +734,7 @@ git commit -m "feat(editor): add generic project viewport host"
 - Create: `packages/editor/tests/ui/project/inspector.test.ts`
 - Modify: `packages/editor/src/ui/index.ts`
 
-- [ ] **Step 1: Write failing generated-control tests**
+- [x] **Step 1: Write failing generated-control tests**
 
 Test number min/max/step, string/multiline, checkbox, enum select, color, vec3, entity/resource reference, nested object groups, optional values, and invalid input. Each change must emit one exact `setProperty` command target/pointer/value.
 
@@ -747,31 +747,31 @@ expect(dispatched).toEqual({
 })
 ```
 
-- [ ] **Step 2: Run focused tests and confirm red**
+- [x] **Step 2: Run focused tests and confirm red**
 
 Run: `npx vitest run --project editor --testNamePattern="property control|property table|project inspector"`
 
 Expected: FAIL because project UI modules do not exist.
 
-- [ ] **Step 3: Implement leaf controls**
+- [x] **Step 3: Implement leaf controls**
 
 `mountPropertyControl` receives schema, current value, JSON Pointer, target, reference options, and dispatch callback. It returns a disposable handle. Number changes reject non-finite values and clamp only when the schema explicitly supplies a min/max; invalid text stays visible with `aria-invalid=true` and does not dispatch. Reference selects contain a blank option for optional fields and only compatible IDs.
 
-- [ ] **Step 4: Implement array lists/tables**
+- [x] **Step 4: Implement array lists/tables**
 
 Tables support arrays whose item is an object with scalar/color/enum/reference cells. Nested arrays/objects inside table cells render a read-only summary and are edited in list mode instead. Add uses schema defaults; remove/reorder dispatch generic array commands. Every row key is its current index because array identity is command/path-based in v1.
 
-- [ ] **Step 5: Implement the project inspector**
+- [x] **Step 5: Implement the project inspector**
 
 Project/scene/entity/component/resource selections resolve their registered schema and target. Entity selection renders name/enabled plus collapsible component cards; component selection focuses one card; resource selection renders the resource schema; multi-entity selection renders only shared transform position controls. No game name/type ID branches are permitted.
 
-- [ ] **Step 6: Run UI tests and editor typecheck**
+- [x] **Step 6: Run UI tests and editor typecheck**
 
 Run: `npx vitest run --project editor --testNamePattern="property control|property table|project inspector" && npm run typecheck -w @automata/editor`
 
 Expected: focused tests PASS; typecheck exits 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/editor/src/ui/project packages/editor/src/ui/index.ts packages/editor/tests/ui/project
