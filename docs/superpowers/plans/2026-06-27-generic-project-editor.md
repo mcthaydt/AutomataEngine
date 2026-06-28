@@ -13,7 +13,11 @@
 ## Source of truth and execution rules
 
 - Approved design: `docs/superpowers/specs/2026-06-27-generic-project-editor-design.md`.
-- This plan is based on commit `936a902` and the current `PULSEBREAK` source. It does not assume the separate `@automata/game-kit` implementation plan has run.
+- This plan was originally drafted against commit `936a902`. Re-baseline onto current `PULSEBREAK` HEAD before starting: the `@automata/game-kit` work has since landed. Both games consume the game-kit shell, UI helpers (`dom.ts`/`view.ts`) moved into `packages/game-kit`, gameplay tests use `@automata/game-kit/testing` primitives, the `new-game` scaffold (`tools/scaffold`) exists, and root coverage/project config is glob-derived. Reconcile every file the plan touches against real HEAD, not `936a902`.
+- Consequences of the landed `@automata/game-kit` work to honor throughout:
+  - New and rewritten gameplay tests use `@automata/game-kit/testing` primitives (`stick` for input, `nullRuntime()` for render + audio doubles) instead of hand-built nulls, matching the established convention. (Non-game packages such as `@automata/editor` may keep using the engine's `createNullRenderer` directly.)
+  - Root `vitest.config.ts` derives `projects` and coverage `include` from workspace globs (`packages/*`, `games/*`, `tools/*`). A new workspace package is auto-registered and auto-covered; do not add per-package entries to the root config.
+  - The game runtime cutovers (Tasks 12–13) edit `main.ts` files that game-kit already rewired to its View/shell. Preserve the game-kit shell wiring and thread compiled-project data through it; do not reintroduce the pre-game-kit composition.
 - Work from an isolated worktree created with `superpowers:using-git-worktrees` when execution starts.
 - Follow TDD for every behavior change: focused red test, observe the expected failure, minimal implementation, focused green test.
 - Mark each checkbox immediately after its step passes. Do not defer checklist updates.
@@ -69,7 +73,6 @@ tools/level-editor/src/{projectCatalog,editorApp,browserWorkspace,main}.ts
 - Create: `packages/project/src/index.ts`
 - Create: `packages/project/tests/model.test.ts`
 - Modify: `eslint.config.js`
-- Modify: `vitest.config.ts`
 - Modify: `package-lock.json` via `npm install`
 
 - [ ] **Step 1: Create package metadata and the failing model test**
@@ -211,7 +214,7 @@ Expected: model tests PASS; typecheck exits 0.
 
 - [ ] **Step 5: Wire workspace, lint boundary, and coverage**
 
-Run `npm install` so `package-lock.json` records the workspace. Add `packages/project/src/**` to root coverage. Add an ESLint block for `packages/project/**/*.ts` that forbids imports from `@automata/engine`, `@automata/editor`, `@automata/contracts`, games, and tools; allow direct `zod` because project is the new persisted-model leaf.
+Run `npm install` so `package-lock.json` records the workspace. Root `vitest.config.ts` already derives `projects` and coverage `include` from workspace globs (`packages/*`, `packages/*/src/**`), so the new package is auto-registered and auto-covered — confirm this rather than editing the root config. Add an ESLint block for `packages/project/**/*.ts` that forbids imports from `@automata/engine`, `@automata/editor`, `@automata/contracts`, games, and tools; allow direct `zod` because project is the new persisted-model leaf.
 
 - [ ] **Step 6: Verify the package boundary**
 
@@ -222,7 +225,7 @@ Expected: all three commands exit 0.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/project eslint.config.js vitest.config.ts package-lock.json
+git add packages/project eslint.config.js package-lock.json
 git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
 git commit -m "feat(project): add persisted project model"
 ```
@@ -1210,6 +1213,8 @@ Filter eligible zones, sort by ID, perform weighted selection, then sample ring/
 
 Add package export `./editor` -> `./src/project/editor.ts` and dependency `@automata/editor`. Normal `src/main.ts` imports only `./project`, not `@automata/editor`.
 
+`main.ts` already wires the `@automata/game-kit` View/shell; edit it in place so the compiled project feeds that existing shell. Do not revert to a pre-game-kit composition.
+
 - [ ] **Step 8: Run the complete Pulsebreak and root CI gates**
 
 Run: `npx vitest run --project pulsebreak && npm run typecheck -w pulsebreak && npm run ci`
@@ -1274,6 +1279,8 @@ Expected: FAIL because boot/lifecycle still load legacy data and editor registra
 `BootData` becomes `{ project: CompiledMonkeyBallProject; lib: ArchetypeLibrary }`. `loadBootData(loader, projectReader)` loads/compiles the project through the reader and separately loads `standard.yaml` through the existing `DataLoader`. In `main.ts`, create the reader from `fetchTextViaFetch()` with a `/project/` prefix and pass both dependencies. `loadRequestedLevel` accepts compiled project data and returns the selected in-memory level after the existing state/epoch checks; it no longer performs I/O.
 
 Update menu/level-select consumers to use `boot.project.manifest`; gameplay receives `boot.project.tuning` and compiled levels.
+
+`main.ts` already wires the `@automata/game-kit` View/shell; thread the project reader and compiled boot data through that existing shell rather than reintroducing the pre-game-kit composition.
 
 - [ ] **Step 5: Implement editor registration and normalized evaluation**
 
