@@ -1,7 +1,6 @@
+import { panel, staticView, type View } from '@automata/game-kit'
 import { UPGRADES } from '../sim/upgrades'
 import type { GameStore } from '../state/root'
-import { panel, staticView } from './dom'
-import type { View } from './view'
 
 /** Between-wave upgrade picker: one button per offered choice. */
 export function createUpgrade(store: GameStore): View {

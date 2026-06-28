@@ -11,8 +11,8 @@ import {
 import {
   attachCanvasRenderer, createKeyboardInput, createVirtualJoystick, startLoopDriver
 } from '@automata/engine/browser'
+import { createBrowserAudio, createOverlayScene, type View } from '@automata/game-kit'
 import './style.css'
-import { createBrowserAudio } from './audio/browserAudio'
 import { registerSounds } from './audio/sounds'
 import { createGameplay } from './game/gameplay'
 import { createRng } from './sim/rng'
@@ -22,7 +22,6 @@ import { createHud } from './ui/hud'
 import { createTitle } from './ui/title'
 import { createUpgrade } from './ui/upgrade'
 import { createDefeat, createPauseOverlay, createVictory } from './ui/overlays'
-import type { View } from './ui/view'
 
 function bootError(error: unknown): HTMLElement {
   const panel = document.createElement('div')
@@ -96,13 +95,7 @@ async function main(): Promise<void> {
     reflectChrome(store.getState().scene)
     cleanup.defer(subscribeSelector(store, (s) => s.scene, reflectChrome))
 
-    const overlayScene = (make: () => View): Scene<SceneId> => {
-      let view: View | null = null
-      return {
-        onEnter() { view = make(); overlays.append(view.element) },
-        onExit() { view?.dispose(); view = null }
-      }
-    }
+    const overlayScene = (make: () => View): Scene<SceneId> => createOverlayScene(overlays, make)
     const scenes: Record<SceneId, Scene<SceneId>> = {
       title: overlayScene(() => createTitle(store)),
       playing: {},

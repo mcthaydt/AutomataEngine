@@ -1,6 +1,6 @@
+import type { View } from '@automata/game-kit'
 import { WAVE_COUNT } from '../config'
 import type { GameStore } from '../state/root'
-import type { View } from './view'
 
 /** Live gameplay HUD: integrity bar, score, wave, and best score. */
 export function createHud(store: GameStore): View {
