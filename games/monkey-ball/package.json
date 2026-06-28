@@ -10,7 +10,8 @@
   "dependencies": {
     "@automata/contracts": "*",
     "@automata/engine": "*",
-    "@automata/editor": "*"
+    "@automata/editor": "*",
+    "@automata/game-kit": "*"
   },
   "devDependencies": { "@automata/agent-core": "*" },
   "scripts": {

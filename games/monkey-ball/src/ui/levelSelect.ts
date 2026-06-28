@@ -1,8 +1,7 @@
+import { button, panel, staticView, type View } from '@automata/game-kit'
 import type { WorldsManifest } from '../data/level'
 import type { GameStore } from '../state/root'
 import { isLevelUnlocked, levelOrder } from '../state/unlocks'
-import { button, panel, staticView } from './dom'
-import type { View } from './view'
 
 export function createLevelSelect(store: GameStore, manifest: WorldsManifest): View {
   const element = panel('level-select')

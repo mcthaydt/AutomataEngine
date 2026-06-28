@@ -1,6 +1,5 @@
+import { button, panel, staticView, type View } from '@automata/game-kit'
 import type { GameStore } from '../state/root'
-import { button, panel, staticView } from './dom'
-import type { View } from './view'
 
 export function createPauseOverlay(store: GameStore): View {
   const element = panel('pause')
