@@ -1,8 +1,14 @@
 export interface ScaffoldFile { path: string; content: string }
-export interface ScaffoldPlan { files: ScaffoldFile[]; rootSnippets: string[] }
+export interface ScaffoldPlan { name: string; port: number; files: ScaffoldFile[] }
 
-/** Plans the files + root-config snippets for a new game package. Pure. */
+/** Plans validated game files plus the metadata needed for root wiring. Pure. */
 export function planNewGame(name: string, port = 5177): ScaffoldPlan {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    throw new Error('Game name must be a lowercase alphanumeric slug with optional hyphens')
+  }
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error('Port must be an integer from 1 through 65535')
+  }
   const dir = `games/${name}`
   const files: ScaffoldFile[] = [
     {
@@ -48,10 +54,5 @@ export function planNewGame(name: string, port = 5177): ScaffoldPlan {
         "if (!app) throw new Error('Missing #app')\n"
     }
   ]
-  const rootSnippets = [
-    `package.json scripts: "dev:${name}": "npm run dev -w ${name} -- --host 127.0.0.1 --port ${port} --strictPort"`,
-    `package.json build: append " && npm run build -w ${name}"`,
-    `playwright.config.ts webServer: { command: 'npm run dev:${name}', url: 'http://127.0.0.1:${port}', reuseExistingServer: !process.env.CI }`
-  ]
-  return { files, rootSnippets }
+  return { name, port, files }
 }

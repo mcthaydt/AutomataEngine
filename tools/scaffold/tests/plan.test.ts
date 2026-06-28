@@ -26,14 +26,22 @@ describe('planNewGame', () => {
     expect(vitest).toContain("name: 'starfall'")
   })
 
-  it('returns root wiring snippets including the chosen port', () => {
-    const snippets = planNewGame('starfall', 5177).rootSnippets.join('\n')
-    expect(snippets).toContain('dev:starfall')
-    expect(snippets).toContain('5177')
-    expect(snippets).toContain('build -w starfall')
+  it('carries validated wiring inputs in the plan', () => {
+    expect(planNewGame('starfall', 5188)).toMatchObject({ name: 'starfall', port: 5188 })
   })
 
   it('defaults the dev-server port to 5177 when none is given', () => {
-    expect(planNewGame('starfall').rootSnippets.join('\n')).toContain('5177')
+    expect(planNewGame('starfall').port).toBe(5177)
+  })
+
+  it.each(['../outside', '../../outside', 'bad/name', "bad'name", 'Uppercase'])(
+    'rejects unsafe game name %s',
+    (name) => {
+      expect(() => planNewGame(name)).toThrow(/game name/i)
+    }
+  )
+
+  it.each([Number.NaN, 0, -1, 5177.5, 65_536])('rejects invalid port %s', (port) => {
+    expect(() => planNewGame('starfall', port)).toThrow(/port/i)
   })
 })
