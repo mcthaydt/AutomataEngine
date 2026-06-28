@@ -16,6 +16,25 @@ export default tseslint.config(
     }
   },
   {
+    // game-kit may use third-party engine deps only via @automata/engine, and
+    // must not depend on any game or the editor.
+    files: ['packages/game-kit/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['three', 'three/*', '@dimforge/*', 'miniplex', 'smol-toml', 'yaml', 'zod'],
+            message: 'Import the engine-wrapped API from @automata/engine instead.'
+          },
+          {
+            group: ['monkey-ball', 'monkey-ball/*', 'pulsebreak', 'pulsebreak/*', 'level-editor', 'level-editor/*', '@automata/editor', '@automata/editor/*'],
+            message: 'game-kit must not import games or the editor.'
+          }
+        ]
+      }]
+    }
+  },
+  {
     // The generic editor core must not depend on any game or on the optional AI layer.
     files: ['packages/editor/**/*.ts'],
     rules: {

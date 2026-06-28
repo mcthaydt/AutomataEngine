@@ -11,6 +11,7 @@ export default defineConfig({
         'packages/editor-agent/src/**',
         'packages/contracts/src/**',
         'packages/agent-core/src/**',
+        'packages/game-kit/src/**',
         'games/monkey-ball/src/**',
         'games/pulsebreak/src/**',
         'tools/editor-mcp-server/src/**'
