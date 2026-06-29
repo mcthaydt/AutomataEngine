@@ -1,9 +1,9 @@
 import { panel, staticView, type View } from '@automata/game-kit'
-import { UPGRADES } from '../sim/upgrades'
+import type { UpgradeDef, UpgradeId } from '../sim/upgrades'
 import type { GameStore } from '../state/root'
 
 /** Between-wave upgrade picker: one button per offered choice. */
-export function createUpgrade(store: GameStore): View {
+export function createUpgrade(store: GameStore, upgrades: Record<UpgradeId, UpgradeDef>): View {
   const element = panel('upgrade')
 
   const heading = document.createElement('h2')
@@ -15,7 +15,7 @@ export function createUpgrade(store: GameStore): View {
   const choices = document.createElement('div')
   choices.className = 'upgrade-choices'
   for (const id of store.getState().run.choices) {
-    const def = UPGRADES[id]
+    const def = upgrades[id]
     const choice = document.createElement('button')
     choice.className = 'upgrade-choice'
     choice.dataset.upgradeId = id

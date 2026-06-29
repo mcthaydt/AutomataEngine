@@ -1,10 +1,13 @@
 import type { EventQueue, InputVector, World } from '@automata/engine'
 import type { Entity } from '../entity'
+import type { PulsebreakCompiledProject } from '../project/types'
 import type { Rng } from '../sim/rng'
 import type { GameStore } from '../state/root'
 
 /** Per-step context handed to every gameplay system by the scheduler. */
 export interface GameCtx {
+  /** Immutable authored/compiled configuration shared by every runtime system. */
+  config: PulsebreakCompiledProject
   world: World<Entity>
   store: GameStore
   /** Gameplay facts drained into sound + particles at the end of each step. */

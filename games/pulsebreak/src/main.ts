@@ -15,6 +15,7 @@ import { createBrowserAudio, createOverlayScene, type View } from '@automata/gam
 import './style.css'
 import { registerSounds } from './audio/sounds'
 import { createGameplay } from './game/gameplay'
+import { loadPulsebreakProject } from './project'
 import { createRng } from './sim/rng'
 import { createGameStore } from './state/root'
 import type { SceneId } from './state/actions'
@@ -43,6 +44,13 @@ async function main(): Promise<void> {
   cleanup.defer(() => window.removeEventListener('beforeunload', onBeforeUnload))
 
   try {
+    const config = await loadPulsebreakProject({
+      async readText(path) {
+        const response = await fetch(new URL(`project/${path}`, document.baseURI))
+        if (!response.ok) throw new Error(`Project request failed (${response.status}): ${path}`)
+        return response.text()
+      }
+    })
     const canvas = document.createElement('canvas')
     app.append(canvas)
     cleanup.defer(() => canvas.remove())
@@ -56,7 +64,7 @@ async function main(): Promise<void> {
     const canvasRenderer = await attachCanvasRenderer(renderer, canvas)
     cleanup.defer(() => canvasRenderer.dispose())
 
-    const store = createGameStore({ storage: localStorageAdapter() })
+    const store = createGameStore({ config, storage: localStorageAdapter() })
     const audioRuntime = createBrowserAudio()
     cleanup.defer(() => audioRuntime.dispose())
     registerSounds(audioRuntime.audio)
@@ -78,11 +86,11 @@ async function main(): Promise<void> {
 
     const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0
     const game = createGameplay({
-      store, render: renderer.port, rng: createRng(seed), audio: audioRuntime.audio, inputSources: inputs
+      config, store, render: renderer.port, rng: createRng(seed), audio: audioRuntime.audio, inputSources: inputs
     })
     cleanup.defer(() => game.dispose())
 
-    const hud = createHud(store)
+    const hud = createHud(store, config.waves.length)
     app.append(hud.element)
     cleanup.defer(() => hud.dispose())
 
@@ -100,7 +108,7 @@ async function main(): Promise<void> {
       title: overlayScene(() => createTitle(store)),
       playing: {},
       paused: overlayScene(() => createPauseOverlay(store)),
-      upgrade: overlayScene(() => createUpgrade(store)),
+      upgrade: overlayScene(() => createUpgrade(store, config.upgrades)),
       victory: overlayScene(() => createVictory(store)),
       defeat: overlayScene(() => createDefeat(store))
     }

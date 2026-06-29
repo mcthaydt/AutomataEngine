@@ -1,5 +1,4 @@
 import type { System } from '@automata/engine'
-import { WAVE_COUNT } from '../config'
 import { spawnWave } from '../sim/spawn'
 import { chooseUpgrades } from '../sim/upgrades'
 import { emitFeedback } from './feedback'
@@ -24,14 +23,15 @@ export function createDirector(): System<GameCtx> {
         spawnedWave = 0
       }
       if (spawnedWave !== run.wave) {
-        spawnWave(ctx.world, run.wave, ctx.rng)
+        spawnWave(ctx.world, run.wave, ctx.rng, ctx.config)
         spawnedWave = run.wave
-        if (run.wave === WAVE_COUNT) emitFeedback(ctx.feedback, 'bossSpawn')
+        if (run.wave === ctx.config.waves.length) emitFeedback(ctx.feedback, 'bossSpawn')
         return
       }
       if ([...ctx.world.with('enemy')].length > 0) return
-      if (run.wave < WAVE_COUNT) {
-        ctx.store.dispatch({ type: 'waveCleared', choices: chooseUpgrades(ctx.rng) })
+      if (run.wave < ctx.config.waves.length) {
+        const upgradeIds = Object.keys(ctx.config.upgrades) as Array<keyof typeof ctx.config.upgrades>
+        ctx.store.dispatch({ type: 'waveCleared', choices: chooseUpgrades(ctx.rng, upgradeIds) })
         emitFeedback(ctx.feedback, 'waveCleared')
       } else {
         ctx.store.dispatch({ type: 'bossDefeated' })

@@ -1,5 +1,4 @@
 import { vec3, type System, type Vec3 } from '@automata/engine'
-import { ENEMY } from '../config'
 import { clampToArena } from '../sim/arena'
 import { isPlaying, type GameCtx } from '../game/context'
 import type { Entity } from '../entity'
@@ -29,10 +28,10 @@ export function createEnemyAI(): System<GameCtx> {
         const dist = vec3.length(toPlayer)
         const dir = vec3.normalize(toPlayer)
         const move = steer(enemy, dir, dist)
-        enemy.velocity = vec3.scale(move, ENEMY[enemy.enemy.kind].speed)
+        enemy.velocity = vec3.scale(move, ctx.config.enemy[enemy.enemy.kind].speed)
         const t = enemy.transform
         t.prevPosition = t.position
-        t.position = clampToArena(vec3.add(t.position, vec3.scale(enemy.velocity, ctx.dt)))
+        t.position = clampToArena(vec3.add(t.position, vec3.scale(enemy.velocity, ctx.dt)), ctx.config)
       }
     }
   }

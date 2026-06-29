@@ -1,6 +1,5 @@
 import { vec3, type System, type Vec3, type WithComponents, type World } from '@automata/engine'
 import { spawnProjectile } from '../sim/spawn'
-import { PLAYER } from '../config'
 import { emitFeedback } from './feedback'
 import { isPlaying, type GameCtx } from '../game/context'
 import type { Entity } from '../entity'
@@ -31,7 +30,7 @@ export function createPlayerWeapon(): System<GameCtx> {
       const player = ctx.world.with('player', 'transform', 'firing').first
       if (!player) return
       player.firing.remainingS = Math.max(0, player.firing.remainingS - ctx.dt)
-      const target = nearestEnemy(ctx.world, player.transform.position, PLAYER.range)
+      const target = nearestEnemy(ctx.world, player.transform.position, ctx.config.player.range)
       if (!target || player.firing.remainingS > 0) return
 
       const stats = ctx.store.getState().run
@@ -39,12 +38,12 @@ export function createPlayerWeapon(): System<GameCtx> {
       const dir = vec3.normalize(vec3.sub(target.transform.position, player.transform.position))
       spawnProjectile(ctx.world, {
         position: player.transform.position,
-        velocity: vec3.scale(dir, PLAYER.projectileSpeed),
+        velocity: vec3.scale(dir, ctx.config.player.projectileSpeed),
         faction: 'player',
         damage: stats.damage,
-        radius: PLAYER.projectileRadius,
+        radius: ctx.config.player.projectileRadius,
         color: '#aef9ff'
-      })
+      }, ctx.config)
       emitFeedback(ctx.feedback, 'shoot', player.transform.position)
     }
   }

@@ -9,8 +9,10 @@ import {
   type Store
 } from '@automata/engine'
 import type { Action, SceneId } from './actions'
+import { defaultPulsebreakCompiledProject } from '../project/template'
+import type { PulsebreakCompiledProject } from '../project/types'
 import { initialProgress, progressReducer, type ProgressState } from './progress'
-import { initialRun, runReducer, type RunState } from './run'
+import { createRunReducer, initialRun, type RunState } from './run'
 import { sceneReducer } from './scene'
 
 export interface GameState {
@@ -22,28 +24,10 @@ export interface GameState {
 const PERSIST_VERSION = 1
 const PROGRESS_KEY = 'pulsebreak/progress'
 
-const slices = combineReducers<GameState, Action>({
-  scene: sceneReducer,
-  run: runReducer,
-  progress: progressReducer
-})
-
-/** Slice reducers plus cross-slice rules: out-of-integrity defeat + best score. */
-export const rootReducer: Reducer<GameState, Action> = (state, action) => {
-  let next = slices(state, action)
-  if (next.run.health <= 0 && next.scene === 'playing') {
-    next = { ...next, scene: 'defeat' }
-  }
-  const endedRun = next.scene !== state.scene && (next.scene === 'victory' || next.scene === 'defeat')
-  if (endedRun && next.run.score > next.progress.bestScore) {
-    next = { ...next, progress: { ...next.progress, bestScore: next.run.score } }
-  }
-  return next
-}
-
 export type GameStore = Store<GameState, Action>
 
 export interface GameStoreOptions {
+  config?: PulsebreakCompiledProject
   storage?: StoragePort
 }
 
@@ -55,12 +39,28 @@ function isProgressState(value: unknown): value is ProgressState {
 }
 
 export function createGameStore(options: GameStoreOptions = {}): GameStore {
+  const config = options.config ?? defaultPulsebreakCompiledProject
   const storage = options.storage ?? memoryStorage()
   const saved = loadPersisted(storage, PROGRESS_KEY, PERSIST_VERSION)
+  const slices = combineReducers<GameState, Action>({
+    scene: sceneReducer,
+    run: createRunReducer(config),
+    progress: progressReducer
+  })
+  /** Slice reducers plus cross-slice rules: defeat and persisted best score. */
+  const rootReducer: Reducer<GameState, Action> = (state, action) => {
+    let next = slices(state, action)
+    if (next.run.health <= 0 && next.scene === 'playing') next = { ...next, scene: 'defeat' }
+    const endedRun = next.scene !== state.scene && (next.scene === 'victory' || next.scene === 'defeat')
+    if (endedRun && next.run.score > next.progress.bestScore) {
+      next = { ...next, progress: { ...next.progress, bestScore: next.run.score } }
+    }
+    return next
+  }
 
   const initial: GameState = {
     scene: 'title',
-    run: initialRun,
+    run: initialRun(config),
     progress: isProgressState(saved) ? saved : initialProgress
   }
 

@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { createPlayerControl } from '../../src/systems/playerControl'
-import { spawnPlayer } from '../../src/sim/spawn'
-import { ARENA, PLAYER } from '../../src/config'
+import { spawnPlayer as spawnConfiguredPlayer } from '../../src/sim/spawn'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 import { playingCtx } from '../helpers/ctx'
+
+const ARENA = config.arena
+const PLAYER = config.player
+const spawnPlayer = (world: Parameters<typeof spawnConfiguredPlayer>[0]) => spawnConfiguredPlayer(world, config)
 
 describe('playerControl', () => {
   it('moves the drone right and forward from input', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createUpgrade } from '../../src/ui/upgrade'
-import { UPGRADES } from '../../src/sim/upgrades'
 import { createGameStore } from '../../src/state/root'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 
 function upgradingStore() {
   const store = createGameStore()
@@ -13,17 +13,17 @@ function upgradingStore() {
 describe('upgrade', () => {
   it('renders one button per offered choice with its label', () => {
     const store = upgradingStore()
-    const view = createUpgrade(store)
+    const view = createUpgrade(store, config.upgrades)
     const buttons = view.element.querySelectorAll('.upgrade-choice')
     expect(buttons).toHaveLength(3)
-    expect(view.element.textContent).toContain(UPGRADES.damage.label)
-    expect(view.element.textContent).toContain(UPGRADES.maxHealth.label)
+    expect(view.element.textContent).toContain(config.upgrades.damage.label)
+    expect(view.element.textContent).toContain(config.upgrades.maxHealth.label)
     view.dispose()
   })
 
   it('applies the chosen upgrade and returns to play', () => {
     const store = upgradingStore()
-    const view = createUpgrade(store)
+    const view = createUpgrade(store, config.upgrades)
     const before = store.getState().run.fireRate
     view.element.querySelector<HTMLButtonElement>('[data-upgrade-id="fireRate"]')!.click()
     expect(store.getState().scene).toBe('playing')

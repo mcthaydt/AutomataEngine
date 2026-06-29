@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { createProjectiles } from '../../src/systems/projectiles'
-import { spawnProjectile } from '../../src/sim/spawn'
-import { ARENA } from '../../src/config'
+import { spawnProjectile as spawnConfiguredProjectile } from '../../src/sim/spawn'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 import { playingCtx } from '../helpers/ctx'
+
+const ARENA = config.arena
+const spawnProjectile = (world: Parameters<typeof spawnConfiguredProjectile>[0], options: Parameters<typeof spawnConfiguredProjectile>[1]) =>
+  spawnConfiguredProjectile(world, options, config)
 
 const opts = (over: Partial<Parameters<typeof spawnProjectile>[1]> = {}) => ({
   position: { x: 0, y: ARENA.y, z: 0 },

@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { createDirector } from '../../src/systems/director'
-import { WAVES, WAVE_COUNT } from '../../src/config'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 import type { FeedbackEvent } from '../../src/systems/feedback'
 import { playingCtx } from '../helpers/ctx'
+
+const WAVES = config.waves
+const WAVE_COUNT = config.waves.length
 
 const enemyCount = (ctx: ReturnType<typeof playingCtx>) => [...ctx.world.with('enemy')].length
 const clearEnemies = (ctx: ReturnType<typeof playingCtx>) => {

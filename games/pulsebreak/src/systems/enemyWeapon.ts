@@ -1,5 +1,4 @@
 import { vec3, type System } from '@automata/engine'
-import { ENEMY } from '../config'
 import { spawnProjectile } from '../sim/spawn'
 import { emitFeedback } from './feedback'
 import { isPlaying, type GameCtx } from '../game/context'
@@ -7,12 +6,12 @@ import type { EnemyWeapon, Entity } from '../entity'
 
 function fire(ctx: GameCtx, enemy: Entity, weapon: EnemyWeapon, toPlayer: { x: number; z: number }): void {
   const origin = enemy.transform!.position
-  const radius = ENEMY[enemy.enemy!.kind].projectileRadius!
+  const radius = ctx.config.enemy[enemy.enemy!.kind].projectileRadius!
   const shot = (velocity: { x: number; y: number; z: number }): void => {
     spawnProjectile(ctx.world, {
       position: origin, velocity, faction: 'enemy', damage: weapon.projectileDamage,
       radius, color: '#ff7b4a'
-    })
+    }, ctx.config)
   }
   if (weapon.burst) {
     for (let i = 0; i < weapon.burst; i++) {

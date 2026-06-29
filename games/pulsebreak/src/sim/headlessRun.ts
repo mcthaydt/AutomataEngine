@@ -3,6 +3,8 @@ import {
 } from '@automata/engine'
 import { createGameplay, type Gameplay } from '../game/gameplay'
 import type { Entity } from '../entity'
+import { defaultPulsebreakCompiledProject } from '../project/template'
+import type { PulsebreakCompiledProject } from '../project/types'
 import { createRng } from './rng'
 import type { UpgradeId } from './upgrades'
 import { createGameStore, type GameStore } from '../state/root'
@@ -10,6 +12,7 @@ import { createGameStore, type GameStore } from '../state/root'
 export type ControlPolicy = (world: World<Entity>, store: GameStore) => InputVector
 
 export interface HeadlessOptions {
+  config?: PulsebreakCompiledProject
   seed?: number
   /** Per-step input policy driving the drone (default: idle). */
   control?: ControlPolicy
@@ -76,15 +79,16 @@ export const kite: ControlPolicy = (world) => {
 
 /** Wires gameplay to recording doubles for deterministic, headless full-run tests. */
 export function createHeadlessRun(opts: HeadlessOptions = {}): HeadlessRun {
+  const config = opts.config ?? defaultPulsebreakCompiledProject
   const control = opts.control ?? (() => ({ x: 0, y: 0 }))
   const pick = opts.pickUpgrade ?? defaultPick
-  const store = createGameStore()
+  const store = createGameStore({ config })
   const render = createNullRenderer()
   const audio = createNullAudio()
   let current: InputVector = { x: 0, y: 0 }
   const source: InputSource = { read: () => current, dispose() {} }
   const game = createGameplay({
-    store, render: render.port, audio: audio.port,
+    config, store, render: render.port, audio: audio.port,
     rng: createRng(opts.seed ?? 1), inputSources: [source]
   })
 

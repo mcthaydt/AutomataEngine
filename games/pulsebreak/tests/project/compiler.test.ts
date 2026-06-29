@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { ARENA, CAMERA, ENEMY, PLAYER, PROJECTILE_LIFETIME_S, UPGRADE_STEP, WAVES } from '../../src/config'
-import { UPGRADES } from '../../src/sim/upgrades'
 import { pulsebreakProjectDefinition } from '../../src/project/definition'
-import { createPulsebreakTemplate } from '../../src/project/template'
+import { createPulsebreakTemplate, defaultPulsebreakCompiledProject } from '../../src/project/template'
 
 describe('Pulsebreak project compiler', () => {
   const compiled = pulsebreakProjectDefinition.compile(createPulsebreakTemplate())
 
   it('reproduces every authored constant exactly', () => {
-    expect(compiled.arena).toEqual(ARENA)
-    expect(compiled.camera).toEqual(CAMERA)
-    expect(compiled.player).toEqual(PLAYER)
-    expect(compiled.enemy).toEqual(ENEMY)
-    expect(compiled.waves).toEqual(WAVES)
-    expect(compiled.upgrades).toEqual(UPGRADES)
-    expect(compiled.upgradeStep).toEqual(UPGRADE_STEP)
-    expect(compiled.projectileLifetimeS).toBe(PROJECTILE_LIFETIME_S)
+    expect(compiled).toEqual(defaultPulsebreakCompiledProject)
+    expect(compiled.arena).toEqual({ half: 13, y: 0.5 })
+    expect(compiled.waves).toEqual([
+      { rammer: 3, shooter: 0, boss: 0 },
+      { rammer: 3, shooter: 1, boss: 0 },
+      { rammer: 4, shooter: 2, boss: 0 },
+      { rammer: 5, shooter: 3, boss: 0 },
+      { rammer: 0, shooter: 0, boss: 1 }
+    ])
+    expect(compiled.projectileLifetimeS).toBe(3)
   })
 
   it('compiles the floor render seed, player start, and zones ordered by entity ID', () => {

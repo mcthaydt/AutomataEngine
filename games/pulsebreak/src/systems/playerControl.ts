@@ -22,7 +22,7 @@ export function createPlayerControl(): System<GameCtx> {
         x: t.position.x + player.velocity.x * ctx.dt,
         y: t.position.y,
         z: t.position.z + player.velocity.z * ctx.dt
-      })
+      }, ctx.config)
     }
   }
 }

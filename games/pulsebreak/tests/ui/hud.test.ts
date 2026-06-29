@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { createHud } from '../../src/ui/hud'
 import { createGameStore } from '../../src/state/root'
-import { PLAYER, WAVE_COUNT } from '../../src/config'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
+
+const PLAYER = config.player
+const WAVE_COUNT = config.waves.length
 
 function startedStore() {
   const store = createGameStore()
@@ -16,7 +19,7 @@ const text = (hud: { element: HTMLElement }, sel: string) =>
 
 describe('hud', () => {
   it('paints the initial run state', () => {
-    const hud = createHud(startedStore())
+    const hud = createHud(startedStore(), WAVE_COUNT)
     expect(fillWidth(hud)).toBe('100%')
     expect(text(hud, '.hud-score')).toContain('0')
     expect(text(hud, '.hud-wave')).toContain(`1/${WAVE_COUNT}`)
@@ -26,7 +29,7 @@ describe('hud', () => {
 
   it('reflects score, wave, and health changes live', () => {
     const store = startedStore()
-    const hud = createHud(store)
+    const hud = createHud(store, WAVE_COUNT)
     store.dispatch({ type: 'enemyKilled', value: 250 })
     store.dispatch({ type: 'upgradeChosen', id: 'damage' })
     store.dispatch({ type: 'playerDamaged', amount: 25 })
@@ -38,7 +41,7 @@ describe('hud', () => {
 
   it('shows the best score after a run ends', () => {
     const store = startedStore()
-    const hud = createHud(store)
+    const hud = createHud(store, WAVE_COUNT)
     store.dispatch({ type: 'enemyKilled', value: 800 })
     store.dispatch({ type: 'playerDamaged', amount: PLAYER.startHealth })
     expect(text(hud, '.hud-best')).toContain('800')
@@ -47,7 +50,7 @@ describe('hud', () => {
 
   it('stops updating and detaches after dispose', () => {
     const store = startedStore()
-    const hud = createHud(store)
+    const hud = createHud(store, WAVE_COUNT)
     document.body.append(hud.element)
     hud.dispose()
     store.dispatch({ type: 'enemyKilled', value: 999 })

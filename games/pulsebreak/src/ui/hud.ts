@@ -1,9 +1,8 @@
 import type { View } from '@automata/game-kit'
-import { WAVE_COUNT } from '../config'
 import type { GameStore } from '../state/root'
 
 /** Live gameplay HUD: integrity bar, score, wave, and best score. */
-export function createHud(store: GameStore): View {
+export function createHud(store: GameStore, waveCount: number): View {
   const element = document.createElement('div')
   element.className = 'hud'
 
@@ -22,7 +21,7 @@ export function createHud(store: GameStore): View {
     const { run, progress } = store.getState()
     fill.style.width = `${(run.health / run.maxHealth) * 100}%`
     score.textContent = `SCORE ${run.score}`
-    wave.textContent = `WAVE ${run.wave}/${WAVE_COUNT}`
+    wave.textContent = `WAVE ${run.wave}/${waveCount}`
     best.textContent = `BEST ${progress.bestScore}`
   }
   paint()

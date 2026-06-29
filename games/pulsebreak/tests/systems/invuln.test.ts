@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { createInvuln } from '../../src/systems/invuln'
-import { spawnPlayer } from '../../src/sim/spawn'
+import { spawnPlayer as spawnConfiguredPlayer } from '../../src/sim/spawn'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 import { playingCtx } from '../helpers/ctx'
+
+const spawnPlayer = (world: Parameters<typeof spawnConfiguredPlayer>[0]) => spawnConfiguredPlayer(world, config)
 
 describe('invuln', () => {
   it('ticks the player invulnerability window down', () => {

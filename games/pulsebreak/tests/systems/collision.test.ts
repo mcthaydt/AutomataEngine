@@ -1,9 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { createCollision } from '../../src/systems/collision'
-import { buildEnemy, spawnPlayer, spawnProjectile } from '../../src/sim/spawn'
-import { ARENA, ENEMY, PLAYER } from '../../src/config'
+import {
+  buildEnemy as buildConfiguredEnemy,
+  spawnPlayer as spawnConfiguredPlayer,
+  spawnProjectile as spawnConfiguredProjectile
+} from '../../src/sim/spawn'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 import type { FeedbackEvent } from '../../src/systems/feedback'
 import { playingCtx } from '../helpers/ctx'
+
+const ARENA = config.arena
+const ENEMY = config.enemy
+const PLAYER = config.player
+const spawnPlayer = (world: Parameters<typeof spawnConfiguredPlayer>[0]) => spawnConfiguredPlayer(world, config)
+const buildEnemy = (kind: Parameters<typeof buildConfiguredEnemy>[0], position: Parameters<typeof buildConfiguredEnemy>[1]) =>
+  buildConfiguredEnemy(kind, position, config)
+const spawnProjectile = (world: Parameters<typeof spawnConfiguredProjectile>[0], opts: Parameters<typeof spawnConfiguredProjectile>[1]) =>
+  spawnConfiguredProjectile(world, opts, config)
 
 const at = (x: number, z: number) => ({ x, y: ARENA.y, z })
 const kinds = (ctx: ReturnType<typeof playingCtx>) =>

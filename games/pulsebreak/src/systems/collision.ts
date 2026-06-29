@@ -1,5 +1,4 @@
 import { vec3, type System, type WithComponents } from '@automata/engine'
-import { PLAYER } from '../config'
 import { emitFeedback } from './feedback'
 import { isPlaying, type GameCtx } from '../game/context'
 import type { Entity } from '../entity'
@@ -26,7 +25,7 @@ function damageEnemy(ctx: GameCtx, enemy: LiveEnemy, damage: number): void {
 
 function hurtPlayer(ctx: GameCtx, player: Player, amount: number): void {
   if (player.invuln.remainingS > 0) return
-  player.invuln.remainingS = PLAYER.invulnS
+  player.invuln.remainingS = ctx.config.player.invulnS
   ctx.store.dispatch({ type: 'playerDamaged', amount })
   emitFeedback(ctx.feedback, 'playerHit', player.transform.position)
 }

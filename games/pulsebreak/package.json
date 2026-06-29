@@ -5,9 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./project": "./src/project/index.ts"
+    "./project": "./src/project/index.ts",
+    "./editor": "./src/project/editor.ts"
   },
   "dependencies": {
+    "@automata/editor": "*",
     "@automata/engine": "*",
     "@automata/game-kit": "*",
     "@automata/project": "*"
@@ -17,7 +19,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "validate:project": "tsx scripts/validate-project.ts",
+    "validate:project": "node --import tsx scripts/validate-project.ts",
     "build": "npm run validate:project && vite build",
     "typecheck": "tsc --noEmit"
   }

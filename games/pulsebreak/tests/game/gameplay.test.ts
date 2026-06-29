@@ -4,20 +4,20 @@ import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
 import { createRng } from '../../src/sim/rng'
 import { createGameStore } from '../../src/state/root'
-import { WAVES } from '../../src/config'
+import { defaultPulsebreakCompiledProject as config } from '../../src/project/template'
 
 function setup(opts: { seed?: number; input?: InputVector } = {}) {
-  const store = createGameStore()
+  const store = createGameStore({ config })
   const render = createNullRenderer()
   const audio = createNullAudio()
   const game = createGameplay({
-    store, render: render.port, audio: audio.port,
+    config, store, render: render.port, audio: audio.port,
     rng: createRng(opts.seed ?? 7), inputSources: [stick(opts.input)]
   })
   return { store, render, audio, game }
 }
 
-const wave1Total = WAVES[0]!.rammer + WAVES[0]!.shooter
+const wave1Total = config.waves[0]!.rammer + config.waves[0]!.shooter
 
 describe('createGameplay', () => {
   it('builds a player and a fixed camera on construction', () => {
@@ -71,10 +71,10 @@ describe('createGameplay', () => {
   })
 
   it('defaults to silent audio when none is provided', () => {
-    const store = createGameStore()
+    const store = createGameStore({ config })
     const render = createNullRenderer()
     const game = createGameplay({
-      store, render: render.port, rng: createRng(1), inputSources: [stick()]
+      config, store, render: render.port, rng: createRng(1), inputSources: [stick()]
     })
     store.dispatch({ type: 'runStarted' })
     expect(() => { for (let i = 0; i < 30; i++) game.fixedUpdate(1 / 60) }).not.toThrow()

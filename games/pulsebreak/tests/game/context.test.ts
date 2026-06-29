@@ -4,9 +4,11 @@ import { isPlaying, type GameCtx } from '../../src/game/context'
 import { createRng } from '../../src/sim/rng'
 import { createGameStore } from '../../src/state/root'
 import type { Entity } from '../../src/entity'
+import { defaultPulsebreakCompiledProject } from '../../src/project/template'
 
 function ctx(): GameCtx {
   return {
+    config: defaultPulsebreakCompiledProject,
     world: createWorld<Entity>(),
     store: createGameStore(),
     feedback: new EventQueue(),

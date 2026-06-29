@@ -1165,7 +1165,7 @@ git commit -m "feat(monkey-ball): migrate content to generic project"
 - Create: `games/pulsebreak/tests/project/runtimeParity.test.ts`
 - Modify: `e2e/pulsebreak.spec.ts`
 
-- [ ] **Step 1: Write failing runtime-injection tests**
+- [x] **Step 1: Write failing runtime-injection tests**
 
 Clone the default compiled config, change arena half-size, player speed/damage, wave counts, projectile lifetime, and enemy speed, then prove each affected system uses the injected value. Add a gameplay test whose floor/camera/grid come from compiled project data rather than constants.
 
@@ -1177,27 +1177,27 @@ createPlayerControl().run(ctx)
 expect(player.transform!.position.x).toBe(5)
 ```
 
-- [ ] **Step 2: Write failing editor registration/evaluation tests**
+- [x] **Step 2: Write failing editor registration/evaluation tests**
 
 Assert the registration has no Pulsebreak-specific DOM, exposes Floor/Player Start/Spawn Zone prefabs, creates gameplay from a compiled unsaved snapshot, and returns normalized headless evaluation. Mutate wave 1 in a snapshot and assert preview/evaluation sees the mutation.
 
-- [ ] **Step 3: Run focused tests and observe red**
+- [x] **Step 3: Run focused tests and observe red**
 
 Run: `npx vitest run --project pulsebreak --testNamePattern="project runtime parity|Pulsebreak editor registration"`
 
 Expected: FAIL because gameplay still imports module constants and editor registration does not exist.
 
-- [ ] **Step 4: Thread compiled config through store and game context**
+- [x] **Step 4: Thread compiled config through store and game context**
 
 Add `config: PulsebreakCompiledProject` to `GameCtx` and `GameplayDeps`. Replace `initialRun` with `initialRun(config)` and `runReducer` with `createRunReducer(config)`. Build root slices/reducer inside `createGameStore({ config, storage })`; default to `compilePulsebreakTemplate()` only for tests/backward-compatible callers during this task. Upgrade application reads `config.upgradeStep`.
 
-- [ ] **Step 5: Replace gameplay/system constant reads**
+- [x] **Step 5: Replace gameplay/system constant reads**
 
 Make spawn/arena helpers accept config explicitly and make systems read `ctx.config`. `createGameplay` builds floor/camera/grid from compiled scene/config and passes config into context. `createHud(store, waveCount)` receives `config.waves.length`. `chooseUpgrades(rng, ids, count)` receives compiled upgrade IDs instead of module `UPGRADE_IDS`.
 
 Update every affected test to obtain `defaultPulsebreakCompiledProject` from `src/project/template.ts` instead of importing authored values from `config.ts`. Tests that customize data clone the default.
 
-- [ ] **Step 6: Implement deterministic zone spawning**
+- [x] **Step 6: Implement deterministic zone spawning**
 
 Replace `ringPosition` with:
 
@@ -1209,7 +1209,7 @@ export function spawnPositions(
 
 Filter eligible zones, sort by ID, perform weighted selection, then sample ring/point mode. Ring sampling preserves the current per-index base angle plus configured jitter and edge padding. Enforce minimum separation with a fixed maximum of eight retries, consuming the same number/order of RNG calls for a fixed project/seed. On exhaustion use the zone center. Add golden fixed-seed expectations to `spawn.test.ts`.
 
-- [ ] **Step 7: Add browser project loading and editor registration**
+- [x] **Step 7: Add browser project loading and editor registration**
 
 `main.ts` creates a prefixed `ProjectFileReader` over `fetch('/project/' + path)`, awaits `loadPulsebreakProject`, then creates store/game/HUD with the compiled result. `editor.ts` adds prefabs and a preview adapter using keyboard input; runtime-safe `evaluation.ts` runs `createHeadlessRun({ config })` and maps victory/defeat/incomplete to normalized outcome/score/metrics without importing editor. The editor registration wraps that function.
 
@@ -1217,13 +1217,13 @@ Add package export `./editor` -> `./src/project/editor.ts` and dependency `@auto
 
 `main.ts` already wires the `@automata/game-kit` View/shell; edit it in place so the compiled project feeds that existing shell. Do not revert to a pre-game-kit composition.
 
-- [ ] **Step 8: Run the complete Pulsebreak and root CI gates**
+- [x] **Step 8: Run the complete Pulsebreak and root CI gates**
 
 Run: `npx vitest run --project pulsebreak && npm run typecheck -w pulsebreak && npm run ci`
 
 Expected: all Pulsebreak tests and root CI PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add games/pulsebreak e2e/pulsebreak.spec.ts package-lock.json
