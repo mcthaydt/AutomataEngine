@@ -1,0 +1,48 @@
+{
+  "formatVersion": 1,
+  "id": "enemies",
+  "typeId": "pulsebreak.enemy-types",
+  "data": {
+    "enemies": [
+      {
+        "id": "rammer",
+        "health": 18,
+        "radius": 0.6,
+        "speed": 4.6,
+        "contactDamage": 10,
+        "scoreValue": 100,
+        "color": "#ff2e88"
+      },
+      {
+        "id": "shooter",
+        "health": 14,
+        "radius": 0.6,
+        "speed": 3,
+        "contactDamage": 6,
+        "scoreValue": 150,
+        "color": "#ffd23f",
+        "cooldownS": 1.3,
+        "projectileSpeed": 13,
+        "projectileDamage": 8,
+        "projectileRadius": 0.3,
+        "range": 24,
+        "preferredRange": 9
+      },
+      {
+        "id": "boss",
+        "health": 340,
+        "radius": 1.7,
+        "speed": 2.3,
+        "contactDamage": 20,
+        "scoreValue": 1000,
+        "color": "#b14cff",
+        "cooldownS": 1.6,
+        "projectileSpeed": 11,
+        "projectileDamage": 10,
+        "projectileRadius": 0.34,
+        "range": 40,
+        "burst": 10
+      }
+    ]
+  }
+}

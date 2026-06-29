@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "id": "upgrades",
+  "typeId": "pulsebreak.upgrade-set",
+  "data": {
+    "upgrades": [
+      {
+        "id": "damage",
+        "label": "Overcharge",
+        "description": "+ pulse damage",
+        "step": 6
+      },
+      {
+        "id": "fireRate",
+        "label": "Rapid Pulse",
+        "description": "+ fire rate",
+        "step": 1
+      },
+      {
+        "id": "moveSpeed",
+        "label": "Thrusters",
+        "description": "+ move speed",
+        "step": 1.5
+      },
+      {
+        "id": "maxHealth",
+        "label": "Reinforce",
+        "description": "+ max integrity & heal",
+        "step": 25
+      }
+    ]
+  }
+}

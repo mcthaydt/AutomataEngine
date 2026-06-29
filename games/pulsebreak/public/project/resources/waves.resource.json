@@ -1,0 +1,66 @@
+{
+  "formatVersion": 1,
+  "id": "waves",
+  "typeId": "pulsebreak.wave-set",
+  "data": {
+    "waves": [
+      {
+        "id": "wave-1",
+        "spawns": [
+          {
+            "enemyTypeId": "rammer",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "id": "wave-2",
+        "spawns": [
+          {
+            "enemyTypeId": "rammer",
+            "count": 3
+          },
+          {
+            "enemyTypeId": "shooter",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "id": "wave-3",
+        "spawns": [
+          {
+            "enemyTypeId": "rammer",
+            "count": 4
+          },
+          {
+            "enemyTypeId": "shooter",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "id": "wave-4",
+        "spawns": [
+          {
+            "enemyTypeId": "rammer",
+            "count": 5
+          },
+          {
+            "enemyTypeId": "shooter",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "id": "wave-5",
+        "spawns": [
+          {
+            "enemyTypeId": "boss",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}

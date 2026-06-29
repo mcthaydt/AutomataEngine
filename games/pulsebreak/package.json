@@ -4,15 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./project": "./src/project/index.ts"
   },
   "dependencies": {
     "@automata/engine": "*",
-    "@automata/game-kit": "*"
+    "@automata/game-kit": "*",
+    "@automata/project": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6"
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "validate:project": "tsx scripts/validate-project.ts",
+    "build": "npm run validate:project && vite build",
     "typecheck": "tsc --noEmit"
   }
 }

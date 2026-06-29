@@ -1,0 +1,176 @@
+{
+  "formatVersion": 1,
+  "id": "arena",
+  "name": "Arena",
+  "entities": [
+    {
+      "id": "floor",
+      "name": "Floor",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": -0.15,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "primitive",
+          "typeId": "core.primitive",
+          "data": {
+            "shape": "box",
+            "size": {
+              "x": 28,
+              "y": 0.3,
+              "z": 28
+            }
+          }
+        },
+        {
+          "id": "surface",
+          "typeId": "core.surface",
+          "data": {
+            "color": "#0a1124"
+          }
+        }
+      ]
+    },
+    {
+      "id": "player-start",
+      "name": "Player Start",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.5,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "player-start",
+          "typeId": "pulsebreak.player-start",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "enemy-ring",
+      "name": "Enemy Ring",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.5,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "spawn-zone",
+          "typeId": "pulsebreak.spawn-zone",
+          "data": {
+            "mode": "ring",
+            "radius": 13,
+            "weight": 1,
+            "enemies": [
+              "rammer",
+              "shooter"
+            ],
+            "minSeparation": 0,
+            "edgePaddingMin": 1,
+            "edgePaddingMax": 3,
+            "angleJitterRad": 0.35
+          }
+        }
+      ]
+    },
+    {
+      "id": "boss-north",
+      "name": "Boss North",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.5,
+              "z": -11
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "spawn-zone",
+          "typeId": "pulsebreak.spawn-zone",
+          "data": {
+            "mode": "point",
+            "radius": 0,
+            "weight": 1,
+            "enemies": [
+              "boss"
+            ],
+            "minSeparation": 0,
+            "edgePaddingMin": 0,
+            "edgePaddingMax": 0,
+            "angleJitterRad": 0
+          }
+        }
+      ]
+    }
+  ]
+}

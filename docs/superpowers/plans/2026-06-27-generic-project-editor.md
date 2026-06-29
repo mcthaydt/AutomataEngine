@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 47% — 9 of 19 tasks complete (Tasks 1–9 ✓; Phase 2 done). (Updated 2026-06-28)
+**Progress:** 53% — 10 of 19 tasks complete (Tasks 1–10 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -934,17 +934,17 @@ git commit -m "feat(editor): add project workspace storage"
 - Create: `games/pulsebreak/public/project/resources/waves.resource.json`
 - Create: `games/pulsebreak/public/project/resources/upgrades.resource.json`
 
-- [ ] **Step 1: Add project dependencies and exports**
+- [x] **Step 1: Add project dependencies and exports**
 
 Add `@automata/project` to Pulsebreak dependencies and `tsx` to devDependencies. Add exports `./project` -> `./src/project/index.ts`. Add `validate:project` and make `build` run it before Vite. Do not add an editor dependency in this task; the runtime-safe graph must typecheck independently.
 
-- [ ] **Step 2: Write failing project-definition/content tests**
+- [x] **Step 2: Write failing project-definition/content tests**
 
 Parse all six public project files with `loadProjectFiles`. Assert `gameId === 'pulsebreak'`, one arena scene, exactly four typed resources, one player start, one ordinary enemy zone, and one boss zone. Assert `validateProject(pulsebreakProjectDefinition, snapshot)` returns no errors.
 
 Add negative cases for missing player start, no eligible spawn zone, duplicate enemy IDs, a wave that references an unknown enemy, non-positive zone weight, and no boss wave.
 
-- [ ] **Step 3: Write the failing compiler parity test**
+- [x] **Step 3: Write the failing compiler parity test**
 
 Compile the public snapshot and compare every currently authored constant:
 
@@ -961,13 +961,13 @@ expect(compiled.projectileLifetimeS).toBe(PROJECTILE_LIFETIME_S)
 
 Also assert the compiled arena scene contains the floor render seed, player start, and zones ordered by entity ID.
 
-- [ ] **Step 4: Run focused tests and observe red**
+- [x] **Step 4: Run focused tests and observe red**
 
 Run: `npx vitest run --project pulsebreak --testNamePattern="Pulsebreak project|Pulsebreak project compiler|Pulsebreak project content"`
 
 Expected: FAIL because Pulsebreak project modules/files do not exist.
 
-- [ ] **Step 5: Define typed Pulsebreak resources and compiler output**
+- [x] **Step 5: Define typed Pulsebreak resources and compiler output**
 
 `PulsebreakCompiledProject` contains:
 
@@ -990,11 +990,11 @@ export interface PulsebreakCompiledProject {
 
 `SpawnZone` has stable `id`, `mode: 'ring' | 'point'`, world `center`, `radius`, `weight`, `enemyTypeIds`, `minSeparation`, `edgePaddingMin`, `edgePaddingMax`, and `angleJitterRad`.
 
-- [ ] **Step 6: Register Pulsebreak component/resource schemas**
+- [x] **Step 6: Register Pulsebreak component/resource schemas**
 
 Register `pulsebreak.player-start` and `pulsebreak.spawn-zone` components. Register singleton resources `pulsebreak.tuning`, `pulsebreak.enemy-types`, `pulsebreak.wave-set`, and `pulsebreak.upgrade-set`. Waves and enemy/upgrade collections use object-array tables with stable string IDs and reference fields. `definition.validate` enforces exactly one player start, at least one zone per referenced enemy type, unique table IDs, valid references, positive weights, one-or-more waves, and at least one boss count in the final wave.
 
-- [ ] **Step 7: Author the default project files with current values**
+- [x] **Step 7: Author the default project files with current values**
 
 Use these resource values as the parity baseline:
 
@@ -1020,17 +1020,17 @@ The arena scene contains:
 - `enemy-ring`: transform `(0,0.5,0)`, circle zone radius `13`, ring mode, rammer/shooter filters, weight `1`, padding `1..3`, jitter `0.35`.
 - `boss-north`: transform `(0,0.5,-11)`, point mode, boss filter, weight `1`.
 
-- [ ] **Step 8: Implement compiler and runtime-safe loader**
+- [x] **Step 8: Implement compiler and runtime-safe loader**
 
 Compiler resolves the singleton resources by type, resolves local/world scene transforms, converts tables to typed lookup maps, and sorts zones by stable ID. `loadPulsebreakProject(reader)` calls `loadProjectFiles`, checks `gameId`, validates, and returns the compiled result or throws an error containing every error issue path. `scripts/validate-project.ts` adapts `games/pulsebreak/public/project` to a filesystem reader, validates/compiles it, prints structured errors to stderr, and exits nonzero on any error.
 
-- [ ] **Step 9: Run focused Pulsebreak tests and typecheck**
+- [x] **Step 9: Run focused Pulsebreak tests and typecheck**
 
 Run: `npx vitest run --project pulsebreak --testNamePattern="Pulsebreak project|Pulsebreak project compiler|Pulsebreak project content" && npm run validate:project -w pulsebreak && npm run typecheck -w pulsebreak`
 
 Expected: project/content/parity tests PASS; typecheck exits 0.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add games/pulsebreak/package.json games/pulsebreak/tsconfig.json games/pulsebreak/src/project games/pulsebreak/scripts games/pulsebreak/tests/project games/pulsebreak/public/project package-lock.json

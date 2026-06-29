@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "id": "pulsebreak",
+  "name": "Pulsebreak",
+  "gameId": "pulsebreak",
+  "entrySceneId": "arena",
+  "scenes": [
+    {
+      "id": "arena",
+      "path": "scenes/arena.scene.json"
+    }
+  ],
+  "resources": [
+    {
+      "id": "tuning",
+      "typeId": "pulsebreak.tuning",
+      "path": "resources/tuning.resource.json"
+    },
+    {
+      "id": "enemies",
+      "typeId": "pulsebreak.enemy-types",
+      "path": "resources/enemies.resource.json"
+    },
+    {
+      "id": "waves",
+      "typeId": "pulsebreak.wave-set",
+      "path": "resources/waves.resource.json"
+    },
+    {
+      "id": "upgrades",
+      "typeId": "pulsebreak.upgrade-set",
+      "path": "resources/upgrades.resource.json"
+    }
+  ]
+}

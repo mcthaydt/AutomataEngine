@@ -1,0 +1,36 @@
+{
+  "formatVersion": 1,
+  "id": "tuning",
+  "typeId": "pulsebreak.tuning",
+  "data": {
+    "arena": {
+      "half": 13,
+      "y": 0.5
+    },
+    "camera": {
+      "eye": {
+        "x": 0,
+        "y": 24,
+        "z": 19
+      },
+      "look": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "player": {
+      "radius": 0.6,
+      "startHealth": 100,
+      "baseDamage": 12,
+      "baseFireRate": 3,
+      "baseMoveSpeed": 8.5,
+      "projectileSpeed": 24,
+      "projectileRadius": 0.22,
+      "range": 26,
+      "invulnS": 0.6,
+      "color": "#27e0ff"
+    },
+    "projectileLifetimeS": 3
+  }
+}
