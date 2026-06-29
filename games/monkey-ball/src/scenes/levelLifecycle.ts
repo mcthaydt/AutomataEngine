@@ -1,5 +1,5 @@
-import type { DataLoader } from '@automata/engine'
-import { levelKind, type Level } from '../data/level'
+import type { Level } from '../data/level'
+import type { CompiledMonkeyBallProject } from '../project/types'
 import type { GameState } from '../state/root'
 import type { GameStore } from '../state/root'
 import type { SceneId } from '../state/actions'
@@ -35,19 +35,17 @@ export function shouldMountLoadedLevel(
     !hasActiveLevel
 }
 
-export async function loadRequestedLevel(
-  loader: DataLoader,
+export function loadRequestedLevel(
+  project: CompiledMonkeyBallProject,
   store: GameStore,
   requestedLevelId: string,
   hasActiveLevel: boolean
-): Promise<Level | null> {
-  try {
-    const level = await loader.load(levelKind, `/data/levels/${requestedLevelId}.json`)
-    return shouldMountLoadedLevel(store.getState(), requestedLevelId, hasActiveLevel) ? level : null
-  } catch {
-    if (shouldMountLoadedLevel(store.getState(), requestedLevelId, hasActiveLevel)) {
-      store.dispatch({ type: 'openedLevelSelect' })
-    }
+): Level | null {
+  if (!shouldMountLoadedLevel(store.getState(), requestedLevelId, hasActiveLevel)) return null
+  const level = project.levels[requestedLevelId]
+  if (!level) {
+    store.dispatch({ type: 'openedLevelSelect' })
     return null
   }
+  return level
 }

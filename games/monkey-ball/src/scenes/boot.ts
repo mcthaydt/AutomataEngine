@@ -1,20 +1,19 @@
 import { archetypeLibraryKind, type ArchetypeLibrary, type DataLoader } from '@automata/engine'
-import { physicsTuningKind, toPhysicsTuning, type PhysicsTuning } from '../data/config'
-import { worldsManifestKind, type WorldsManifest } from '../data/level'
+import type { ProjectFileReader } from '@automata/project'
+import { loadMonkeyBallProject } from '../project/load'
+import type { CompiledMonkeyBallProject } from '../project/types'
 
 export interface BootData {
-  tuning: PhysicsTuning
+  project: CompiledMonkeyBallProject
   lib: ArchetypeLibrary
-  manifest: WorldsManifest
 }
 
-/** Loads everything the game needs before the menu. Rejects with DataLoadError. */
-export async function loadBootData(loader: DataLoader): Promise<BootData> {
-  const [tuningRaw, lib, manifest] = await Promise.all([
-    loader.load(physicsTuningKind, '/data/config/physics.toml'),
-    loader.load(archetypeLibraryKind, '/data/archetypes/standard.yaml'),
-    loader.load(worldsManifestKind, '/data/levels/worlds.json')
+/** Load authored project data plus the remaining code-owned archetype registry. */
+export async function loadBootData(loader: DataLoader, projectReader: ProjectFileReader): Promise<BootData> {
+  const [project, lib] = await Promise.all([
+    loadMonkeyBallProject(projectReader),
+    loader.load(archetypeLibraryKind, '/data/archetypes/standard.yaml')
   ])
 
-  return { tuning: toPhysicsTuning(tuningRaw), lib, manifest }
+  return { project, lib }
 }

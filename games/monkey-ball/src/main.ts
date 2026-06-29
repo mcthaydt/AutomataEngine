@@ -60,7 +60,9 @@ async function main(): Promise<void> {
     app.append(overlays)
     cleanup.defer(() => overlays.remove())
 
-    const loader = createLoader(fetchTextViaFetch())
+    const fetchText = fetchTextViaFetch()
+    const loader = createLoader(fetchText)
+    const projectReader = { readText: (path: string): Promise<string> => fetchText(`/project/${path}`) }
     const renderer = createThreeRenderer()
     cleanup.defer(() => renderer.port.dispose())
     const canvasRenderer = await attachCanvasRenderer(renderer, canvas)
@@ -84,29 +86,22 @@ async function main(): Promise<void> {
     cleanup.defer(() => window.removeEventListener('pointerdown', audioRuntime.resume))
     const physics = await createRapierPhysics()
     cleanup.defer(() => physics.dispose())
-    const boot: BootData = await loadBootData(loader)
-    const { tuning, lib, manifest } = boot
+    const boot: BootData = await loadBootData(loader, projectReader)
+    const { project, lib } = boot
+    const { tuning, manifest } = project
 
     let active: { game: Gameplay; cleanup: CleanupStack } | null = null
-    let pendingLoad = false
-    let loadEpoch = 0
 
     const leaveLevel = (): void => {
-      loadEpoch++
-      pendingLoad = false
       const current = active
       active = null
       current?.cleanup.dispose()
     }
     cleanup.defer(leaveLevel)
 
-    const enterLevel = async (levelId: string): Promise<void> => {
-      if (active || pendingLoad || cleanup.disposed) return
-      pendingLoad = true
-      const epoch = loadEpoch
-      const level = await loadRequestedLevel(loader, store, levelId, false)
-      if (epoch !== loadEpoch || cleanup.disposed) return
-      pendingLoad = false
+    const enterLevel = (levelId: string): void => {
+      if (active || cleanup.disposed) return
+      const level = loadRequestedLevel(project, store, levelId, false)
       if (!level || active) return
 
       const session = createCleanupStack()
@@ -142,10 +137,12 @@ async function main(): Promise<void> {
     }
 
     const startLevel = (levelId: string): void => {
-      void enterLevel(levelId).catch((error) => {
+      try {
+        enterLevel(levelId)
+      } catch (error) {
         leaveLevel()
         console.error('Level startup failed', error)
-      })
+      }
     }
 
     const overlayScene = (make: () => View): Scene<SceneId> => createOverlayScene(overlays, make)
@@ -161,7 +158,7 @@ async function main(): Promise<void> {
     }
     const sceneManager = createSceneManager(store, (state) => state.scene, scenes, {
       onTransition: ({ from, to }) => {
-        const action = levelSessionAction(from, to, active !== null, pendingLoad)
+        const action = levelSessionAction(from, to, active !== null, false)
         if (action === 'leave') leaveLevel()
         if (action === 'enter') {
           const levelId = store.getState().session.levelId

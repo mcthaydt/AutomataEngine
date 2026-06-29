@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./headless": "./src/headless.ts",
-    "./project": "./src/project/index.ts"
+    "./project": "./src/project/index.ts",
+    "./editor": "./src/project/editor.ts"
   },
   "dependencies": {
     "@automata/contracts": "*",

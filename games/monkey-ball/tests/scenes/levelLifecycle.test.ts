@@ -1,15 +1,16 @@
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { parseData, type DataLoader } from '@automata/engine'
 import * as lifecycle from '../../src/scenes/levelLifecycle'
-import { levelKind } from '../../src/data/level'
 import { createGameStore } from '../../src/state/root'
 import type { SceneId } from '../../src/state/actions'
-import { readDataFile } from '../helpers/data'
+import { loadMonkeyBallProject } from '../../src/project/load'
 
 const { loadRequestedLevel, shouldMountLoadedLevel } = lifecycle
-const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const projectRoot = resolve(import.meta.dirname, '../../public/project')
+const project = await loadMonkeyBallProject({ readText: (path) => readFile(resolve(projectRoot, path), 'utf8') })
 
-describe('shouldMountLoadedLevel', () => {
+describe('loadRequestedLevel and lifecycle', () => {
   it('classifies transitions for one retained level session', () => {
     type LevelSessionAction = (
       from: SceneId | null,
@@ -52,39 +53,29 @@ describe('shouldMountLoadedLevel', () => {
     expect(shouldMountLoadedLevel(store.getState(), 'w1-l1', false)).toBe(false)
   })
 
-  it('returns to level select when the requested level fails to load', async () => {
+  it('returns to level select when the requested level is missing', () => {
     const store = createGameStore()
     store.dispatch({ type: 'levelStarted', levelId: 'missing' })
-    const loader = {
-      load: async () => { throw new Error('404') }
-    } as DataLoader
 
-    await expect(loadRequestedLevel(loader, store, 'missing', false)).resolves.toBeNull()
+    expect(loadRequestedLevel(project, store, 'missing', false)).toBeNull()
     expect(store.getState().scene).toBe('levelSelect')
   })
 
-  it('returns a successfully loaded current level', async () => {
+  it('returns the selected level directly from the compiled project', () => {
     const store = createGameStore()
-    store.dispatch({ type: 'levelStarted', levelId: level.id })
-    const loader = { load: async () => level } as unknown as DataLoader
+    store.dispatch({ type: 'levelStarted', levelId: 'w1-l1' })
 
-    await expect(loadRequestedLevel(loader, store, level.id, false)).resolves.toBe(level)
+    expect(loadRequestedLevel(project, store, 'w1-l1', false)).toBe(project.levels['w1-l1'])
   })
 
-  it('ignores a failed stale request without dispatching', async () => {
+  it('refuses a stale in-memory selection without dispatching', () => {
     const store = createGameStore()
-    store.dispatch({ type: 'levelStarted', levelId: 'stale' })
-    let reject!: (error: Error) => void
-    const loader = {
-      load: () => new Promise((_resolve, rejectPromise) => { reject = rejectPromise })
-    } as unknown as DataLoader
-    const pending = loadRequestedLevel(loader, store, 'stale', false)
-    store.dispatch({ type: 'openedMenu' })
+    store.dispatch({ type: 'levelStarted', levelId: 'w1-l1' })
+    store.dispatch({ type: 'openedLevelSelect' })
+    store.dispatch({ type: 'levelStarted', levelId: 'w1-l2' })
     const dispatch = vi.spyOn(store, 'dispatch')
 
-    reject(new Error('404'))
-
-    await expect(pending).resolves.toBeNull()
+    expect(loadRequestedLevel(project, store, 'w1-l1', false)).toBeNull()
     expect(dispatch).not.toHaveBeenCalled()
   })
 })

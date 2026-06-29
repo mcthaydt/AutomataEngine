@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 58% — 11 of 19 tasks complete (Tasks 1–11 ✓). (Updated 2026-06-28)
+**Progress:** 63% — 12 of 19 tasks complete (Tasks 1–12 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -1231,7 +1231,7 @@ git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
 git commit -m "feat(pulsebreak): boot gameplay from authored project"
 ```
 
-- [ ] **Step 10: Manual Pulsebreak runtime checkpoint — stop and wait**
+- [x] **Step 10: Manual Pulsebreak runtime checkpoint — stop and wait**
 
 Run: `npm run dev:pulsebreak`
 
@@ -1262,21 +1262,21 @@ Stop here. Continue only after the user confirms the Pulsebreak runtime checkpoi
 - Modify: `games/monkey-ball/tests/content/{levels,baseline}.test.ts`
 - Modify: `e2e/game.spec.ts`
 
-- [ ] **Step 1: Write failing boot/lifecycle tests**
+- [x] **Step 1: Write failing boot/lifecycle tests**
 
 Assert `loadBootData(loader, projectReader)` reads six scene files and two resources through `projectReader`, and the existing archetype YAML through `DataLoader`; it must not request physics TOML, worlds JSON, or legacy level JSON. Assert selecting `w1-l1` resolves `compiled.levels['w1-l1']` without another fetch and stale scene transitions still refuse to mount.
 
-- [ ] **Step 2: Write failing registration/evaluation tests**
+- [x] **Step 2: Write failing registration/evaluation tests**
 
 Assert the editor registration exposes box/cylinder/banana/bumper/moving-platform/spawn/goal prefabs, compiles the active scene, creates gameplay with injected archetype library/physics tuning, and evaluates through the existing headless runner. Modify a project scene before preview and assert the created level contains the modification.
 
-- [ ] **Step 3: Run focused tests and observe red**
+- [x] **Step 3: Run focused tests and observe red**
 
 Run: `npx vitest run --project monkey-ball --testNamePattern="project runtime parity|Monkey Ball editor registration|loadBootData|loadRequestedLevel"`
 
 Expected: FAIL because boot/lifecycle still load legacy data and editor registration is legacy-shaped.
 
-- [ ] **Step 4: Cut boot and lifecycle over to project data**
+- [x] **Step 4: Cut boot and lifecycle over to project data**
 
 `BootData` becomes `{ project: CompiledMonkeyBallProject; lib: ArchetypeLibrary }`. `loadBootData(loader, projectReader)` loads/compiles the project through the reader and separately loads `standard.yaml` through the existing `DataLoader`. In `main.ts`, create the reader from `fetchTextViaFetch()` with a `/project/` prefix and pass both dependencies. `loadRequestedLevel` accepts compiled project data and returns the selected in-memory level after the existing state/epoch checks; it no longer performs I/O.
 
@@ -1284,23 +1284,23 @@ Update menu/level-select consumers to use `boot.project.manifest`; gameplay rece
 
 `main.ts` already wires the `@automata/game-kit` View/shell; thread the project reader and compiled boot data through that existing shell rather than reintroducing the pre-game-kit composition.
 
-- [ ] **Step 5: Implement editor registration and normalized evaluation**
+- [x] **Step 5: Implement editor registration and normalized evaluation**
 
 Prefabs are declarative generic entities. Preview compiles the current snapshot, selects the active scene, and delegates to existing `createGameplay`. Runtime-safe evaluation compiles and calls `runHeadlessPlay`; map completed/gameOver/incomplete to passed/failed/incomplete and expose time/falls/bananas in `metrics` with score derived from completion and falls. `editor.ts` wraps the evaluator but the evaluator itself imports no editor APIs.
 
 Export `./editor` and keep `./headless` compatibility exports until Task 18.
 
-- [ ] **Step 6: Repoint content tests to shipped project data**
+- [x] **Step 6: Repoint content tests to shipped project data**
 
 Existing level/baseline tests load compiled project scenes rather than public legacy level files. Keep importer tests as the proof that old JSON converts correctly. Assert no production source path contains `/data/levels/` or `/data/config/physics.toml` after the cutover.
 
-- [ ] **Step 7: Run complete Monkey Ball and root CI gates**
+- [x] **Step 7: Run complete Monkey Ball and root CI gates**
 
 Run: `npx vitest run --project monkey-ball && npm run typecheck -w monkey-ball && npm run ci`
 
 Expected: all Monkey Ball tests and root CI PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add games/monkey-ball e2e/game.spec.ts package-lock.json

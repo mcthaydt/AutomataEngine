@@ -9,7 +9,8 @@ import { renderEditorChrome } from '@automata/editor/ui'
 import {
   attachFlyControls, paintMap, screenToWorldXZ, type ScreenSize
 } from '@automata/editor/viewport'
-import { createMonkeyBallDefinition, loadBootData, type Level } from 'monkey-ball'
+import { createMonkeyBallDefinition, type Level } from 'monkey-ball'
+import { loadLegacyMonkeyBallBootData } from './legacyMonkeyBallBoot'
 
 function bootError(error: unknown): HTMLElement {
   const panel = document.createElement('div')
@@ -45,7 +46,7 @@ async function main(): Promise<void> {
     cleanup.defer(() => canvasRenderer.dispose())
     const physics = await createRapierPhysics()
     cleanup.defer(() => physics.dispose())
-    const boot = await loadBootData(loader)
+    const boot = await loadLegacyMonkeyBallBootData(loader)
     const definition = createMonkeyBallDefinition(boot.lib, boot.tuning)
 
     const editor = createEditor<Level>({ definition, render: renderer.port, physics })

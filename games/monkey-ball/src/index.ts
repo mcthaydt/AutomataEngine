@@ -8,3 +8,8 @@ export type { Entity } from './entity'
 export { runHeadlessPlay } from './level/headlessPlay'
 export { levelSceneModel } from './editor/sceneModel'
 export { createMonkeyBallDefinition } from './editor/registration'
+export {
+  loadMonkeyBallProject,
+  monkeyBallProjectDefinition,
+  type CompiledMonkeyBallProject
+} from './project'
