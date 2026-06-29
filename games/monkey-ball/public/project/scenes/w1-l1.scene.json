@@ -1,0 +1,239 @@
+{
+  "formatVersion": 1,
+  "id": "w1-l1",
+  "name": "First Roll",
+  "entities": [
+    {
+      "id": "marker:spawn",
+      "name": "Spawn",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 1,
+              "z": 6
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "spawn",
+          "typeId": "monkey-ball.spawn",
+          "data": {
+            "timeLimitS": 60,
+            "fallY": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "marker:goal",
+      "name": "Goal",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -6
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "goal",
+          "typeId": "monkey-ball.goal",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "geometry:0",
+      "name": "Box 1",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": -0.25,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "primitive",
+          "typeId": "core.primitive",
+          "data": {
+            "shape": "box",
+            "size": {
+              "x": 8,
+              "y": 0.5,
+              "z": 16
+            }
+          }
+        },
+        {
+          "id": "surface",
+          "typeId": "core.surface",
+          "data": {
+            "color": "#7ec850"
+          }
+        },
+        {
+          "id": "collider",
+          "typeId": "core.collider",
+          "data": {
+            "shape": "box",
+            "friction": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:0",
+      "name": "banana 1",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.6,
+              "z": 2
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "banana",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:1",
+      "name": "banana 2",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 1.5,
+              "y": 0.6,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "banana",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:2",
+      "name": "bumper 3",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": -2,
+              "y": 0.25,
+              "z": -2
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "bumper",
+            "overrides": {}
+          }
+        }
+      ]
+    }
+  ]
+}

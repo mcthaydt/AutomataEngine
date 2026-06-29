@@ -1,0 +1,14 @@
+{
+  "formatVersion": 1,
+  "id": "physics",
+  "typeId": "monkey-ball.physics",
+  "data": {
+    "maxTiltRad": 0.20943951023931953,
+    "tiltSmooth": 0.15,
+    "gravity": 9.81,
+    "ball": {
+      "radius": 0.5,
+      "friction": 0.6
+    }
+  }
+}

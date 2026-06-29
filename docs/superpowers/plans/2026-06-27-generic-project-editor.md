@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 53% — 10 of 19 tasks complete (Tasks 1–10 ✓). (Updated 2026-06-28)
+**Progress:** 58% — 11 of 19 tasks complete (Tasks 1–11 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -1058,11 +1058,11 @@ git commit -m "feat(pulsebreak): define authored project format"
 - Generate: `games/monkey-ball/public/project/scenes/{w1-l1,w1-l2,w1-l3,w2-l1,w2-l2,w2-l3}.scene.json`
 - Generate: `games/monkey-ball/public/project/resources/{physics,worlds}.resource.json`
 
-- [ ] **Step 1: Add the runtime-safe project dependency/export**
+- [x] **Step 1: Add the runtime-safe project dependency/export**
 
 Add `@automata/project` to Monkey Ball dependencies and `tsx` to devDependencies, then export `./project` from `./src/project/index.ts`. Add `validate:project` and make `build` run it before Vite. Existing root/headless exports stay intact until Task 18.
 
-- [ ] **Step 2: Write failing deterministic importer tests**
+- [x] **Step 2: Write failing deterministic importer tests**
 
 Load current physics TOML, worlds JSON, and six levels through existing kinds, then call `importLegacyMonkeyBallProject`. Assert:
 
@@ -1074,17 +1074,17 @@ Load current physics TOML, worlds JSON, and six levels through existing kinds, t
 - Moving-platform `overrides` survive in its game component data.
 - Physics/world resource values match the legacy inputs.
 
-- [ ] **Step 3: Write failing compile-back parity tests**
+- [x] **Step 3: Write failing compile-back parity tests**
 
 For each of six scenes, compile the imported snapshot and compare the resulting legacy-compatible `Level` to the parsed current JSON after normalizing optional UIDs. Compare compiled `PhysicsTuning` and `WorldsManifest` to current boot values. Run existing headless baselines against the compiled levels and require the recorded outcomes/metrics to remain unchanged.
 
-- [ ] **Step 4: Run focused tests and observe red**
+- [x] **Step 4: Run focused tests and observe red**
 
 Run: `npx vitest run --project monkey-ball --testNamePattern="legacy project importer|Monkey Ball project compiler|Monkey Ball project content"`
 
 Expected: FAIL because project modules do not exist.
 
-- [ ] **Step 5: Define Monkey Ball schemas and compiler types**
+- [x] **Step 5: Define Monkey Ball schemas and compiler types**
 
 Register components:
 
@@ -1094,13 +1094,13 @@ Register components:
 
 Register singleton `monkey-ball.physics` and `monkey-ball.worlds` resources. `CompiledMonkeyBallProject` contains `tuning`, `manifest`, `levels: Record<string, Level>`, and the source snapshot.
 
-- [ ] **Step 6: Implement the importer and compiler**
+- [x] **Step 6: Implement the importer and compiler**
 
 The importer creates stable IDs using existing UID helpers, otherwise `geometry:<index>` / `entity:<index>`, with `marker:spawn` and `marker:goal`. Euler degrees from legacy files convert to radians in `core.transform`; the compiler converts back to degrees. Friction lives in `core.collider`. Legacy archetype names/overrides live in `monkey-ball.archetype`.
 
 The compiler rejects scenes without spawn/goal or geometry, converts scene entities back into current `Level` values for reuse by gameplay, and compiles physics/world resources into current runtime types.
 
-- [ ] **Step 7: Add and run the deterministic content generator**
+- [x] **Step 7: Add and run the deterministic content generator**
 
 `scripts/build-project.ts` reads current public legacy data, calls the importer, and writes `projectFileDocuments(snapshot)` using stable two-space JSON plus trailing newline. It accepts `--source` and `--out` arguments so Task 18 can point it at retained legacy test fixtures.
 
@@ -1114,17 +1114,17 @@ Expected: manifest, six scenes, and two resources are written.
 
 `scripts/validate-project.ts` loads `games/monkey-ball/public/project`, validates/compiles all scenes/resources, prints structured errors to stderr, and exits nonzero on any error.
 
-- [ ] **Step 8: Add content tests against generated files**
+- [x] **Step 8: Add content tests against generated files**
 
 Load `games/monkey-ball/public/project` through an fs-backed `ProjectFileReader`, validate it, compare its canonical bundle with a fresh legacy import, and assert all six levels compile and run their existing baselines.
 
-- [ ] **Step 9: Run focused Monkey Ball tests and typecheck**
+- [x] **Step 9: Run focused Monkey Ball tests and typecheck**
 
 Run: `npx vitest run --project monkey-ball --testNamePattern="legacy project importer|Monkey Ball project compiler|Monkey Ball project content" && npm run validate:project -w monkey-ball && npm run typecheck -w monkey-ball`
 
 Expected: all new project/import/parity tests PASS; typecheck exits 0.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add games/monkey-ball/package.json games/monkey-ball/src/project games/monkey-ball/scripts games/monkey-ball/tests/project games/monkey-ball/public/project package-lock.json

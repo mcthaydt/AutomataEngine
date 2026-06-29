@@ -1,0 +1,457 @@
+{
+  "formatVersion": 1,
+  "id": "w1-l3",
+  "name": "Bumper Box",
+  "entities": [
+    {
+      "id": "marker:spawn",
+      "name": "Spawn",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 1,
+              "z": 6
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "spawn",
+          "typeId": "monkey-ball.spawn",
+          "data": {
+            "timeLimitS": 70,
+            "fallY": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "marker:goal",
+      "name": "Goal",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": -6
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "goal",
+          "typeId": "monkey-ball.goal",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "geometry:0",
+      "name": "Box 1",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": -0.25,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "primitive",
+          "typeId": "core.primitive",
+          "data": {
+            "shape": "box",
+            "size": {
+              "x": 12,
+              "y": 0.5,
+              "z": 14
+            }
+          }
+        },
+        {
+          "id": "surface",
+          "typeId": "core.surface",
+          "data": {
+            "color": "#7ec850"
+          }
+        },
+        {
+          "id": "collider",
+          "typeId": "core.collider",
+          "data": {
+            "shape": "box",
+            "friction": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "geometry:1",
+      "name": "Box 2",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.25,
+              "z": 7
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "primitive",
+          "typeId": "core.primitive",
+          "data": {
+            "shape": "box",
+            "size": {
+              "x": 12,
+              "y": 1,
+              "z": 0.5
+            }
+          }
+        },
+        {
+          "id": "surface",
+          "typeId": "core.surface",
+          "data": {
+            "color": "#5fa83c"
+          }
+        },
+        {
+          "id": "collider",
+          "typeId": "core.collider",
+          "data": {
+            "shape": "box",
+            "friction": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "geometry:2",
+      "name": "Box 3",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.25,
+              "z": -7
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "primitive",
+          "typeId": "core.primitive",
+          "data": {
+            "shape": "box",
+            "size": {
+              "x": 12,
+              "y": 1,
+              "z": 0.5
+            }
+          }
+        },
+        {
+          "id": "surface",
+          "typeId": "core.surface",
+          "data": {
+            "color": "#5fa83c"
+          }
+        },
+        {
+          "id": "collider",
+          "typeId": "core.collider",
+          "data": {
+            "shape": "box",
+            "friction": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:0",
+      "name": "bumper 1",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": -3,
+              "y": 0.25,
+              "z": 2
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "bumper",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:1",
+      "name": "bumper 2",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 3,
+              "y": 0.25,
+              "z": 2
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "bumper",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:2",
+      "name": "bumper 3",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.25,
+              "z": -2
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "bumper",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:3",
+      "name": "banana 4",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 0,
+              "y": 0.6,
+              "z": 4
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "banana",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:4",
+      "name": "banana 5",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": -3,
+              "y": 0.6,
+              "z": -3
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "banana",
+            "overrides": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity:5",
+      "name": "banana 6",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": 3,
+              "y": 0.6,
+              "z": -3
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "archetype",
+          "typeId": "monkey-ball.archetype",
+          "data": {
+            "archetypeId": "banana",
+            "overrides": {}
+          }
+        }
+      ]
+    }
+  ]
+}

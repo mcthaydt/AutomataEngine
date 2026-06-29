@@ -1,0 +1,45 @@
+{
+  "formatVersion": 1,
+  "id": "monkey-ball",
+  "name": "Monkey Ball",
+  "gameId": "monkey-ball",
+  "entrySceneId": "w1-l1",
+  "scenes": [
+    {
+      "id": "w1-l1",
+      "path": "scenes/w1-l1.scene.json"
+    },
+    {
+      "id": "w1-l2",
+      "path": "scenes/w1-l2.scene.json"
+    },
+    {
+      "id": "w1-l3",
+      "path": "scenes/w1-l3.scene.json"
+    },
+    {
+      "id": "w2-l1",
+      "path": "scenes/w2-l1.scene.json"
+    },
+    {
+      "id": "w2-l2",
+      "path": "scenes/w2-l2.scene.json"
+    },
+    {
+      "id": "w2-l3",
+      "path": "scenes/w2-l3.scene.json"
+    }
+  ],
+  "resources": [
+    {
+      "id": "physics",
+      "typeId": "monkey-ball.physics",
+      "path": "resources/physics.resource.json"
+    },
+    {
+      "id": "worlds",
+      "typeId": "monkey-ball.worlds",
+      "path": "resources/worlds.resource.json"
+    }
+  ]
+}

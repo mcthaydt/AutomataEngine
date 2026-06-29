@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "id": "worlds",
+  "typeId": "monkey-ball.worlds",
+  "data": {
+    "worlds": [
+      {
+        "id": "w1",
+        "name": "Grassland",
+        "levels": [
+          "w1-l1",
+          "w1-l2",
+          "w1-l3"
+        ]
+      },
+      {
+        "id": "w2",
+        "name": "Sky Park",
+        "levels": [
+          "w2-l1",
+          "w2-l2",
+          "w2-l3"
+        ]
+      }
+    ]
+  }
+}
