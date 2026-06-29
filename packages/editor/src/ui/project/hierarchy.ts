@@ -41,7 +41,8 @@ function render(root: HTMLElement, state: ProjectEditorState, options: ProjectHi
     button.type = 'button'
     button.className = 'ed-tree-scene'
     button.dataset.sceneId = entry.id
-    button.textContent = state.snapshot.scenes[entry.id]?.name ?? entry.id
+    const name = state.snapshot.scenes[entry.id]?.name ?? entry.id
+    button.textContent = name === entry.id ? entry.id : `${name} (${entry.id})`
     if (entry.id === state.activeSceneId) button.classList.add('is-active')
     button.addEventListener('click', () => {
       options.dispatch({ type: 'setActiveScene', sceneId: entry.id })

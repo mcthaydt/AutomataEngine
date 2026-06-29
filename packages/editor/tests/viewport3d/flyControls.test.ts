@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { attachFlyControls } from '../../src/viewport3d/browser'
 import { initialFlyCamera, type FlyCamera } from '../../src/viewport3d/flyCamera'
+import { advanceFlyControls } from '../../src/viewport3d/flyControls'
 
 interface FlyControlsHandle {
   update(dt: number): void
@@ -51,5 +52,16 @@ describe('attachFlyControls', () => {
     expect(at60Hz.position.x).toBeCloseTo(at120Hz.position.x, 5)
     expect(at60Hz.position.y).toBeCloseTo(at120Hz.position.y, 5)
     expect(at60Hz.position.z).toBeCloseTo(at120Hz.position.z, 5)
+  })
+
+  it('maps every movement key and preserves identity when idle', () => {
+    expect(advanceFlyControls(initialFlyCamera, new Set(), 1)).toBe(initialFlyCamera)
+    for (const key of ['w', 's', 'a', 'd', 'e', 'q']) {
+      expect(advanceFlyControls(initialFlyCamera, new Set([key]), 0.1)).not.toBe(initialFlyCamera)
+    }
+    expect(advanceFlyControls(initialFlyCamera, new Set(['w', 's', 'a', 'd', 'e', 'q']), 1)).toBe(initialFlyCamera)
+    const clamped = advanceFlyControls(initialFlyCamera, new Set(['w']), -1)
+    expect(clamped).not.toBe(initialFlyCamera)
+    expect(clamped.position).toEqual(initialFlyCamera.position)
   })
 })

@@ -8,6 +8,7 @@ export type ProjectSaveStatus =
   | { kind: 'idle' }
   | { kind: 'saving' }
   | { kind: 'saved' }
+  | { kind: 'exported' }
   | { kind: 'error'; message: string; paths: string[] }
 
 /** Everything the project session can be asked to do. */
@@ -22,6 +23,7 @@ export type ProjectEditorAction =
   | { type: 'setMode'; mode: 'edit' | 'play' }
   | { type: 'beginSave' }
   | { type: 'markSaved'; paths: string[] }
+  | { type: 'markExported' }
   | { type: 'saveFailed'; message: string; paths: string[] }
   | { type: 'setSnap'; snap: number }
   | { type: 'setPrimaryView'; view: PrimaryView }

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 63% — 12 of 19 tasks complete (Tasks 1–12 ✓). (Updated 2026-06-28)
+**Progress:** 68% — 13 of 19 tasks complete (Tasks 1–13 ✓). (Updated 2026-06-28)
 
 ---
 
@@ -1308,7 +1308,7 @@ git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
 git commit -m "feat(monkey-ball): boot gameplay from authored project"
 ```
 
-- [ ] **Step 9: Manual Monkey Ball runtime checkpoint — stop and wait**
+- [x] **Step 9: Manual Monkey Ball runtime checkpoint — stop and wait**
 
 Run: `npm run dev:game`
 
@@ -1337,11 +1337,11 @@ Stop here. Continue only after the user confirms the Monkey Ball runtime checkpo
 - Create: `tools/level-editor/tests/legacyAutosave.test.ts`
 - Modify: `e2e/editor.spec.ts`
 
-- [ ] **Step 1: Write failing catalog and browser-workspace tests**
+- [x] **Step 1: Write failing catalog and browser-workspace tests**
 
 Catalog tests assert exactly Monkey Ball and Pulsebreak registrations, unique IDs, and template `gameId` consistency. Browser-workspace tests inject `showDirectoryPicker`, download, file input, IndexedDB, and permission callbacks; assert folder open, bundle fallback, recent reopen, denied permission, and download URL revocation. Legacy-autosave tests seed `monkey-ball-editor`, recover it through `importLegacyMonkeyBallProject`, and prove the old key remains until a successful workspace save or bundle export.
 
-- [ ] **Step 2: Rewrite the e2e test to express the generic workflow**
+- [x] **Step 2: Rewrite the e2e test to express the generic workflow**
 
 Use two tests:
 
@@ -1364,27 +1364,27 @@ test('opens Monkey Ball in the same editor shell', async ({ page }) => {
 })
 ```
 
-- [ ] **Step 3: Run focused tests/e2e and observe red**
+- [x] **Step 3: Run focused tests/e2e and observe red**
 
 Run: `npx vitest run --project level-editor && npx playwright test e2e/editor.spec.ts`
 
 Expected: FAIL because the host still boots Monkey Ball directly and has no chooser/catalog.
 
-- [ ] **Step 4: Implement the catalog and browser capability adapter**
+- [x] **Step 4: Implement the catalog and browser capability adapter**
 
 `projectCatalog.ts` imports only `monkey-ball/editor` and `pulsebreak/editor`, registers them through `registerEditorProject`, and exports a lookup by `gameId`. It contains no behavior branches. `browserWorkspace.ts` converts browser directory handles/downloads/file inputs/IndexedDB into tested project storage adapters.
 
 `legacyAutosave.ts` is the one explicit migration seam: it detects the version-1 `monkey-ball-editor` payload, parses its legacy level, imports a new Monkey Ball project with that scene active, and exposes a Recover action in the chooser. It never runs inside editor core and deletes the old key only after the new project is explicitly saved/exported.
 
-- [ ] **Step 5: Implement `mountEditorApp`**
+- [x] **Step 5: Implement `mountEditorApp`**
 
 `editorApp.ts` owns chooser/session transitions and cleanup. It creates renderer/physics/canvases only after a project opens, mounts `renderProjectChrome`, installs project autosave, wires import/export/save callbacks, pointer/key handling, fly controls, and the loop. Switching or closing a dirty project requires Save, Export, or Discard; cancellation keeps the current session mounted. Switching projects disposes the full previous session before mounting another. URL query parsing preselects a game/recent project but never bypasses validation.
 
-- [ ] **Step 6: Reduce `main.ts` to browser composition**
+- [x] **Step 6: Reduce `main.ts` to browser composition**
 
 `main.ts` obtains `#app`, constructs the catalog/browser workspace, calls `mountEditorApp`, handles `beforeunload`, and renders boot errors. Remove Monkey Ball boot data, legacy autosave key, `GameDefinition<Level>`, and legacy chrome usage. Update dependencies to include `@automata/project`, `pulsebreak`, and both editor exports.
 
-- [ ] **Step 7: Run editor/host tests, e2e, CI, and coverage**
+- [x] **Step 7: Run editor/host tests, e2e, CI, and coverage**
 
 Run:
 
@@ -1397,7 +1397,7 @@ npm run coverage
 
 Expected: all commands PASS and coverage remains at least 90% lines/branches.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add tools/level-editor packages/editor e2e/editor.spec.ts package-lock.json

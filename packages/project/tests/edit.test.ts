@@ -148,4 +148,170 @@ describe('project commands', () => {
     expect(projectCommandSchema.safeParse({ type: 'nope' }).success).toBe(false)
     expect(projectCommandSchema.safeParse({ type: 'insertArrayItem', target: { kind: 'resource', resourceId: 'x' }, pointer: '/a', index: -1, value: 1 }).success).toBe(false)
   })
+
+  it('adds and removes non-entry scenes while rejecting duplicates and missing scenes', () => {
+    const snapshot = baseSnapshot()
+    const scene = { formatVersion: 1 as const, id: 'second', name: 'Second', entities: [] }
+    const added = applyProjectCommand(definition, snapshot, {
+      type: 'addScene', path: 'scenes/second.scene.json', scene
+    })
+    expect(added.scenes.second).toEqual(scene)
+    expect(() => applyProjectCommand(definition, added, {
+      type: 'addScene', path: 'scenes/duplicate.scene.json', scene
+    })).toThrow(/duplicate/i)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addScene', path: 'scenes/bad.scene.json', scene: { ...scene, id: '' }
+    })).toThrow(ProjectCommandError)
+    const removed = applyProjectCommand(definition, added, { type: 'removeScene', sceneId: 'second' })
+    expect(removed.scenes.second).toBeUndefined()
+    expect(() => applyProjectCommand(definition, removed, { type: 'removeScene', sceneId: 'second' })).toThrow(/unknown scene/i)
+  })
+
+  it('rejects duplicate entities, missing parents, malformed entities, and invalid initial components', () => {
+    const snapshot = baseSnapshot()
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addEntity', sceneId: 'main',
+      entity: { id: 'root', name: 'Duplicate', enabled: true, components: [] }
+    })).toThrow(/duplicate/i)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addEntity', sceneId: 'main',
+      entity: { id: 'orphan', name: 'Orphan', parentId: 'missing', enabled: true, components: [] }
+    })).toThrow(/parent/i)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addEntity', sceneId: 'main',
+      entity: { id: '', name: 'Bad', enabled: true, components: [] }
+    })).toThrow(ProjectCommandError)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addEntity', sceneId: 'main',
+      entity: {
+        id: 'bad-component', name: 'Bad', enabled: true,
+        components: [{ id: 'spawn', typeId: 'fake.spawn', data: { team: 'green' } }]
+      }
+    })).toThrow(/invalid component/i)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addEntity', sceneId: 'main',
+      entity: {
+        id: 'too-many', name: 'Too many', enabled: true,
+        components: [
+          { id: 'spawn-a', typeId: 'fake.spawn', data: { team: 'red' } },
+          { id: 'spawn-b', typeId: 'fake.spawn', data: { team: 'blue' } }
+        ]
+      }
+    })).toThrow(/cardinality/i)
+  })
+
+  it('handles empty removals and all reparenting guard branches', () => {
+    const snapshot = applyProjectCommands(definition, baseSnapshot(), [
+      { type: 'addEntity', sceneId: 'main', entity: { id: 'child', name: 'Child', parentId: 'root', enabled: true, components: [] } },
+      { type: 'addEntity', sceneId: 'main', entity: { id: 'other', name: 'Other', enabled: true, components: [] } }
+    ])
+    expect(applyProjectCommand(definition, snapshot, { type: 'removeEntities', sceneId: 'main', entityIds: [] })).toBe(snapshot)
+    expect(() => applyProjectCommand(definition, snapshot, { type: 'removeEntities', sceneId: 'main', entityIds: ['missing'] })).toThrow(/unknown entity/i)
+    expect(() => applyProjectCommand(definition, snapshot, { type: 'reparentEntity', sceneId: 'main', entityId: 'child', parentId: 'child' })).toThrow(/cycle/i)
+    expect(() => applyProjectCommand(definition, snapshot, { type: 'reparentEntity', sceneId: 'main', entityId: 'child', parentId: 'missing' })).toThrow(/parent/i)
+    const detached = applyProjectCommand(definition, snapshot, { type: 'reparentEntity', sceneId: 'main', entityId: 'child' })
+    expect(detached.scenes.main!.entities.find((entity) => entity.id === 'child')!.parentId).toBeUndefined()
+    const reparented = applyProjectCommand(definition, detached, { type: 'reparentEntity', sceneId: 'main', entityId: 'child', parentId: 'other' })
+    expect(reparented.scenes.main!.entities.find((entity) => entity.id === 'child')!.parentId).toBe('other')
+  })
+
+  it('removes components and enforces missing/minimum-cardinality rules', () => {
+    const withSpawn = applyProjectCommand(definition, baseSnapshot(), {
+      type: 'addComponent', sceneId: 'main', entityId: 'root',
+      component: { id: 'spawn', typeId: 'fake.spawn', data: { team: 'red' } }
+    })
+    expect(() => applyProjectCommand(definition, withSpawn, {
+      type: 'addComponent', sceneId: 'main', entityId: 'root',
+      component: { id: 'spawn', typeId: 'unregistered', data: {} }
+    })).toThrow(/duplicate component/i)
+    expect(() => applyProjectCommand(definition, withSpawn, {
+      type: 'removeComponent', sceneId: 'main', entityId: 'root', componentId: 'missing'
+    })).toThrow(/unknown component/i)
+    const removed = applyProjectCommand(definition, withSpawn, {
+      type: 'removeComponent', sceneId: 'main', entityId: 'root', componentId: 'spawn'
+    })
+    expect(removed.scenes.main!.entities[0]!.components.some((component) => component.id === 'spawn')).toBe(false)
+
+    const requiredDefinition: GameProjectDefinition<{ snapshot: ProjectSnapshot }> = {
+      ...definition,
+      components: [{ ...definition.components[0]!, cardinality: { min: 1, max: 1 } }]
+    }
+    expect(() => applyProjectCommand(requiredDefinition, withSpawn, {
+      type: 'removeComponent', sceneId: 'main', entityId: 'root', componentId: 'spawn'
+    })).toThrow(/minimum|cardinality/i)
+  })
+
+  it('covers resource creation, validation, singleton, and unreferenced removal', () => {
+    const snapshot = baseSnapshot()
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addResource', path: 'resources/dup.resource.json',
+      resource: { formatVersion: 1, id: 'tuning', typeId: 'fake.tuning', data: { speed: 1 } }
+    })).toThrow(/duplicate/i)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addResource', path: 'resources/second.resource.json',
+      resource: { formatVersion: 1, id: 'second', typeId: 'fake.tuning', data: { speed: 1 } }
+    })).toThrow(/singleton/i)
+    expect(() => applyProjectCommand(definition, snapshot, {
+      type: 'addResource', path: 'resources/bad.resource.json',
+      resource: { formatVersion: 1, id: 'bad', typeId: 'fake.list', data: { items: 4 } }
+    })).toThrow(/invalid resource/i)
+
+    const withList = applyProjectCommand(definition, snapshot, {
+      type: 'addResource', path: 'resources/list.resource.json',
+      resource: { formatVersion: 1, id: 'list', typeId: 'fake.list', data: { items: [] } }
+    })
+    const removed = applyProjectCommand(definition, withList, { type: 'removeResource', resourceId: 'list' })
+    expect(removed.resources.list).toBeUndefined()
+    expect(() => applyProjectCommand(definition, removed, { type: 'removeResource', resourceId: 'missing' })).toThrow(/unknown resource/i)
+
+    const unknown = applyProjectCommand(definition, snapshot, {
+      type: 'addResource', path: 'resources/unknown.resource.json',
+      resource: { formatVersion: 1, id: 'unknown', typeId: 'other.type', data: {} }
+    })
+    expect(unknown.resources.unknown).toBeDefined()
+  })
+
+  it('sets every target kind and reports missing component targets', () => {
+    const snapshot = applyProjectCommand(definition, baseSnapshot(), {
+      type: 'addComponent', sceneId: 'main', entityId: 'root',
+      component: { id: 'spawn', typeId: 'fake.spawn', data: { team: 'red' } }
+    })
+    const manifest = applyProjectCommand(definition, snapshot, {
+      type: 'setProperty', target: { kind: 'manifest' }, pointer: '/name', value: 'Renamed Project'
+    })
+    expect(manifest.manifest.name).toBe('Renamed Project')
+    const scene = applyProjectCommand(definition, manifest, {
+      type: 'setProperty', target: { kind: 'scene', sceneId: 'main' }, pointer: '/name', value: 'Renamed Scene'
+    })
+    expect(scene.scenes.main!.name).toBe('Renamed Scene')
+    const component = applyProjectCommand(definition, scene, {
+      type: 'setProperty',
+      target: { kind: 'component', sceneId: 'main', entityId: 'root', componentId: 'spawn' },
+      pointer: '/team', value: 'blue'
+    })
+    expect((component.scenes.main!.entities[0]!.components.find((entry) => entry.id === 'spawn')!.data as { team: string }).team).toBe('blue')
+    expect(() => applyProjectCommand(definition, component, {
+      type: 'setProperty',
+      target: { kind: 'component', sceneId: 'main', entityId: 'root', componentId: 'missing' },
+      pointer: '/team', value: 'red'
+    })).toThrow(/unknown component/i)
+  })
+
+  it('removes array items, preserves no-op moves, and validates loaded snapshots', () => {
+    const withList = applyProjectCommand(definition, baseSnapshot(), {
+      type: 'addResource', path: 'resources/list.resource.json',
+      resource: { formatVersion: 1, id: 'list', typeId: 'fake.list', data: { items: ['a', 'b'] } }
+    })
+    const removed = applyProjectCommand(definition, withList, {
+      type: 'removeArrayItem', target: { kind: 'resource', resourceId: 'list' }, pointer: '/items', index: 0
+    })
+    expect((removed.resources.list!.data as { items: string[] }).items).toEqual(['b'])
+    expect(applyProjectCommand(definition, removed, {
+      type: 'moveArrayItem', target: { kind: 'resource', resourceId: 'list' }, pointer: '/items', from: 0, to: 0
+    })).toBe(removed)
+    expect(applyProjectCommand(definition, removed, { type: 'loadSnapshot', snapshot: removed })).toEqual(removed)
+    expect(() => applyProjectCommand(definition, removed, {
+      type: 'loadSnapshot', snapshot: { ...removed, manifest: { ...removed.manifest, id: '' } }
+    })).toThrow(ProjectCommandError)
+  })
 })

@@ -79,8 +79,13 @@ function applyMarkSaved(saved: ProjectSnapshot, snapshot: ProjectSnapshot, paths
  * registers it internally; the registered project is exposed on state so a host
  * can reuse it (e.g. `store.getState().registration`) without re-registering.
  */
-export function createProjectEditorStore<Compiled>(registration: EditorProjectRegistration<Compiled>, snapshot: ProjectSnapshot): ProjectEditorStore {
-  const registered = registerEditorProject(registration)
+export function createProjectEditorStore<Compiled>(
+  registration: EditorProjectRegistration<Compiled> | RegisteredEditorProject,
+  snapshot: ProjectSnapshot
+): ProjectEditorStore {
+  const registered = 'gameId' in registration
+    ? registration
+    : registerEditorProject(registration)
   const initial: ProjectEditorState = {
     registration: registered,
     snapshot,
@@ -175,6 +180,13 @@ export function createProjectEditorStore<Compiled>(registration: EditorProjectRe
         const savedSnapshot = applyMarkSaved(state.savedSnapshot, state.snapshot, action.paths)
         return { ...state, savedSnapshot, dirtyPaths: computeDirtyPaths(state.snapshot, savedSnapshot), saveStatus: { kind: 'saved' } }
       }
+      case 'markExported':
+        return {
+          ...state,
+          savedSnapshot: state.snapshot,
+          dirtyPaths: [],
+          saveStatus: { kind: 'exported' }
+        }
       case 'saveFailed':
         return { ...state, saveStatus: { kind: 'error', message: action.message, paths: action.paths } }
       case 'setSnap':

@@ -11,7 +11,12 @@ const spawn: ComponentTypeRegistration = {
   schema: { kind: 'object', fields: [] }, defaultData: {}, cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', size: 0.5, color: '#ffd166' }
 }
-const componentTypes = [...CORE_COMPONENTS, tag, spawn]
+const area: ComponentTypeRegistration = {
+  typeId: 'fake.area', label: 'Area',
+  schema: { kind: 'object', fields: [] }, defaultData: {}, cardinality: { min: 0, max: 1 },
+  gizmo: { kind: 'zone' }
+}
+const componentTypes = [...CORE_COMPONENTS, tag, spawn, area]
 
 const transform = (position: { x: number; y: number; z: number }) => ({
   id: 't', typeId: 'core.transform', data: { position, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } }
@@ -60,5 +65,43 @@ describe('project spatial projection', () => {
     ]), componentTypes)
     expect(items.map((item) => item.entityId)).toEqual(['ch'])
     expect(items[0]!.position).toEqual({ x: 11, y: 0, z: 0 })
+  })
+
+  it('projects cylinder and sphere primitives with the default color', () => {
+    const items = buildProjectSpatialItems(scene([
+      {
+        id: 'c', name: 'Cylinder', enabled: true,
+        components: [transform({ x: 0, y: 0, z: 0 }), { id: 'p', typeId: 'core.primitive', data: { shape: 'cylinder', size: { x: 4, y: 6, z: 4 } } }]
+      },
+      {
+        id: 's', name: 'Sphere', enabled: true,
+        components: [transform({ x: 2, y: 0, z: 0 }), { id: 'p', typeId: 'core.primitive', data: { shape: 'sphere', size: { x: 2, y: 3, z: 4 } } }]
+      }
+    ]), componentTypes)
+    expect(items[0]).toMatchObject({ color: '#9aa4b2', bounds: { kind: 'cylinder', radius: 2, halfHeight: 3 } })
+    expect(items[1]).toMatchObject({ renderable: { primitive: 'sphere', radius: 1 }, bounds: { kind: 'box', half: { x: 1, y: 1, z: 1 } } })
+  })
+
+  it('projects box zones and registration zone gizmos with fallback colors', () => {
+    const items = buildProjectSpatialItems(scene([
+      {
+        id: 'zone', name: 'Zone', enabled: true,
+        components: [transform({ x: 0, y: 0, z: 0 }), { id: 'z', typeId: 'core.zone', data: { shape: 'box', size: { x: 4, y: 2, z: 6 } } }]
+      },
+      {
+        id: 'area', name: 'Area', enabled: true,
+        components: [transform({ x: 1, y: 0, z: 1 }), { id: 'a', typeId: 'fake.area', data: {} }]
+      }
+    ]), componentTypes)
+    expect(items[0]).toMatchObject({ color: '#39ff14', bounds: { kind: 'box', half: { x: 2, y: 1, z: 3 } } })
+    expect(items[1]).toMatchObject({ color: '#39ff14', bounds: { kind: 'box', half: { x: 0.5, y: 0.5, z: 0.5 } } })
+  })
+
+  it('skips entities whose transform hierarchy is cyclic', () => {
+    const items = buildProjectSpatialItems(scene([
+      { id: 'a', name: 'A', parentId: 'b', enabled: true, components: [transform({ x: 0, y: 0, z: 0 }), { id: 'p', typeId: 'core.primitive', data: { shape: 'box', size: { x: 1, y: 1, z: 1 } } }] },
+      { id: 'b', name: 'B', parentId: 'a', enabled: true, components: [transform({ x: 0, y: 0, z: 0 })] }
+    ]), componentTypes)
+    expect(items).toEqual([])
   })
 })

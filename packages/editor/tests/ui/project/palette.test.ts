@@ -11,7 +11,10 @@ describe('project palette', () => {
     const handle = mountProjectPalette(parent, { dispatch: (command) => store.dispatch({ type: 'projectCommand', command }), onSelectPrefab: (id) => selected.push(id) })
     handle.update(store.getState())
     parent.querySelector<HTMLButtonElement>('[data-prefab="box"]')!.click()
-    expect(selected).toEqual(['box'])
+    parent.querySelector<HTMLButtonElement>('[data-prefab="box"]')!.click()
+    expect(selected).toEqual(['box', null])
+    handle.dispose()
+    expect(parent.children).toHaveLength(0)
   })
 
   it('offers add-component options gated by cardinality', () => {
@@ -23,5 +26,19 @@ describe('project palette', () => {
     // box already has a single transform/primitive/surface (max 1) -> not offered; spawn is.
     expect(parent.querySelector('[data-add-component="fake.spawn"]')).not.toBeNull()
     expect(parent.querySelector('[data-add-component="core.transform"]')).toBeNull()
+  })
+
+  it('ignores missing entities and creates collision-free component IDs', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const parent = document.createElement('div')
+    const commands: unknown[] = []
+    const handle = mountProjectPalette(parent, { dispatch: (command) => commands.push(command), onSelectPrefab: () => {} })
+    handle.update({ ...store.getState(), selection: { kind: 'entity', sceneId: 'main', entityIds: ['missing'] } })
+    expect(parent.querySelector('[data-add-component-menu]')).toBeNull()
+
+    store.getState().snapshot.scenes.main!.entities[0]!.components.push({ id: 'spawn', typeId: 'unknown', data: {} })
+    handle.update({ ...store.getState(), selection: { kind: 'entity', sceneId: 'main', entityIds: ['box'] } })
+    parent.querySelector<HTMLButtonElement>('[data-add-component="fake.spawn"]')!.click()
+    expect(commands).toContainEqual(expect.objectContaining({ component: expect.objectContaining({ id: 'spawn-2' }) }))
   })
 })

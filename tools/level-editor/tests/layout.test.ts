@@ -13,4 +13,14 @@ describe('level editor host shell', () => {
     expect(html).not.toContain('.view-canvas')
     expect(html).not.toContain('#panels')
   })
+
+  it('keeps main.ts as generic browser composition', () => {
+    const main = readFileSync(resolve(toolRoot, 'src/main.ts'), 'utf8')
+    expect(main).toContain('createProjectCatalog')
+    expect(main).toContain('createBrowserWorkspace')
+    expect(main).toContain('mountEditorApp')
+    expect(main).not.toContain('createMonkeyBallDefinition')
+    expect(main).not.toContain('loadLegacyMonkeyBallBootData')
+    expect(main).not.toContain('renderEditorChrome')
+  })
 })

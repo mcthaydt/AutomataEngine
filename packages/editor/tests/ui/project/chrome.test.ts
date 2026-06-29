@@ -36,9 +36,23 @@ describe('project chrome', () => {
 
   it('exposes a save-status readout and play/stop toggle', () => {
     const { core, root, canvases } = setup()
-    const handle = renderProjectChrome(core, root, canvases, {})
+    const handle = renderProjectChrome(core, root, canvases)
     expect(root.querySelector('[data-save-status]')).not.toBeNull()
     expect(root.querySelector('[data-play]')!.textContent).toBe('Play')
     handle.dispose()
+  })
+
+  it('mounts and disposes an injected project agent panel', () => {
+    const { core, root, canvases } = setup()
+    let disposed = false
+    const handle = renderProjectChrome(core, root, canvases, {
+      mountAgentPanel: (_editor, host) => {
+        host.textContent = 'Agent'
+        return { update() {}, dispose() { disposed = true } }
+      }
+    })
+    expect(root.querySelector('.ed-chat-host')?.textContent).toBe('Agent')
+    handle.dispose()
+    expect(disposed).toBe(true)
   })
 })

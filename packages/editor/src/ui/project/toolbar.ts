@@ -70,6 +70,7 @@ function statusText(state: ProjectEditorState): string {
   switch (state.saveStatus.kind) {
     case 'saving': return 'Saving…'
     case 'saved': return 'Saved'
+    case 'exported': return 'Exported'
     case 'error': return `Error: ${state.saveStatus.message}`
     case 'idle': return state.dirtyPaths.length > 0 ? `${state.dirtyPaths.length} unsaved` : 'Saved'
   }

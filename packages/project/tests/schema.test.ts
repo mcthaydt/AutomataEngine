@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultObject, validateProperty } from '../src'
+import { collectReferences, defaultObject, validateProperty } from '../src'
 import type { ObjectSchema } from '../src'
 
 const stats = {
@@ -45,12 +45,34 @@ describe('property schemas', () => {
     expect(validateProperty({ kind: 'color', key: 'k', label: 'K', required: true }, 'red')[0]).toMatchObject({ code: 'color.format' })
     expect(validateProperty({ kind: 'vec3', key: 'k', label: 'K', required: true }, { x: 0, y: 0 })[0]).toMatchObject({ code: 'vec3.type' })
     expect(validateProperty({ kind: 'number', key: 'k', label: 'K', required: true, max: 3 }, 9)[0]).toMatchObject({ code: 'number.max' })
+    expect(validateProperty({ kind: 'number', min: 0, max: 3 }, 2)).toEqual([])
+    expect(validateProperty({ kind: 'number' }, Number.NaN)[0]).toMatchObject({ code: 'number.type' })
+    expect(validateProperty({ kind: 'string' }, 'ok')).toEqual([])
+    expect(validateProperty({ kind: 'boolean' }, true)).toEqual([])
+    expect(validateProperty({ kind: 'enum', values: ['a'] }, 'a')).toEqual([])
+    expect(validateProperty({ kind: 'color' }, 3)[0]).toMatchObject({ code: 'color.type' })
+    expect(validateProperty({ kind: 'vec3' }, { x: 0, y: 1, z: 2 })).toEqual([])
+    expect(validateProperty({ kind: 'vec3' }, { x: 0, y: Infinity, z: 2 })[0]).toMatchObject({ code: 'vec3.type' })
   })
 
   it('validates references as non-empty strings without resolving them', () => {
     const ref = { kind: 'reference', key: 'r', label: 'R', required: true, target: 'entity' } as const satisfies import('../src').PropertySchema
     expect(validateProperty(ref, '')[0]).toMatchObject({ code: 'reference.empty' })
     expect(validateProperty(ref, 'some-id')).toEqual([])
+    expect(validateProperty({ ...ref, required: false }, '')).toEqual([])
+    expect(validateProperty(ref, 3)[0]).toMatchObject({ code: 'reference.type' })
+  })
+
+  it('rejects non-objects and ignores metadata-only fields without keys', () => {
+    expect(validateProperty(stats, null)[0]).toMatchObject({ code: 'object.type' })
+    const schema = {
+      kind: 'object',
+      fields: [
+        { kind: 'string', label: 'Decoration' },
+        { kind: 'string', key: 'optional', required: false }
+      ]
+    } as const satisfies ObjectSchema
+    expect(validateProperty(schema, { optional: undefined })).toEqual([])
   })
 
   it('validates object-array tables', () => {
@@ -75,5 +97,58 @@ describe('defaultObject', () => {
       tint: '#ffffff',
       target: ''
     })
+  })
+
+  it('builds defaults for every nested property kind', () => {
+    const schema = {
+      kind: 'object',
+      fields: [
+        { key: 'count', kind: 'number', min: 2 },
+        { key: 'name', kind: 'string' },
+        { key: 'enabled', kind: 'boolean' },
+        { key: 'emptyEnum', kind: 'enum', values: [] },
+        { key: 'position', kind: 'vec3' },
+        { key: 'nested', kind: 'object', fields: [{ key: 'color', kind: 'color' }] },
+        { key: 'items', kind: 'array', presentation: 'list', item: { kind: 'string' } },
+        { kind: 'string', label: 'Ignored' }
+      ]
+    } as const satisfies ObjectSchema
+    expect(defaultObject(schema)).toEqual({
+      count: 2,
+      name: '',
+      enabled: false,
+      emptyEnum: '',
+      position: { x: 0, y: 0, z: 0 },
+      nested: { color: '#ffffff' },
+      items: []
+    })
+  })
+})
+
+describe('collectReferences', () => {
+  const schema = {
+    kind: 'object',
+    fields: [
+      { key: 'resource', kind: 'reference', target: 'resource' },
+      { key: 'entity', kind: 'reference', target: 'entity' },
+      {
+        key: 'rows', kind: 'array', presentation: 'list',
+        item: { kind: 'object', fields: [{ key: 'resource', kind: 'reference', target: 'resource' }] }
+      }
+    ]
+  } as const satisfies ObjectSchema
+
+  it('walks nested arrays and filters empty or differently-targeted references', () => {
+    expect(collectReferences(schema, {
+      resource: 'tuning', entity: 'spawn', rows: [{ resource: 'texture' }, { resource: '' }]
+    }, 'resource')).toEqual(['tuning', 'texture'])
+    expect(collectReferences(schema, {
+      resource: 'tuning', entity: 'spawn', rows: [{ resource: 'texture' }]
+    }, 'entity')).toEqual(['spawn'])
+  })
+
+  it('stops safely at malformed objects and arrays', () => {
+    expect(collectReferences(schema, null, 'resource')).toEqual([])
+    expect(collectReferences(schema, { resource: 4, rows: 'bad' }, 'resource')).toEqual([])
   })
 })

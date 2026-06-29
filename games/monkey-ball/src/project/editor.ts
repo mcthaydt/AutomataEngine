@@ -1,4 +1,4 @@
-import type { ArchetypeLibrary } from '@automata/engine'
+import { archetypeLibraryKind, createLoader, type ArchetypeLibrary } from '@automata/engine'
 import { createKeyboardInput } from '@automata/engine/browser'
 import type { EditorProjectRegistration, ProjectPlayHandle } from '@automata/editor'
 import { CORE_TYPE_IDS } from '@automata/project'
@@ -87,4 +87,15 @@ export function createMonkeyBallEditorRegistration(
       evaluate: (snapshot, opts) => evaluateMonkeyBallProject(snapshot, lib, opts)
     }
   }
+}
+
+/** Load the code-owned archetype registry and close it into the browser editor registration. */
+export async function loadMonkeyBallEditorRegistration(
+  readText: (path: string) => Promise<string>
+): Promise<EditorProjectRegistration<CompiledMonkeyBallProject>> {
+  const lib = await createLoader(readText).load(
+    archetypeLibraryKind,
+    '/data/archetypes/standard.yaml'
+  )
+  return createMonkeyBallEditorRegistration(lib)
 }

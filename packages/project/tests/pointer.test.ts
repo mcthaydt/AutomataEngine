@@ -49,7 +49,36 @@ describe('JSON Pointer helpers', () => {
 
   it('rejects out-of-range array operations', () => {
     expect(() => insertAtPointer({ arr: [1] }, '/arr', 5, 9)).toThrow(PointerError)
+    expect(() => insertAtPointer({ arr: [1] }, '/arr', -1, 9)).toThrow(PointerError)
     expect(() => removeAtPointer({ arr: [1] }, '/arr', 5)).toThrow(PointerError)
+    expect(() => removeAtPointer({ arr: [1] }, '/arr', -1)).toThrow(PointerError)
     expect(() => moveAtPointer({ arr: [1] }, '/arr', 0, 5)).toThrow(PointerError)
+    expect(() => moveAtPointer({ arr: [1] }, '/arr', -1, 0)).toThrow(PointerError)
+    expect(() => moveAtPointer({ arr: [1] }, '/arr', 0, -1)).toThrow(PointerError)
+  })
+
+  it('covers root, object creation, and array replacement writes', () => {
+    const root = { arr: [{ value: 1 }], keep: true }
+    expect(getAtPointer(root, '')).toBe(root)
+    expect(setAtPointer(root, '', { arr: [{ value: 1 }], keep: true })).toBe(root)
+    expect(setAtPointer(root, '', { replaced: true })).toEqual({ replaced: true })
+    expect(setAtPointer(root, '/created', 2)).toEqual({ ...root, created: 2 })
+    expect(setAtPointer(root, '/arr/0/value', 2)).toEqual({ arr: [{ value: 2 }], keep: true })
+    expect(setAtPointer(root, '/arr/-', { value: 3 })).toEqual({ arr: [{ value: 1 }, { value: 3 }], keep: true })
+    expect(setAtPointer(root, '/arr/0', { value: 1 })).toBe(root)
+  })
+
+  it('rejects malformed set paths and non-array collection targets', () => {
+    expect(() => getAtPointer({ arr: [1] }, '/arr/01')).toThrow(PointerError)
+    expect(() => getAtPointer({ arr: [1] }, '/arr/nope')).toThrow(PointerError)
+    expect(() => setAtPointer({ arr: [1] }, '/arr/2/x', 3)).toThrow(PointerError)
+    expect(() => setAtPointer({ a: {} }, '/a/missing/x', 3)).toThrow(PointerError)
+    expect(() => setAtPointer({ a: 1 }, '/a/x', 3)).toThrow(PointerError)
+    expect(() => insertAtPointer({ value: 1 }, '/value', 0, 2)).toThrow(PointerError)
+  })
+
+  it('preserves identity when moving an item to the same index', () => {
+    const root = { arr: ['a', 'b'] }
+    expect(moveAtPointer(root, '/arr', 1, 1)).toBe(root)
   })
 })

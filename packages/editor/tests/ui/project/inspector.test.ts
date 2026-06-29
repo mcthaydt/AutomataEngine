@@ -30,18 +30,91 @@ describe('project inspector', () => {
 
     name.value = 'Renamed'; name.dispatchEvent(new Event('change'))
     expect(dispatched).toContainEqual({ type: 'setProperty', target: { kind: 'entity', sceneId: 'main', entityId: 'box' }, pointer: '/name', value: 'Renamed' })
+    const enabled = parent.querySelector<HTMLInputElement>('[data-entity-enabled]')!
+    enabled.checked = false; enabled.dispatchEvent(new Event('change'))
+    expect(dispatched).toContainEqual({ type: 'setProperty', target: { kind: 'entity', sceneId: 'main', entityId: 'box' }, pointer: '/enabled', value: false })
   })
 
   it('renders only shared position controls for a multi-entity selection', () => {
-    const { registration, snapshot, parent, inspector } = setup()
+    const { registration, snapshot, parent, dispatched, inspector } = setup()
+    snapshot.scenes.main!.entities.push({ id: 'plain', name: 'Plain', enabled: true, components: [] })
     inspector.update({ registration, snapshot, selection: { kind: 'entity', sceneId: 'main', entityIds: ['box', 'box'] } })
     expect(parent.querySelector('[data-multi-position]')).not.toBeNull()
     expect(parent.querySelector('[data-component-card]')).toBeNull()
+    const x = parent.querySelector<HTMLInputElement>('[data-axis="x"]')!
+    x.value = 'bad'; x.dispatchEvent(new Event('change'))
+    expect(x.getAttribute('aria-invalid')).toBe('true')
+    x.value = '3'; x.dispatchEvent(new Event('change'))
+    expect(x.hasAttribute('aria-invalid')).toBe(false)
+    expect(dispatched.filter((command) => command.type === 'setProperty')).toHaveLength(2)
+
+    dispatched.length = 0
+    inspector.update({ registration, snapshot, selection: { kind: 'entity', sceneId: 'main', entityIds: ['plain', 'box'] } })
+    const y = parent.querySelector<HTMLInputElement>('[data-axis="y"]')!
+    y.value = '2'; y.dispatchEvent(new Event('change'))
+    expect(dispatched).toHaveLength(1)
   })
 
   it('renders an empty hint for the project root selection', () => {
     const { registration, snapshot, parent, inspector } = setup()
     inspector.update({ registration, snapshot, selection: { kind: 'project' } })
     expect(parent.textContent).toBeTruthy()
+  })
+
+  it('renders scene, missing-resource, and missing-entity states', () => {
+    const { registration, snapshot, parent, inspector } = setup()
+    inspector.update({ registration, snapshot, selection: { kind: 'scene', sceneId: 'main' } })
+    expect(parent.textContent).toContain('Main')
+    inspector.update({ registration, snapshot, selection: { kind: 'scene', sceneId: 'missing' } })
+    expect(parent.textContent).toContain('missing')
+    inspector.update({ registration, snapshot, selection: { kind: 'resource', resourceId: 'missing' } })
+    expect(parent.textContent).toContain('Resource not found')
+    inspector.update({ registration, snapshot, selection: { kind: 'entity', sceneId: 'main', entityIds: ['missing'] } })
+    expect(parent.textContent).toContain('Entity not found')
+  })
+
+  it('focuses one component and falls back to its ID when unregistered', () => {
+    const { registration, snapshot, parent, inspector } = setup()
+    snapshot.scenes.main!.entities[0]!.components.push({ id: 'custom', typeId: 'unknown.type', data: {} })
+    inspector.update({
+      registration,
+      snapshot,
+      selection: { kind: 'component', sceneId: 'main', entityId: 'box', componentId: 'custom' }
+    })
+    expect(parent.querySelectorAll('[data-component-card]')).toHaveLength(1)
+    expect(parent.textContent).toContain('custom')
+    expect(parent.querySelector('[data-entity-name]')).toBeNull()
+  })
+
+  it('disposes its root panel', () => {
+    const { parent, inspector } = setup()
+    inspector.dispose()
+    expect(parent.children).toHaveLength(0)
+  })
+
+  it('builds filtered resource and entity reference options', () => {
+    const { registration, snapshot, parent, inspector } = setup()
+    registration.resourceTypes.push({
+      typeId: 'fake.links', label: 'Links', defaultData: {},
+      schema: {
+        kind: 'object', fields: [
+          { key: 'any', label: 'Any', kind: 'reference', target: 'resource' },
+          { key: 'typed', label: 'Typed', kind: 'reference', target: 'resource', typeIds: ['fake.tuning'] },
+          { key: 'entity', label: 'Entity', kind: 'reference', required: true, target: 'entity' }
+        ]
+      }
+    })
+    snapshot.resources.links = {
+      formatVersion: 1, id: 'links', typeId: 'fake.links',
+      data: { any: 'tuning', typed: 'tuning', entity: 'box' }
+    }
+    inspector.update({ registration, snapshot, selection: { kind: 'resource', resourceId: 'links' } })
+    expect(parent.querySelector<HTMLSelectElement>('[data-prop="/any"] select')!.options.length).toBe(3)
+    expect(parent.querySelector<HTMLSelectElement>('[data-prop="/typed"] select')!.options.length).toBe(2)
+    expect(parent.querySelector<HTMLSelectElement>('[data-prop="/entity"] select')!.options.item(0)!.value).toBe('box')
+
+    snapshot.manifest.entrySceneId = ''
+    inspector.update({ registration, snapshot, selection: { kind: 'resource', resourceId: 'links' } })
+    expect(parent.querySelector<HTMLSelectElement>('[data-prop="/entity"] select')!.options.length).toBe(0)
   })
 })

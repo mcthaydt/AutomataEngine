@@ -26,6 +26,14 @@ describe('property control', () => {
     input.value = 'abc'; change(input)
     expect(dispatched).toHaveLength(2)
     expect(input.getAttribute('aria-invalid')).toBe('true')
+
+    const unclamped = mount({ kind: 'number' }, null, '/plain')
+    const plain = unclamped.parent.querySelector('input')!
+    expect(plain.value).toBe('')
+    plain.value = '-2'; change(plain)
+    expect(unclamped.dispatched.at(-1)).toMatchObject({ value: -2 })
+    plain.value = ''; change(plain)
+    expect(plain.getAttribute('aria-invalid')).toBe('true')
   })
 
   it('emits string, multiline, boolean, enum, and color values', () => {
@@ -51,6 +59,10 @@ describe('property control', () => {
     const color = c.parent.querySelector('input')!
     color.value = '#00ff00'; change(color)
     expect(c.dispatched).toEqual([{ type: 'setProperty', target, pointer: '/c', value: '#00ff00' }])
+
+    expect(mount({ kind: 'string' }, null, '/empty').parent.querySelector<HTMLInputElement>('input')!.value).toBe('')
+    expect(mount({ kind: 'enum', values: [] }, null, '/enum').parent.querySelector<HTMLSelectElement>('select')!.value).toBe('')
+    expect(mount({ kind: 'color' }, null, '/color').parent.querySelector<HTMLInputElement>('input')!.value).toBe('#000000')
   })
 
   it('emits a per-axis pointer for vec3 edits', () => {
@@ -58,6 +70,12 @@ describe('property control', () => {
     const x = parent.querySelector<HTMLInputElement>('[data-axis="x"]')!
     x.value = '5'; change(x)
     expect(dispatched).toEqual([{ type: 'setProperty', target, pointer: '/position/x', value: 5 }])
+
+    const empty = mount({ kind: 'vec3' }, null, '/empty')
+    expect(empty.parent.querySelector<HTMLInputElement>('[data-axis="z"]')!.value).toBe('0')
+    const invalid = empty.parent.querySelector<HTMLInputElement>('[data-axis="y"]')!
+    invalid.value = ''; change(invalid)
+    expect(invalid.getAttribute('aria-invalid')).toBe('true')
   })
 
   it('renders a reference select with a blank option for optional fields', () => {
@@ -69,6 +87,9 @@ describe('property control', () => {
     expect(select.options[0]!.value).toBe('')
     select.value = 'a'; change(select)
     expect(dispatched).toEqual([{ type: 'setProperty', target, pointer: '/r', value: 'a' }])
+
+    const required = mount({ kind: 'reference', required: true, target: 'entity' }, null, '/target')
+    expect(required.parent.querySelector('select')!.options).toHaveLength(0)
   })
 
   it('renders nested object groups with extended pointers', () => {
@@ -79,5 +100,26 @@ describe('property control', () => {
     const input = parent.querySelector<HTMLInputElement>('[data-prop="/inner/a"] input')!
     input.value = '7'; change(input)
     expect(dispatched).toEqual([{ type: 'setProperty', target, pointer: '/inner/a', value: 7 }])
+
+    const keyless: PropertySchema = { kind: 'object', fields: [{ kind: 'string', label: 'Skipped' }, { key: 'name', kind: 'string' }] }
+    expect(mount(keyless, null, '').parent.querySelectorAll('input')).toHaveLength(1)
+  })
+
+  it('falls back to an empty array and supports hidden labels and disposal', () => {
+    const parent = document.createElement('div')
+    const handle = mountPropertyControl(parent, {
+      schema: { kind: 'array', presentation: 'list', item: { kind: 'string' } },
+      value: 'bad', pointer: '/items', target, dispatch: () => {}, hideLabel: true
+    })
+    expect(parent.querySelectorAll('[data-cell]')).toHaveLength(0)
+    handle.dispose()
+    expect(parent.children).toHaveLength(0)
+
+    const hidden = document.createElement('div')
+    mountPropertyControl(hidden, {
+      schema: { kind: 'number', label: 'Hidden' }, value: 1, pointer: '/n', target,
+      dispatch: () => {}, hideLabel: true
+    })
+    expect(hidden.querySelector('.ed-field-label')).toBeNull()
   })
 })

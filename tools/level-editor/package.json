@@ -5,9 +5,10 @@
   "type": "module",
   "dependencies": {
     "@automata/editor": "*",
-    "@automata/editor-agent": "*",
     "@automata/engine": "*",
-    "monkey-ball": "*"
+    "@automata/project": "*",
+    "monkey-ball": "*",
+    "pulsebreak": "*"
   },
   "scripts": {
     "dev": "vite",

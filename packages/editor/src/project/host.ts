@@ -19,7 +19,7 @@ import type { ProjectSelection } from './selection'
  * expressed as project commands; the host never branches on a game.
  */
 export interface ProjectEditorOpts<Compiled> {
-  registration: EditorProjectRegistration<Compiled>
+  registration: EditorProjectRegistration<Compiled> | RegisteredEditorProject
   snapshot: ProjectSnapshot
   render: RenderPort
   physics: PhysicsPort

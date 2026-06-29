@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loadProjectFiles, projectFileDocuments } from '../src'
+import { isSafeProjectPath, loadProjectFiles, projectFileDocuments } from '../src'
 import { sampleSnapshot } from './fixtures/sampleProject'
 
 function readerFor(snapshot = sampleSnapshot()) {
@@ -52,5 +52,34 @@ describe('project files', () => {
     const mismatched = readerFor()
     mismatched.files.set('scenes/main.scene.json', JSON.stringify({ ...sampleSnapshot().scenes.main, id: 'other' }))
     await expect(loadProjectFiles(mismatched.reader)).rejects.toThrow(/mismatch|id/i)
+
+    const resourceId = readerFor()
+    resourceId.files.set('resources/tuning.resource.json', JSON.stringify({ ...sampleSnapshot().resources.tuning, id: 'other' }))
+    await expect(loadProjectFiles(resourceId.reader)).rejects.toThrow(/resource id mismatch/i)
+
+    const resourceType = readerFor()
+    resourceType.files.set('resources/tuning.resource.json', JSON.stringify({ ...sampleSnapshot().resources.tuning, typeId: 'other' }))
+    await expect(loadProjectFiles(resourceType.reader)).rejects.toThrow(/resource type mismatch/i)
+  })
+
+  it('classifies safe relative project paths', () => {
+    expect(isSafeProjectPath('scenes/main.scene.json')).toBe(true)
+    for (const path of ['', '/absolute', 'a\\b', 'a//b', './a', 'a/../b']) {
+      expect(isSafeProjectPath(path)).toBe(false)
+    }
+  })
+
+  it('rejects unsafe resource paths and missing serialized documents', async () => {
+    const unsafe = sampleSnapshot()
+    unsafe.manifest.resources[0]!.path = '../resource.json'
+    const unsafeFolder = readerFor(unsafe)
+    await expect(loadProjectFiles(unsafeFolder.reader)).rejects.toThrow(/unsafe resource path/i)
+
+    const missingScene = sampleSnapshot()
+    delete missingScene.scenes.main
+    expect(() => projectFileDocuments(missingScene)).toThrow(/missing scene/i)
+    const missingResource = sampleSnapshot()
+    delete missingResource.resources.tuning
+    expect(() => projectFileDocuments(missingResource)).toThrow(/missing resource/i)
   })
 })
