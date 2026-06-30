@@ -1,5 +1,5 @@
 import { CORE_TYPE_IDS, resolveWorldTransform, type ProjectSnapshot, type ResourceDocument, type SceneDocument } from '@automata/project'
-import type { EnemyKind } from '../entity'
+import { ENEMY_KINDS, type EnemyKind } from '../entity'
 import type { UpgradeDef, UpgradeId } from '../sim/upgrades'
 import { PULSEBREAK_TYPE_IDS, type EnemySpec, type PulsebreakCompiledProject, type SpawnZone, type WaveSpec } from './types'
 
@@ -64,7 +64,8 @@ function compileFloor(scene: SceneDocument): PulsebreakCompiledProject['floor'] 
   const world = resolveWorldTransform(scene, floor.id)
   const primitive = floor.components.find((component) => component.typeId === CORE_TYPE_IDS.primitive)!.data as { size: Vec3Data }
   const surface = floor.components.find((component) => component.typeId === CORE_TYPE_IDS.surface)?.data as { color?: string } | undefined
-  return { position: world.position, size: { ...primitive.size }, color: surface?.color ?? '#0a1124' }
+  const size = { x: primitive.size.x * world.scale.x, y: primitive.size.y * world.scale.y, z: primitive.size.z * world.scale.z }
+  return { position: world.position, size, color: surface?.color ?? '#0a1124' }
 }
 
 function compilePlayerSpawn(scene: SceneDocument): Vec3Data {
@@ -111,7 +112,7 @@ function compileWaves(rows: WaveRow[]): WaveSpec[] {
   return rows.map((row) => {
     const wave: WaveSpec = { rammer: 0, shooter: 0, boss: 0 }
     for (const spawn of row.spawns) {
-      if (spawn.enemyTypeId in wave) wave[spawn.enemyTypeId as keyof WaveSpec] += spawn.count
+      if ((ENEMY_KINDS as readonly string[]).includes(spawn.enemyTypeId)) wave[spawn.enemyTypeId as keyof WaveSpec] += spawn.count
     }
     return wave
   })

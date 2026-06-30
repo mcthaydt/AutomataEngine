@@ -1,6 +1,8 @@
 import type { EngineEntity, Vec3 } from '@automata/engine'
 
-export type EnemyKind = 'rammer' | 'shooter' | 'boss'
+/** The enemy kinds the runtime AI/weapon code can actually spawn and drive. */
+export const ENEMY_KINDS = ['rammer', 'shooter', 'boss'] as const
+export type EnemyKind = (typeof ENEMY_KINDS)[number]
 export type Faction = 'player' | 'enemy'
 
 /** Ranged weapon carried by shooter and boss enemies. Self-contained tuning. */

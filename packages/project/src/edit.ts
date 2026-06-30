@@ -3,9 +3,10 @@ import {
   sceneDocumentSchema, resourceDocumentSchema, projectSnapshotSchema
 } from './model'
 import type { EntityDocument, ResourceDocument, SceneDocument, ProjectSnapshot } from './model'
-import { CORE_COMPONENTS } from './core'
+import { indexComponents, indexResources } from './core'
 import { collectReferences, validateProperty } from './schema'
-import type { ComponentTypeRegistration, GameProjectDefinition, ResourceTypeRegistration } from './registration'
+import type { ObjectSchema } from './schema'
+import type { GameProjectDefinition } from './registration'
 import { insertAtPointer, moveAtPointer, removeAtPointer, setAtPointer } from './pointer'
 import type { ProjectCommand, ProjectTarget } from './command'
 import type { ZodType } from 'zod'
@@ -30,17 +31,6 @@ export class ProjectCommandError extends Error {
 }
 
 type AnyDefinition = GameProjectDefinition<unknown>
-
-function indexComponents(definition: AnyDefinition): Map<string, ComponentTypeRegistration> {
-  const map = new Map<string, ComponentTypeRegistration>()
-  for (const component of CORE_COMPONENTS) map.set(component.typeId, component)
-  for (const component of definition.components) map.set(component.typeId, component)
-  return map
-}
-
-function indexResources(definition: AnyDefinition): Map<string, ResourceTypeRegistration> {
-  return new Map(definition.resources.map((resource) => [resource.typeId, resource]))
-}
 
 function formatIssues(issues: ReadonlyArray<{ pointer: string; code: string }>): string {
   return issues.map((issue) => `${issue.pointer || '/'} ${issue.code}`).join(', ')
@@ -159,7 +149,7 @@ function resolveTarget(definition: AnyDefinition, snapshot: ProjectSnapshot, tar
   }
 }
 
-function assertSchemaData(schema: ComponentTypeRegistration['schema'] | undefined, data: unknown, label: string, typeId: string, target: ProjectTarget): void {
+function assertSchemaData(schema: ObjectSchema | undefined, data: unknown, label: string, typeId: string, target: ProjectTarget): void {
   if (!schema) return
   const issues = validateProperty(schema, data)
   if (issues.length > 0) throw new ProjectCommandError(`Invalid ${label} data for "${typeId}": ${formatIssues(issues)}`, `${label}.invalid`, target)

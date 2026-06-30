@@ -1,4 +1,4 @@
-import type { ComponentTypeRegistration } from './registration'
+import type { ComponentTypeRegistration, GameProjectDefinition, ResourceTypeRegistration } from './registration'
 
 /**
  * Standard, game-agnostic authoring components.
@@ -126,3 +126,16 @@ export const CORE_COMPONENTS: readonly ComponentTypeRegistration[] = [
   zone,
   camera
 ]
+
+/** Index a definition's components (core first, then game) by type ID. */
+export function indexComponents(definition: GameProjectDefinition<unknown>): Map<string, ComponentTypeRegistration> {
+  const map = new Map<string, ComponentTypeRegistration>()
+  for (const component of CORE_COMPONENTS) map.set(component.typeId, component)
+  for (const component of definition.components) map.set(component.typeId, component)
+  return map
+}
+
+/** Index a definition's resource registrations by type ID. */
+export function indexResources(definition: GameProjectDefinition<unknown>): Map<string, ResourceTypeRegistration> {
+  return new Map(definition.resources.map((resource) => [resource.typeId, resource]))
+}

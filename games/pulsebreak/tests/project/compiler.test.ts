@@ -18,6 +18,18 @@ describe('Pulsebreak project compiler', () => {
     expect(compiled.projectileLifetimeS).toBe(3)
   })
 
+  it('scales the floor primitive size by the floor entity world scale', () => {
+    const snapshot = createPulsebreakTemplate()
+    const scene = snapshot.scenes[snapshot.manifest.entrySceneId]!
+    const floor = scene.entities.find((entity) => entity.components.some((c) => c.typeId === 'core.primitive'))!
+    const base = { ...(floor.components.find((c) => c.typeId === 'core.primitive')!.data as { size: { x: number; y: number; z: number } }).size }
+    const transform = floor.components.find((c) => c.typeId === 'core.transform')!
+    ;(transform.data as { scale: { x: number; y: number; z: number } }).scale = { x: 2, y: 3, z: 4 }
+
+    const scaled = pulsebreakProjectDefinition.compile(snapshot)
+    expect(scaled.floor.size).toEqual({ x: base.x * 2, y: base.y * 3, z: base.z * 4 })
+  })
+
   it('compiles the floor render seed, player start, and zones ordered by entity ID', () => {
     expect(compiled.floor).toEqual({ position: { x: 0, y: -0.15, z: 0 }, size: { x: 28, y: 0.3, z: 28 }, color: '#0a1124' })
     expect(compiled.player.spawn).toEqual({ x: 0, y: 0.5, z: 0 })

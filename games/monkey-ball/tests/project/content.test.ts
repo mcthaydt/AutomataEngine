@@ -35,6 +35,12 @@ describe('Monkey Ball project content', () => {
     )
   })
 
+  it('rejects a physics max tilt beyond the 45° clamp', async () => {
+    const snapshot = await loadProjectFiles(reader)
+    ;(snapshot.resources.physics!.data as { maxTiltRad: number }).maxTiltRad = Math.PI / 2
+    expect(validateProject(monkeyBallProjectDefinition, snapshot).map((issue) => issue.code)).toContain('number.max')
+  })
+
   it('compiles all six scenes and retains every no-input metric baseline', async () => {
     const compiled = monkeyBallProjectDefinition.compile(await loadProjectFiles(reader))
     const ids = compiled.manifest.worlds.flatMap((world) => world.levels)

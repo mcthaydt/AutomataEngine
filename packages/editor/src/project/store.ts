@@ -51,7 +51,12 @@ function computeDirtyPaths(snapshot: ProjectSnapshot, saved: ProjectSnapshot): s
   return paths
 }
 
-/** Adopt the live document(s) for `paths` into the saved snapshot. */
+/** Keep `activeSceneId` pointing at a scene that still exists, falling back to the entry scene. */
+function reconcileActiveScene(snapshot: ProjectSnapshot, activeSceneId: string): string {
+  return snapshot.scenes[activeSceneId] ? activeSceneId : snapshot.manifest.entrySceneId
+}
+
+/** Adopt the saved document(s) for `paths` from the snapshot that was actually persisted. */
 function applyMarkSaved(saved: ProjectSnapshot, snapshot: ProjectSnapshot, paths: string[]): ProjectSnapshot {
   let result = saved
   for (const path of paths) {
@@ -111,6 +116,7 @@ export function createProjectEditorStore<Compiled>(
       past: [...state.past, state.snapshot].slice(-PROJECT_UNDO_LIMIT),
       future: [],
       dirtyPaths: computeDirtyPaths(next, state.savedSnapshot),
+      activeSceneId: reconcileActiveScene(next, state.activeSceneId),
       selection: reconcileSelection(next, state.selection)
     }
   }
@@ -144,6 +150,18 @@ export function createProjectEditorStore<Compiled>(
           selection: initialProjectSelection,
           saveStatus: { kind: 'idle' }
         }
+      case 'recoverSnapshot':
+        // Adopt an autosaved snapshot as the live working copy while keeping the on-disk
+        // baseline as savedSnapshot, so dirtyPaths reflects the unsaved work and Save writes it.
+        return {
+          ...state,
+          snapshot: action.snapshot,
+          past: [],
+          future: [],
+          dirtyPaths: computeDirtyPaths(action.snapshot, state.savedSnapshot),
+          activeSceneId: reconcileActiveScene(action.snapshot, state.activeSceneId),
+          selection: reconcileSelection(action.snapshot, state.selection)
+        }
       case 'select':
         return { ...state, selection: reconcileSelection(state.snapshot, action.selection) }
       case 'setActiveScene':
@@ -157,6 +175,7 @@ export function createProjectEditorStore<Compiled>(
           past: state.past.slice(0, -1),
           future: [state.snapshot, ...state.future],
           dirtyPaths: computeDirtyPaths(prev, state.savedSnapshot),
+          activeSceneId: reconcileActiveScene(prev, state.activeSceneId),
           selection: reconcileSelection(prev, state.selection)
         }
       }
@@ -169,6 +188,7 @@ export function createProjectEditorStore<Compiled>(
           past: [...state.past, state.snapshot],
           future: rest,
           dirtyPaths: computeDirtyPaths(next, state.savedSnapshot),
+          activeSceneId: reconcileActiveScene(next, state.activeSceneId),
           selection: reconcileSelection(next, state.selection)
         }
       }
@@ -177,16 +197,21 @@ export function createProjectEditorStore<Compiled>(
       case 'beginSave':
         return { ...state, saveStatus: { kind: 'saving' } }
       case 'markSaved': {
-        const savedSnapshot = applyMarkSaved(state.savedSnapshot, state.snapshot, action.paths)
+        const savedSnapshot = applyMarkSaved(state.savedSnapshot, action.snapshot, action.paths)
         return { ...state, savedSnapshot, dirtyPaths: computeDirtyPaths(state.snapshot, savedSnapshot), saveStatus: { kind: 'saved' } }
       }
-      case 'markExported':
+      case 'markExported': {
+        // A bundle export only clears dirt when it IS the save target (bundle mode, snapshot
+        // provided). For a folder-backed project the bundle is a side artifact, so folder dirt
+        // must survive or the unsaved-changes guard is silently defeated.
+        if (!action.snapshot) return { ...state, saveStatus: { kind: 'exported' } }
         return {
           ...state,
-          savedSnapshot: state.snapshot,
-          dirtyPaths: [],
+          savedSnapshot: action.snapshot,
+          dirtyPaths: computeDirtyPaths(state.snapshot, action.snapshot),
           saveStatus: { kind: 'exported' }
         }
+      }
       case 'saveFailed':
         return { ...state, saveStatus: { kind: 'error', message: action.message, paths: action.paths } }
       case 'setSnap':

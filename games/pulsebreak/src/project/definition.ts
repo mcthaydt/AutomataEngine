@@ -6,6 +6,7 @@ import {
 import { compilePulsebreakProject } from './compiler'
 import { createPulsebreakTemplate } from './template'
 import { PULSEBREAK_TYPE_IDS, type PulsebreakCompiledProject } from './types'
+import { ENEMY_KINDS } from '../entity'
 
 /**
  * The Pulsebreak project definition: authoring component/resource schemas plus
@@ -152,6 +153,11 @@ function validatePulsebreakProject(snapshot: ProjectSnapshot): ValidationIssue[]
 
   const enemyRows = resourceData<{ enemies: EnemyRow[] }>(snapshot, PULSEBREAK_TYPE_IDS.enemyTypes)?.enemies ?? []
   assertUniqueIds(enemyRows, 'pulsebreak.enemyId', 'enemy', error)
+  for (const row of enemyRows) {
+    if (!(ENEMY_KINDS as readonly string[]).includes(row.id)) {
+      error('pulsebreak.enemyKind', `Enemy "${row.id}" is not a runtime-supported kind (${ENEMY_KINDS.join(', ')})`)
+    }
+  }
   const enemyIds = new Set(enemyRows.map((row) => row.id))
 
   const waveRows = resourceData<{ waves: WaveRow[] }>(snapshot, PULSEBREAK_TYPE_IDS.waveSet)?.waves ?? []

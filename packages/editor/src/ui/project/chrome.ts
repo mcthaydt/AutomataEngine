@@ -20,6 +20,8 @@ import { mountProjectValidation } from './validation'
  */
 export interface ProjectChromeOptions {
   onSave?: () => void
+  /** Re-evaluated each render so the Save affordance can react to a dropped backing folder. */
+  canSave?: () => boolean
   onExport?: () => void
   onImport?: () => void
   onSwitchProject?: () => void
@@ -76,6 +78,7 @@ export function renderProjectChrome(
     callbacks: {
       onSwitchProject: options.onSwitchProject,
       onSave: options.onSave,
+      canSave: options.canSave,
       onExport: options.onExport,
       onImport: options.onImport,
       onPlay: () => core.enterPlay(),

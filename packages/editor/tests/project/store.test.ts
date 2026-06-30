@@ -13,7 +13,7 @@ describe('project editor store', () => {
     const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
     store.dispatch(speedCommand(8))
     expect(store.getState().dirtyPaths).toEqual(['resources/tuning.resource.json'])
-    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'] })
+    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'], snapshot: store.getState().snapshot })
     expect(store.getState().dirtyPaths).toEqual([])
     store.dispatch({ type: 'undo' })
     expect(store.getState().dirtyPaths).toEqual(['resources/tuning.resource.json'])
@@ -70,7 +70,7 @@ describe('project editor store', () => {
     store.dispatch({ type: 'projectCommand', command: { type: 'setProperty', target: { kind: 'entity', sceneId: 'main', entityId: 'box' }, pointer: '/name', value: 'Renamed' } })
     expect(store.getState().dirtyPaths.sort()).toEqual(['resources/tuning.resource.json', 'scenes/main.scene.json'])
 
-    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'] })
+    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'], snapshot: store.getState().snapshot })
     expect(store.getState().dirtyPaths).toEqual(['scenes/main.scene.json'])
 
     store.dispatch({ type: 'saveFailed', message: 'disk full', paths: ['scenes/main.scene.json'] })
@@ -78,14 +78,60 @@ describe('project editor store', () => {
     expect(store.getState().dirtyPaths).toEqual(['scenes/main.scene.json'])
   })
 
-  it('records a bundle export as durable persistence', () => {
+  it('records a bundle export as durable persistence when it is the save target', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    store.dispatch(speedCommand(8))
+
+    store.dispatch({ type: 'markExported', snapshot: store.getState().snapshot })
+
+    expect(store.getState().dirtyPaths).toEqual([])
+    expect(store.getState().saveStatus).toEqual({ kind: 'exported' })
+  })
+
+  it('keeps folder dirt when a bundle export is only a side artifact', () => {
     const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
     store.dispatch(speedCommand(8))
 
     store.dispatch({ type: 'markExported' })
 
-    expect(store.getState().dirtyPaths).toEqual([])
+    expect(store.getState().dirtyPaths).toEqual(['resources/tuning.resource.json'])
     expect(store.getState().saveStatus).toEqual({ kind: 'exported' })
+  })
+
+  it('marks the saved snapshot clean, not edits made during an async save', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    store.dispatch(speedCommand(8))
+    const inFlight = store.getState().snapshot
+    store.dispatch(speedCommand(9))
+
+    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'], snapshot: inFlight })
+
+    expect(store.getState().dirtyPaths).toEqual(['resources/tuning.resource.json'])
+  })
+
+  it('recovers a snapshot as dirty working state against the saved baseline', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const recovered = fakeSnapshot()
+    ;(recovered.resources.tuning!.data as { speed: number }).speed = 99
+
+    store.dispatch({ type: 'recoverSnapshot', snapshot: recovered })
+
+    expect((store.getState().snapshot.resources.tuning!.data as { speed: number }).speed).toBe(99)
+    expect((store.getState().savedSnapshot.resources.tuning!.data as { speed: number }).speed).toBe(4)
+    expect(store.getState().dirtyPaths).toContain('resources/tuning.resource.json')
+  })
+
+  it('reconciles the active scene when it is removed', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const scene2 = { formatVersion: 1 as const, id: 'two', name: 'Two', entities: [] }
+    store.dispatch({ type: 'projectCommand', command: { type: 'addScene', scene: scene2, path: 'scenes/two.scene.json' } })
+    store.dispatch({ type: 'setActiveScene', sceneId: 'two' })
+    expect(store.getState().activeSceneId).toBe('two')
+
+    store.dispatch({ type: 'projectCommand', command: { type: 'removeScene', sceneId: 'two' } })
+
+    expect(store.getState().activeSceneId).toBe('main')
+    expect(selectActiveScene(store.getState())).toBeDefined()
   })
 
   it('accepts registered input and ignores no-op commands or empty batches', () => {
@@ -115,7 +161,7 @@ describe('project editor store', () => {
     store.dispatch({ type: 'projectCommand', command: { type: 'setProperty', target: { kind: 'manifest' }, pointer: '/name', value: 'Renamed' } })
     store.dispatch({ type: 'projectCommand', command: { type: 'setProperty', target: { kind: 'entity', sceneId: 'main', entityId: 'box' }, pointer: '/name', value: 'Box 2' } })
     expect(store.getState().dirtyPaths.sort()).toEqual(['automata.project.json', 'scenes/main.scene.json'])
-    store.dispatch({ type: 'markSaved', paths: ['automata.project.json', 'scenes/main.scene.json', 'missing.json'] })
+    store.dispatch({ type: 'markSaved', paths: ['automata.project.json', 'scenes/main.scene.json', 'missing.json'], snapshot: store.getState().snapshot })
     expect(store.getState().dirtyPaths).toEqual([])
   })
 

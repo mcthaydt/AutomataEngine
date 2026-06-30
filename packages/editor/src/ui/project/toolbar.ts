@@ -9,6 +9,8 @@ import type { ProjectEditorState } from '../../project/store'
 export interface ProjectToolbarCallbacks {
   onSwitchProject?: () => void
   onSave?: () => void
+  /** Re-evaluated on every render so Save can disappear when the backing folder is dropped. */
+  canSave?: () => boolean
   onExport?: () => void
   onImport?: () => void
   onPlay: () => void
@@ -50,7 +52,7 @@ function render(root: HTMLElement, state: ProjectEditorState, options: ProjectTo
   const { callbacks } = options
 
   if (callbacks.onSwitchProject) root.append(button('Switch Project', 'data-switch', callbacks.onSwitchProject))
-  if (callbacks.onSave) root.append(button('Save', 'data-save', callbacks.onSave))
+  if (callbacks.onSave && (callbacks.canSave?.() ?? true)) root.append(button('Save', 'data-save', callbacks.onSave))
   if (callbacks.onExport) root.append(button('Export Bundle', 'data-export', callbacks.onExport))
   if (callbacks.onImport) root.append(button('Import Bundle', 'data-import', callbacks.onImport))
   root.append(button('Undo', 'data-undo', () => options.dispatch({ type: 'undo' })))

@@ -1,4 +1,4 @@
-import { CORE_COMPONENTS } from './core'
+import { indexComponents, indexResources } from './core'
 import { escapePointerToken } from './pointer'
 import { validateProperty } from './schema'
 import { isSafeProjectPath } from './files'
@@ -34,17 +34,6 @@ export function validateProject<Compiled>(definition: GameProjectDefinition<Comp
   }
 
   return issues.sort(compareIssues)
-}
-
-function indexComponents(definition: GameProjectDefinition<unknown>): Map<string, ComponentTypeRegistration> {
-  const map = new Map<string, ComponentTypeRegistration>()
-  for (const component of CORE_COMPONENTS) map.set(component.typeId, component)
-  for (const component of definition.components) map.set(component.typeId, component)
-  return map
-}
-
-function indexResources(definition: GameProjectDefinition<unknown>): Map<string, ResourceTypeRegistration> {
-  return new Map(definition.resources.map((resource) => [resource.typeId, resource]))
 }
 
 // --- Layer 1: format / identity / paths -------------------------------------

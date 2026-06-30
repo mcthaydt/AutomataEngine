@@ -16,7 +16,8 @@ const mocks = vi.hoisted(() => ({
   autosaveDispose: vi.fn(),
   chromeDispose: vi.fn(),
   renderFrame: vi.fn(),
-  flyUpdate: vi.fn()
+  flyUpdate: vi.fn(),
+  loadAutosaveResult: null as unknown
 }))
 
 vi.mock('@automata/engine', () => ({
@@ -46,7 +47,8 @@ vi.mock('@automata/engine/browser', () => ({
 
 vi.mock('@automata/editor', () => ({
   createProjectEditor: vi.fn(() => mocks.core),
-  installProjectAutosave: vi.fn(() => mocks.autosaveDispose)
+  installProjectAutosave: vi.fn(() => mocks.autosaveDispose),
+  loadProjectAutosave: vi.fn(() => mocks.loadAutosaveResult)
 }))
 
 vi.mock('@automata/editor/ui', () => ({
@@ -156,6 +158,7 @@ describe('project browser session', () => {
     mocks.chromeOptions = null
     mocks.canvases = null
     mocks.loopOptions = null
+    mocks.loadAutosaveResult = null
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as CanvasRenderingContext2D)
     vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({
       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 80,
@@ -239,6 +242,106 @@ describe('project browser session', () => {
     expect(mocks.chromeDispose).toHaveBeenCalledOnce()
     expect(mocks.core!.dispose).toHaveBeenCalledOnce()
     expect(mocks.rendererDispose).toHaveBeenCalledOnce()
+  })
+
+  it('restores a differing autosaved snapshot as dirty working state on mount', async () => {
+    const recovered = structuredClone(snapshot)
+    recovered.scenes.main.name = 'Recovered'
+    mocks.loadAutosaveResult = recovered
+    const session = await mountProjectSession({
+      root: document.createElement('main'),
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: null,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      onSwitchProject: async () => {}
+    })
+
+    expect(mocks.core!.store.dispatch).toHaveBeenCalledWith({ type: 'recoverSnapshot', snapshot: recovered })
+    session.dispose()
+  })
+
+  it('ignores an autosave identical to the opened project', async () => {
+    mocks.loadAutosaveResult = structuredClone(snapshot)
+    const session = await mountProjectSession({
+      root: document.createElement('main'),
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: null,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      onSwitchProject: async () => {}
+    })
+
+    expect(mocks.core!.store.dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'recoverSnapshot' }))
+    session.dispose()
+  })
+
+  it('ignores destructive shortcuts that originate from an editable field', async () => {
+    const root = document.createElement('main')
+    document.body.append(root)
+    const session = await mountProjectSession({
+      root,
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: null,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      onSwitchProject: async () => {}
+    })
+
+    const input = document.createElement('input')
+    root.append(input)
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
+    expect(mocks.core!.deleteSelected).not.toHaveBeenCalled()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
+    expect(mocks.core!.deleteSelected).toHaveBeenCalledOnce()
+
+    session.dispose()
+    root.remove()
+  })
+
+  it('stops advertising Save to the chrome after a bundle import drops the folder', async () => {
+    const browserWorkspace = workspace(structuredClone(snapshot))
+    const session = await mountProjectSession({
+      root: document.createElement('main'),
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: storage() as never,
+      autosaveStorage: {} as never,
+      workspace: browserWorkspace as never,
+      onSwitchProject: async () => {}
+    })
+
+    expect((mocks.chromeOptions!.canSave as () => boolean)()).toBe(true)
+
+    mocks.chromeOptions!.onImport!()
+    await vi.waitFor(() => expect(browserWorkspace.importBundle).toHaveBeenCalledOnce())
+
+    expect((mocks.chromeOptions!.canSave as () => boolean)()).toBe(false)
+    session.dispose()
+  })
+
+  it('ignores a second save while one is already in flight', async () => {
+    const saveFn = vi.fn(async () => ({ saved: ['scenes/main.scene.json'], failed: [] }))
+    const backing = storage(saveFn)
+    const session = await mountProjectSession({
+      root: document.createElement('main'),
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: backing as never,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      onSwitchProject: async () => {}
+    })
+
+    const [, second] = await Promise.all([session.save(), session.save()])
+
+    expect(saveFn).toHaveBeenCalledOnce()
+    expect(second).toBe(false)
+    session.dispose()
   })
 
   it('reports save failures, no-storage saves, cancelled imports, and setup cleanup', async () => {

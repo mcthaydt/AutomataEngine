@@ -16,14 +16,15 @@ export type ProjectEditorAction =
   | { type: 'projectCommand'; command: ProjectCommand }
   | { type: 'projectCommandBatch'; commands: ProjectCommand[] }
   | { type: 'loadSnapshot'; snapshot: ProjectSnapshot }
+  | { type: 'recoverSnapshot'; snapshot: ProjectSnapshot }
   | { type: 'select'; selection: ProjectSelection }
   | { type: 'setActiveScene'; sceneId: string }
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'setMode'; mode: 'edit' | 'play' }
   | { type: 'beginSave' }
-  | { type: 'markSaved'; paths: string[] }
-  | { type: 'markExported' }
+  | { type: 'markSaved'; paths: string[]; snapshot: ProjectSnapshot }
+  | { type: 'markExported'; snapshot?: ProjectSnapshot }
   | { type: 'saveFailed'; message: string; paths: string[] }
   | { type: 'setSnap'; snap: number }
   | { type: 'setPrimaryView'; view: PrimaryView }

@@ -34,6 +34,15 @@ function byId<T extends { id: string }>(items: readonly T[]): Map<string, T> {
   return new Map(items.map((item) => [item.id, item]))
 }
 
+/** True when the elements common to both lists appear in a different relative order. */
+function orderChanged(before: readonly { id: string }[], after: readonly { id: string }[]): boolean {
+  const afterIds = new Set(after.map((item) => item.id))
+  const beforeIds = new Set(before.map((item) => item.id))
+  const beforeCommon = before.filter((item) => afterIds.has(item.id)).map((item) => item.id)
+  const afterCommon = after.filter((item) => beforeIds.has(item.id)).map((item) => item.id)
+  return beforeCommon.some((id, index) => id !== afterCommon[index])
+}
+
 function entityProperties(entity: EntityDocument): unknown {
   return {
     id: entity.id,
@@ -54,7 +63,11 @@ function manifestProperties(snapshot: ProjectSnapshot): unknown {
     id: manifest.id,
     name: manifest.name,
     gameId: manifest.gameId,
-    entrySceneId: manifest.entrySceneId
+    entrySceneId: manifest.entrySceneId,
+    // The scene/resource path index is part of the manifest: a path edit or reorder is a real
+    // change even when the documents themselves are untouched.
+    scenes: manifest.scenes,
+    resources: manifest.resources
   }
 }
 
@@ -92,7 +105,7 @@ function compareEntities(before: SceneDocument, after: SceneDocument, changes: P
       changes.push({ id: entity.id, kind: 'added', label })
       continue
     }
-    if (!valuesEqual(entityProperties(old), entityProperties(entity))) {
+    if (!valuesEqual(entityProperties(old), entityProperties(entity)) || orderChanged(old.components, entity.components)) {
       changes.push({ id: entity.id, kind: 'modified', label })
     }
     compareComponents(old, entity, changes)
@@ -115,7 +128,7 @@ function compareScenes(before: ProjectSnapshot, after: ProjectSnapshot, changes:
       changes.push({ id: scene.id, kind: 'added', label })
       continue
     }
-    if (!valuesEqual(sceneProperties(old), sceneProperties(scene))) {
+    if (!valuesEqual(sceneProperties(old), sceneProperties(scene)) || orderChanged(old.entities, scene.entities)) {
       changes.push({ id: scene.id, kind: 'modified', label })
     }
     compareEntities(old, scene, changes)

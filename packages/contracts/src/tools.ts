@@ -20,12 +20,6 @@ export type ToolName =
   | 'validate'
   | 'evaluate'
 
-const TOOL_NAMES: readonly ToolName[] = [
-  'addEntity', 'removeEntities', 'reparentEntity', 'addComponent', 'removeComponent',
-  'addResource', 'removeResource', 'setProperty', 'insertArrayItem', 'removeArrayItem',
-  'moveArrayItem', 'getProject', 'getHierarchy', 'getResources', 'validate', 'evaluate'
-]
-
 /** RFC 6901 pointer, including the empty pointer for a document root. */
 const jsonPointerSchema = z.string().regex(/^(?:|(?:\/(?:[^~]|~[01])*)*)$/)
 
@@ -63,6 +57,9 @@ export const toolArgSchemas = {
   validate: z.object({}),
   evaluate: projectEvaluationOptionsSchema
 } as const satisfies Record<ToolName, z.ZodType>
+
+/** Derived from the schema map so a new tool can never be silently left unadvertised. */
+const TOOL_NAMES = Object.keys(toolArgSchemas) as ToolName[]
 
 const TOOL_DESCRIPTIONS: Record<ToolName, string> = {
   addEntity: 'Add an entity to a project scene.',

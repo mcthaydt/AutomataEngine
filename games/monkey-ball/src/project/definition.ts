@@ -95,7 +95,7 @@ const physics: ResourceTypeRegistration = {
   schema: {
     kind: 'object',
     fields: [
-      { key: 'maxTiltRad', label: 'Max Tilt (rad)', kind: 'number', required: true, min: 0 },
+      { key: 'maxTiltRad', label: 'Max Tilt (rad)', kind: 'number', required: true, min: 0, max: Math.PI / 4 },
       { key: 'tiltSmooth', label: 'Tilt Smoothing', kind: 'number', required: true, min: 0, max: 1 },
       { key: 'gravity', label: 'Gravity', kind: 'number', required: true, min: 0 },
       {

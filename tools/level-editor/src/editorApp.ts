@@ -9,6 +9,7 @@ import { attachCanvasRenderer, startLoopDriver } from '@automata/engine/browser'
 import {
   createProjectEditor,
   installProjectAutosave,
+  loadProjectAutosave,
   type ProjectStoragePort,
   type RegisteredEditorProject
 } from '@automata/editor'
@@ -22,7 +23,7 @@ import {
   screenToWorldXZ,
   type ScreenSize
 } from '@automata/editor/viewport'
-import type { ProjectSnapshot } from '@automata/project'
+import { stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
 import type { BrowserWorkspace, OpenedBrowserProject } from './browserWorkspace'
 import type { LegacyMonkeyBallRecovery } from './legacyAutosave'
 import type { ProjectCatalog } from './projectCatalog'
@@ -273,16 +274,32 @@ export async function mountProjectSession(
       physics
     })
     cleanup.defer(() => core.dispose())
+
+    // Recover newer in-memory work an earlier session autosaved but never persisted. Compare
+    // canonically so a clean reopen (autosave == opened project) does not spuriously go dirty.
+    const autosaved = loadProjectAutosave(options.autosaveStorage, options.snapshot.manifest.id)
+    if (autosaved && stringifyProjectBundle(toProjectBundle(autosaved)) !== stringifyProjectBundle(toProjectBundle(options.snapshot))) {
+      core.store.dispatch({ type: 'recoverSnapshot', snapshot: autosaved })
+    }
     cleanup.defer(installProjectAutosave(core.store, options.autosaveStorage, { debounceMs: 400 }))
 
     let selectedPrefab: string | null = null
     let backingStorage = options.storage
+    let saving = false
     const save = async (): Promise<boolean> => {
-      if (!backingStorage) return false
+      if (!backingStorage || saving) return false // a folder write is in flight; don't race a second one
+      saving = true
+      try {
+        return await runSave(backingStorage)
+      } finally {
+        saving = false
+      }
+    }
+    const runSave = async (store: NonNullable<typeof backingStorage>): Promise<boolean> => {
       const state = core.store.getState()
       core.store.dispatch({ type: 'beginSave' })
-      const result = await backingStorage.save(state.snapshot, state.dirtyPaths)
-      if (result.saved.length > 0) core.store.dispatch({ type: 'markSaved', paths: result.saved })
+      const result = await store.save(state.snapshot, state.dirtyPaths)
+      if (result.saved.length > 0) core.store.dispatch({ type: 'markSaved', paths: result.saved, snapshot: state.snapshot })
       if (result.failed.length > 0) {
         core.store.dispatch({
           type: 'saveFailed',
@@ -291,15 +308,22 @@ export async function mountProjectSession(
         })
         return false
       }
-      if (result.saved.length === 0) core.store.dispatch({ type: 'markSaved', paths: [] })
+      if (result.saved.length === 0) core.store.dispatch({ type: 'markSaved', paths: [], snapshot: state.snapshot })
       forceDirty = false
       options.onPersisted?.()
       return true
     }
     const exportBundle = (): void => {
-      options.workspace.exportBundle(options.registration, core.store.getState().snapshot)
-      core.store.dispatch({ type: 'markExported' })
-      forceDirty = false
+      const exported = core.store.getState().snapshot
+      options.workspace.exportBundle(options.registration, exported)
+      // Only a bundle-mode export (no folder behind it) counts as durable persistence; a
+      // folder-backed export is a side artifact and must not clear the folder's dirty state.
+      if (backingStorage) {
+        core.store.dispatch({ type: 'markExported' })
+      } else {
+        core.store.dispatch({ type: 'markExported', snapshot: exported })
+        forceDirty = false
+      }
       options.onPersisted?.()
     }
     const importBundle = async (): Promise<void> => {
@@ -311,7 +335,9 @@ export async function mountProjectSession(
 
     const chrome = renderProjectChrome(core, options.root, { '2d': canvas2d, '3d': canvas3d }, {
       onSwitchProject: () => { void options.onSwitchProject() },
-      onSave: backingStorage ? () => { void save() } : undefined,
+      onSave: () => { void save() },
+      // Re-checked on every render, so importing a bundle (which drops the folder) hides Save.
+      canSave: () => Boolean(backingStorage?.capabilities.canSaveFolder),
       onExport: exportBundle,
       onImport: () => { void importBundle() },
       onSelectPrefab: (prefabId) => { selectedPrefab = prefabId }
@@ -372,6 +398,7 @@ export async function mountProjectSession(
     }
 
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (isEditableTarget(event.target)) return // never hijack typing in inspector text fields
       const key = event.key.toLowerCase()
       if (event.key === 'Delete' || event.key === 'Backspace') core.deleteSelected()
       else if ((event.metaKey || event.ctrlKey) && key === 'z') {
@@ -416,6 +443,13 @@ export async function mountProjectSession(
     cleanup.dispose()
     throw error
   }
+}
+
+/** True when a keyboard event is being typed into an editable control, where editor shortcuts must not fire. */
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  const tag = target.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable
 }
 
 function actionButton(label: string, onClick: () => void): HTMLButtonElement {

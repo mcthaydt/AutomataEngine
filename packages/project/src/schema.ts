@@ -13,6 +13,8 @@
  * object (key/label present), and as an array's item type (no key/label).
  */
 
+import { escapePointerToken } from './pointer'
+
 /** Metadata shared by every property; present on object fields, omitted at roots. */
 export interface CommonProperty {
   key?: string
@@ -95,11 +97,6 @@ export interface PropertyIssue {
 
 const COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
 
-/** Escape a single JSON Pointer reference token per RFC 6901 (`~`→`~0`, `/`→`~1`). */
-function escapeToken(token: string): string {
-  return token.replace(/~/g, '~0').replace(/\//g, '~1')
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -163,7 +160,7 @@ function validateObject(schema: ObjectProperty, value: unknown, pointer: string)
   for (const field of schema.fields) {
     if (field.key === undefined) continue
     known.add(field.key)
-    const childPointer = `${pointer}/${escapeToken(field.key)}`
+    const childPointer = `${pointer}/${escapePointerToken(field.key)}`
     const present = field.key in value && value[field.key] !== undefined
     if (!present) {
       if (field.required) issues.push({ code: 'required', message: `${field.label ?? field.key} is required`, pointer: childPointer })
@@ -172,7 +169,7 @@ function validateObject(schema: ObjectProperty, value: unknown, pointer: string)
     issues.push(...validateProperty(field, value[field.key], childPointer))
   }
   for (const key of Object.keys(value)) {
-    if (!known.has(key)) issues.push({ code: 'object.unknownKey', message: `Unknown key "${key}"`, pointer: `${pointer}/${escapeToken(key)}` })
+    if (!known.has(key)) issues.push({ code: 'object.unknownKey', message: `Unknown key "${key}"`, pointer: `${pointer}/${escapePointerToken(key)}` })
   }
   return issues
 }

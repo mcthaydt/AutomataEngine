@@ -52,6 +52,14 @@ describe('Pulsebreak project definition', () => {
     expect(codes(weight)).toContain('pulsebreak.zoneWeight')
   })
 
+  it('flags an enemy type the runtime cannot spawn', async () => {
+    const snapshot = await snapshotWith((s) => {
+      const enemies = (s.resources.enemies!.data as { enemies: Array<Record<string, unknown>> }).enemies
+      enemies.push({ id: 'tank', health: 10, radius: 1, speed: 1, contactDamage: 1, scoreValue: 1, color: '#ffffff' })
+    })
+    expect(codes(snapshot)).toContain('pulsebreak.enemyKind')
+  })
+
   it('flags a final wave without a boss', async () => {
     const snapshot = await snapshotWith((s) => {
       const waves = (s.resources.waves!.data as { waves: Array<{ spawns: Array<{ enemyTypeId: string; count: number }> }> }).waves

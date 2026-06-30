@@ -56,6 +56,32 @@ describe('diffProjects', () => {
     ])
   })
 
+  it('reports a scene as modified when its entities are reordered', () => {
+    const before = fakeSnapshot()
+    before.scenes.arena!.entities.push({ id: 'spawn-west', name: 'West Spawn', enabled: true, components: [] })
+    const after = structuredClone(before)
+    after.scenes.arena!.entities.reverse()
+
+    expect(diffProjects(before, after).changes).toContainEqual({ id: 'arena', kind: 'modified', label: 'scene:arena' })
+  })
+
+  it('reports an entity as modified when its components are reordered', () => {
+    const before = fakeSnapshot()
+    before.scenes.arena!.entities[0]!.components.push({ id: 'transform', typeId: 'core.transform', data: {} })
+    const after = structuredClone(before)
+    after.scenes.arena!.entities[0]!.components.reverse()
+
+    expect(diffProjects(before, after).changes).toContainEqual({ id: 'spawn-east', kind: 'modified', label: 'entity:arena/spawn-east' })
+  })
+
+  it('reports the project as modified when a manifest scene path changes', () => {
+    const before = fakeSnapshot()
+    const after = structuredClone(before)
+    after.manifest.scenes[0]!.path = 'scenes/renamed.scene.json'
+
+    expect(diffProjects(before, after).changes).toContainEqual({ id: 'fake-project', kind: 'modified', label: 'project:fake-project' })
+  })
+
   it('reports no changes for structurally identical snapshots', () => {
     const snapshot = fakeSnapshot()
     expect(diffProjects(snapshot, structuredClone(snapshot))).toEqual({

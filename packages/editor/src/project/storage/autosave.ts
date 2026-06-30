@@ -16,10 +16,12 @@ export function projectAutosaveKey(projectId: string): string {
 export function installProjectAutosave(store: ProjectEditorStore, storage: StoragePort, opts: { debounceMs: number }): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null
   const write = (): void => {
+    timer = null
     const snapshot = store.getState().snapshot
     storage.set(projectAutosaveKey(snapshot.manifest.id), JSON.stringify({ version: PROJECT_AUTOSAVE_VERSION, snapshot }))
   }
-  const unsubscribe = store.subscribe(() => {
+  const unsubscribe = store.subscribe((state, prev) => {
+    if (state.snapshot === prev.snapshot) return // only the snapshot is persisted; ignore UI/no-op changes
     if (timer) clearTimeout(timer)
     timer = setTimeout(write, opts.debounceMs)
   })

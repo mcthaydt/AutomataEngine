@@ -70,16 +70,16 @@ export async function runTuning(options: TuningRunOptions): Promise<TuningRunRes
       initialSnapshot: best.snapshot,
       baseline: { score: bestScore }
     })
-    const result = await runAgentFn({
+    // A non-'end' stop (e.g. the agent exhausting its turn budget) is a normal outcome, not a
+    // fatal error: the host still holds whatever edits it made, so return them as a candidate and
+    // let the loop's validate/score/patience machinery judge it. Throwing here would discard every
+    // improvement already accepted on prior iterations.
+    await runAgentFn({
       provider,
       host,
       system: TUNING_SYSTEM,
       prompt: options.prompt
     })
-    if (result.stoppedBy !== 'end') {
-      const reason = result.stoppedBy === 'max-turns' ? 'maximum turn limit' : 'provider stop'
-      throw new Error(`agent stopped before completing (${reason})`)
-    }
     return { snapshot: host.snapshot, commands: [...best.commands, ...host.commands] }
   }
 

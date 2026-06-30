@@ -83,20 +83,25 @@ describe('runTuning', () => {
     expect(result.commands).toHaveLength(0)
   })
 
-  it.each([
-    ['max-turns', 'maximum turn limit'],
-    ['provider-stop', 'provider stop']
-  ] as const)('reports %s agent termination explicitly', async (stoppedBy, message) => {
-    const editor = createFakeProjectEditor({ scores: [0.2] })
-    const runAgentFn = vi.fn(async () => ({ ...complete(), stoppedBy }))
+  it('preserves accumulated improvements when a later proposal stops without a clean end', async () => {
+    const editor = createFakeProjectEditor({ scores: [0.2, 0.8] })
+    let call = 0
+    const runAgentFn = vi.fn(async ({ host }: { host: ToolHost }) => {
+      call += 1
+      await host.executeTool('addEntity', { sceneId: 'arena', entity: entity(`p${call}`) })
+      return call === 1 ? complete() : { ...complete(), stoppedBy: 'max-turns' as const }
+    })
 
-    await expect(runTuning({
+    const result = await runTuning({
       core: editor,
       provider,
       prompt: 'improve',
-      maxIterations: 1,
+      maxIterations: 2,
       runAgentFn
-    })).rejects.toThrow(message)
+    })
+
+    expect(result).toMatchObject({ score: 0.8, accepted: 1 })
+    expect(result.commands).toHaveLength(1)
   })
 
   it('throws explicitly when the project has no evaluation adapter', async () => {

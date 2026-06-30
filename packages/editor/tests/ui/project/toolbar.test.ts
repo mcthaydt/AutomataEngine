@@ -33,6 +33,23 @@ describe('project toolbar', () => {
     expect(parent.children).toHaveLength(0)
   })
 
+  it('hides Save when canSave reports the project cannot currently be saved', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const parent = document.createElement('div')
+    let canSave = true
+    const toolbar = mountProjectToolbar(parent, {
+      dispatch: store.dispatch,
+      callbacks: { onSave: vi.fn(), onPlay: () => {}, onStop: () => {}, canSave: () => canSave }
+    })
+    toolbar.update(store.getState())
+    expect(parent.querySelector('[data-save]')).not.toBeNull()
+
+    canSave = false
+    toolbar.update(store.getState())
+    expect(parent.querySelector('[data-save]')).toBeNull()
+    toolbar.dispose()
+  })
+
   it('omits unavailable actions and renders every save status', () => {
     const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
     const parent = document.createElement('div')
@@ -50,7 +67,7 @@ describe('project toolbar', () => {
     toolbar.update(store.getState())
     expect(status()).toBe('1 unsaved')
     store.dispatch({ type: 'beginSave' }); toolbar.update(store.getState()); expect(status()).toBe('Saving…')
-    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'] }); toolbar.update(store.getState()); expect(status()).toBe('Saved')
+    store.dispatch({ type: 'markSaved', paths: ['resources/tuning.resource.json'], snapshot: store.getState().snapshot }); toolbar.update(store.getState()); expect(status()).toBe('Saved')
     store.dispatch({ type: 'markExported' }); toolbar.update(store.getState()); expect(status()).toBe('Exported')
     store.dispatch({ type: 'saveFailed', message: 'disk full', paths: ['x'] }); toolbar.update(store.getState()); expect(status()).toBe('Error: disk full')
   })
