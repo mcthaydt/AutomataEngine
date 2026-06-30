@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 95% — 18 of 19 tasks complete (Tasks 1–18 ✓). (Updated 2026-06-29)
+**Progress:** 100% — 19 of 19 tasks complete (Tasks 1–19 ✓). (Updated 2026-06-29)
 
 ---
 
@@ -1763,7 +1763,7 @@ git commit -m "refactor(editor): remove legacy game-shaped editor path"
 - Modify: `docs/superpowers/plans/2026-06-27-generic-project-editor.md` (final checkboxes)
 - Modify: `AGENTS.md` only if final gate results require status correction
 
-- [ ] **Step 1: Run fresh static and unit gates**
+- [x] **Step 1: Run fresh static and unit gates**
 
 Run:
 
@@ -1775,13 +1775,13 @@ npm run coverage
 
 Expected: diff check clean; lint/typecheck/tests PASS; coverage at least 90% lines and branches.
 
-- [ ] **Step 2: Run all browser e2e gates**
+- [x] **Step 2: Run all browser e2e gates**
 
 Run: `npm run e2e`
 
 Expected: Monkey Ball, Pulsebreak, and both editor project workflows PASS with zero unexpected page errors.
 
-- [ ] **Step 3: Build every production app**
+- [x] **Step 3: Build every production app**
 
 Run: `npm run build`
 
@@ -1791,7 +1791,7 @@ Expected: exits 0 and creates:
 - `games/pulsebreak/dist/index.html`
 - `tools/level-editor/dist/index.html`
 
-- [ ] **Step 4: Verify the MCP executable against both shipped projects**
+- [x] **Step 4: Verify the MCP executable against both shipped projects**
 
 Run one protocol smoke through the existing test harness for each directory:
 
@@ -1801,7 +1801,7 @@ npx vitest run --project editor-mcp-server --testNamePattern="Monkey Ball projec
 
 Expected: both project catalogs and stdio smoke PASS.
 
-- [ ] **Step 5: Serve production builds for the final manual checkpoint — stop and wait**
+- [x] **Step 5: Serve production builds for the final manual checkpoint — stop and wait**
 
 Serve the three `dist/` outputs on separate loopback ports using `npx vite preview` and their package Vite configs. Verify:
 
@@ -1814,7 +1814,7 @@ Serve the three `dist/` outputs on separate loopback ports using `npx vite previ
 
 Stop here. Continue only after the user confirms the production checkpoint passes.
 
-- [ ] **Step 6: Close trackers and commit final verification state**
+- [x] **Step 6: Close trackers and commit final verification state**
 
 Mark every completed checkbox in this plan. Confirm the generic editor milestone remains checked in `AGENTS.md`. Run `git diff --check` once more.
 

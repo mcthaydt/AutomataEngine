@@ -89,7 +89,7 @@ describe('MCP server', () => {
     }
   })
 
-  it('starts through the declared executable with the default project', async () => {
+  it('stdio smoke starts through the declared executable', async () => {
     const manifest = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8')) as {
       bin: Record<string, string>
     }

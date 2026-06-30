@@ -15,9 +15,9 @@ const pulsebreakProject = resolve(repoRoot, 'games/pulsebreak/public/project')
 
 describe('headless MCP host', () => {
   it.each([
-    ['monkey-ball', monkeyBallProject],
-    ['pulsebreak', pulsebreakProject]
-  ])('loads the %s registration from manifest.gameId', async (gameId, projectDir) => {
+    ['Monkey Ball project', 'monkey-ball', monkeyBallProject],
+    ['Pulsebreak project', 'pulsebreak', pulsebreakProject]
+  ])('loads the %s registration from manifest.gameId', async (_label, gameId, projectDir) => {
     const { host, registration, snapshot } = await createHeadlessHost({ projectDir })
 
     expect(snapshot.manifest.gameId).toBe(gameId)
@@ -68,7 +68,7 @@ describe('headless MCP host', () => {
     await expect(reader.readText('missing.scene.json')).rejects.toThrow()
   })
 
-  it('defaults to the shipped Monkey Ball project', async () => {
+  it('defaults to the shipped monkey-ball registration', async () => {
     const { snapshot } = await createHeadlessHost()
     expect(snapshot.manifest.gameId).toBe('monkey-ball')
   })
