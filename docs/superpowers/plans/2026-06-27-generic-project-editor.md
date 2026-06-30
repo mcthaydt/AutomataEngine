@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 84% — 16 of 19 tasks complete (Tasks 1–16 ✓). (Updated 2026-06-29)
+**Progress:** 89% — 17 of 19 tasks complete (Tasks 1–17 ✓). (Updated 2026-06-29)
 
 ---
 
@@ -1588,25 +1588,25 @@ git commit -m "feat(editor-agent): operate on generic projects"
 - Modify: `tools/editor-mcp-server/README.md`
 - Modify: `package-lock.json`
 
-- [ ] **Step 1: Write failing multi-game headless-host tests**
+- [x] **Step 1: Write failing multi-game headless-host tests**
 
 Create a host from Monkey Ball's project directory and Pulsebreak's project directory. Assert `manifest.gameId` selects the matching registration, tools operate on each snapshot, evaluate works, and an unknown game ID reports available IDs. Add bundle JSON input coverage and path traversal/missing file failures.
 
-- [ ] **Step 2: Update protocol tests to generic resources/tools**
+- [x] **Step 2: Update protocol tests to generic resources/tools**
 
 Assert MCP list-tools returns the Task 15 names/schemas, resource reads expose project/hierarchy/resources/validation/baseline, invalid args map to MCP `InvalidParams`, unknown resource URIs fail, and write errors set `isError` without mutating the snapshot.
 
-- [ ] **Step 3: Run MCP tests and observe red**
+- [x] **Step 3: Run MCP tests and observe red**
 
 Run: `npx vitest run --project editor-mcp-server`
 
 Expected: FAIL because the server still boots Monkey Ball data/one level directly.
 
-- [ ] **Step 4: Implement catalog and filesystem reader**
+- [x] **Step 4: Implement catalog and filesystem reader**
 
 Catalog imports headless-capable registrations from `monkey-ball/project` and `pulsebreak/project`, closes evaluation dependencies, and exposes lookup by game ID. `projectReader.ts` adapts a root directory to `ProjectFileReader` with `resolve` containment checks before every read.
 
-- [ ] **Step 5: Rewrite headless host options**
+- [x] **Step 5: Rewrite headless host options**
 
 ```ts
 export interface HeadlessHostOptions {
@@ -1618,11 +1618,11 @@ export interface HeadlessHostOptions {
 
 Exactly one source may be supplied. Default to `games/monkey-ball/public/project` for CLI backward convenience, but report the selected project/game on stderr only. Load/parse, select registration, validate, then create `ProjectToolHost`.
 
-- [ ] **Step 6: Update stdio CLI and README**
+- [x] **Step 6: Update stdio CLI and README**
 
 Support `--project <directory>` and `--bundle <file>`; reject both together. Keep stdout protocol-clean. Document example Claude/Codex MCP configs for each shipped project and list the generic tools/resources.
 
-- [ ] **Step 7: Run MCP executable/protocol and root gates**
+- [x] **Step 7: Run MCP executable/protocol and root gates**
 
 Run:
 
@@ -1636,7 +1636,7 @@ npm run ci
 
 Expected: tests/typechecks/CI PASS; launcher prints usage to stderr and exits 0 without corrupting stdout.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add tools/editor-mcp-server package-lock.json

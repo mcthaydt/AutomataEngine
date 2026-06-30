@@ -1,41 +1,45 @@
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  projectToolDefs,
+  type ProjectToolHost
+} from '@automata/contracts'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { ErrorCode } from '@modelcontextprotocol/sdk/types.js'
-import type { ToolHost } from '@automata/contracts'
-import { readFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { createHeadlessHost } from '../src/headlessHost'
 import { createMcpServer } from '../src/server'
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const pulsebreakProject = resolve(packageDir, '../../games/pulsebreak/public/project')
 
-const fakeHost: ToolHost = {
-  listTools: () => [],
+const fakeHost: ProjectToolHost = {
+  listTools: projectToolDefs,
   executeTool: async () => ({ ok: true, content: null }),
-  readResource: async () => null
+  readResource: async (uri) => ({ uri, title: 'Current project' })
+}
+
+async function connected(host: ProjectToolHost) {
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+  const server = createMcpServer(host)
+  const client = new Client({ name: 'editor-mcp-server-test', version: '0.0.0' })
+  await server.connect(serverTransport)
+  await client.connect(clientTransport)
+  return { client, server }
 }
 
 describe('MCP server', () => {
-  it('reads a valid editor resource through the in-memory server', async () => {
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-    const host: ToolHost = {
-      ...fakeHost,
-      readResource: async (uri) => ({ uri, title: 'Current document' })
-    }
-    const server = createMcpServer(host)
-    const client = new Client({ name: 'editor-mcp-server-test', version: '0.0.0' })
-
-    await server.connect(serverTransport)
-    await client.connect(clientTransport)
+  it('reads generic project resources through the protocol', async () => {
+    const { client, server } = await connected(fakeHost)
     try {
-      const result = await client.readResource({ uri: 'editor://doc' })
+      const result = await client.readResource({ uri: 'editor://project' })
       const content = result.contents[0]!
-      expect(content).toMatchObject({ uri: 'editor://doc', mimeType: 'application/json' })
+      expect(content).toMatchObject({ uri: 'editor://project', mimeType: 'application/json' })
       expect(JSON.parse((content as { text: string }).text)).toEqual({
-        uri: 'editor://doc',
-        title: 'Current document'
+        uri: 'editor://project', title: 'Current project'
       })
     } finally {
       await client.close()
@@ -43,14 +47,13 @@ describe('MCP server', () => {
     }
   })
 
-  it('rejects an unknown resource URI as invalid params', async () => {
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-    const server = createMcpServer(fakeHost)
-    const client = new Client({ name: 'editor-mcp-server-test', version: '0.0.0' })
-
-    await server.connect(serverTransport)
-    await client.connect(clientTransport)
+  it('maps invalid tool arguments and unknown resources to InvalidParams', async () => {
+    const { client, server } = await connected(fakeHost)
     try {
+      await expect(client.callTool({
+        name: 'removeArrayItem',
+        arguments: { target: { kind: 'manifest' }, pointer: 'bad', index: -1 }
+      })).rejects.toMatchObject({ code: ErrorCode.InvalidParams })
       await expect(client.readResource({ uri: 'editor://missing' })).rejects.toMatchObject({
         code: ErrorCode.InvalidParams
       })
@@ -60,7 +63,33 @@ describe('MCP server', () => {
     }
   })
 
-  it('starts through the declared package executable', async () => {
+  it('returns write errors without mutating the project sandbox', async () => {
+    const { host } = await createHeadlessHost({ projectDir: pulsebreakProject })
+    const before = host.snapshot
+    const { client, server } = await connected(host)
+    try {
+      const result = await client.callTool({
+        name: 'addResource',
+        arguments: {
+          path: 'resources/duplicate.resource.json',
+          resource: {
+            formatVersion: 1,
+            id: 'waves',
+            typeId: 'pulsebreak.wave-set',
+            data: { waves: [] }
+          }
+        }
+      })
+      expect(result.isError).toBe(true)
+      expect(host.snapshot).toBe(before)
+      expect(host.commands).toHaveLength(0)
+    } finally {
+      await client.close()
+      await server.close()
+    }
+  })
+
+  it('starts through the declared executable with the default project', async () => {
     const manifest = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8')) as {
       bin: Record<string, string>
     }
@@ -70,7 +99,7 @@ describe('MCP server', () => {
 
     await client.connect(transport)
     try {
-      expect((await client.listTools()).tools).toHaveLength(10)
+      expect((await client.listTools()).tools).toHaveLength(16)
     } finally {
       await client.close()
     }

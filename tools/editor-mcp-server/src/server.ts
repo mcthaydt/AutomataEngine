@@ -7,11 +7,17 @@ import {
   McpError,
   ReadResourceRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
-import type { ToolHost } from '@automata/contracts'
-import { callToolResult, isResourceUri, listResourcesResult, listToolsResult, readResourceResult } from './mcpAdapter'
+import type { ProjectToolHost } from '@automata/contracts'
+import {
+  callToolResult,
+  isProjectResourceUri,
+  listResourcesResult,
+  listToolsResult,
+  readResourceResult
+} from './mcpAdapter'
 
-/** Binds a contracts ToolHost to an MCP Server exposing the registry as tools + resources. */
-export function createMcpServer(host: ToolHost): Server {
+/** Bind one isolated project host to the MCP tools/resources protocol. */
+export function createMcpServer(host: ProjectToolHost): Server {
   const server = new Server(
     { name: 'automata-editor', version: '0.1.0' },
     { capabilities: { tools: {}, resources: {} } }
@@ -24,7 +30,9 @@ export function createMcpServer(host: ToolHost): Server {
   server.setRequestHandler(ListResourcesRequestSchema, async () => listResourcesResult())
   server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
     const { uri } = req.params
-    if (!isResourceUri(uri)) throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`)
+    if (!isProjectResourceUri(uri)) {
+      throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`)
+    }
     return readResourceResult(host, uri)
   })
 

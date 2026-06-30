@@ -1,55 +1,75 @@
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  loadProjectFiles,
+  stringifyProjectBundle,
+  toProjectBundle
+} from '@automata/project'
 import { describe, expect, it } from 'vitest'
 import { createHeadlessHost } from '../src/headlessHost'
+import { createProjectDirectoryReader } from '../src/projectReader'
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+const monkeyBallProject = resolve(repoRoot, 'games/monkey-ball/public/project')
+const pulsebreakProject = resolve(repoRoot, 'games/pulsebreak/public/project')
 
 describe('headless MCP host', () => {
-  it('lists the registry tools and reads the seeded doc', async () => {
-    const { host } = await createHeadlessHost()
-    expect(host.listTools().map((d) => d.name)).toEqual(
-      expect.arrayContaining(['addItem', 'getDoc', 'validate', 'testPlay'])
+  it.each([
+    ['monkey-ball', monkeyBallProject],
+    ['pulsebreak', pulsebreakProject]
+  ])('loads the %s registration from manifest.gameId', async (gameId, projectDir) => {
+    const { host, registration, snapshot } = await createHeadlessHost({ projectDir })
+
+    expect(snapshot.manifest.gameId).toBe(gameId)
+    expect(registration.gameId).toBe(gameId)
+    expect((await host.executeTool('getProject', {})).content).toEqual(snapshot)
+
+    const changed = await host.executeTool('setProperty', {
+      target: { kind: 'manifest' },
+      pointer: '/name',
+      value: `${snapshot.manifest.name} MCP`
+    })
+    expect(changed).toMatchObject({ ok: true, content: { changed: true } })
+    expect(host.snapshot.manifest.name).toBe(`${snapshot.manifest.name} MCP`)
+
+    const evaluation = await host.executeTool('evaluate', { maxSteps: 1 })
+    expect(evaluation).toMatchObject({
+      ok: true,
+      content: { outcome: expect.any(String), score: expect.any(Number), steps: expect.any(Number) }
+    })
+  }, 20_000)
+
+  it('loads a canonical bundle JSON source', async () => {
+    const snapshot = await loadProjectFiles(createProjectDirectoryReader(pulsebreakProject))
+    const bundleJson = stringifyProjectBundle(toProjectBundle(snapshot))
+
+    const loaded = await createHeadlessHost({ bundleJson, baseline: { score: 10 } })
+
+    expect(loaded.registration.gameId).toBe('pulsebreak')
+    expect(await loaded.host.readResource('editor://baseline')).toEqual({ score: 10 })
+  })
+
+  it('reports available registrations for an unknown game ID', async () => {
+    const snapshot = await loadProjectFiles(createProjectDirectoryReader(pulsebreakProject))
+    snapshot.manifest.gameId = 'unknown-game'
+    const bundleJson = stringifyProjectBundle(toProjectBundle(snapshot))
+
+    await expect(createHeadlessHost({ bundleJson })).rejects.toThrow(
+      'Unknown project gameId "unknown-game". Available: monkey-ball, pulsebreak'
     )
-    const doc = (await host.executeTool('getDoc', {})).content as { geometry: unknown[] }
-    expect(Array.isArray(doc.geometry)).toBe(true)
   })
 
-  it('applies an addItem to the in-memory doc and keeps it valid', async () => {
-    const { host } = await createHeadlessHost()
-    const before = ((await host.executeTool('listItems', {})).content as unknown[]).length
-    const res = await host.executeTool('addItem', {
-      item: {
-        id: 'box:42',
-        kind: 'box',
-        transform: { position: { x: 0, y: 0, z: 0 }, rotationEuler: { x: 0, y: 0, z: 0 } },
-        shape: { type: 'box', size: { x: 1, y: 1, z: 1 } },
-        surface: { kind: 'color', value: '#ffffff' }
-      }
-    })
-    expect(res.ok).toBe(true)
-    const after = ((await host.executeTool('listItems', {})).content as unknown[]).length
-    expect(after).toBe(before + 1)
-    const validation = await host.executeTool('validate', {})
-    expect(validation.ok).toBe(true)
-    expect(validation.content).toEqual({ issues: [], exportable: true })
+  it('rejects multiple sources, traversal, and missing files', async () => {
+    await expect(createHeadlessHost({ projectDir: pulsebreakProject, bundleJson: '{}' }))
+      .rejects.toThrow('exactly one project source')
+
+    const reader = createProjectDirectoryReader(pulsebreakProject)
+    await expect(reader.readText('../automata.project.json')).rejects.toThrow('outside project root')
+    await expect(reader.readText('missing.scene.json')).rejects.toThrow()
   })
 
-  it('runs a deterministic headless test-play through the reused runHeadlessPlay', async () => {
-    const { host } = await createHeadlessHost()
-    const res = await host.executeTool('testPlay', { maxSteps: 30 })
-    expect(res.ok).toBe(true)
-    expect(res.content).toMatchObject({ outcome: expect.any(String), steps: expect.any(Number) })
-  }, 20000)
-
-  it('loads the narrow headless package graph without browser globals', async () => {
-    const headless = await import('monkey-ball/headless')
-    expect('window' in globalThis).toBe(false)
-    expect('document' in globalThis).toBe(false)
-    expect('localStorage' in globalThis).toBe(false)
-    expect(headless.createHeadlessMonkeyBallDefinition).toBeTypeOf('function')
-
-    const { host, definition } = await createHeadlessHost()
-    expect(host.listTools()).not.toHaveLength(0)
-    await expect(definition.play!.runHeadlessPlay(host.doc, { maxSteps: 1 })).resolves.toMatchObject({
-      outcome: expect.any(String),
-      steps: expect.any(Number)
-    })
-  }, 20000)
+  it('defaults to the shipped Monkey Ball project', async () => {
+    const { snapshot } = await createHeadlessHost()
+    expect(snapshot.manifest.gameId).toBe('monkey-ball')
+  })
 })

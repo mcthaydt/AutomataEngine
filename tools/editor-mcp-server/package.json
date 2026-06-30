@@ -12,7 +12,9 @@
     "@automata/contracts": "*",
     "@automata/editor": "*",
     "@automata/engine": "*",
+    "@automata/project": "*",
     "monkey-ball": "*",
+    "pulsebreak": "*",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "tsx": "^4.20.0"
   }
