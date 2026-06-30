@@ -1,89 +1,108 @@
 import {
-  createSeekGoalPlayer,
   runAgent,
   runTuningLoop,
-  scoreFitness,
-  type FitnessTarget,
+  type AgentRunOptions,
+  type AgentRunResult,
   type ProviderAdapter
 } from '@automata/agent-core'
-import type { SceneCommand } from '@automata/contracts'
-import type { EditorCore } from '@automata/editor'
-import { createEditorToolHost, validateDoc } from '@automata/editor/headless'
+import type { ProjectToolHost } from '@automata/contracts'
+import type { ProjectEditorCore } from '@automata/editor'
+import { createProjectToolHost } from '@automata/editor/headless'
+import type { ProjectCommand, ProjectSnapshot } from '@automata/project'
 
 const TUNING_SYSTEM =
-  'You tune a game level for solvability. Use the tools to make small layout/tuning edits that ' +
-  'keep the level valid and beatable, then stop. Prefer the smallest change that helps.'
+  'You tune a game project using its registered validation and evaluation adapters. ' +
+  'Use project tools to make small changes, validate and evaluate them, then stop. ' +
+  'Prefer the smallest change that improves the normalized score.'
 
-export interface TuningState<Doc> {
-  doc: Doc
-  /** Cumulative commands from the original doc to this state. */
-  commands: SceneCommand[]
+export interface TuningState {
+  snapshot: ProjectSnapshot
+  /** Cumulative commands from the original snapshot to this state. */
+  commands: ProjectCommand[]
 }
 
-export interface TuningRunOptions<Doc> {
-  core: EditorCore<Doc>
+export type ProjectAgentRunOptions = Omit<AgentRunOptions, 'host'> & { host: ProjectToolHost }
+export type ProjectAgentRunner = (options: ProjectAgentRunOptions) => Promise<AgentRunResult>
+
+export interface TuningRunOptions {
+  core: ProjectEditorCore
   provider: ProviderAdapter
-  /** The tuning instruction handed to the LLM each proposal. */
+  /** The tuning instruction handed to the provider for each proposal. */
   prompt: string
-  target: FitnessTarget
-  /** Stop the optimizer once this score is reached. Default 1. */
+  /** Stop once evaluation reaches this score. Default 1. */
   targetScore?: number
-  /** Headless play step cap per scoring run. Default 3000. */
+  /** Evaluation step cap. Default 3000. */
   maxSteps?: number
   maxIterations?: number
   /** Stop after this many consecutive invalid or non-improving proposals. */
   patience?: number
-  /** Injected for tests; defaults to the real agent-core loop. */
-  runAgentFn?: typeof runAgent
+  /** Injected for tests; defaults to the provider-neutral agent loop. */
+  runAgentFn?: ProjectAgentRunner
 }
 
-export interface TuningRunResult<Doc> {
-  doc: Doc
-  commands: SceneCommand[]
+export interface TuningRunResult {
+  snapshot: ProjectSnapshot
+  commands: ProjectCommand[]
   score: number
   iterations: number
   accepted: number
 }
 
-/** Drives LLM proposals through a validate/score keep-revert loop without mutating the live editor doc. */
-export async function runTuning<Doc>(opts: TuningRunOptions<Doc>): Promise<TuningRunResult<Doc>> {
-  const { core, provider } = opts
-  const { definition } = core
-  if (!definition.play) throw new Error('this game has no test-play support')
+/**
+ * Propose project edits in isolated hosts and retain only score improvements.
+ * The live editor store is never dispatched to; approval remains a UI concern.
+ */
+export async function runTuning(options: TuningRunOptions): Promise<TuningRunResult> {
+  const { core, provider } = options
+  const { registration } = core
+  if (!registration.evaluate) throw new Error('this project has no evaluation adapter')
 
-  const play = definition.play
-  const maxSteps = opts.maxSteps ?? 3000
-  const runAgentFn = opts.runAgentFn ?? runAgent
-  const seek = createSeekGoalPlayer()
-  const targetScore = opts.targetScore ?? 1
-
-  const score = async (state: TuningState<Doc>): Promise<number> => {
-    const result = await play.runHeadlessPlay(state.doc, { maxSteps, input: seek })
-    return scoreFitness(result, opts.target)
-  }
-  const validate = (state: TuningState<Doc>): boolean => validateDoc(definition, state.doc).exportable
-  const propose = async (best: TuningState<Doc>): Promise<TuningState<Doc>> => {
-    const host = createEditorToolHost({ definition, initialDoc: best.doc })
-    const result = await runAgentFn({ provider, host, system: TUNING_SYSTEM, prompt: opts.prompt })
+  const maxSteps = options.maxSteps ?? 3000
+  const targetScore = options.targetScore ?? 1
+  // Agent core still exposes the coexistence-era level ToolHost type. Project
+  // hosts implement the same runtime protocol; Task 18 removes that old name.
+  const runAgentFn = options.runAgentFn ?? (runAgent as unknown as ProjectAgentRunner)
+  const valid = (state: TuningState): boolean =>
+    !registration.validate(state.snapshot).some((issue) => issue.severity === 'error')
+  const score = async (state: TuningState): Promise<number> =>
+    (await registration.evaluate!(state.snapshot, { maxSteps })).score
+  const propose = async (best: TuningState, bestScore: number): Promise<TuningState> => {
+    const host = createProjectToolHost({
+      registration,
+      initialSnapshot: best.snapshot,
+      baseline: { score: bestScore }
+    })
+    const result = await runAgentFn({
+      provider,
+      host,
+      system: TUNING_SYSTEM,
+      prompt: options.prompt
+    })
     if (result.stoppedBy !== 'end') {
       const reason = result.stoppedBy === 'max-turns' ? 'maximum turn limit' : 'provider stop'
       throw new Error(`agent stopped before completing (${reason})`)
     }
-    return { doc: host.doc, commands: [...best.commands, ...host.commands] }
+    return { snapshot: host.snapshot, commands: [...best.commands, ...host.commands] }
   }
 
-  const loop = await runTuningLoop<TuningState<Doc>>({
-    initial: { doc: core.store.getState().document.doc, commands: [] },
+  const initial: TuningState = {
+    snapshot: core.store.getState().snapshot,
+    commands: []
+  }
+  if (!valid(initial)) throw new Error('cannot tune an invalid project snapshot')
+
+  const loop = await runTuningLoop<TuningState>({
+    initial,
     propose,
     score,
-    validate,
+    validate: valid,
     target: targetScore,
-    maxIterations: opts.maxIterations,
-    patience: opts.patience
+    maxIterations: options.maxIterations,
+    patience: options.patience
   })
 
   return {
-    doc: loop.best.doc,
+    snapshot: loop.best.snapshot,
     commands: loop.best.commands,
     score: loop.bestScore,
     iterations: loop.iterations,

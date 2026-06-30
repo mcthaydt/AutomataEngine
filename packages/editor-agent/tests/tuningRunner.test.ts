@@ -1,157 +1,125 @@
+import type { AgentRunResult, ProviderAdapter } from '@automata/agent-core'
+import type { ProjectToolHost } from '@automata/contracts'
 import { describe, expect, it, vi } from 'vitest'
-import { createNullRenderer, type PhysicsPort } from '@automata/engine'
-import type { AgentRunOptions, AgentRunResult, ProviderAdapter } from '@automata/agent-core'
-import type { TestPlayResult } from '@automata/contracts'
-import { createEditor } from '@automata/editor'
 import { runTuning } from '../src/tuningRunner'
-import { boxItem, markerItem, playableDefinition, type FakeDoc } from './fixtures/fakeDefinition'
-
-const nullPhysics = (): PhysicsPort =>
-  ({
-    addBody() {},
-    removeBody() {},
-    setGravity() {},
-    step: () => [],
-    readPose: () => null,
-    readLinearVelocity: () => ({ x: 0, y: 0, z: 0 }),
-    applyImpulse() {},
-    setKinematicTarget() {},
-    get bodyCount() {
-      return 0
-    },
-    dispose() {}
-  }) as PhysicsPort
+import { createFakeProjectEditor } from './fixtures/fakeProject'
 
 const provider: ProviderAdapter = { id: 'anthropic', defaultModel: 'm', send: vi.fn() }
 
-function definitionScoring(scores: number[]) {
-  let i = 0
-  return {
-    ...playableDefinition,
-    play: {
-      ...playableDefinition.play!,
-      runHeadlessPlay: async (): Promise<TestPlayResult> => ({
-        outcome: 'completed',
-        timeMs: 0,
-        fallCount: 0,
-        bananas: 0,
-        steps: scores[i++] ?? 0
-      })
-    }
-  }
-}
+const complete = (): AgentRunResult => ({
+  finalText: '', messages: [], executed: [], stoppedBy: 'end'
+})
+
+const entity = (id: string) => ({ id, name: id, enabled: true, components: [] })
 
 describe('runTuning', () => {
-  it('keeps a proposal that beats the baseline and returns its cumulative commands + score', async () => {
-    const definition = definitionScoring([1800, 600, 1800])
-    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
-    editor.store.dispatch({
-      type: 'loadDoc',
-      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
+  it('keeps only improving project proposals and never mutates the live store', async () => {
+    const editor = createFakeProjectEditor({ scores: [0.2, 0.8, 0.5] })
+    const runAgentFn = vi.fn(async ({ host }: { host: ProjectToolHost }) => {
+      await host.executeTool('addEntity', {
+        sceneId: 'arena',
+        entity: entity(`proposal-${runAgentFn.mock.calls.length}`)
+      })
+      return complete()
     })
 
-    const runAgentFn = vi.fn(async ({ host }: AgentRunOptions): Promise<AgentRunResult> => {
-      await host.executeTool('addItem', { item: boxItem(`b${runAgentFn.mock.calls.length}`) })
-      return { finalText: '', messages: [], executed: [], stoppedBy: 'end' as const }
-    })
-
-    const result = await runTuning<FakeDoc>({
+    const result = await runTuning({
       core: editor,
       provider,
-      prompt: 'make it easier',
-      target: { minSteps: 300, maxSteps: 900 },
+      prompt: 'improve the project',
+      maxSteps: 240,
       maxIterations: 2,
       runAgentFn
     })
 
-    expect(runAgentFn).toHaveBeenCalled()
-    expect(result.accepted).toBe(1)
-    expect(result.score).toBe(1)
-    expect(result.commands).toHaveLength(1)
-    expect(playableDefinition.scene.listItems(result.doc)).toHaveLength(3)
-    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
+    expect(result).toMatchObject({ score: 0.8, accepted: 1, iterations: 2 })
+    expect(result.commands).toEqual([
+      expect.objectContaining({ type: 'addEntity', sceneId: 'arena' })
+    ])
+    expect(result.snapshot.scenes.arena!.entities).toHaveLength(2)
+    expect(editor.store.getState().snapshot.scenes.arena!.entities).toHaveLength(1)
   })
 
-  it('stops proposing once the target score is reached', async () => {
-    const definition = definitionScoring([1800, 600, 600, 600])
-    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
-    editor.store.dispatch({
-      type: 'loadDoc',
-      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
-    })
-    const runAgentFn = vi.fn(async ({ host }: AgentRunOptions): Promise<AgentRunResult> => {
-      await host.executeTool('addItem', { item: boxItem(`target-${runAgentFn.mock.calls.length}`) })
-      return { finalText: '', messages: [], executed: [], stoppedBy: 'end' as const }
+  it('stops proposing once the normalized target score is reached', async () => {
+    const editor = createFakeProjectEditor({ scores: [0.2, 1] })
+    const runAgentFn = vi.fn(async ({ host }: { host: ProjectToolHost }) => {
+      await host.executeTool('addEntity', { sceneId: 'arena', entity: entity('winner') })
+      return complete()
     })
 
-    const result = await runTuning<FakeDoc>({
+    const result = await runTuning({
       core: editor,
       provider,
-      prompt: 'make it easier',
-      target: { minSteps: 300, maxSteps: 900 },
+      prompt: 'improve',
       targetScore: 1,
       maxIterations: 5,
       runAgentFn
     })
 
-    expect(result.score).toBe(1)
-    expect(result.accepted).toBe(1)
-    expect(result.iterations).toBe(1)
+    expect(result).toMatchObject({ score: 1, accepted: 1, iterations: 1 })
     expect(runAgentFn).toHaveBeenCalledOnce()
   })
 
-  it('rejects incomplete agent proposals even when they mutated the sandbox', async () => {
-    const definition = definitionScoring([1800])
-    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
-    editor.store.dispatch({
-      type: 'loadDoc',
-      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
-    })
-    const runAgentFn = vi.fn(async ({ host }: AgentRunOptions): Promise<AgentRunResult> => {
-      await host.executeTool('addItem', { item: boxItem('partial') })
-      return { finalText: 'still working', messages: [], executed: [], stoppedBy: 'max-turns' as const }
-    })
-
-    await expect(
-      runTuning<FakeDoc>({
-        core: editor,
-        provider,
-        prompt: 'make it easier',
-        target: { minSteps: 300, maxSteps: 900 },
-        maxIterations: 1,
-        runAgentFn
+  it('rejects project snapshots with validation errors before evaluating them', async () => {
+    const editor = createFakeProjectEditor({ scores: [0.2, 1] })
+    const evaluate = vi.spyOn(editor.registration, 'evaluate')
+    const runAgentFn = vi.fn(async ({ host }: { host: ProjectToolHost }) => {
+      await host.executeTool('setProperty', {
+        target: { kind: 'manifest' }, pointer: '/entrySceneId', value: 'missing'
       })
-    ).rejects.toThrow('agent stopped before completing')
-    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
-  })
-
-  it('throws when the definition has no test-play support', async () => {
-    const { play, ...noPlay } = playableDefinition
-    void play
-    const editor = createEditor<FakeDoc>({ definition: noPlay, render: createNullRenderer().port, physics: nullPhysics() })
-    await expect(
-      runTuning<FakeDoc>({ core: editor, provider, prompt: 'x', target: { minSteps: 1, maxSteps: 2 } })
-    ).rejects.toThrow()
-  })
-
-  it('uses the default agent loop when no runAgentFn is injected', async () => {
-    const definition = definitionScoring([1800, 1800])
-    const editor = createEditor<FakeDoc>({ definition, render: createNullRenderer().port, physics: nullPhysics() })
-    editor.store.dispatch({
-      type: 'loadDoc',
-      doc: { title: 'lvl', items: [boxItem('a'), markerItem('start')] }
+      return complete()
     })
+
+    const result = await runTuning({
+      core: editor,
+      provider,
+      prompt: 'break it',
+      maxIterations: 1,
+      runAgentFn
+    })
+
+    expect(result).toMatchObject({ score: 0.2, accepted: 0 })
+    expect(evaluate).toHaveBeenCalledOnce()
+    expect(result.commands).toHaveLength(0)
+  })
+
+  it.each([
+    ['max-turns', 'maximum turn limit'],
+    ['provider-stop', 'provider stop']
+  ] as const)('reports %s agent termination explicitly', async (stoppedBy, message) => {
+    const editor = createFakeProjectEditor({ scores: [0.2] })
+    const runAgentFn = vi.fn(async () => ({ ...complete(), stoppedBy }))
+
+    await expect(runTuning({
+      core: editor,
+      provider,
+      prompt: 'improve',
+      maxIterations: 1,
+      runAgentFn
+    })).rejects.toThrow(message)
+  })
+
+  it('throws explicitly when the project has no evaluation adapter', async () => {
+    const editor = createFakeProjectEditor({ evaluation: false })
+    await expect(runTuning({
+      core: editor,
+      provider,
+      prompt: 'improve'
+    })).rejects.toThrow('this project has no evaluation adapter')
+  })
+
+  it('uses the default agent loop when no runner is injected', async () => {
+    const editor = createFakeProjectEditor({ scores: [0.2, 0.2] })
     const localProvider: ProviderAdapter = {
       id: 'anthropic',
       defaultModel: 'm',
       send: vi.fn(async () => ({ text: 'done', toolCalls: [], stopReason: 'end' as const }))
     }
 
-    const result = await runTuning<FakeDoc>({
+    const result = await runTuning({
       core: editor,
       provider: localProvider,
-      prompt: 'make it easier',
-      target: { minSteps: 300, maxSteps: 900 },
+      prompt: 'improve',
       maxIterations: 1
     })
 

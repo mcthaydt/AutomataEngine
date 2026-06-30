@@ -1,41 +1,161 @@
-import type { GameDefinition, SceneItem } from '@automata/editor/headless'
+import type { ComponentInstance, EntityDocument, ProjectSnapshot, SceneDocument } from '@automata/project'
 
-export interface ItemChange {
+export interface ProjectChange {
   id: string
   kind: 'added' | 'removed' | 'modified'
-  /** The item's kind, used as a compact human-readable label. */
+  /** Stable, game-neutral identifier rendered in proposal previews. */
   label: string
 }
 
-export interface DocDiff {
-  changes: ItemChange[]
+export interface ProjectDiff {
+  changes: ProjectChange[]
   addedCount: number
   removedCount: number
   modifiedCount: number
 }
 
-function itemsEqual(a: SceneItem, b: SceneItem): boolean {
-  return JSON.stringify(a) === JSON.stringify(b)
+/** Compare JSON-shaped values without depending on object insertion order. */
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return Array.isArray(a) && Array.isArray(b) &&
+      a.length === b.length && a.every((value, index) => valuesEqual(value, b[index]))
+  }
+  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false
+  const left = a as Record<string, unknown>
+  const right = b as Record<string, unknown>
+  const leftKeys = Object.keys(left).sort()
+  const rightKeys = Object.keys(right).sort()
+  return leftKeys.length === rightKeys.length &&
+    leftKeys.every((key, index) => key === rightKeys[index] && valuesEqual(left[key], right[key]))
 }
 
-export function diffDocs<Doc>(definition: GameDefinition<Doc>, before: Doc, after: Doc): DocDiff {
-  const beforeItems = new Map(definition.scene.listItems(before).map((item) => [item.id, item]))
-  const afterItems = new Map(definition.scene.listItems(after).map((item) => [item.id, item]))
-  const changes: ItemChange[] = []
+function byId<T extends { id: string }>(items: readonly T[]): Map<string, T> {
+  return new Map(items.map((item) => [item.id, item]))
+}
 
-  for (const [id, item] of afterItems) {
-    const prev = beforeItems.get(id)
-    if (!prev) changes.push({ id, kind: 'added', label: item.kind })
-    else if (!itemsEqual(prev, item)) changes.push({ id, kind: 'modified', label: item.kind })
+function entityProperties(entity: EntityDocument): unknown {
+  return {
+    id: entity.id,
+    name: entity.name,
+    parentId: entity.parentId,
+    enabled: entity.enabled
   }
-  for (const [id, item] of beforeItems) {
-    if (!afterItems.has(id)) changes.push({ id, kind: 'removed', label: item.kind })
+}
+
+function sceneProperties(scene: SceneDocument): unknown {
+  return { formatVersion: scene.formatVersion, id: scene.id, name: scene.name }
+}
+
+function manifestProperties(snapshot: ProjectSnapshot): unknown {
+  const { manifest } = snapshot
+  return {
+    formatVersion: manifest.formatVersion,
+    id: manifest.id,
+    name: manifest.name,
+    gameId: manifest.gameId,
+    entrySceneId: manifest.entrySceneId
   }
+}
+
+function compareComponents(
+  before: EntityDocument,
+  after: EntityDocument,
+  changes: ProjectChange[]
+): void {
+  const previous = byId(before.components)
+  const next = byId(after.components)
+  const label = (component: ComponentInstance) => `component:${after.id}/${component.typeId}`
+
+  for (const component of next.values()) {
+    const old = previous.get(component.id)
+    if (!old) changes.push({ id: component.id, kind: 'added', label: label(component) })
+    else if (!valuesEqual(old, component)) {
+      changes.push({ id: component.id, kind: 'modified', label: label(component) })
+    }
+  }
+  for (const component of previous.values()) {
+    if (!next.has(component.id)) {
+      changes.push({ id: component.id, kind: 'removed', label: `component:${before.id}/${component.typeId}` })
+    }
+  }
+}
+
+function compareEntities(before: SceneDocument, after: SceneDocument, changes: ProjectChange[]): void {
+  const previous = byId(before.entities)
+  const next = byId(after.entities)
+
+  for (const entity of next.values()) {
+    const old = previous.get(entity.id)
+    const label = `entity:${after.id}/${entity.id}`
+    if (!old) {
+      changes.push({ id: entity.id, kind: 'added', label })
+      continue
+    }
+    if (!valuesEqual(entityProperties(old), entityProperties(entity))) {
+      changes.push({ id: entity.id, kind: 'modified', label })
+    }
+    compareComponents(old, entity, changes)
+  }
+  for (const entity of previous.values()) {
+    if (!next.has(entity.id)) {
+      changes.push({ id: entity.id, kind: 'removed', label: `entity:${before.id}/${entity.id}` })
+    }
+  }
+}
+
+function compareScenes(before: ProjectSnapshot, after: ProjectSnapshot, changes: ProjectChange[]): void {
+  const previous = byId(Object.values(before.scenes))
+  const next = byId(Object.values(after.scenes))
+
+  for (const scene of next.values()) {
+    const old = previous.get(scene.id)
+    const label = `scene:${scene.id}`
+    if (!old) {
+      changes.push({ id: scene.id, kind: 'added', label })
+      continue
+    }
+    if (!valuesEqual(sceneProperties(old), sceneProperties(scene))) {
+      changes.push({ id: scene.id, kind: 'modified', label })
+    }
+    compareEntities(old, scene, changes)
+  }
+  for (const scene of previous.values()) {
+    if (!next.has(scene.id)) changes.push({ id: scene.id, kind: 'removed', label: `scene:${scene.id}` })
+  }
+}
+
+function compareResources(before: ProjectSnapshot, after: ProjectSnapshot, changes: ProjectChange[]): void {
+  const previous = byId(Object.values(before.resources))
+  const next = byId(Object.values(after.resources))
+  for (const resource of next.values()) {
+    const old = previous.get(resource.id)
+    const label = `resource:${resource.id}`
+    if (!old) changes.push({ id: resource.id, kind: 'added', label })
+    else if (!valuesEqual(old, resource)) changes.push({ id: resource.id, kind: 'modified', label })
+  }
+  for (const resource of previous.values()) {
+    if (!next.has(resource.id)) {
+      changes.push({ id: resource.id, kind: 'removed', label: `resource:${resource.id}` })
+    }
+  }
+}
+
+/** Diff canonical project structures by stable IDs, independent of map iteration order. */
+export function diffProjects(before: ProjectSnapshot, after: ProjectSnapshot): ProjectDiff {
+  const changes: ProjectChange[] = []
+  if (!valuesEqual(manifestProperties(before), manifestProperties(after))) {
+    changes.push({ id: after.manifest.id, kind: 'modified', label: `project:${after.manifest.id}` })
+  }
+
+  compareScenes(before, after, changes)
+  compareResources(before, after, changes)
+  changes.sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id) || a.kind.localeCompare(b.kind))
 
   return {
     changes,
-    addedCount: changes.filter((c) => c.kind === 'added').length,
-    removedCount: changes.filter((c) => c.kind === 'removed').length,
-    modifiedCount: changes.filter((c) => c.kind === 'modified').length
+    addedCount: changes.filter((change) => change.kind === 'added').length,
+    removedCount: changes.filter((change) => change.kind === 'removed').length,
+    modifiedCount: changes.filter((change) => change.kind === 'modified').length
   }
 }

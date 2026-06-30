@@ -9,7 +9,13 @@ import {
   type RigidBodyDef
 } from '@automata/engine'
 import { loadProjectFiles } from '@automata/project'
+import type { PlayObservation, TestPlayResult } from '@automata/contracts'
 import { createMonkeyBallEditorRegistration } from '../../src/project/editor'
+import {
+  createSeekGoalPlayer,
+  scoreMonkeyBallFitness,
+  type MonkeyBallFitnessTarget
+} from '../../src/project/evaluation'
 import { readDataFile } from '../helpers/data'
 
 const projectRoot = resolve(import.meta.dirname, '../../public/project')
@@ -61,5 +67,51 @@ describe('Monkey Ball editor registration', () => {
       steps: 1,
       metrics: { falls: 0, bananas: 0 }
     })
+  })
+})
+
+const playResult = (overrides: Partial<TestPlayResult>): TestPlayResult => ({
+  outcome: 'completed',
+  timeMs: 1000,
+  fallCount: 0,
+  bananas: 0,
+  steps: 600,
+  ...overrides
+})
+
+const fitnessTarget: MonkeyBallFitnessTarget = { minSteps: 300, maxSteps: 900 }
+
+describe('Monkey Ball project evaluation policy', () => {
+  it('scores completion bands, falls, bananas, and incomplete runs', () => {
+    expect(scoreMonkeyBallFitness(playResult({}), fitnessTarget)).toBe(1)
+    expect(scoreMonkeyBallFitness(playResult({ outcome: 'incomplete' }), fitnessTarget)).toBe(0)
+    expect(scoreMonkeyBallFitness(playResult({ fallCount: 1 }), fitnessTarget)).toBeLessThan(1)
+    expect(scoreMonkeyBallFitness(playResult({ steps: 1800 }), fitnessTarget)).toBeLessThan(1)
+    expect(scoreMonkeyBallFitness(
+      playResult({ bananas: 3 }),
+      { ...fitnessTarget, bananas: 2 }
+    )).toBeGreaterThan(1)
+  })
+
+  it('steers toward the goal and stops inside the arrival radius', () => {
+    const observation = (
+      ballX: number,
+      ballZ: number,
+      goalX: number,
+      goalZ: number
+    ): PlayObservation => ({
+      step: 0,
+      ball: {
+        position: { x: ballX, y: 0, z: ballZ },
+        velocity: { x: 0, y: 0, z: 0 }
+      },
+      goal: { x: goalX, y: 0, z: goalZ }
+    })
+    const seek = createSeekGoalPlayer()
+    const input = seek(0, observation(0, 6, 0, -6))
+    expect(input.y).toBeGreaterThan(0)
+    expect(Math.abs(input.x)).toBeLessThan(1e-9)
+    expect(createSeekGoalPlayer({ arriveRadius: 1 })(0, observation(0, 0.2, 0, 0)))
+      .toEqual({ x: 0, y: 0 })
   })
 })

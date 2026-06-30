@@ -1,61 +1,81 @@
 import { runAgent, type AgentRunResult, type ProviderAdapter, type ProviderId } from '@automata/agent-core'
-import type { SceneCommand } from '@automata/contracts'
-import { createEditorToolHost, type EditorToolHost } from '@automata/editor/headless'
-import type { EditorCore, EditorState } from '@automata/editor'
-import type { PanelHandle } from '@automata/editor/ui'
-import { diffDocs } from './diff'
+import type { ProjectEditorCore, ProjectEditorState } from '@automata/editor'
+import { createProjectToolHost, type EditorProjectToolHost } from '@automata/editor/headless'
+import type { ProjectCommand, ProjectSnapshot } from '@automata/project'
+import { diffProjects } from './diff'
 import { createProvider, loadAgentSettings, saveAgentSettings, type AgentSettings } from './settings'
-import { runTuning, type TuningRunResult } from './tuningRunner'
+import {
+  runTuning,
+  type ProjectAgentRunner,
+  type TuningRunResult
+} from './tuningRunner'
 
 export const CHAT_SYSTEM_PROMPT =
-  'You are a level-editing assistant. Use the provided tools to edit the level document. ' +
-  'Validate and test-play your changes before finishing. Make the smallest edit that satisfies the request.'
+  'You are a project-editing assistant. Use the provided tools to edit the game project. ' +
+  'Validate and evaluate changes when those capabilities are available. ' +
+  'Make the smallest edit that satisfies the request.'
 
-/** What a chat run returns: the agent result plus the sandbox host that holds the proposed commands. */
-export interface ChatRunOutput<Doc> {
+/** Agent output plus the isolated project host containing its proposed batch. */
+export interface ChatRunOutput {
   result: AgentRunResult
-  host: EditorToolHost<Doc>
+  host: EditorProjectToolHost
 }
 
-export interface ChatOverlayDeps<Doc> {
+export interface ChatOverlayDeps {
   loadSettings: () => AgentSettings
   saveSettings: (settings: AgentSettings) => void
-  run: (doc: Doc, prompt: string, core: EditorCore<Doc>, settings: AgentSettings) => Promise<ChatRunOutput<Doc>>
-  /** Optional autonomous tuning pass; when present, a Tune button is shown. */
-  tune?: (prompt: string, core: EditorCore<Doc>, settings: AgentSettings) => Promise<TuningRunResult<Doc>>
+  run: (
+    snapshot: ProjectSnapshot,
+    prompt: string,
+    core: ProjectEditorCore,
+    settings: AgentSettings
+  ) => Promise<ChatRunOutput>
+  /** Optional autonomous tuning pass; evaluation support also must be registered. */
+  tune?: (
+    prompt: string,
+    core: ProjectEditorCore,
+    settings: AgentSettings
+  ) => Promise<TuningRunResult>
 }
 
 export interface DefaultChatDepsOptions {
   createProviderFor?: (settings: AgentSettings) => ProviderAdapter
-  runAgentFn?: typeof runAgent
+  runAgentFn?: ProjectAgentRunner
   runTuningFn?: typeof runTuning
 }
 
-export function defaultChatDeps<Doc>(opts: DefaultChatDepsOptions = {}): ChatOverlayDeps<Doc> {
-  const makeProvider = opts.createProviderFor ?? createProvider
-  const run = opts.runAgentFn ?? runAgent
-  const tuneRun = opts.runTuningFn ?? runTuning
+export interface ProjectAgentPanelHandle {
+  update(state: ProjectEditorState): void
+  dispose(): void
+}
+
+export function defaultChatDeps(options: DefaultChatDepsOptions = {}): ChatOverlayDeps {
+  const makeProvider = options.createProviderFor ?? createProvider
+  // Agent core's protocol is structurally shared during the Task 15-18
+  // coexistence window; Task 18 makes the project host name canonical.
+  const run = options.runAgentFn ?? (runAgent as unknown as ProjectAgentRunner)
+  const tuneRun = options.runTuningFn ?? runTuning
   return {
     loadSettings: () => loadAgentSettings(),
     saveSettings: (settings) => saveAgentSettings(settings),
-    run: async (doc, prompt, core, settings) => {
-      const host = createEditorToolHost<Doc>({ definition: core.definition, initialDoc: doc })
+    run: async (snapshot, prompt, core, settings) => {
+      const host = createProjectToolHost({ registration: core.registration, initialSnapshot: snapshot })
       const provider = makeProvider(settings)
       const result = await run({ provider, host, system: CHAT_SYSTEM_PROMPT, prompt })
       return { result, host }
     },
     tune: async (prompt, core, settings) => {
       const provider = makeProvider(settings)
-      return tuneRun<Doc>({ core, provider, prompt, target: { minSteps: 300, maxSteps: 900 } })
+      return tuneRun({ core, provider, prompt, targetScore: 1 })
     }
   }
 }
 
-export function mountChatOverlay<Doc>(
-  core: EditorCore<Doc>,
+export function mountChatOverlay(
+  core: ProjectEditorCore,
   parent: HTMLElement,
-  deps: ChatOverlayDeps<Doc> = defaultChatDeps<Doc>()
-): PanelHandle<Doc> {
+  deps: ChatOverlayDeps = defaultChatDeps()
+): ProjectAgentPanelHandle {
   const root = document.createElement('div')
   root.className = 'ed-panel ed-chat'
   parent.append(root)
@@ -69,10 +89,10 @@ export function mountChatOverlay<Doc>(
   const provider = document.createElement('select')
   provider.className = 'ed-chat-provider'
   for (const id of ['anthropic', 'openai', 'deepseek'] as ProviderId[]) {
-    const opt = document.createElement('option')
-    opt.value = id
-    opt.textContent = id
-    provider.append(opt)
+    const option = document.createElement('option')
+    option.value = id
+    option.textContent = id
+    provider.append(option)
   }
   const model = document.createElement('input')
   model.className = 'ed-chat-model'
@@ -89,7 +109,7 @@ export function mountChatOverlay<Doc>(
 
   const input = document.createElement('textarea')
   input.className = 'ed-chat-input'
-  input.placeholder = 'Ask the assistant to edit the level...'
+  input.placeholder = 'Ask the assistant to edit the project...'
   const send = document.createElement('button')
   send.type = 'button'
   send.className = 'ed-chat-send'
@@ -98,11 +118,11 @@ export function mountChatOverlay<Doc>(
   tuneButton.type = 'button'
   tuneButton.className = 'ed-chat-tune'
   tuneButton.textContent = 'Tune'
-  tuneButton.hidden = deps.tune === undefined
+  tuneButton.hidden = deps.tune === undefined || core.registration.evaluate === undefined
 
   root.append(head, controls, log, input, send, tuneButton)
 
-  let currentDoc = core.store.getState().document.doc
+  let currentSnapshot = core.store.getState().snapshot
   let busy = false
 
   const appendMessage = (roleClass: string, text: string): void => {
@@ -113,19 +133,24 @@ export function mountChatOverlay<Doc>(
     log.append(row)
   }
 
-  const appendDiffBlock = (commands: SceneCommand[], beforeDoc: Doc, afterDoc: Doc, extraLine?: string): void => {
-    const diff = diffDocs(core.definition, beforeDoc, afterDoc)
+  const appendDiffBlock = (
+    commands: readonly ProjectCommand[],
+    before: ProjectSnapshot,
+    after: ProjectSnapshot,
+    extraLine?: string
+  ): void => {
+    const diff = diffProjects(before, after)
     const block = document.createElement('div')
     block.className = 'ed-chat-msg ed-chat-diff'
     block.dataset.role = 'diff'
 
     const summary = document.createElement('div')
     summary.className = 'ed-chat-diff-summary'
-    summary.textContent =
-      commands.length === 0
-        ? `No changes proposed.${extraLine ? ` - ${extraLine}` : ''}`
-        : `${commands.length} command${commands.length === 1 ? '' : 's'}: +${diff.addedCount} ~${diff.modifiedCount} -${diff.removedCount}` +
-          (extraLine ? ` - ${extraLine}` : '')
+    summary.textContent = commands.length === 0
+      ? `No changes proposed.${extraLine ? ` - ${extraLine}` : ''}`
+      : `${commands.length} command${commands.length === 1 ? '' : 's'}: ` +
+        `+${diff.addedCount} ~${diff.modifiedCount} -${diff.removedCount}` +
+        (extraLine ? ` - ${extraLine}` : '')
     block.append(summary)
 
     for (const change of diff.changes) {
@@ -141,8 +166,8 @@ export function mountChatOverlay<Doc>(
       apply.className = 'ed-chat-apply'
       apply.textContent = 'Apply'
       apply.addEventListener('click', () => {
-        core.store.dispatch({ type: 'commandBatch', commands })
-        currentDoc = core.store.getState().document.doc
+        core.store.dispatch({ type: 'projectCommandBatch', commands: [...commands] })
+        currentSnapshot = core.store.getState().snapshot
         apply.disabled = true
         apply.textContent = 'Applied'
       })
@@ -152,16 +177,11 @@ export function mountChatOverlay<Doc>(
     log.append(block)
   }
 
-  const renderProposal = (output: ChatRunOutput<Doc>): void => {
-    appendDiffBlock(output.host.commands, currentDoc, output.host.doc)
-  }
-
-  const renderRunStatus = (output: ChatRunOutput<Doc>): void => {
+  const renderRunStatus = (output: ChatRunOutput): void => {
     if (output.result.stoppedBy === 'end') {
-      renderProposal(output)
+      appendDiffBlock(output.host.commands, currentSnapshot, output.host.snapshot)
       return
     }
-
     const reason = output.result.stoppedBy === 'max-turns' ? 'maximum turn limit' : 'provider stop'
     appendMessage('error', `Agent stopped before completing (${reason}).`)
   }
@@ -199,7 +219,7 @@ export function mountChatOverlay<Doc>(
     appendMessage('user', prompt)
     input.value = ''
     try {
-      const output = await deps.run(currentDoc, prompt, core, deps.loadSettings())
+      const output = await deps.run(currentSnapshot, prompt, core, deps.loadSettings())
       appendMessage('assistant', output.result.finalText || '(no reply)')
       renderRunStatus(output)
     } catch (error) {
@@ -212,14 +232,14 @@ export function mountChatOverlay<Doc>(
   send.addEventListener('click', () => void submit())
 
   const runTuningPass = async (): Promise<void> => {
-    if (!deps.tune || busy) return
+    if (!deps.tune || busy || !core.registration.evaluate) return
     busy = true
     send.disabled = true
     tuneButton.disabled = true
-    appendMessage('user', 'Tune for solvability')
+    appendMessage('user', 'Tune project')
     try {
-      const result = await deps.tune('Improve this level\'s solvability.', core, deps.loadSettings())
-      appendDiffBlock(result.commands, currentDoc, result.doc, `score ${result.score.toFixed(2)}`)
+      const result = await deps.tune('Improve this project\'s evaluation score.', core, deps.loadSettings())
+      appendDiffBlock(result.commands, currentSnapshot, result.snapshot, `score ${result.score.toFixed(2)}`)
     } catch (error) {
       appendMessage('error', error instanceof Error ? error.message : String(error))
     } finally {
@@ -233,8 +253,8 @@ export function mountChatOverlay<Doc>(
   syncControls()
 
   return {
-    update(state: EditorState<Doc>) {
-      currentDoc = state.document.doc
+    update(state) {
+      currentSnapshot = state.snapshot
     },
     dispose() {
       root.remove()

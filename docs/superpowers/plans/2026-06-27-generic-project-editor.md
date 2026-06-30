@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 79% — 15 of 19 tasks complete (Tasks 1–15 ✓). (Updated 2026-06-29)
+**Progress:** 84% — 16 of 19 tasks complete (Tasks 1–16 ✓). (Updated 2026-06-29)
 
 ---
 
@@ -1522,35 +1522,35 @@ git commit -m "feat(contracts): expose generic project tools"
 - Modify: `games/monkey-ball/src/project/evaluation.ts`
 - Modify: `games/monkey-ball/tests/project/editor.test.ts`
 
-- [ ] **Step 1: Write failing project-diff tests**
+- [x] **Step 1: Write failing project-diff tests**
 
 Diff two snapshots and report changes across scenes, entities, components, resources, and properties. Stable labels must look like `scene:w1-l1`, `entity:arena/spawn-east`, `component:spawn-east/pulsebreak.spawn-zone`, and `resource:waves`. Counts cover added/removed/modified and output ordering is stable.
 
-- [ ] **Step 2: Write failing generic tuning tests**
+- [x] **Step 2: Write failing generic tuning tests**
 
 The tuning runner receives `ProjectEditorCore`, provider, prompt, target score, max steps/iterations, and an injected agent loop. It uses `createProjectToolHost`, validates project snapshots, evaluates through `registration.evaluate`, accepts only improving normalized scores, returns cumulative project commands, and never mutates the live store before approval.
 
 Assert provider-stop/max-turn errors and missing evaluation adapters remain explicit.
 
-- [ ] **Step 3: Update chat-overlay tests first**
+- [x] **Step 3: Update chat-overlay tests first**
 
 Replace fake document/core fixtures with fake project registration/session. Assert command batch preview, generic diff labels, apply dispatch as one `projectCommandBatch`, stale selection reconciliation, Tune visibility only when evaluation exists, and existing provider/settings behavior unchanged.
 
-- [ ] **Step 4: Run editor-agent tests and observe red**
+- [x] **Step 4: Run editor-agent tests and observe red**
 
 Run: `npx vitest run --project editor-agent`
 
 Expected: FAIL because editor-agent expects `GameDefinition<Doc>`, `SceneCommand`, and document state.
 
-- [ ] **Step 5: Implement generic diff/tuning/chat behavior**
+- [x] **Step 5: Implement generic diff/tuning/chat behavior**
 
 `diffProjects(before, after)` compares canonical project structures by stable IDs. `runTuning` seeds from `core.store.getState().snapshot`, evaluates normalized score, proposes through project ToolHost, and applies nothing. Chat Apply dispatches one project command batch; the store owns undo/selection reconciliation.
 
-- [ ] **Step 6: Remove Monkey-Ball-shaped fitness from agent-core**
+- [x] **Step 6: Remove Monkey-Ball-shaped fitness from agent-core**
 
 Move the seek-goal controller and Monkey Ball score mapping into `games/monkey-ball/src/project/evaluation.ts`, with its tests under Monkey Ball. `@automata/agent-core` retains only provider adapters, agent loop, and generic keep/revert `runTuningLoop<T>`. No `ball`, `goal`, `banana`, `fall`, or Monkey Ball result fields remain in agent-core.
 
-- [ ] **Step 7: Run package and root tests/typecheck**
+- [x] **Step 7: Run package and root tests/typecheck**
 
 Run:
 
@@ -1563,7 +1563,7 @@ npm run ci
 
 Expected: all commands PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/editor-agent packages/agent-core games/monkey-ball/src/project/evaluation.ts games/monkey-ball/tests/project/editor.test.ts

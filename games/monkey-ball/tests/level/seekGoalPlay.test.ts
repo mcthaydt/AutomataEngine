@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData } from '@automata/engine'
-import { createSeekGoalPlayer } from '@automata/agent-core'
+import { createSeekGoalPlayer } from '../../src/project/evaluation'
 import { runHeadlessPlay } from '../../src/level/headlessPlay'
 import { levelKind, type Level } from '../../src/data/level'
 import { physicsTuningKind, toPhysicsTuning } from '../../src/data/config'

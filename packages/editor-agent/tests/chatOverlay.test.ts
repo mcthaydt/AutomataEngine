@@ -1,34 +1,8 @@
-import { createNullRenderer, type PhysicsPort } from '@automata/engine'
+import { createProjectToolHost } from '@automata/editor/headless'
 import { describe, expect, it, vi } from 'vitest'
-import { createEditor } from '@automata/editor'
-import { createEditorToolHost } from '@automata/editor/headless'
 import { defaultChatDeps, mountChatOverlay, type ChatOverlayDeps } from '../src/chatOverlay'
 import type { AgentSettings } from '../src/settings'
-import { boxItem, playableDefinition, type FakeDoc } from './fixtures/fakeDefinition'
-
-const nullPhysics = (): PhysicsPort =>
-  ({
-    addBody() {},
-    removeBody() {},
-    setGravity() {},
-    step: () => [],
-    readPose: () => null,
-    readLinearVelocity: () => ({ x: 0, y: 0, z: 0 }),
-    applyImpulse() {},
-    setKinematicTarget() {},
-    get bodyCount() { return 0 },
-    dispose() {}
-  }) as PhysicsPort
-
-function makeEditor() {
-  const editor = createEditor<FakeDoc>({
-    definition: playableDefinition,
-    render: createNullRenderer().port,
-    physics: nullPhysics()
-  })
-  editor.store.dispatch({ type: 'loadDoc', doc: { title: 'lvl', items: [boxItem('a')] } })
-  return editor
-}
+import { createFakeProjectEditor, fakeSnapshot } from './fixtures/fakeProject'
 
 const makeSettings = (): AgentSettings => ({
   provider: 'anthropic',
@@ -36,19 +10,23 @@ const makeSettings = (): AgentSettings => ({
   models: { anthropic: 'claude-opus-4-8', openai: 'gpt-5', deepseek: 'deepseek-chat' }
 })
 
-const flush = () => new Promise((r) => setTimeout(r, 0))
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+const entity = (id: string) => ({ id, name: id, enabled: true, components: [] })
 
 describe('chat overlay', () => {
-  it('sends a prompt and renders the assistant reply + proposed-change count', async () => {
-    const editor = makeEditor()
+  it('previews generic changes and applies one project command batch', async () => {
+    const editor = createFakeProjectEditor()
     const parent = document.createElement('div')
     const settings = makeSettings()
-    const run = vi.fn(async (doc: FakeDoc) => {
-      const host = createEditorToolHost({ definition: playableDefinition, initialDoc: doc })
-      await host.executeTool('addItem', { item: boxItem('b') })
-      return { result: { finalText: 'added a box', messages: [], executed: [], stoppedBy: 'end' as const }, host }
+    const run = vi.fn(async (snapshot) => {
+      const host = createProjectToolHost({ registration: editor.registration, initialSnapshot: snapshot })
+      await host.executeTool('addEntity', { sceneId: 'arena', entity: entity('new-spawn') })
+      return {
+        result: { finalText: 'added a spawn', messages: [], executed: [], stoppedBy: 'end' as const },
+        host
+      }
     })
-    const deps: ChatOverlayDeps<FakeDoc> = {
+    const deps: ChatOverlayDeps = {
       loadSettings: () => settings,
       saveSettings: () => {},
       run
@@ -57,43 +35,79 @@ describe('chat overlay', () => {
     panel.update(editor.store.getState())
 
     const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
-    input.value = 'add a box near the goal'
+    input.value = 'add a spawn'
     parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
     await flush()
 
     expect(run).toHaveBeenCalledWith(
-      expect.objectContaining({ items: [expect.objectContaining({ id: 'a' })] }),
-      'add a box near the goal',
+      expect.objectContaining({ manifest: expect.objectContaining({ id: 'fake-project' }) }),
+      'add a spawn',
       editor,
       settings
     )
     const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
-    expect(log).toContain('add a box near the goal')
-    expect(log).toContain('added a box')
-    expect(parent.querySelector('.ed-chat-diff')).not.toBeNull()
-    expect(log).toContain('added box (b)')
-    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(1)
+    expect(log).toContain('added a spawn')
+    expect(log).toContain('added entity:arena/new-spawn')
+    expect(editor.store.getState().snapshot.scenes.arena!.entities).toHaveLength(1)
 
-    const pastBefore = editor.store.getState().document.past.length
+    const pastBefore = editor.store.getState().past.length
     parent.querySelector<HTMLButtonElement>('.ed-chat-apply')!.click()
-    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
-    expect(editor.store.getState().document.past.length).toBe(pastBefore + 1)
+    expect(editor.store.getState().snapshot.scenes.arena!.entities).toHaveLength(2)
+    expect(editor.store.getState().past).toHaveLength(pastBefore + 1)
     editor.store.dispatch({ type: 'undo' })
-    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(1)
+    expect(editor.store.getState().snapshot.scenes.arena!.entities).toHaveLength(1)
     panel.dispose()
   })
 
-  it('runs a tuning pass, shows the net diff + score, and applies as one undo step', async () => {
-    const editor = makeEditor()
+  it('lets the project store reconcile stale selection when applying a proposal', async () => {
+    const editor = createFakeProjectEditor()
+    editor.store.dispatch({
+      type: 'select',
+      selection: { kind: 'entity', sceneId: 'arena', entityIds: ['spawn-east'] }
+    })
     const parent = document.createElement('div')
     const settings = makeSettings()
-    const tune = vi.fn(async () => ({
-      doc: { title: 'lvl', items: [boxItem('a'), boxItem('tuned')] } as FakeDoc,
-      commands: [{ type: 'addItem' as const, item: boxItem('tuned') }],
-      score: 0.87,
-      iterations: 2,
-      accepted: 1
-    }))
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: async (snapshot) => {
+        const host = createProjectToolHost({ registration: editor.registration, initialSnapshot: snapshot })
+        await host.executeTool('removeEntities', { sceneId: 'arena', entityIds: ['spawn-east'] })
+        return {
+          result: { finalText: 'removed', messages: [], executed: [], stoppedBy: 'end' },
+          host
+        }
+      }
+    })
+    panel.update(editor.store.getState())
+
+    parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!.value = 'remove it'
+    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+    parent.querySelector<HTMLButtonElement>('.ed-chat-apply')!.click()
+
+    expect(editor.store.getState().selection).toEqual({ kind: 'scene', sceneId: 'arena' })
+    panel.dispose()
+  })
+
+  it('runs a tuning pass and shows its generic diff and score', async () => {
+    const editor = createFakeProjectEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const tune = vi.fn(async () => {
+      const host = createProjectToolHost({
+        registration: editor.registration,
+        initialSnapshot: editor.store.getState().snapshot
+      })
+      await host.executeTool('addEntity', { sceneId: 'arena', entity: entity('tuned') })
+      return {
+        snapshot: host.snapshot,
+        commands: [...host.commands],
+        score: 0.87,
+        iterations: 2,
+        accepted: 1
+      }
+    })
     const panel = mountChatOverlay(editor, parent, {
       loadSettings: () => settings,
       saveSettings: () => {},
@@ -102,108 +116,88 @@ describe('chat overlay', () => {
     })
     panel.update(editor.store.getState())
 
+    expect(parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.hidden).toBe(false)
     parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.click()
     await flush()
 
-    expect(tune).toHaveBeenCalled()
     const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
     expect(log).toContain('score 0.87')
-    expect(log).toContain('added box (tuned)')
-
-    const pastBefore = editor.store.getState().document.past.length
+    expect(log).toContain('added entity:arena/tuned')
     parent.querySelector<HTMLButtonElement>('.ed-chat-apply')!.click()
-    expect(playableDefinition.scene.listItems(editor.store.getState().document.doc)).toHaveLength(2)
-    expect(editor.store.getState().document.past.length).toBe(pastBefore + 1)
+    expect(editor.store.getState().snapshot.scenes.arena!.entities).toHaveLength(2)
     panel.dispose()
   })
 
-  it('renders an incomplete agent run as an error status instead of a zero-change proposal', async () => {
-    const editor = makeEditor()
-    const parent = document.createElement('div')
-    const settings = makeSettings()
-    const deps: ChatOverlayDeps<FakeDoc> = {
-      loadSettings: () => settings,
-      saveSettings: () => {},
-      run: async (doc) => ({
-        result: { finalText: 'partial reply', messages: [], executed: [], stoppedBy: 'max-turns' },
-        host: createEditorToolHost({ definition: playableDefinition, initialDoc: doc })
-      })
-    }
-    const panel = mountChatOverlay(editor, parent, deps)
-    panel.update(editor.store.getState())
-
-    const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
-    input.value = 'try something hard'
-    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
-    await flush()
-
-    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
-    expect(log).toContain('partial reply')
-    expect(log).toContain('Agent stopped before completing')
-    expect(log).not.toContain('0 proposed changes')
-    panel.dispose()
-  })
-
-  it('renders run errors in the chat log', async () => {
-    const editor = makeEditor()
-    const parent = document.createElement('div')
-    const settings = makeSettings()
-    const panel = mountChatOverlay(editor, parent, {
-      loadSettings: () => settings,
-      saveSettings: () => {},
-      run: vi.fn(async () => {
-        throw new Error('network down')
-      })
-    })
-    panel.update(editor.store.getState())
-
-    const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
-    input.value = 'try to edit'
-    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
-    await flush()
-
-    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
-    expect(log).toContain('network down')
-    panel.dispose()
-  })
-
-  it('keeps the Tune button hidden when no tune dependency is provided', () => {
-    const editor = makeEditor()
-    const parent = document.createElement('div')
-    const settings = makeSettings()
-    const panel = mountChatOverlay(editor, parent, {
-      loadSettings: () => settings,
-      saveSettings: () => {},
-      run: vi.fn()
-    })
-    expect(parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.hidden).toBe(true)
-    panel.dispose()
-  })
-
-  it('renders tune errors in the chat log', async () => {
-    const editor = makeEditor()
+  it('shows Tune only when both tuning and project evaluation are available', () => {
+    const editor = createFakeProjectEditor({ evaluation: false })
     const parent = document.createElement('div')
     const settings = makeSettings()
     const panel = mountChatOverlay(editor, parent, {
       loadSettings: () => settings,
       saveSettings: () => {},
       run: vi.fn(),
-      tune: vi.fn(async () => {
-        throw new Error('no valid proposal')
+      tune: vi.fn()
+    })
+
+    expect(parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.hidden).toBe(true)
+    panel.dispose()
+  })
+
+  it('renders incomplete agent runs and thrown errors in the chat log', async () => {
+    const settings = makeSettings()
+
+    const incompleteEditor = createFakeProjectEditor()
+    const incompleteParent = document.createElement('div')
+    const incomplete = mountChatOverlay(incompleteEditor, incompleteParent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: async (snapshot) => ({
+        result: { finalText: 'partial reply', messages: [], executed: [], stoppedBy: 'max-turns' },
+        host: createProjectToolHost({ registration: incompleteEditor.registration, initialSnapshot: snapshot })
       })
+    })
+    incomplete.update(incompleteEditor.store.getState())
+    incompleteParent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!.value = 'try'
+    incompleteParent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+    expect(incompleteParent.querySelector('.ed-chat-log')!.textContent).toContain('maximum turn limit')
+    incomplete.dispose()
+
+    const errorEditor = createFakeProjectEditor()
+    const errorParent = document.createElement('div')
+    const errored = mountChatOverlay(errorEditor, errorParent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: vi.fn(async () => { throw new Error('network down') })
+    })
+    errored.update(errorEditor.store.getState())
+    errorParent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!.value = 'try'
+    errorParent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+    expect(errorParent.querySelector('.ed-chat-log')!.textContent).toContain('network down')
+    errored.dispose()
+  })
+
+  it('renders tune errors in the chat log', async () => {
+    const editor = createFakeProjectEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run: vi.fn(),
+      tune: vi.fn(async () => { throw new Error('no valid proposal') })
     })
     panel.update(editor.store.getState())
 
     parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.click()
     await flush()
-
-    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
-    expect(log).toContain('no valid proposal')
+    expect(parent.querySelector('.ed-chat-log')!.textContent).toContain('no valid proposal')
     panel.dispose()
   })
 
-  it('persists a provider change through saveSettings', () => {
-    const editor = makeEditor()
+  it('persists provider, model, and API key changes', () => {
+    const editor = createFakeProjectEditor()
     const parent = document.createElement('div')
     const settings = makeSettings()
     const saveSettings = vi.fn()
@@ -212,65 +206,40 @@ describe('chat overlay', () => {
       saveSettings,
       run: vi.fn()
     })
-    const select = parent.querySelector<HTMLSelectElement>('.ed-chat-provider')!
-    select.value = 'openai'
-    select.dispatchEvent(new Event('change'))
-    expect(saveSettings).toHaveBeenCalledWith(expect.objectContaining({ provider: 'openai' }))
-    panel.dispose()
-  })
 
-  it('persists an API key change for the active provider', () => {
-    const editor = makeEditor()
-    const parent = document.createElement('div')
-    const settings = makeSettings()
-    const saveSettings = vi.fn()
-    const panel = mountChatOverlay(editor, parent, {
-      loadSettings: () => settings,
-      saveSettings,
-      run: vi.fn()
-    })
+    const provider = parent.querySelector<HTMLSelectElement>('.ed-chat-provider')!
+    provider.value = 'openai'
+    provider.dispatchEvent(new Event('change'))
+    expect(saveSettings).toHaveBeenLastCalledWith(expect.objectContaining({ provider: 'openai' }))
+
+    const model = parent.querySelector<HTMLInputElement>('.ed-chat-model')!
+    model.value = 'gpt-custom'
+    model.dispatchEvent(new Event('change'))
+    expect(saveSettings).toHaveBeenLastCalledWith(
+      expect.objectContaining({ models: expect.objectContaining({ openai: 'gpt-custom' }) })
+    )
+
     const key = parent.querySelector<HTMLInputElement>('.ed-chat-key')!
     key.value = 'new-secret'
     key.dispatchEvent(new Event('change'))
-    expect(saveSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ apiKeys: expect.objectContaining({ anthropic: 'new-secret' }) })
+    expect(saveSettings).toHaveBeenLastCalledWith(
+      expect.objectContaining({ apiKeys: expect.objectContaining({ openai: 'new-secret' }) })
     )
     panel.dispose()
   })
 
-  it('persists a model change for the active provider', () => {
-    const editor = makeEditor()
-    const parent = document.createElement('div')
-    const settings = makeSettings()
-    const saveSettings = vi.fn()
-    const panel = mountChatOverlay(editor, parent, {
-      loadSettings: () => settings,
-      saveSettings,
-      run: vi.fn()
-    })
-    const model = parent.querySelector<HTMLInputElement>('.ed-chat-model')!
-    model.value = 'claude-custom'
-    model.dispatchEvent(new Event('change'))
-    expect(saveSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ models: expect.objectContaining({ anthropic: 'claude-custom' }) })
-    )
-    panel.dispose()
-  })
-
-  it('defaultChatDeps wires a sandbox host + injected provider/runAgent', async () => {
-    const editor = makeEditor()
+  it('defaultChatDeps wires a project sandbox through the injected provider and runner', async () => {
+    const editor = createFakeProjectEditor()
     const settings = makeSettings()
     const fakeProvider = { id: 'anthropic' as const, defaultModel: 'm', send: vi.fn() }
     const runAgentFn = vi.fn(async () => ({
-      finalText: 'ok',
-      messages: [],
-      executed: [],
-      stoppedBy: 'end' as const
+      finalText: 'ok', messages: [], executed: [], stoppedBy: 'end' as const
     }))
-    const deps = defaultChatDeps<FakeDoc>({ createProviderFor: () => fakeProvider, runAgentFn })
-    const output = await deps.run({ title: 'lvl', items: [boxItem('a')] }, 'go', editor, settings)
+    const deps = defaultChatDeps({ createProviderFor: () => fakeProvider, runAgentFn })
+    const output = await deps.run(fakeSnapshot(), 'go', editor, settings)
+
     expect(runAgentFn).toHaveBeenCalledOnce()
     expect(output.result.finalText).toBe('ok')
-    expect(output.host.doc.items).toHaveLength(1)
+    expect(output.host.snapshot.scenes.arena!.entities).toHaveLength(1)
   })
 })

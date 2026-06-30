@@ -16,10 +16,7 @@
     "@automata/game-kit": "*",
     "@automata/project": "*"
   },
-  "devDependencies": {
-    "@automata/agent-core": "*",
-    "tsx": "^4.20.6"
-  },
+  "devDependencies": { "tsx": "^4.20.6" },
   "scripts": {
     "dev": "vite",
     "validate:project": "node --import tsx scripts/validate-project.ts",

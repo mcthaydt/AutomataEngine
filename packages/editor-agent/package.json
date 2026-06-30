@@ -9,6 +9,7 @@
   "dependencies": {
     "@automata/editor": "*",
     "@automata/agent-core": "*",
-    "@automata/contracts": "*"
+    "@automata/contracts": "*",
+    "@automata/project": "*"
   }
 }
