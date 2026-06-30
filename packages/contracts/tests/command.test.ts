@@ -1,52 +1,24 @@
-import { describe, it, expect } from 'vitest'
-import { sceneCommandSchema, type SceneCommand } from '../src/command'
+import { describe, expect, it } from 'vitest'
+import {
+  projectCommandSchema as contractProjectCommandSchema,
+  type ProjectCommand as ContractProjectCommand
+} from '../src/command'
+import {
+  projectCommandSchema as sourceProjectCommandSchema,
+  type ProjectCommand as SourceProjectCommand
+} from '@automata/project'
 
-const commandCases: SceneCommand[] = [
-  {
-    type: 'addItem',
-    item: {
-      id: 'box:0',
-      kind: 'box',
-      transform: { position: { x: 0, y: 0, z: 0 }, rotationEuler: { x: 0, y: 0, z: 0 } },
-      shape: { type: 'box', size: { x: 1, y: 1, z: 1 } },
-      surface: { kind: 'color', value: '#7ec850' }
+describe('project command contract', () => {
+  it('re-exports the project package schema by identity', () => {
+    expect(contractProjectCommandSchema).toBe(sourceProjectCommandSchema)
+  })
+
+  it('keeps the command type assignable in both directions', () => {
+    const source: SourceProjectCommand = {
+      type: 'removeEntities', sceneId: 'main', entityIds: ['box']
     }
-  },
-  { type: 'moveSelected', ids: ['a', 'b'], delta: { x: 1, y: 0, z: -2 } },
-  { type: 'setItemField', id: 'box:0', path: 'transform.position.x', value: 2 },
-  { type: 'setSurface', id: 'g:0', surface: { kind: 'texture', textureId: 't1' } },
-  { type: 'setMetadata', path: 'title', value: 'Training Grounds' },
-  { type: 'deleteItems', ids: ['a', 'b'] },
-  { type: 'loadDoc', doc: { version: 1, entities: [] } }
-]
-
-describe('sceneCommandSchema', () => {
-  it('parses every command variant', () => {
-    for (const cmd of commandCases) {
-      expect(sceneCommandSchema.parse(cmd)).toEqual(cmd)
-    }
-  })
-
-  it('parses an addItem command', () => {
-    const cmd = commandCases[0]
-    expect(sceneCommandSchema.parse(cmd)).toEqual(cmd)
-  })
-
-  it('parses a moveSelected command', () => {
-    const cmd = commandCases[1]
-    expect(sceneCommandSchema.parse(cmd)).toEqual(cmd)
-  })
-
-  it('parses a setSurface command with a texture surface', () => {
-    const cmd = commandCases[3]
-    expect(sceneCommandSchema.parse(cmd)).toEqual(cmd)
-  })
-
-  it('rejects an unknown command type', () => {
-    expect(() => sceneCommandSchema.parse({ type: 'nope' })).toThrow()
-  })
-
-  it('rejects moveSelected with a non-numeric delta', () => {
-    expect(() => sceneCommandSchema.parse({ type: 'moveSelected', ids: [], delta: { x: 'a', y: 0, z: 0 } })).toThrow()
+    const contract: ContractProjectCommand = source
+    const roundTrip: SourceProjectCommand = contract
+    expect(roundTrip).toEqual(source)
   })
 })

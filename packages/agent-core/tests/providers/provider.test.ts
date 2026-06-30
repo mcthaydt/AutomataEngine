@@ -22,7 +22,7 @@ describe('ProviderAdapter', () => {
     const res = await echo.send({
       system: 'sys',
       messages: [{ role: 'user', text: 'hi' }],
-      tools: [{ name: 'getDoc', description: 'read', schema: {} }]
+      tools: [{ name: 'getProject', description: 'read', schema: {} }]
     })
     expect(res.text).toBe('saw 1 messages and 1 tools')
     expect(res.stopReason).toBe('end')

@@ -7,12 +7,29 @@ import {
   type Vec3,
   type World
 } from '@automata/engine'
-import type { HeadlessOpts, PlayObservation, TestPlayResult } from '@automata/contracts'
-import type { PhysicsTuning } from '../data/config'
-import type { Level } from '../data/level'
+import type { Level, PhysicsTuning } from '../project/types'
 import type { Entity } from '../entity'
 import { createGameplay } from '../game/gameplay'
 import { createGameStore } from '../state/root'
+
+export interface PlayObservation {
+  step: number
+  ball: { position: Vec3; velocity: Vec3 }
+  goal: Vec3
+}
+
+export interface HeadlessOpts {
+  input?: (step: number, observation: PlayObservation) => { x: number; y: number }
+  maxSteps: number
+}
+
+export interface TestPlayResult {
+  outcome: 'completed' | 'gameOver' | 'incomplete'
+  timeMs: number
+  fallCount: number
+  bananas: number
+  steps: number
+}
 
 function readObservation(world: World<Entity>, goal: Vec3, step: number, dt: number): PlayObservation {
   const ball = world.with('ball', 'transform').first

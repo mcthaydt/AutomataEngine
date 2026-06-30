@@ -1,5 +1,5 @@
 export * from './types'
-export { importLegacyMonkeyBallProject } from './legacyImporter'
+export { importLegacyMonkeyBallProject, parseLegacyMonkeyBallLevel } from './legacyImporter'
 export { compileMonkeyBallProject } from './compiler'
 export { createMonkeyBallTemplate } from './template'
 export { monkeyBallProjectDefinition } from './definition'

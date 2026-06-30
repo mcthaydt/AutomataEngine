@@ -10,7 +10,11 @@ export default defineConfig({
         'games/*/src/**',
         'tools/*/src/**'
       ],
-      exclude: ['**/main.ts', '**/browser.ts', '**/index.ts', '**/version.ts', 'tools/level-editor/**'],
+      exclude: [
+        '**/main.ts',
+        'packages/engine/src/loop/browser.ts',
+        'packages/engine/src/render/browser.ts'
+      ],
       thresholds: { lines: 90, branches: 90 }
     }
   }

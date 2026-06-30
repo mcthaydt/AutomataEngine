@@ -41,8 +41,8 @@ export default tseslint.config(
       'no-restricted-imports': ['error', {
         patterns: [
           {
-            group: ['monkey-ball', 'monkey-ball/*'],
-            message: 'The editor core is generic; the game registers itself via GameDefinition.'
+            group: ['monkey-ball', 'monkey-ball/*', 'pulsebreak', 'pulsebreak/*'],
+            message: 'The editor core is generic; games attach through project registrations.'
           },
           {
             group: ['@automata/agent-core', '@automata/agent-core/*'],
@@ -60,7 +60,8 @@ export default tseslint.config(
         paths: [
           { name: '@automata/engine', message: 'Use @automata/engine/data in the headless MCP graph.' },
           { name: '@automata/editor', message: 'Use @automata/editor/headless in the headless MCP graph.' },
-          { name: 'monkey-ball', message: 'Use monkey-ball/headless in the headless MCP graph.' }
+          { name: 'monkey-ball', message: 'Use monkey-ball/project in the headless MCP graph.' },
+          { name: 'pulsebreak', message: 'Use pulsebreak/project in the headless MCP graph.' }
         ],
         patterns: [{
           group: ['three', 'three/*', '@dimforge/*', 'miniplex', 'smol-toml', 'yaml', 'zod'],
@@ -75,7 +76,7 @@ export default tseslint.config(
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [{
-          group: ['monkey-ball', 'monkey-ball/*', 'level-editor', 'level-editor/*', '@automata/editor'],
+          group: ['monkey-ball', 'monkey-ball/*', 'pulsebreak', 'pulsebreak/*', 'level-editor', 'level-editor/*', '@automata/editor'],
           message: 'Engine must not import games or tools.'
         }]
       }]
@@ -89,7 +90,7 @@ export default tseslint.config(
       'no-restricted-imports': ['error', {
         patterns: [
           {
-            group: ['monkey-ball', 'monkey-ball/*', 'level-editor', 'level-editor/*', '@automata/editor'],
+            group: ['monkey-ball', 'monkey-ball/*', 'pulsebreak', 'pulsebreak/*', 'level-editor', 'level-editor/*', '@automata/editor'],
             message: 'Engine must not import games or tools.'
           },
           {

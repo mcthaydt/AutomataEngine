@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DataLoadError, parseData } from '@automata/engine'
-import { physicsTuningKind, toPhysicsTuning } from '../../src/data/config'
+import { physicsTuningKind, toPhysicsTuning } from '../../src/project/legacyTypes'
 import { readDataFile } from '../helpers/data'
 
 describe('physics tuning', () => {

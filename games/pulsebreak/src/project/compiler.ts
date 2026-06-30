@@ -8,8 +8,8 @@ import { PULSEBREAK_TYPE_IDS, type EnemySpec, type PulsebreakCompiledProject, ty
  *
  * Resolves the singleton tuning/enemy/wave/upgrade resources, walks the entry
  * scene for the floor, player start, and spawn zones (resolving world
- * transforms), and reproduces the exact constants the legacy `config.ts`
- * exported so the runtime is a lossless consumer.
+ * transforms), and produces the complete runtime configuration so authored
+ * project documents remain the only tuning source.
  */
 interface TuningData {
   arena: { half: number; y: number }

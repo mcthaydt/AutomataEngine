@@ -2,11 +2,14 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const dataRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../public/data')
+const gameRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const runtimeDataRoot = resolve(gameRoot, 'public/data')
+const legacyDataRoot = resolve(gameRoot, 'tests/fixtures/legacy')
 
-/** Reads a shipped data file relative to games/monkey-ball/public/data/. */
+/** Read the retained runtime archetypes or quarantined pre-project fixtures. */
 export function readDataFile(rel: string): string {
-  return readFileSync(resolve(dataRoot, rel), 'utf8')
+  const root = rel.startsWith('archetypes/') ? runtimeDataRoot : legacyDataRoot
+  return readFileSync(resolve(root, rel), 'utf8')
 }
 
 /** fetchText double for engine loaders, backed by the real shipped files. */

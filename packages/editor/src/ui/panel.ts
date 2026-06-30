@@ -1,7 +1,5 @@
-import type { EditorState } from '../state/store'
-
-/** A chrome sub-panel updated by the shell's single store subscription. */
-export interface PanelHandle<Doc> {
-  update(state: EditorState<Doc>): void
+/** A UI panel updated from one explicit state shape and disposable by its owner. */
+export interface PanelHandle<State> {
+  update(state: State): void
   dispose(): void
 }

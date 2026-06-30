@@ -1,13 +1,11 @@
 import type { Vec3 } from '@automata/engine'
-import type { SceneItem } from '../model/types'
 import type { Ray } from './ray'
 
 export interface Aabb { min: Vec3; max: Vec3 }
 
 /**
- * A minimal, game-agnostic picking footprint. The generic project picker works
- * purely from `{ id, position, bounds }`, so it never depends on the legacy
- * `SceneItem`; the legacy helpers below adapt `SceneItem` onto the same path.
+ * A minimal, game-agnostic picking footprint. The project picker works purely
+ * from `{ id, position, bounds }`.
  */
 export type Bounds =
   | { kind: 'box'; half: Vec3 }
@@ -19,8 +17,6 @@ export interface BoundedItem {
   position: Vec3
   bounds: Bounds
 }
-
-const MARKER_HALF = 0.4
 
 /** Axis-aligned bounds from a position + bounds shape (rotation deliberately ignored). */
 export function boundedAabb(position: Vec3, bounds: Bounds): Aabb {
@@ -75,24 +71,4 @@ export function pickBounded(items: readonly BoundedItem[], ray: Ray): string | n
     if (t !== null && (best === null || t < best.t)) best = { id: item.id, t }
   }
   return best?.id ?? null
-}
-
-/** Legacy `SceneItem` → bounds adapter so old and new picking share one path. */
-function sceneItemBounds(item: SceneItem): Bounds {
-  if (item.shape.type === 'box') {
-    return { kind: 'box', half: { x: item.shape.size.x / 2, y: item.shape.size.y / 2, z: item.shape.size.z / 2 } }
-  }
-  if (item.shape.type === 'cylinder') {
-    return { kind: 'cylinder', radius: item.shape.radius, halfHeight: item.shape.height / 2 }
-  }
-  return { kind: 'point', half: MARKER_HALF }
-}
-
-/** Axis-aligned bounds of a legacy item. Rotation is ignored as a pick approximation. */
-export function itemAabb(item: SceneItem): Aabb {
-  return boundedAabb(item.transform.position, sceneItemBounds(item))
-}
-
-export function pickItem(items: SceneItem[], ray: Ray): string | null {
-  return pickBounded(items.map((item) => ({ id: item.id, position: item.transform.position, bounds: sceneItemBounds(item) })), ray)
 }

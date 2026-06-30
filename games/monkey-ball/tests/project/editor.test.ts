@@ -9,13 +9,13 @@ import {
   type RigidBodyDef
 } from '@automata/engine'
 import { loadProjectFiles } from '@automata/project'
-import type { PlayObservation, TestPlayResult } from '@automata/contracts'
 import { createMonkeyBallEditorRegistration } from '../../src/project/editor'
 import {
   createSeekGoalPlayer,
   scoreMonkeyBallFitness,
   type MonkeyBallFitnessTarget
 } from '../../src/project/evaluation'
+import type { PlayObservation, TestPlayResult } from '../../src/level/headlessPlay'
 import { readDataFile } from '../helpers/data'
 
 const projectRoot = resolve(import.meta.dirname, '../../public/project')

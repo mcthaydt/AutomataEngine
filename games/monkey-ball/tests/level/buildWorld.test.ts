@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData, quat } from '@automata/engine'
 import { buildLevelWorld } from '../../src/level/buildWorld'
-import { levelKind } from '../../src/data/level'
+import { levelKind } from '../../src/project/legacyTypes'
 import { readDataFile } from '../helpers/data'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')

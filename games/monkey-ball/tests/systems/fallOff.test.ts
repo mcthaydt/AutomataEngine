@@ -5,7 +5,7 @@ import type { FeedbackEvent } from '../../src/systems/feedback'
 import { createGameStore } from '../../src/state/root'
 import type { Entity } from '../../src/entity'
 import type { GameCtx } from '../../src/game/context'
-import type { Level } from '../../src/data/level'
+import type { Level } from '../../src/project/legacyTypes'
 
 const level: Level = {
   id: 'x', name: 'X', timeLimitS: 60, fallY: -10,

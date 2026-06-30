@@ -1,23 +1,18 @@
 import { z } from 'zod'
-import type { Vec3 } from './command'
 
-export const testPlayResultSchema = z.object({
-  outcome: z.enum(['completed', 'gameOver', 'incomplete']),
-  timeMs: z.number(),
-  fallCount: z.number(),
-  bananas: z.number(),
-  steps: z.number()
+const metricValueSchema = z.union([z.number(), z.string(), z.boolean()])
+
+/** Provider- and game-neutral evaluation result shared by editor, agent, and MCP. */
+export const projectEvaluationResultSchema = z.object({
+  outcome: z.enum(['passed', 'failed', 'incomplete']),
+  score: z.number(),
+  metrics: z.record(z.string(), metricValueSchema),
+  steps: z.number().int().nonnegative()
 })
-export type TestPlayResult = z.infer<typeof testPlayResultSchema>
+export type ProjectEvaluationResult = z.infer<typeof projectEvaluationResultSchema>
 
-export interface HeadlessOpts {
-  input?: (step: number, observation: PlayObservation) => { x: number; y: number }
-  maxSteps: number
-}
-
-/** Per-step world readout exposed to a closed-loop scoring policy (consumed by the M16b tuning loop). */
-export interface PlayObservation {
-  step: number
-  ball: { position: Vec3; velocity: Vec3 }
-  goal: Vec3
-}
+/** Bounded evaluation request accepted by the generic evaluate tool. */
+export const projectEvaluationOptionsSchema = z.object({
+  maxSteps: z.number().int().positive()
+})
+export type ProjectEvaluationOptions = z.infer<typeof projectEvaluationOptionsSchema>

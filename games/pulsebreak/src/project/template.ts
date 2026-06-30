@@ -5,10 +5,9 @@ import { PULSEBREAK_TYPE_IDS, type PulsebreakCompiledProject } from './types'
 /**
  * The default authored Pulsebreak project, in memory.
  *
- * Values are the parity baseline copied verbatim from the legacy `config.ts`;
- * the shipped `public/project` files are generated from this template, and the
- * runtime/tests obtain `defaultPulsebreakCompiledProject` from here instead of
- * importing authored constants.
+ * Values are the authored parity baseline. The shipped `public/project` files
+ * are generated from this template, and runtime/tests obtain
+ * `defaultPulsebreakCompiledProject` through project compilation.
  */
 const ZERO = { x: 0, y: 0, z: 0 }
 const ONE = { x: 1, y: 1, z: 1 }

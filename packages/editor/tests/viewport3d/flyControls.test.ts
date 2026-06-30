@@ -64,4 +64,27 @@ describe('attachFlyControls', () => {
     expect(clamped).not.toBe(initialFlyCamera)
     expect(clamped.position).toEqual(initialFlyCamera.position)
   })
+
+  it('requests pointer lock and applies mouse look only while locked', () => {
+    const canvas = document.createElement('canvas')
+    const requestPointerLock = vi.fn()
+    Object.defineProperty(canvas, 'requestPointerLock', { value: requestPointerLock })
+    let camera: FlyCamera = initialFlyCamera
+    const setCamera = vi.fn((next: FlyCamera) => { camera = next })
+    const handle = attachFlyControls(canvas, () => camera, setCamera)
+
+    canvas.click()
+    expect(requestPointerLock).toHaveBeenCalledOnce()
+    window.dispatchEvent(new MouseEvent('mousemove', { movementX: 10, movementY: 5 }))
+    expect(setCamera).not.toHaveBeenCalled()
+
+    Object.defineProperty(document, 'pointerLockElement', {
+      configurable: true,
+      value: canvas
+    })
+    window.dispatchEvent(new MouseEvent('mousemove', { movementX: 10, movementY: 5 }))
+    expect(setCamera).toHaveBeenCalledOnce()
+    handle.update(0.1)
+    handle.dispose()
+  })
 })

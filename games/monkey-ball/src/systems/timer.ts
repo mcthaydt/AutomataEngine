@@ -1,5 +1,5 @@
 import type { EventQueue, System } from '@automata/engine'
-import type { Level } from '../data/level'
+import type { Level } from '../project/types'
 import { isPlaying, type GameCtx } from '../game/context'
 import { emitFeedback } from './feedback'
 

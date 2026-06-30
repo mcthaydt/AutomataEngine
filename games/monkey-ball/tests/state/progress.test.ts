@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { WorldsManifest } from '../../src/data/level'
+import type { WorldsManifest } from '../../src/project/legacyTypes'
 import { initialProgress, progressReducer } from '../../src/state/progress'
 import { isLevelUnlocked, isWorldUnlocked, levelOrder } from '../../src/state/unlocks'
 

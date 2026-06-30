@@ -1,5 +1,5 @@
 import { button, panel, staticView, type View } from '@automata/game-kit'
-import type { WorldsManifest } from '../data/level'
+import type { WorldsManifest } from '../project/types'
 import type { GameStore } from '../state/root'
 import { isLevelUnlocked, levelOrder } from '../state/unlocks'
 

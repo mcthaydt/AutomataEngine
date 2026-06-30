@@ -1,6 +1,6 @@
 import { quat, type GroupId, type PhysicsPort, type RenderPort, type System } from '@automata/engine'
 import type { GameCtx } from '../game/context'
-import type { PhysicsTuning } from '../data/config'
+import type { PhysicsTuning } from '../project/types'
 
 /** input -> smoothed/clamped rotated gravity + counter-rotated cosmetic stage. */
 export function createTiltControl(

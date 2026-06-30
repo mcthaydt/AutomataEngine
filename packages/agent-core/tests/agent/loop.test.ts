@@ -3,7 +3,7 @@ import { runAgent, type ExecutedToolCall } from '../../src/agent/loop'
 import type { ProviderAdapter, ProviderResponse } from '../../src/providers/provider'
 import type { ToolDef, ToolHost, ToolResult } from '@automata/contracts'
 
-const TOOLS: ToolDef[] = [{ name: 'addItem', description: 'add', schema: {} }]
+const TOOLS: ToolDef[] = [{ name: 'addEntity', description: 'add', schema: {} }]
 
 function fakeHost(): { host: ToolHost; calls: { name: string; args: unknown }[] } {
   const calls: { name: string; args: unknown }[] = []
@@ -37,19 +37,19 @@ describe('runAgent', () => {
   it('executes a tool call then stops when the model ends the turn', async () => {
     const { host, calls } = fakeHost()
     const provider = scriptedProvider([
-      { text: 'placing', toolCalls: [{ id: 't1', name: 'addItem', args: { x: 1 } }], stopReason: 'tool_use' },
+      { text: 'placing', toolCalls: [{ id: 't1', name: 'addEntity', args: { x: 1 } }], stopReason: 'tool_use' },
       { text: 'all set', toolCalls: [], stopReason: 'end' }
     ])
     const result = await runAgent({ provider, host, system: 's', prompt: 'add a box' })
-    expect(calls).toEqual([{ name: 'addItem', args: { x: 1 } }])
+    expect(calls).toEqual([{ name: 'addEntity', args: { x: 1 } }])
     expect(result.finalText).toBe('all set')
     expect(result.stoppedBy).toBe('end')
-    expect(result.executed).toEqual([{ name: 'addItem', args: { x: 1 }, result: { ok: true, content: { applied: 'addItem' } } }])
+    expect(result.executed).toEqual([{ name: 'addEntity', args: { x: 1 }, result: { ok: true, content: { applied: 'addEntity' } } }])
   })
 
   it('stops at maxTurns when the model keeps calling tools', async () => {
     const { host } = fakeHost()
-    const loop: ProviderResponse = { text: '', toolCalls: [{ id: 't', name: 'addItem', args: {} }], stopReason: 'tool_use' }
+    const loop: ProviderResponse = { text: '', toolCalls: [{ id: 't', name: 'addEntity', args: {} }], stopReason: 'tool_use' }
     const provider = scriptedProvider([loop, loop, loop, loop, loop])
     const result = await runAgent({ provider, host, system: 's', prompt: 'go', maxTurns: 2 })
     expect(result.stoppedBy).toBe('max-turns')
@@ -83,7 +83,7 @@ describe('runAgent', () => {
       send: async (req) => {
         requests.push(JSON.parse(JSON.stringify(req)) as unknown)
         return requests.length === 1
-          ? { text: 'placing', toolCalls: [{ id: 't1', name: 'addItem', args: { x: 1 } }], stopReason: 'tool_use' }
+          ? { text: 'placing', toolCalls: [{ id: 't1', name: 'addEntity', args: { x: 1 } }], stopReason: 'tool_use' }
           : { text: 'done', toolCalls: [], stopReason: 'end' }
       }
     }
@@ -91,9 +91,9 @@ describe('runAgent', () => {
     const secondRequest = requests[1] as { messages: unknown[] }
     expect(secondRequest.messages.at(-1)).toEqual({
       role: 'tool',
-      text: JSON.stringify({ ok: true, content: { applied: 'addItem' } }),
+      text: JSON.stringify({ ok: true, content: { applied: 'addEntity' } }),
       toolCallId: 't1',
-      toolResult: { ok: true, content: { applied: 'addItem' } }
+      toolResult: { ok: true, content: { applied: 'addEntity' } }
     })
   })
 

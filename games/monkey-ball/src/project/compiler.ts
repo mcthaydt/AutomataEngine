@@ -1,6 +1,5 @@
 import { CORE_TYPE_IDS, resolveWorldTransform, type ComponentInstance, type EntityDocument, type ProjectSnapshot, type SceneDocument } from '@automata/project'
-import type { Level, WorldsManifest } from '../data/level'
-import { MONKEY_BALL_TYPE_IDS, type CompiledMonkeyBallProject } from './types'
+import { MONKEY_BALL_TYPE_IDS, type CompiledMonkeyBallProject, type Level, type WorldsManifest } from './types'
 
 const RAD_TO_DEG = 180 / Math.PI
 

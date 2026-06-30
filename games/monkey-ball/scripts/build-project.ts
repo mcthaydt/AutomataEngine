@@ -2,8 +2,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { parseData } from '@automata/engine'
 import { projectFileDocuments } from '@automata/project'
-import { physicsTuningKind, toPhysicsTuning } from '../src/data/config'
-import { levelKind, worldsManifestKind, type Level } from '../src/data/level'
+import { physicsTuningKind, toPhysicsTuning } from '../src/project/legacyTypes'
+import { levelKind, worldsManifestKind, type Level } from '../src/project/legacyTypes'
 import { importLegacyMonkeyBallProject } from '../src/project/legacyImporter'
 
 /**
@@ -11,7 +11,7 @@ import { importLegacyMonkeyBallProject } from '../src/project/legacyImporter'
  * Explicit source/output flags keep the generator useful after legacy public
  * data moves to test fixtures in the cleanup phase.
  */
-const source = resolve(readOption('--source') ?? 'games/monkey-ball/public/data')
+const source = resolve(readOption('--source') ?? 'games/monkey-ball/tests/fixtures/legacy')
 const output = resolve(readOption('--out') ?? 'games/monkey-ball/public/project')
 
 const readSource = (path: string): Promise<string> => readFile(resolve(source, path), 'utf8')

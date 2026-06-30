@@ -1,6 +1,6 @@
 import type { EventQueue, System } from '@automata/engine'
 import { isPlaying, type GameCtx } from '../game/context'
-import type { Level } from '../data/level'
+import type { Level } from '../project/types'
 import { emitFeedback } from './feedback'
 
 /** Below the level's fall plane: lose a life and respawn (store rebuilds the run). */

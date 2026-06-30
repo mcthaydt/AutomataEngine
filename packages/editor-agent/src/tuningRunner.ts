@@ -5,7 +5,7 @@ import {
   type AgentRunResult,
   type ProviderAdapter
 } from '@automata/agent-core'
-import type { ProjectToolHost } from '@automata/contracts'
+import type { ToolHost } from '@automata/contracts'
 import type { ProjectEditorCore } from '@automata/editor'
 import { createProjectToolHost } from '@automata/editor/headless'
 import type { ProjectCommand, ProjectSnapshot } from '@automata/project'
@@ -21,7 +21,7 @@ export interface TuningState {
   commands: ProjectCommand[]
 }
 
-export type ProjectAgentRunOptions = Omit<AgentRunOptions, 'host'> & { host: ProjectToolHost }
+export type ProjectAgentRunOptions = Omit<AgentRunOptions, 'host'> & { host: ToolHost }
 export type ProjectAgentRunner = (options: ProjectAgentRunOptions) => Promise<AgentRunResult>
 
 export interface TuningRunOptions {
@@ -59,9 +59,7 @@ export async function runTuning(options: TuningRunOptions): Promise<TuningRunRes
 
   const maxSteps = options.maxSteps ?? 3000
   const targetScore = options.targetScore ?? 1
-  // Agent core still exposes the coexistence-era level ToolHost type. Project
-  // hosts implement the same runtime protocol; Task 18 removes that old name.
-  const runAgentFn = options.runAgentFn ?? (runAgent as unknown as ProjectAgentRunner)
+  const runAgentFn: ProjectAgentRunner = options.runAgentFn ?? runAgent
   const valid = (state: TuningState): boolean =>
     !registration.validate(state.snapshot).some((issue) => issue.severity === 'error')
   const score = async (state: TuningState): Promise<number> =>

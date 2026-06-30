@@ -62,4 +62,23 @@ describe('diffProjects', () => {
       changes: [], addedCount: 0, removedCount: 0, modifiedCount: 0
     })
   })
+
+  it('compares array properties and reports removed components', () => {
+    const before = fakeSnapshot()
+    before.resources.waves!.data = { values: [1, 2] }
+    const same = structuredClone(before)
+    expect(diffProjects(before, same).changes).toEqual([])
+
+    const after = structuredClone(before)
+    after.resources.waves!.data = { values: [1, 3] }
+    after.scenes.arena!.entities[0]!.components = []
+    expect(diffProjects(before, after).changes).toEqual([
+      {
+        id: 'spawn-zone',
+        kind: 'removed',
+        label: 'component:spawn-east/pulsebreak.spawn-zone'
+      },
+      { id: 'waves', kind: 'modified', label: 'resource:waves' }
+    ])
+  })
 })

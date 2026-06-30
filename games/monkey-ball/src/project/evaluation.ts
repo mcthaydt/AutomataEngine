@@ -1,7 +1,10 @@
 import type { ArchetypeLibrary } from '@automata/engine'
-import type { PlayObservation, TestPlayResult } from '@automata/contracts'
 import type { ProjectSnapshot } from '@automata/project'
-import { runHeadlessPlay } from '../level/headlessPlay'
+import {
+  runHeadlessPlay,
+  type PlayObservation,
+  type TestPlayResult
+} from '../level/headlessPlay'
 import { monkeyBallProjectDefinition } from './definition'
 
 export interface MonkeyBallEvaluationResult {

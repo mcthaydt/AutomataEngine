@@ -45,6 +45,11 @@ PULSEBREAK uses only public `@automata/engine` APIs (ECS, fixed-step loop,
 input, rendering, scenes, persistence, audio, particles, math) and imports no
 other game's code — it reuses architectural patterns, not implementation.
 
+Its runtime boots from `public/project`. Arena geometry/spawn zones and typed
+resources for tuning, enemies, waves, and upgrades compile to
+`PulsebreakCompiledProject`; the editor, browser game, headless simulation, and
+tests all consume that same authored truth.
+
 - **Deterministic kinematic sim.** Movement and combat are pure XZ-plane
   kinematics with circle-overlap collision, integrated under the engine's
   fixed-step loop. A rigid-body solver is unnecessary for a top-down arena, so
@@ -76,9 +81,9 @@ other game's code — it reuses architectural patterns, not implementation.
 
 ```
 src/
-  config.ts        tuning constants (arena, player, enemies, waves, upgrades)
   entity.ts        ECS entity model
   main.ts          browser composition root (untested shim)
+  project/         schemas, template, compiler, editor/evaluation registration
   style.css        neon styling
   audio/           sound specs + WebAudio adapter
   game/            per-step context + gameplay wiring
@@ -86,4 +91,5 @@ src/
   state/           scene/run/progress reducers + store
   systems/         ECS systems
   ui/              title, HUD, upgrade, pause/victory/defeat overlays
+public/project/    shipped scene and typed resource documents
 ```

@@ -5,8 +5,14 @@ import {
   type ProjectSnapshot,
   type SceneDocument
 } from '@automata/project'
-import { entityUid, geometryUid, type Level } from '../data/level'
-import { MONKEY_BALL_TYPE_IDS, type LegacyMonkeyBallProjectInput } from './types'
+import {
+  entityUid,
+  geometryUid,
+  MONKEY_BALL_TYPE_IDS,
+  type LegacyMonkeyBallProjectInput,
+  type Level
+} from './types'
+import { levelSchema } from './legacyTypes'
 
 const DEG_TO_RAD = Math.PI / 180
 const ZERO = { x: 0, y: 0, z: 0 }
@@ -14,6 +20,11 @@ const ONE = { x: 1, y: 1, z: 1 }
 
 type LegacyGeometry = Level['geometry'][number]
 type LegacyEntity = Level['entities'][number]
+
+/** Parse one former level document for explicit recovery/import workflows. */
+export function parseLegacyMonkeyBallLevel(input: unknown): Level {
+  return levelSchema.parse(input)
+}
 
 /**
  * Convert the former TOML/world/level documents into the universal project

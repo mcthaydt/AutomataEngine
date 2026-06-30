@@ -6,11 +6,11 @@ import {
 } from '@automata/engine'
 import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
-import { levelKind, type Level } from '../../src/data/level'
+import { levelKind, type Level } from '../../src/project/legacyTypes'
 import { createGameStore } from '../../src/state/root'
 import { readDataFile } from '../helpers/data'
 import type { Entity } from '../../src/entity'
-import type { PhysicsTuning } from '../../src/data/config'
+import type { PhysicsTuning } from '../../src/project/legacyTypes'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
 const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')

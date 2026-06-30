@@ -3,7 +3,7 @@ import {
   type ArchetypeLibrary, type RenderableDef, type RigidBodyDef, type World
 } from '@automata/engine'
 import type { Entity } from '../entity'
-import { entityUid, geometryUid, type Level } from '../data/level'
+import { entityUid, geometryUid, type Level } from '../project/types'
 
 const DEG = Math.PI / 180
 type Geometry = Level['geometry'][number]

@@ -15,9 +15,8 @@ export const PULSEBREAK_TYPE_IDS = {
 /**
  * Project-owned compiled types for Pulsebreak.
  *
- * These mirror the legacy `config.ts` constants exactly (so compilation is a
- * lossless port) but are owned by the project layer, which becomes the single
- * source of authored gameplay tuning once the runtime cuts over.
+ * These are owned by the project layer, the single source of authored gameplay
+ * tuning shared by browser and headless runtimes.
  */
 export interface PlayerSpec {
   radius: number

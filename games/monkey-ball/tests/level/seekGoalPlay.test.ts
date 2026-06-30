@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData } from '@automata/engine'
 import { createSeekGoalPlayer } from '../../src/project/evaluation'
 import { runHeadlessPlay } from '../../src/level/headlessPlay'
-import { levelKind, type Level } from '../../src/data/level'
-import { physicsTuningKind, toPhysicsTuning } from '../../src/data/config'
+import { levelKind, type Level } from '../../src/project/legacyTypes'
+import { physicsTuningKind, toPhysicsTuning } from '../../src/project/legacyTypes'
 import { readDataFile } from '../helpers/data'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')

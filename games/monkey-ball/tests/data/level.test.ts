@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DataLoadError, parseData } from '@automata/engine'
-import { levelKind, worldsManifestKind } from '../../src/data/level'
+import { levelKind, worldsManifestKind } from '../../src/project/legacyTypes'
 import { readDataFile } from '../helpers/data'
 
 describe('level schema', () => {

@@ -1,5 +1,5 @@
 import type { AgentRunResult, ProviderAdapter } from '@automata/agent-core'
-import type { ProjectToolHost } from '@automata/contracts'
+import type { ToolHost } from '@automata/contracts'
 import { describe, expect, it, vi } from 'vitest'
 import { runTuning } from '../src/tuningRunner'
 import { createFakeProjectEditor } from './fixtures/fakeProject'
@@ -15,7 +15,7 @@ const entity = (id: string) => ({ id, name: id, enabled: true, components: [] })
 describe('runTuning', () => {
   it('keeps only improving project proposals and never mutates the live store', async () => {
     const editor = createFakeProjectEditor({ scores: [0.2, 0.8, 0.5] })
-    const runAgentFn = vi.fn(async ({ host }: { host: ProjectToolHost }) => {
+    const runAgentFn = vi.fn(async ({ host }: { host: ToolHost }) => {
       await host.executeTool('addEntity', {
         sceneId: 'arena',
         entity: entity(`proposal-${runAgentFn.mock.calls.length}`)
@@ -42,7 +42,7 @@ describe('runTuning', () => {
 
   it('stops proposing once the normalized target score is reached', async () => {
     const editor = createFakeProjectEditor({ scores: [0.2, 1] })
-    const runAgentFn = vi.fn(async ({ host }: { host: ProjectToolHost }) => {
+    const runAgentFn = vi.fn(async ({ host }: { host: ToolHost }) => {
       await host.executeTool('addEntity', { sceneId: 'arena', entity: entity('winner') })
       return complete()
     })
@@ -63,7 +63,7 @@ describe('runTuning', () => {
   it('rejects project snapshots with validation errors before evaluating them', async () => {
     const editor = createFakeProjectEditor({ scores: [0.2, 1] })
     const evaluate = vi.spyOn(editor.registration, 'evaluate')
-    const runAgentFn = vi.fn(async ({ host }: { host: ProjectToolHost }) => {
+    const runAgentFn = vi.fn(async ({ host }: { host: ToolHost }) => {
       await host.executeTool('setProperty', {
         target: { kind: 'manifest' }, pointer: '/entrySceneId', value: 'missing'
       })

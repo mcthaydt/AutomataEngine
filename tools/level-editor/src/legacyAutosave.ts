@@ -1,7 +1,7 @@
-import { levelSchema } from 'monkey-ball'
 import {
   importLegacyMonkeyBallProject,
-  monkeyBallProjectDefinition
+  monkeyBallProjectDefinition,
+  parseLegacyMonkeyBallLevel
 } from 'monkey-ball/project'
 import type { ProjectSnapshot } from '@automata/project'
 
@@ -24,7 +24,7 @@ export function loadLegacyMonkeyBallAutosave(
   try {
     const parsed = JSON.parse(raw) as { version?: number; doc?: unknown }
     if (parsed.version !== 1) return null
-    const level = levelSchema.parse(parsed.doc)
+    const level = parseLegacyMonkeyBallLevel(parsed.doc)
     const template = monkeyBallProjectDefinition.compile(
       monkeyBallProjectDefinition.createTemplate()
     )

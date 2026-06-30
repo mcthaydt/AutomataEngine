@@ -5,8 +5,7 @@ import {
   type PhysicsPort, type RenderPort, type World
 } from '@automata/engine'
 import type { Entity } from '../entity'
-import type { Level } from '../data/level'
-import type { PhysicsTuning } from '../data/config'
+import type { Level, PhysicsTuning } from '../project/types'
 import type { GameStore } from '../state/root'
 import type { GameCtx } from './context'
 import { populateLevelWorld } from '../level/buildWorld'

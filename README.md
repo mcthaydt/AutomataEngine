@@ -1,51 +1,79 @@
 # AutomataEngine
 
-Web-first game engine (`packages/engine`) with two games — a Monkey Ball clone
-(`games/monkey-ball`) and PULSEBREAK, a neon arena roguelite
-(`games/pulsebreak`) — and a level editor (`tools/level-editor`).
-
-- Spec: `docs/superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md`
-- Dev: `npm install`, then `npm run ci` (lint + typecheck + tests)
+Web-first game engine with two shipped games and one generic project editor.
+Games register authored component/resource schemas, compilation, preview, and
+evaluation adapters; shared editor packages contain no game-specific code.
 
 ## Workspace
 
-| Path | Package | What |
+| Path | Package | Purpose |
 |---|---|---|
-| `packages/engine` | `@automata/engine` | The engine: ECS, store, data, loop, input, physics (Rapier), render (Three) |
-| `games/monkey-ball` | `monkey-ball` | The game app (Vite) |
-| `games/pulsebreak` | `pulsebreak` | Neon fixed-camera arena roguelite (Vite) |
-| `tools/level-editor` | `level-editor` | Level editor app (Vite) |
+| `packages/engine` | `@automata/engine` | ECS, store, data, loop, input, physics, rendering, audio |
+| `packages/project` | `@automata/project` | Persisted project schemas, commands, validation, and bundles |
+| `packages/contracts` | `@automata/contracts` | Agent/MCP project tool and evaluation contracts |
+| `packages/editor` | `@automata/editor` | Generic project session, storage, viewport, and generated UI |
+| `packages/editor-agent` | `@automata/editor-agent` | Sandboxed assistant and tuning workflow |
+| `games/monkey-ball` | `monkey-ball` | Physics platform game and project registration |
+| `games/pulsebreak` | `pulsebreak` | Deterministic neon arena roguelite and project registration |
+| `tools/level-editor` | `level-editor` | Multi-game project editor app |
+| `tools/editor-mcp-server` | `editor-mcp-server` | Generic project MCP server |
 
 ## Commands
 
-- `npm run ci` - lint + typecheck + all tests (run before every commit claim)
-- `npm run coverage` - tests with the repo-wide 90% line + branch coverage gate
-- `npm run dev -w monkey-ball` - run monkey-ball locally
-- `npm run dev:pulsebreak` - run PULSEBREAK locally
+- `npm run dev:editor` — open the project chooser at `http://127.0.0.1:5175`
+- `npm run dev:game` — run Monkey Ball at `http://127.0.0.1:5174`
+- `npm run dev:pulsebreak` — run PULSEBREAK at `http://127.0.0.1:5176`
+- `npm run ci` — lint, typecheck, and all unit tests
+- `npm run coverage` — repository-wide 90% line and branch gate
+- `npm run build` — production builds for both games and the editor
+- `npm run e2e` — Playwright browser/release smokes
 
-## Game (monkey-ball)
+## Project format
 
-`games/monkey-ball` is the first game on the engine. Run it with
-`npm run dev -w monkey-ball`. Flow: menu -> level select -> play (tilt with
-WASD/arrows or the on-screen joystick) -> goal or game-over. Progress and
-settings persist to localStorage.
+Each project directory contains:
 
-Data lives under `games/monkey-ball/public/data/` (served at `/data/...`):
-`config/physics.toml` (tuning), `archetypes/standard.yaml` (entity bundles),
-`levels/*.json` + `levels/worlds.json` (levels and the world manifest).
+```text
+automata.project.json             project identity, gameId, entry scene, file index
+scenes/<id>.scene.json            entity hierarchy and typed component instances
+resources/<id>.resource.json      typed tuning/content resources
+```
 
-## Game (pulsebreak)
+Portable bundle JSON contains the same manifest, scenes, and resources in one
+canonical file. Shipped projects are:
 
-`games/pulsebreak` is a fixed-camera neon arena roguelite: a hover-drone
-auto-fires at the nearest enemy across five escalating waves and a boss, with an
-upgrade pick between each wave. Run it with `npm run dev:pulsebreak`. It uses
-only `@automata/engine` (kinematic deterministic sim, no Rapier). Tuning lives in
-`games/pulsebreak/src/config.ts`. See `games/pulsebreak/README.md` for controls
-and architecture.
+- `games/monkey-ball/public/project`
+- `games/pulsebreak/public/project`
 
-### Untested browser shims (excluded from the coverage gate)
+The editor chooser can create either game, open a folder through File System
+Access, fall back to bundle import/export, and reopen recent folder handles.
+Use `?game=monkey-ball` or `?game=pulsebreak` to preselect a game, and
+`?project=<recent-project-id>` to deep-link a recent project. Component and
+resource inspectors, tables, references, and validation UI are generated from
+each game's registered schemas.
 
-`packages/engine/src/loop/browser.ts`, `packages/engine/src/render/browser.ts`,
-`packages/engine/src/audio/browser.ts`, `games/monkey-ball/src/main.ts`, and
-`games/pulsebreak/src/main.ts`. Everything else is unit-tested; these are
-covered by the Playwright smokes.
+## MCP
+
+Run the project MCP server against either directory:
+
+```bash
+node_modules/.bin/automata-editor-mcp --project games/monkey-ball/public/project
+node_modules/.bin/automata-editor-mcp --project games/pulsebreak/public/project
+```
+
+It also accepts `--bundle <file>`. See
+`tools/editor-mcp-server/README.md` for tool/resource lists and client configs.
+
+## Game data
+
+Both games boot from compiled project data. Monkey Ball retains only its
+archetype registry at `games/monkey-ball/public/data/archetypes/standard.yaml`;
+pre-project level/config documents are quarantined under test fixtures for the
+deterministic importer. PULSEBREAK tuning, enemies, waves, upgrades, arena, and
+spawn zones live in project resources/scenes rather than TypeScript constants.
+
+## Coverage exclusions
+
+Only thin browser composition shims are excluded:
+`packages/engine/src/loop/browser.ts`,
+`packages/engine/src/render/browser.ts`, and application `main.ts` files.
+Browser behavior is covered by Playwright release smokes.

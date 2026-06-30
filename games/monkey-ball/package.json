@@ -10,7 +10,6 @@
     "./editor": "./src/project/editor.ts"
   },
   "dependencies": {
-    "@automata/contracts": "*",
     "@automata/engine": "*",
     "@automata/editor": "*",
     "@automata/game-kit": "*",

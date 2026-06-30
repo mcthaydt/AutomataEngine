@@ -1,4 +1,4 @@
-import type { WorldsManifest } from '../data/level'
+import type { WorldsManifest } from '../project/types'
 import type { ProgressState } from './progress'
 
 /** The flat, ordered list of level ids across all worlds. */

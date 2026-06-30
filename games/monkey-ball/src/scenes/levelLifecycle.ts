@@ -1,4 +1,4 @@
-import type { Level } from '../data/level'
+import type { Level } from '../project/types'
 import type { CompiledMonkeyBallProject } from '../project/types'
 import type { GameState } from '../state/root'
 import type { GameStore } from '../state/root'

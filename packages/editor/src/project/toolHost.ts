@@ -1,11 +1,11 @@
 import {
-  PROJECT_RESOURCE_URIS,
-  parseProjectToolArgs,
-  projectToolDefs,
-  type ProjectResourceUri,
-  type ProjectToolDef,
-  type ProjectToolHost,
-  type ProjectToolName,
+  RESOURCE_URIS,
+  parseToolArgs,
+  toolDefs,
+  type ResourceUri,
+  type ToolDef,
+  type ToolHost,
+  type ToolName,
   type ToolResult
 } from '@automata/contracts'
 import {
@@ -24,12 +24,12 @@ export interface ProjectToolHostOptions {
   baseline?: unknown
 }
 
-export interface EditorProjectToolHost extends ProjectToolHost {
+export interface EditorProjectToolHost extends ToolHost {
   readonly snapshot: ProjectSnapshot
   readonly commands: readonly ProjectCommand[]
 }
 
-const WRITE_TOOLS = new Set<ProjectToolName>([
+const WRITE_TOOLS = new Set<ToolName>([
   'addEntity', 'removeEntities', 'reparentEntity', 'addComponent', 'removeComponent',
   'addResource', 'removeResource', 'setProperty', 'insertArrayItem', 'removeArrayItem',
   'moveArrayItem'
@@ -74,13 +74,13 @@ export function createProjectToolHost(options: ProjectToolHostOptions): EditorPr
   return {
     get snapshot() { return snapshot },
     get commands() { return commands },
-    listTools(): ProjectToolDef[] {
-      return projectToolDefs()
+    listTools(): ToolDef[] {
+      return toolDefs()
     },
     async executeTool(name, args): Promise<ToolResult> {
       let parsed: unknown
       try {
-        parsed = parseProjectToolArgs(name, args)
+        parsed = parseToolArgs(name, args)
       } catch (error) {
         return errorResult(error)
       }
@@ -130,13 +130,13 @@ export function createProjectToolHost(options: ProjectToolHostOptions): EditorPr
           return { ok: false, isError: true, content: `unknown project tool ${name}` }
       }
     },
-    async readResource(uri: ProjectResourceUri): Promise<unknown> {
+    async readResource(uri: ResourceUri): Promise<unknown> {
       switch (uri) {
-        case PROJECT_RESOURCE_URIS.project: return snapshot
-        case PROJECT_RESOURCE_URIS.hierarchy: return hierarchy()
-        case PROJECT_RESOURCE_URIS.resources: return resources()
-        case PROJECT_RESOURCE_URIS.validation: return validation()
-        case PROJECT_RESOURCE_URIS.baseline: return options.baseline ?? null
+        case RESOURCE_URIS.project: return snapshot
+        case RESOURCE_URIS.hierarchy: return hierarchy()
+        case RESOURCE_URIS.resources: return resources()
+        case RESOURCE_URIS.validation: return validation()
+        case RESOURCE_URIS.baseline: return options.baseline ?? null
         default: return null
       }
     }

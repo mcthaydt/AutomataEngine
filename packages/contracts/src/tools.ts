@@ -1,56 +1,91 @@
+import { projectCommandSchema } from '@automata/project'
 import { z } from 'zod'
-import {
-  addItemSchema,
-  moveSelectedSchema,
-  setItemFieldSchema,
-  setSurfaceSchema,
-  setMetadataSchema,
-  deleteItemsSchema
-} from './command'
+import { projectEvaluationOptionsSchema } from './eval'
 
 export type ToolName =
-  | 'addItem'
-  | 'moveSelected'
-  | 'setItemField'
-  | 'setSurface'
-  | 'setMetadata'
-  | 'deleteItems'
-  | 'getDoc'
-  | 'listItems'
+  | 'addEntity'
+  | 'removeEntities'
+  | 'reparentEntity'
+  | 'addComponent'
+  | 'removeComponent'
+  | 'addResource'
+  | 'removeResource'
+  | 'setProperty'
+  | 'insertArrayItem'
+  | 'removeArrayItem'
+  | 'moveArrayItem'
+  | 'getProject'
+  | 'getHierarchy'
+  | 'getResources'
   | 'validate'
-  | 'testPlay'
+  | 'evaluate'
 
-/** Arg schema per tool. Write tools = command schema minus its `type` discriminant. */
+const TOOL_NAMES: readonly ToolName[] = [
+  'addEntity', 'removeEntities', 'reparentEntity', 'addComponent', 'removeComponent',
+  'addResource', 'removeResource', 'setProperty', 'insertArrayItem', 'removeArrayItem',
+  'moveArrayItem', 'getProject', 'getHierarchy', 'getResources', 'validate', 'evaluate'
+]
+
+/** RFC 6901 pointer, including the empty pointer for a document root. */
+const jsonPointerSchema = z.string().regex(/^(?:|(?:\/(?:[^~]|~[01])*)*)$/)
+
+function commandArgs(type: string): z.ZodObject {
+  // The discriminated union holds heterogeneous object shapes. Erase that
+  // option union only after selecting by its literal discriminator so Zod's
+  // generic `omit` overload has one callable object-schema signature.
+  const schema = projectCommandSchema.options.find(
+    (option) => option.shape.type.value === type
+  ) as z.ZodObject | undefined
+  if (!schema) throw new Error(`Missing project command schema for "${type}"`)
+  return schema.omit({ type: true })
+}
+
+function pointerCommandArgs(type: string): z.ZodObject {
+  return commandArgs(type).extend({ pointer: jsonPointerSchema })
+}
+
+/** Argument schemas stay derived from project commands while omitting wire discriminants. */
 export const toolArgSchemas = {
-  addItem: addItemSchema.omit({ type: true }),
-  moveSelected: moveSelectedSchema.omit({ type: true }),
-  setItemField: setItemFieldSchema.omit({ type: true }),
-  setSurface: setSurfaceSchema.omit({ type: true }),
-  setMetadata: setMetadataSchema.omit({ type: true }),
-  deleteItems: deleteItemsSchema.omit({ type: true }),
-  getDoc: z.object({}),
-  listItems: z.object({}),
+  addEntity: commandArgs('addEntity'),
+  removeEntities: commandArgs('removeEntities'),
+  reparentEntity: commandArgs('reparentEntity'),
+  addComponent: commandArgs('addComponent'),
+  removeComponent: commandArgs('removeComponent'),
+  addResource: commandArgs('addResource'),
+  removeResource: commandArgs('removeResource'),
+  setProperty: pointerCommandArgs('setProperty'),
+  insertArrayItem: pointerCommandArgs('insertArrayItem'),
+  removeArrayItem: pointerCommandArgs('removeArrayItem'),
+  moveArrayItem: pointerCommandArgs('moveArrayItem'),
+  getProject: z.object({}),
+  getHierarchy: z.object({}),
+  getResources: z.object({}),
   validate: z.object({}),
-  testPlay: z.object({ maxSteps: z.number().int().positive() })
-} as const
+  evaluate: projectEvaluationOptionsSchema
+} as const satisfies Record<ToolName, z.ZodType>
 
 const TOOL_DESCRIPTIONS: Record<ToolName, string> = {
-  addItem: 'Add a placeable item (geometry, archetype, or marker) to the level.',
-  moveSelected: 'Move the given items by a delta vector.',
-  setItemField: 'Set a single field (by dotted path) on one item.',
-  setSurface: 'Set an item\'s surface (color or texture).',
-  setMetadata: 'Set a document-level metadata field by dotted path.',
-  deleteItems: 'Delete the given items from the level.',
-  getDoc: 'Read the current level document.',
-  listItems: 'List all placeable items in the current level.',
-  validate: 'Validate the current level and return any issues.',
-  testPlay: 'Run a deterministic headless play and return TestPlayResult metrics.'
+  addEntity: 'Add an entity to a project scene.',
+  removeEntities: 'Remove entities and their descendants from a project scene.',
+  reparentEntity: 'Change an entity parent within a project scene.',
+  addComponent: 'Add a typed component to an entity.',
+  removeComponent: 'Remove a component from an entity.',
+  addResource: 'Add a typed resource document to the project.',
+  removeResource: 'Remove an unreferenced resource document from the project.',
+  setProperty: 'Set a property on a project, scene, entity, component, or resource target.',
+  insertArrayItem: 'Insert an item into an array property.',
+  removeArrayItem: 'Remove an item from an array property.',
+  moveArrayItem: 'Reorder an item within an array property.',
+  getProject: 'Read the current project snapshot.',
+  getHierarchy: 'Read scenes, entities, and component type IDs in stable project order.',
+  getResources: 'Read resource documents in manifest order.',
+  validate: 'Validate the current project and return structured issues.',
+  evaluate: 'Evaluate the current project and return normalized score metrics.'
 }
 
 export interface ToolDef {
   name: ToolName
   description: string
-  /** JSON Schema (from z.toJSONSchema) for the tool's arguments. */
   schema: unknown
 }
 
@@ -60,16 +95,22 @@ export interface ToolResult {
   isError?: boolean
 }
 
-export type ResourceUri = 'editor://doc' | 'editor://items' | 'editor://validation' | 'editor://baseline'
+export type ResourceUri =
+  | 'editor://project'
+  | 'editor://hierarchy'
+  | 'editor://resources'
+  | 'editor://validation'
+  | 'editor://baseline'
 
 export const RESOURCE_URIS = {
-  doc: 'editor://doc',
-  items: 'editor://items',
+  project: 'editor://project',
+  hierarchy: 'editor://hierarchy',
+  resources: 'editor://resources',
   validation: 'editor://validation',
   baseline: 'editor://baseline'
 } as const satisfies Record<string, ResourceUri>
 
-/** A host that exposes the editor's command/eval surface as tools + resources. */
+/** Generic project host consumed by providers and protocol adapters. */
 export interface ToolHost {
   listTools(): ToolDef[]
   executeTool(name: ToolName, args: unknown): Promise<ToolResult>
@@ -77,7 +118,7 @@ export interface ToolHost {
 }
 
 export function toolDefs(): ToolDef[] {
-  return (Object.keys(toolArgSchemas) as ToolName[]).map((name) => ({
+  return TOOL_NAMES.map((name) => ({
     name,
     description: TOOL_DESCRIPTIONS[name],
     schema: z.toJSONSchema(toolArgSchemas[name])
@@ -85,5 +126,7 @@ export function toolDefs(): ToolDef[] {
 }
 
 export function parseToolArgs(name: ToolName, args: unknown): unknown {
-  return toolArgSchemas[name].parse(args)
+  const schema: z.ZodType | undefined = toolArgSchemas[name]
+  if (!schema) throw new Error(`Unknown project tool "${name}"`)
+  return schema.parse(args)
 }

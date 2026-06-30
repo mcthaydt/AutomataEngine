@@ -69,10 +69,11 @@ root unless a task explicitly says otherwise.
   with auto-globbed coverage, a `new-game` scaffold, and shared test primitives
   (spec: `docs/superpowers/specs/2026-06-27-game-kit-design.md`; completed plan:
   `docs/superpowers/plans/2026-06-27-game-kit.md`).
-- Direction agreed, spec pending:
-  - PULSEBREAK data-driven tuning — move `config.ts` balance knobs to engine
-    data files, then extend the MCP/tuning-agent loop to balance it. The level
-    editor stays spatial; pulsebreak is a tuning target, not a level-editing one.
+- [x] Generic Project Editor — one chooser/session/storage/UI for Monkey Ball,
+  PULSEBREAK, and future registrations; project-first runtime data, generic
+  command/evaluation contracts, sandboxed agent tuning, and multi-game MCP
+  loading (spec: `docs/superpowers/specs/2026-06-27-generic-project-editor-design.md`;
+  plan: `docs/superpowers/plans/2026-06-27-generic-project-editor.md`).
 
 ## Verification Commands
 

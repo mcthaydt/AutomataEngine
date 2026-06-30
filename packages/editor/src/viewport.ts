@@ -1,10 +1,7 @@
 export { attachFlyControls } from './viewport3d/browser'
 export { paintMap } from './viewport2d/browser'
 export * from './viewport2d/projection'
-export * from './viewport2d/draw'
-export * from './viewport2d/hit'
-// `DrawOp` is re-exported via ./viewport2d/draw; only pull the generic builder here.
-export { buildProjectDrawModel } from './viewport2d/projectDraw'
+export * from './viewport2d/projectDraw'
 export * from './viewport2d/projectHit'
 export * from './viewport3d/flyCamera'
 export * from './viewport3d/ray'

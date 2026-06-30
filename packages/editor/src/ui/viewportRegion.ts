@@ -1,11 +1,8 @@
-import type { EditorCore } from '../host'
-import type { EditorState } from '../state/store'
-import type { PrimaryView } from '../state/ui'
-import type { PanelHandle } from './panel'
+import type { PrimaryView } from '../project/actions'
 
 const other = (view: PrimaryView): PrimaryView => (view === '2d' ? '3d' : '2d')
 
-/** The minimal viewport UI state shared by the legacy and project chromes. */
+/** The minimal viewport UI state shared by project chrome layouts. */
 export interface ViewportRegionView {
   primaryView: PrimaryView
   insetVisible: boolean
@@ -23,8 +20,7 @@ export interface ViewportRegionHandle {
 }
 
 /**
- * Store-shape-agnostic dual-viewport region (main + swappable inset). Both chrome
- * paths build this with a thin controller and feed it `{ primaryView, insetVisible }`.
+ * Store-shape-agnostic dual-viewport region (main + swappable inset).
  */
 export function createViewportRegion(
   parent: HTMLElement,
@@ -80,24 +76,5 @@ export function createViewportRegion(
       main.remove()
       inset.remove()
     }
-  }
-}
-
-/** Legacy adapter: drives the shared region from `EditorCore` + `EditorState`. */
-export function mountViewportRegion<Doc>(
-  core: EditorCore<Doc>,
-  parent: HTMLElement,
-  canvases: Record<PrimaryView, HTMLCanvasElement>
-): PanelHandle<Doc> {
-  const region = createViewportRegion(parent, canvases, {
-    setPrimaryView: (view) => core.store.dispatch({ type: 'setPrimaryView', view }),
-    toggleInset: () => core.store.dispatch({ type: 'toggleInset' })
-  })
-  region.update({ primaryView: core.store.getState().ui.primaryView, insetVisible: core.store.getState().ui.insetVisible })
-  return {
-    update(state: EditorState<Doc>) {
-      region.update({ primaryView: state.ui.primaryView, insetVisible: state.ui.insetVisible })
-    },
-    dispose() { region.dispose() }
   }
 }

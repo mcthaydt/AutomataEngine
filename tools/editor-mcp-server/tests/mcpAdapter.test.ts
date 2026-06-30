@@ -1,7 +1,7 @@
 import {
-  PROJECT_RESOURCE_URIS,
-  projectToolDefs,
-  type ProjectToolHost
+  RESOURCE_URIS,
+  toolDefs,
+  type ToolHost
 } from '@automata/contracts'
 import { ErrorCode } from '@modelcontextprotocol/sdk/types.js'
 import { describe, expect, it, vi } from 'vitest'
@@ -12,8 +12,8 @@ import {
   readResourceResult
 } from '../src/mcpAdapter'
 
-const fakeHost: ProjectToolHost = {
-  listTools: projectToolDefs,
+const fakeHost: ToolHost = {
+  listTools: toolDefs,
   executeTool: async (name) => ({ ok: true, content: { tool: name } }),
   readResource: async (uri) => ({ uri })
 }
@@ -38,7 +38,7 @@ describe('MCP project adapter', () => {
       isError: false
     })
 
-    const erroring: ProjectToolHost = {
+    const erroring: ToolHost = {
       ...fakeHost,
       executeTool: async () => ({ ok: false, isError: true, content: 'write failed' })
     }
@@ -49,7 +49,7 @@ describe('MCP project adapter', () => {
 
   it('maps invalid tool names and arguments to InvalidParams before host execution', async () => {
     const executeTool = vi.fn(fakeHost.executeTool)
-    const host: ProjectToolHost = { ...fakeHost, executeTool }
+    const host: ToolHost = { ...fakeHost, executeTool }
 
     await expect(callToolResult(host, 'removeArrayItem', {
       target: { kind: 'manifest' }, pointer: 'not-a-pointer', index: -1
@@ -67,9 +67,9 @@ describe('MCP project adapter', () => {
 
   it('lists and reads all generic project resources', async () => {
     expect(listResourcesResult().resources.map((resource) => resource.uri)).toEqual(
-      Object.values(PROJECT_RESOURCE_URIS)
+      Object.values(RESOURCE_URIS)
     )
-    for (const uri of Object.values(PROJECT_RESOURCE_URIS)) {
+    for (const uri of Object.values(RESOURCE_URIS)) {
       const result = await readResourceResult(fakeHost, uri)
       expect(JSON.parse(result.contents[0]!.text)).toEqual({ uri })
     }

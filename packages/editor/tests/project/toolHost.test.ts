@@ -98,4 +98,49 @@ describe('project ToolHost', () => {
       ok: false, isError: true, content: expect.stringMatching(/evaluation/i)
     })
   })
+
+  it('covers malformed calls, sparse reads, every resource, and evaluation exceptions', async () => {
+    const sparse = fakeSnapshot()
+    sparse.manifest.scenes.push({ id: 'missing', path: 'scenes/missing.scene.json' })
+    sparse.manifest.resources.push({
+      id: 'missing-resource', typeId: 'fake.tuning', path: 'resources/missing.json'
+    })
+    sparse.scenes.main!.entities[0]!.parentId = 'parent'
+    const registration = registerEditorProject({
+      ...fakeEditorRegistration,
+      evaluation: { evaluate: async () => { throw 'evaluation exploded' } }
+    })
+    const host = createProjectToolHost({ registration, initialSnapshot: sparse })
+
+    expect(await host.executeTool('removeArrayItem', {
+      target: { kind: 'manifest' }, pointer: 'bad', index: -1
+    })).toMatchObject({ ok: false, isError: true })
+    expect((await host.executeTool('getHierarchy', {})).content).toEqual({
+      scenes: [
+        expect.objectContaining({
+          id: 'main',
+          entities: [expect.objectContaining({ parentId: 'parent' })]
+        }),
+        { id: 'missing', name: 'missing', entities: [] }
+      ]
+    })
+    expect((await host.executeTool('getResources', {})).content).toHaveLength(1)
+    expect(await host.readResource('editor://hierarchy')).toEqual(
+      (await host.executeTool('getHierarchy', {})).content
+    )
+    expect(await host.readResource('editor://resources')).toEqual([sparse.resources.tuning])
+    expect(await host.readResource('editor://validation')).toEqual(
+      (await host.executeTool('validate', {})).content
+    )
+    expect(await host.readResource('editor://baseline')).toBeNull()
+    expect(await host.readResource('editor://unknown' as never)).toBeNull()
+
+    const validHost = createProjectToolHost({
+      registration,
+      initialSnapshot: fakeSnapshot()
+    })
+    expect(await validHost.executeTool('evaluate', { maxSteps: 10 })).toEqual({
+      ok: false, isError: true, content: 'evaluation exploded'
+    })
+  })
 })

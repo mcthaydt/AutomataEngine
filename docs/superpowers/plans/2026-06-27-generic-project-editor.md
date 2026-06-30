@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 89% — 17 of 19 tasks complete (Tasks 1–17 ✓). (Updated 2026-06-29)
+**Progress:** 95% — 18 of 19 tasks complete (Tasks 1–18 ✓). (Updated 2026-06-29)
 
 ---
 
@@ -1695,7 +1695,7 @@ git commit -m "feat(editor-mcp): host generic game projects"
 - Modify: `vitest.config.ts`
 - Modify: `eslint.config.js`
 
-- [ ] **Step 1: Add failing architecture/deletion guards**
+- [x] **Step 1: Add failing architecture/deletion guards**
 
 Add focused smoke tests or source guards that fail while legacy surfaces remain:
 
@@ -1708,37 +1708,37 @@ expect(contracts).not.toHaveProperty('TestPlayResult')
 
 Add a repo source test under `tools/level-editor/tests/boundaries.test.ts` that scans `packages/editor/src` and fails on `monkey-ball`, `pulsebreak`, `GameDefinition`, `SceneModel`, or legacy `SceneCommand` tokens outside migration comments.
 
-- [ ] **Step 2: Run guards and observe red**
+- [x] **Step 2: Run guards and observe red**
 
 Run: `npx vitest run --project editor --project contracts --project level-editor --testNamePattern="legacy|boundary"`
 
 Expected: FAIL because legacy exports/files still exist.
 
-- [ ] **Step 3: Remove legacy editor path and normalize generic exports**
+- [x] **Step 3: Remove legacy editor path and normalize generic exports**
 
 Delete superseded files/tests, update project modules to import shared fly camera/ray/projection helpers directly, and make root/headless/UI exports project-first. Rename temporary Task 15 prefixed project ToolHost names to the canonical `ToolHost`, `ToolName`, `toolDefs`, and `RESOURCE_URIS` only after all consumers use them.
 
 Keep reusable `grid.ts`, viewport projection/browser paint, fly camera/controls/ray/AABB, panel/theme primitives, state `tool.ts`, and state `ui.ts` where the project editor still imports them.
 
-- [ ] **Step 4: Retain legacy import fixtures without shipping them**
+- [x] **Step 4: Retain legacy import fixtures without shipping them**
 
 Use `git mv` to move physics TOML, worlds JSON, and six legacy level JSON files into `games/monkey-ball/tests/fixtures/legacy/` with the same relative `config/` and `levels/` layout. Update importer tests/generator source argument. Leave `public/data/archetypes/standard.yaml` in place because it remains a runtime asset registry, not an editor level document.
 
 Move legacy `Level`/physics parse schemas into private `games/monkey-ball/src/project/legacyTypes.ts`; do not export them from package root/headless. Compiled runtime types live in `src/project/types.ts`.
 
-- [ ] **Step 5: Remove Pulsebreak authored constants**
+- [x] **Step 5: Remove Pulsebreak authored constants**
 
 Delete `config.ts`. All runtime/tests use `PulsebreakCompiledProject` and `defaultPulsebreakCompiledProject`; algorithms may retain numeric invariants only when they are not authored values (for example fixed retry count and fixed timestep).
 
-- [ ] **Step 6: Strengthen ESLint boundaries and coverage**
+- [x] **Step 6: Strengthen ESLint boundaries and coverage**
 
 Update messages from “registers itself via GameDefinition” to project-registration terminology. Forbid both game names under `packages/project`, `packages/editor`, and `packages/contracts`; allow `contracts -> project` only. Ensure root coverage includes all new project/editor logic and excludes only the already-approved browser shims/main files.
 
-- [ ] **Step 7: Update user-facing documentation and task board**
+- [x] **Step 7: Update user-facing documentation and task board**
 
 Document one editor command (`npm run dev:editor`), chooser/deep links, folder/bundle workflow, schema-generated components/resources, project directory format, both game project locations, and MCP `--project`. In `AGENTS.md`, add the generic project editor milestone and mark it complete only after this task's tests pass; preserve all prior completed milestones.
 
-- [ ] **Step 8: Run deletion guards, full tests, typecheck, and coverage**
+- [x] **Step 8: Run deletion guards, full tests, typecheck, and coverage**
 
 Run:
 
@@ -1750,7 +1750,7 @@ npm run coverage
 
 Expected: `rg` reports no forbidden shared-editor/project dependencies or legacy types; CI PASS; coverage is at least 90% lines/branches.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/editor packages/contracts packages/project games/monkey-ball games/pulsebreak tools/level-editor README.md AGENTS.md eslint.config.js vitest.config.ts docs/superpowers/plans/2026-06-27-generic-project-editor.md

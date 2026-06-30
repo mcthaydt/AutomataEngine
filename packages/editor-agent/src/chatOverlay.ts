@@ -51,9 +51,7 @@ export interface ProjectAgentPanelHandle {
 
 export function defaultChatDeps(options: DefaultChatDepsOptions = {}): ChatOverlayDeps {
   const makeProvider = options.createProviderFor ?? createProvider
-  // Agent core's protocol is structurally shared during the Task 15-18
-  // coexistence window; Task 18 makes the project host name canonical.
-  const run = options.runAgentFn ?? (runAgent as unknown as ProjectAgentRunner)
+  const run: ProjectAgentRunner = options.runAgentFn ?? runAgent
   const tuneRun = options.runTuningFn ?? runTuning
   return {
     loadSettings: () => loadAgentSettings(),

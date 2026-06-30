@@ -1,41 +1,42 @@
-import { describe, expect, it } from 'vitest'
-import { mountViewportRegion } from '../../src/ui/viewportRegion'
-import { makeTestEditor } from '../fixtures/editorHarness'
+import { describe, expect, it, vi } from 'vitest'
+import { createViewportRegion } from '../../src/ui/viewportRegion'
 
-const canvases = (): { '2d': HTMLCanvasElement; '3d': HTMLCanvasElement } =>
-  ({ '2d': document.createElement('canvas'), '3d': document.createElement('canvas') })
+const canvases = (): { '2d': HTMLCanvasElement; '3d': HTMLCanvasElement } => ({
+  '2d': document.createElement('canvas'),
+  '3d': document.createElement('canvas')
+})
 
 describe('viewport region', () => {
-  it('puts the primary view in main and the other in the inset', () => {
+  it('puts the selected project view in main and the other in the inset', () => {
     const host = document.createElement('div')
-    const editor = makeTestEditor()
     const cs = canvases()
-    const handle = mountViewportRegion(editor, host, cs)
+    const handle = createViewportRegion(host, cs, {
+      setPrimaryView() {}, toggleInset() {}
+    })
 
+    handle.update({ primaryView: '2d', insetVisible: true })
     expect(cs['2d'].closest('[data-vp]')!.getAttribute('data-vp')).toBe('main')
     expect(cs['3d'].closest('[data-vp]')!.getAttribute('data-vp')).toBe('inset')
 
-    editor.store.dispatch({ type: 'setPrimaryView', view: '3d' })
-    handle.update(editor.store.getState())
+    handle.update({ primaryView: '3d', insetVisible: true })
     expect(cs['3d'].closest('[data-vp]')!.getAttribute('data-vp')).toBe('main')
-
     handle.dispose()
-    editor.dispose()
   })
 
-  it('swap and hide affordances dispatch ui actions', () => {
+  it('routes swap and hide affordances through the injected controller', () => {
     const host = document.createElement('div')
-    const editor = makeTestEditor()
-    const handle = mountViewportRegion(editor, host, canvases())
+    const setPrimaryView = vi.fn()
+    const toggleInset = vi.fn()
+    const handle = createViewportRegion(host, canvases(), { setPrimaryView, toggleInset })
+    handle.update({ primaryView: '2d', insetVisible: true })
 
     host.querySelector<HTMLButtonElement>('[data-vp-swap]')!.click()
-    expect(editor.store.getState().ui.primaryView).toBe('3d')
-
+    expect(setPrimaryView).toHaveBeenCalledWith('3d')
     host.querySelector<HTMLButtonElement>('[data-vp-hide]')!.click()
-    handle.update(editor.store.getState())
-    expect(host.querySelector('[data-vp="inset"]')!.classList.contains('is-hidden')).toBe(true)
+    expect(toggleInset).toHaveBeenCalledOnce()
 
+    handle.update({ primaryView: '2d', insetVisible: false })
+    expect(host.querySelector('[data-vp="inset"]')!.classList.contains('is-hidden')).toBe(true)
     handle.dispose()
-    editor.dispose()
   })
 })

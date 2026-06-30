@@ -1,6 +1,5 @@
 import type { ProjectSnapshot } from '@automata/project'
-import type { Level, WorldsManifest } from '../data/level'
-import type { PhysicsTuning } from '../data/config'
+import type { Level, PhysicsTuning, WorldsManifest } from './types'
 import { importLegacyMonkeyBallProject } from './legacyImporter'
 
 const DEFAULT_TUNING: PhysicsTuning = {

@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  projectToolDefs,
-  type ProjectToolHost
+  toolDefs,
+  type ToolHost
 } from '@automata/contracts'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
@@ -16,13 +16,13 @@ import { createMcpServer } from '../src/server'
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pulsebreakProject = resolve(packageDir, '../../games/pulsebreak/public/project')
 
-const fakeHost: ProjectToolHost = {
-  listTools: projectToolDefs,
+const fakeHost: ToolHost = {
+  listTools: toolDefs,
   executeTool: async () => ({ ok: true, content: null }),
   readResource: async (uri) => ({ uri, title: 'Current project' })
 }
 
-async function connected(host: ProjectToolHost) {
+async function connected(host: ToolHost) {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
   const server = createMcpServer(host)
   const client = new Client({ name: 'editor-mcp-server-test', version: '0.0.0' })

@@ -7,7 +7,7 @@ import {
   McpError,
   ReadResourceRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
-import type { ProjectToolHost } from '@automata/contracts'
+import type { ToolHost } from '@automata/contracts'
 import {
   callToolResult,
   isProjectResourceUri,
@@ -17,7 +17,7 @@ import {
 } from './mcpAdapter'
 
 /** Bind one isolated project host to the MCP tools/resources protocol. */
-export function createMcpServer(host: ProjectToolHost): Server {
+export function createMcpServer(host: ToolHost): Server {
   const server = new Server(
     { name: 'automata-editor', version: '0.1.0' },
     { capabilities: { tools: {}, resources: {} } }

@@ -24,7 +24,7 @@ describe('openai adapter', () => {
     await adapter.send({
       system: 'be helpful',
       messages: [{ role: 'user', text: 'add a box' }],
-      tools: [{ name: 'addItem', description: 'add', schema: { type: 'object' } }]
+      tools: [{ name: 'addEntity', description: 'add', schema: { type: 'object' } }]
     })
     const body = bodies[0] as Record<string, unknown>
     expect(body.tool_choice).toBe('auto')
@@ -33,7 +33,7 @@ describe('openai adapter', () => {
       { role: 'user', content: 'add a box' }
     ])
     expect(body.tools).toEqual([
-      { type: 'function', function: { name: 'addItem', description: 'add', parameters: { type: 'object' } } }
+      { type: 'function', function: { name: 'addEntity', description: 'add', parameters: { type: 'object' } } }
     ])
   })
 
@@ -63,7 +63,7 @@ describe('openai adapter', () => {
       system: '',
       messages: [
         { role: 'user', text: 'go' },
-        { role: 'assistant', text: 'calling', toolCalls: [{ id: 'call_1', name: 'addItem', args: { a: 1 } }] },
+        { role: 'assistant', text: 'calling', toolCalls: [{ id: 'call_1', name: 'addEntity', args: { a: 1 } }] },
         { role: 'tool', text: '{"ok":true}', toolCallId: 'call_1' }
       ],
       tools: []
@@ -74,7 +74,7 @@ describe('openai adapter', () => {
       {
         role: 'assistant',
         content: 'calling',
-        tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'addItem', arguments: '{"a":1}' } }]
+        tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'addEntity', arguments: '{"a":1}' } }]
       },
       { role: 'tool', tool_call_id: 'call_1', content: '{"ok":true}' }
     ])

@@ -1,14 +1,13 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData } from '@automata/engine'
-import { physicsTuningKind, toPhysicsTuning } from '../../src/data/config'
+import { physicsTuningKind, toPhysicsTuning } from '../../src/project/legacyTypes'
 import {
-  entityUid,
-  geometryUid,
   levelKind,
   worldsManifestKind,
   type Level
-} from '../../src/data/level'
+} from '../../src/project/legacyTypes'
+import { entityUid, geometryUid } from '../../src/project/types'
 import { runHeadlessPlay } from '../../src/level/headlessPlay'
 import { compileMonkeyBallProject } from '../../src/project/compiler'
 import { importLegacyMonkeyBallProject } from '../../src/project/legacyImporter'

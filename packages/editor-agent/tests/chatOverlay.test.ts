@@ -242,4 +242,103 @@ describe('chat overlay', () => {
     expect(output.result.finalText).toBe('ok')
     expect(output.host.snapshot.scenes.arena!.entities).toHaveLength(1)
   })
+
+  it('default dependencies persist settings and delegate tuning with target score one', async () => {
+    localStorage.clear()
+    const editor = createFakeProjectEditor()
+    const settings = makeSettings()
+    const tuneResult = {
+      snapshot: fakeSnapshot(), commands: [], score: 1, iterations: 0, accepted: 0
+    }
+    const runTuningFn = vi.fn(async () => tuneResult)
+    const deps = defaultChatDeps({
+      createProviderFor: () => ({ id: 'anthropic', defaultModel: 'm', send: vi.fn() }),
+      runTuningFn
+    })
+
+    expect(deps.loadSettings()).toMatchObject({ provider: 'anthropic' })
+    deps.saveSettings(settings)
+    expect(deps.loadSettings()).toEqual(settings)
+    await expect(deps.tune!('tune', editor, settings)).resolves.toBe(tuneResult)
+    expect(runTuningFn).toHaveBeenCalledWith(expect.objectContaining({
+      core: editor, prompt: 'tune', targetScore: 1
+    }))
+  })
+
+  it('ignores empty/duplicate submissions and renders a zero-change no-reply proposal', async () => {
+    const editor = createFakeProjectEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    let finish: ((value: Awaited<ReturnType<ChatOverlayDeps['run']>>) => void) | undefined
+    const run = vi.fn(() => new Promise<Awaited<ReturnType<ChatOverlayDeps['run']>>>((resolve) => {
+      finish = resolve
+    }))
+    const tune = vi.fn()
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run,
+      tune
+    })
+    const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
+    const send = parent.querySelector<HTMLButtonElement>('.ed-chat-send')!
+
+    send.click()
+    expect(run).not.toHaveBeenCalled()
+    input.value = 'inspect'
+    send.click()
+    send.click()
+    parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.click()
+    expect(run).toHaveBeenCalledOnce()
+    expect(tune).not.toHaveBeenCalled()
+
+    finish!({
+      result: { finalText: '', messages: [], executed: [], stoppedBy: 'end' },
+      host: createProjectToolHost({
+        registration: editor.registration,
+        initialSnapshot: editor.store.getState().snapshot
+      })
+    })
+    await flush()
+    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
+    expect(log).toContain('(no reply)')
+    expect(log).toContain('No changes proposed.')
+    panel.dispose()
+  })
+
+  it('renders provider stops and non-Error failures', async () => {
+    const editor = createFakeProjectEditor()
+    const parent = document.createElement('div')
+    const settings = makeSettings()
+    const run = vi.fn()
+      .mockResolvedValueOnce({
+        result: { finalText: 'stopped', messages: [], executed: [], stoppedBy: 'provider-stop' },
+        host: createProjectToolHost({
+          registration: editor.registration,
+          initialSnapshot: editor.store.getState().snapshot
+        })
+      })
+      .mockRejectedValueOnce('string failure')
+    const panel = mountChatOverlay(editor, parent, {
+      loadSettings: () => settings,
+      saveSettings: () => {},
+      run,
+      tune: vi.fn(async () => { throw 'tune string failure' })
+    })
+    const input = parent.querySelector<HTMLTextAreaElement>('.ed-chat-input')!
+    input.value = 'first'
+    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+    input.value = 'second'
+    parent.querySelector<HTMLButtonElement>('.ed-chat-send')!.click()
+    await flush()
+    parent.querySelector<HTMLButtonElement>('.ed-chat-tune')!.click()
+    await flush()
+
+    const log = parent.querySelector('.ed-chat-log')!.textContent ?? ''
+    expect(log).toContain('provider stop')
+    expect(log).toContain('string failure')
+    expect(log).toContain('tune string failure')
+    panel.dispose()
+  })
 })

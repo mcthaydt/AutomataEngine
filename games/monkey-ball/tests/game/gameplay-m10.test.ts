@@ -10,10 +10,10 @@ import {
 import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
 import { registerSounds } from '../../src/audio/sounds'
-import { levelKind } from '../../src/data/level'
+import { levelKind } from '../../src/project/legacyTypes'
 import { createGameStore } from '../../src/state/root'
 import { readDataFile } from '../helpers/data'
-import type { PhysicsTuning } from '../../src/data/config'
+import type { PhysicsTuning } from '../../src/project/legacyTypes'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
 const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
