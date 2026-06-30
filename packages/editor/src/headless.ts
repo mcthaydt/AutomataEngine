@@ -41,4 +41,9 @@ export {
   type ProjectEvaluationResult,
   type PrefabRegistration
 } from './project/registration'
+export {
+  createProjectToolHost,
+  type EditorProjectToolHost,
+  type ProjectToolHostOptions
+} from './project/toolHost'
 export type { ProjectSelection } from './project/selection'

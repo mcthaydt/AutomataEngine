@@ -1,4 +1,5 @@
 import type { PhysicsPort, RenderPort } from '@automata/engine'
+import type { ProjectEvaluationResult } from '@automata/contracts'
 import {
   CORE_COMPONENTS, validateProject, validateProperty,
   type ComponentTypeRegistration, type GameProjectDefinition,
@@ -28,13 +29,7 @@ export interface ProjectPreviewAdapter<Compiled> {
   create(compiled: Compiled, sceneId: string, render: RenderPort, physics: PhysicsPort): ProjectPlayHandle
 }
 
-/** Normalized, game-agnostic headless evaluation outcome. */
-export interface ProjectEvaluationResult {
-  outcome: 'passed' | 'failed' | 'incomplete'
-  score: number
-  metrics: Record<string, number | string | boolean>
-  steps: number
-}
+export type { ProjectEvaluationResult } from '@automata/contracts'
 
 /** Runs a headless evaluation directly from an (unsaved) snapshot. */
 export interface ProjectEvaluationAdapter {

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6 (strict ESM), zod 4, npm workspaces, Vitest 4, happy-dom, Vite 8, Playwright, engine `RenderPort`/`PhysicsPort`, browser File System Access API, IndexedDB.
 
-**Progress:** 68% — 13 of 19 tasks complete (Tasks 1–13 ✓). (Updated 2026-06-28)
+**Progress:** 79% — 15 of 19 tasks complete (Tasks 1–15 ✓). (Updated 2026-06-29)
 
 ---
 
@@ -1405,7 +1405,7 @@ git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): launch one multi-game project editor"
 ```
 
-- [ ] **Step 9: Manual generic editor/storage checkpoint — stop and wait**
+- [x] **Step 9: Manual generic editor/storage checkpoint — stop and wait**
 
 Run: `npm run dev:editor`
 
@@ -1445,7 +1445,7 @@ Stop here. Continue only after the user confirms the editor checkpoint passes.
 - Modify: `packages/editor/src/headless.ts`
 - Modify: `package-lock.json`
 
-- [ ] **Step 1: Write failing project-contract tests**
+- [x] **Step 1: Write failing project-contract tests**
 
 Assert `@automata/contracts` re-exports the same `ProjectCommand` schema/type identity from `@automata/project`, and the new project tool schemas parse valid project operations while rejecting missing IDs, invalid JSON Pointers, negative array indices, and unknown tools. Existing level contracts stay exported until Task 18 so every commit remains root-green.
 
@@ -1462,27 +1462,27 @@ expect(projectToolDefs().map((tool) => tool.name)).toEqual(expected)
 
 Lock resource URIs to `editor://project`, `editor://hierarchy`, `editor://resources`, `editor://validation`, and `editor://baseline`.
 
-- [ ] **Step 2: Write failing sandbox project ToolHost tests**
+- [x] **Step 2: Write failing sandbox project ToolHost tests**
 
 Using the fake registration/snapshot, assert writes mutate only the sandbox, record exact `ProjectCommand[]`, expected command failures leave snapshot/commands unchanged, read tools/resources return generic project data, validation is structured, evaluation delegates to registration, and a registration without evaluation returns an error result.
 
-- [ ] **Step 3: Run focused tests and observe red**
+- [x] **Step 3: Run focused tests and observe red**
 
 Run: `npx vitest run --project contracts --project editor --testNamePattern="project command contract|project tools|project ToolHost"`
 
 Expected: FAIL because the additive project contract/ToolHost modules do not exist.
 
-- [ ] **Step 4: Add project contracts without breaking legacy consumers**
+- [x] **Step 4: Add project contracts without breaking legacy consumers**
 
 Add `@automata/project` dependency. Change the contracts ESLint rule to permit only `@automata/project` as an internal import while still forbidding engine/editor/games/tools. Re-export project commands/schemas from `projectCommand.ts`. Define normalized `ProjectEvaluationResult` plus `{ maxSteps: positive integer }` options in `projectEval.ts`.
 
 In `projectTools.ts`, prefix shared names during coexistence: `ProjectToolName`, `ProjectToolHost`, `PROJECT_RESOURCE_URIS`, `projectToolDefs`, and `parseProjectToolArgs`. Derive write-tool argument schemas from project command schemas with `type` omitted. Read/evaluate schemas stay local. Tool descriptions use project/entity/component/resource terminology only. Keep current `command.ts`, `eval.ts`, and `tools.ts` untouched until Task 18. Repoint `EditorProjectRegistration` to the contracts-owned `ProjectEvaluationResult` so editor, agent, and MCP share one normalized type.
 
-- [ ] **Step 5: Implement `createProjectToolHost`**
+- [x] **Step 5: Implement `createProjectToolHost`**
 
 Options are `{ registration, initialSnapshot, baseline? }`. Write tools parse args, construct a project command, apply it atomically, and append only semantic changes. Read tools return canonical hierarchy/resources rather than viewport items. `evaluate` parses `maxSteps`, validates first, then delegates to registration evaluation. Expose readonly `snapshot` and `commands`.
 
-- [ ] **Step 6: Run contracts/editor tests and typechecks**
+- [x] **Step 6: Run contracts/editor tests and typechecks**
 
 Run:
 
@@ -1495,7 +1495,7 @@ npm run typecheck
 
 Expected: all tests PASS; package and root typechecks exit 0; legacy editor-agent/MCP tests remain green on the coexistence exports.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/contracts packages/editor/src/project/toolHost.ts packages/editor/src/project/registration.ts packages/editor/src/headless.ts packages/editor/tests/project/toolHost.test.ts eslint.config.js package-lock.json

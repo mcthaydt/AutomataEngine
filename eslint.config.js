@@ -101,7 +101,8 @@ export default tseslint.config(
     }
   },
   {
-    // contracts is the dependency-free leaf; it must not depend on anything else in the repo.
+    // contracts may share persisted command schemas with @automata/project only;
+    // it must not depend on runtime, editor, agent, game, or tool packages.
     files: ['packages/contracts/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', {
@@ -110,12 +111,18 @@ export default tseslint.config(
             '@automata/engine',
             '@automata/editor',
             '@automata/editor/*',
+            '@automata/editor-agent',
+            '@automata/editor-agent/*',
+            '@automata/agent-core',
+            '@automata/agent-core/*',
             'monkey-ball',
             'monkey-ball/*',
+            'pulsebreak',
+            'pulsebreak/*',
             'level-editor',
             'level-editor/*'
           ],
-          message: 'contracts is the dependency-free leaf; do not import editor, engine, games, or tools.'
+          message: 'contracts may import only @automata/project from internal packages.'
         }]
       }]
     }
