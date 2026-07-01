@@ -10,9 +10,13 @@
     "@automata/engine": "*",
     "@automata/game-kit": "*"
   },
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "headless": "node --import tsx scripts/headless.ts",
     "typecheck": "tsc --noEmit"
   }
 }

@@ -58,6 +58,7 @@ export function advanceMachinery(
   const darknessS = state.circuits.beacon.powered && !conditions.beaconDisabled
     ? 0
     : state.darknessS + dt
+  const outageS = state.outageS + (state.circuits.beacon.powered && !conditions.beaconDisabled ? 0 : dt)
 
   const feedback = [
     ...state.feedback,
@@ -72,6 +73,7 @@ export function advanceMachinery(
     flooding,
     integrity,
     darknessS,
+    outageS,
     feedback
   }
 }

@@ -10,6 +10,8 @@ import { moveKeeper } from './movement'
 import { resolvePower } from './power'
 import { advanceBeaconGuidance, advanceRadioCalls } from './rescue'
 import { createRng } from './rng'
+import { calculateScoreBreakdown } from './score'
+import { evaluateTerminal } from './terminal'
 
 export interface NightIntents {
   movement: InputVector
@@ -29,7 +31,7 @@ export function stepNight(
   dt: number,
   services: NightStepServices
 ): NightState {
-  if (!services.playing || !Number.isFinite(dt) || dt <= 0) return state
+  if (!services.playing || state.outcome !== null || !Number.isFinite(dt) || dt <= 0) return state
 
   const definition = services.definition ?? nightDefinition
   const keeper = moveKeeper(
@@ -83,5 +85,9 @@ export function stepNight(
     definition
   )
   next = advanceStormDirector(next, targetTimeS, definition)
+  next = evaluateTerminal(next, definition)
+  if (next.outcome !== null) {
+    next = { ...next, score: calculateScoreBreakdown(next, definition).total }
+  }
   return next
 }

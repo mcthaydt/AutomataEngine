@@ -84,6 +84,7 @@ export interface NightState {
   integrity: number
   flooding: number
   darknessS: number
+  outageS: number
   rescues: number
   losses: number
   activeCallId: string | null
@@ -130,6 +131,7 @@ export function createInitialNight(runId: number, seed: number): NightState {
     integrity: 100,
     flooding: 0,
     darknessS: 0,
+    outageS: 0,
     rescues: 0,
     losses: 0,
     activeCallId: null,

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 50% (66/133 steps complete)
+**Progress:** 56% (74/133 steps complete)
 
 ## Global Constraints
 
@@ -492,35 +492,35 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/integration/headless.test.ts
 - Modify: games/last-lightkeeper/package.json
 
-- [ ] **Step 1: Write terminal tests**
+- [x] **Step 1: Write terminal tests**
 
   Cover flood 100%, integrity 0, unsafe darkness, dawn with fewer than three rescues, and victory at dawn with at least three rescues and valid lighthouse state.
 
-- [ ] **Step 2: Implement terminal evaluation**
+- [x] **Step 2: Implement terminal evaluation**
 
   Return one stable terminal reason and never mutate a completed run.
 
-- [ ] **Step 3: Write scoring tests**
+- [x] **Step 3: Write scoring tests**
 
   Assert rescue points, integrity bonus, outage penalty, efficiency bonus, non-negative result, and deterministic rounding.
 
-- [ ] **Step 4: Implement score breakdown**
+- [x] **Step 4: Implement score breakdown**
 
   Return named line items used directly by victory/defeat views and persistence.
 
-- [ ] **Step 5: Write full headless integration tests**
+- [x] **Step 5: Write full headless integration tests**
 
   Script real movement, carrying, radio operation, power routing, repairs, beacon aiming, and time advancement to prove one three-rescue victory and one terminal failure.
 
-- [ ] **Step 6: Run headless tests red**
+- [x] **Step 6: Run headless tests red**
 
   Confirm the harness is absent or cannot complete both paths.
 
-- [ ] **Step 7: Implement the harness and CLI**
+- [x] **Step 7: Implement the harness and CLI**
 
   Add npm run headless -w last-lightkeeper -- victory and failure modes. Exit non-zero when the expected terminal state or key rescue sequence is not observed.
 
-- [ ] **Step 8: Run full game sim tests and commit**
+- [x] **Step 8: Run full game sim tests and commit**
 
   Run npx vitest run --project last-lightkeeper games/last-lightkeeper/tests/sim games/last-lightkeeper/tests/integration and both CLI modes. Commit as feat(last-lightkeeper): prove complete headless night outcomes.
 
