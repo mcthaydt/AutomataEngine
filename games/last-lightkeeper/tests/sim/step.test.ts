@@ -114,4 +114,29 @@ describe('night input step', () => {
     expect(next.storm.nextEventIndex).toBe(1)
     expect(next.timeS).toBe(75)
   })
+
+  it('advances distress calls at the new simulation time before storm events', () => {
+    const initial = createInitialNight(1, 42)
+    const state = {
+      ...initial,
+      timeS: 44,
+      keeper: {
+        ...initial.keeper,
+        floor: 'navigation' as const,
+        x: -28,
+        y: 168
+      }
+    }
+
+    const next = stepNight(
+      state,
+      { movement: { x: 0, y: 0 }, operate: true, carryPressed: false },
+      1,
+      { playing: true }
+    )
+
+    expect(next.timeS).toBe(45)
+    expect(next.activeCallId).toBe('mercy-bell')
+    expect(next.calls['mercy-bell']?.status).toBe('acknowledged')
+  })
 })

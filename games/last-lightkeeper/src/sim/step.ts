@@ -8,6 +8,7 @@ import { applyCarryIntent, findFocusedInteraction } from './interactions'
 import { advanceMachinery, type MachineryConditions } from './machinery'
 import { moveKeeper } from './movement'
 import { resolvePower } from './power'
+import { advanceBeaconGuidance, advanceRadioCalls } from './rescue'
 import { createRng } from './rng'
 
 export interface NightIntents {
@@ -66,6 +67,21 @@ export function stepNight(
   }
   const targetTimeS = next.timeS + dt
   next = { ...next, timeS: targetTimeS }
+  next = advanceRadioCalls(
+    next,
+    intents.operate,
+    dt,
+    { radioDisabled: failureConditions.radioDisabled },
+    definition
+  )
+  next = advanceBeaconGuidance(
+    next,
+    intents.movement.y,
+    intents.operate,
+    dt,
+    { beaconDisabled: failureConditions.beaconDisabled, radioDisabled: failureConditions.radioDisabled },
+    definition
+  )
   next = advanceStormDirector(next, targetTimeS, definition)
   return next
 }

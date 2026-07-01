@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 45% (60/133 steps complete)
+**Progress:** 50% (66/133 steps complete)
 
 ## Global Constraints
 
@@ -456,27 +456,27 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/sim/rescue.test.ts
 - Modify: games/last-lightkeeper/src/sim/step.ts
 
-- [ ] **Step 1: Write call-state tests**
+- [x] **Step 1: Write call-state tests**
 
   Cover incoming, powered-radio acknowledgement, identifying duration, interference pause, bearingKnown, rescue-window open/close, and lost outcome.
 
-- [ ] **Step 2: Run rescue tests red**
+- [x] **Step 2: Run rescue tests red**
 
   Confirm missing-module failure.
 
-- [ ] **Step 3: Implement radio call progression**
+- [x] **Step 3: Implement radio call progression**
 
   Keep each transition explicit and produce readable active-call text data for the HUD.
 
-- [ ] **Step 4: Write beacon tests**
+- [x] **Step 4: Write beacon tests**
 
   Cover powered/functional requirements, operator proximity, aim bounds, tolerance, hold progress, lock pause/decay on lost aim or power, rescued outcome, unique feedback, and no duplicate scoring.
 
-- [ ] **Step 5: Implement aim and guide progression**
+- [x] **Step 5: Implement aim and guide progression**
 
   Use vertical intent while operating the beacon; do not advance guidance from UI state.
 
-- [ ] **Step 6: Integrate and commit**
+- [x] **Step 6: Integrate and commit**
 
   Commit as feat(last-lightkeeper): complete the ship rescue loop.
 

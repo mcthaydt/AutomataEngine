@@ -80,6 +80,7 @@ export const nightDefinition = parseNightDefinition({
     defaultCapacity: 3,
     maxDarkS: 45,
     rescueTarget: 3,
+    rescue: { aimSpeedDegS: 60, bearingToleranceDeg: 3, lockDecayPerS: 1 },
     machinery: {
       heatPerPoweredCircuitS: 0.02,
       coolingPerS: 0.04,

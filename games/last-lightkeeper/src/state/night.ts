@@ -1,6 +1,7 @@
 import type { Reducer } from '@automata/engine'
 import type { CircuitId, FailureId, FloorId, ItemId, StationId } from '../data/schema'
 import type { Action } from './actions'
+import { nightDefinition } from '../data/night'
 
 export type KeeperMode = 'idle' | 'run' | 'climb' | 'carry' | 'operate'
 export type NightOutcome = 'victory' | 'defeat' | null
@@ -8,7 +9,15 @@ export type ItemLifecycle = 'racked' | 'carried' | 'consumed'
 export type InteractionFocus =
   | { kind: 'station'; id: StationId; prompt: string; distance: number }
   | { kind: 'item'; id: ItemId; prompt: string; distance: number }
-export type FeedbackEventType = 'generator-overheat' | 'high-water' | 'darkness-warning'
+export type FeedbackEventType =
+  | 'generator-overheat'
+  | 'high-water'
+  | 'darkness-warning'
+  | 'call-incoming'
+  | 'call-acknowledged'
+  | 'bearing-known'
+  | 'ship-rescued'
+  | 'ship-lost'
 export interface FeedbackEvent { type: FeedbackEventType; timeS: number }
 export interface ActiveFailure {
   id: FailureId
@@ -26,6 +35,22 @@ export interface StormEvent {
 export interface StormState {
   schedule: StormEvent[]
   nextEventIndex: number
+}
+export type CallStatus =
+  | 'pending'
+  | 'incoming'
+  | 'acknowledged'
+  | 'identifying'
+  | 'bearingKnown'
+  | 'guiding'
+  | 'rescued'
+  | 'lost'
+export interface DistressCallState {
+  id: string
+  status: CallStatus
+  identifyProgressS: number
+  lockS: number
+  scoreAwarded: boolean
 }
 
 export interface KeeperState {
@@ -62,6 +87,7 @@ export interface NightState {
   rescues: number
   losses: number
   activeCallId: string | null
+  calls: Record<string, DistressCallState>
   beaconBearingDeg: number
   beaconLockS: number
   outcome: NightOutcome
@@ -107,6 +133,13 @@ export function createInitialNight(runId: number, seed: number): NightState {
     rescues: 0,
     losses: 0,
     activeCallId: null,
+    calls: Object.fromEntries(nightDefinition.calls.map((call) => [call.id, {
+      id: call.id,
+      status: 'pending',
+      identifyProgressS: 0,
+      lockS: 0,
+      scoreAwarded: false
+    }])),
     beaconBearingDeg: 0,
     beaconLockS: 0,
     outcome: null,

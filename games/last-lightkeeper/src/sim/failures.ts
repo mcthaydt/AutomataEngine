@@ -17,7 +17,8 @@ export function getFailureConditions(state: NightState): FailureConditions {
   return {
     pumpJammed: state.activeFailures['jammed-pump'] !== undefined,
     brokenWindows: state.activeFailures['broken-window'] === undefined ? 0 : 1,
-    beaconDisabled: state.activeFailures['beacon-misalignment'] !== undefined,
+    beaconDisabled: state.activeFailures['beacon-misalignment'] !== undefined ||
+      state.activeFailures['lightning-damage'] !== undefined,
     radioDisabled: state.activeFailures['radio-interference'] !== undefined
   }
 }

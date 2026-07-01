@@ -110,6 +110,11 @@ export const nightDefinitionSchema = z.object({
     defaultCapacity: z.literal(3),
     maxDarkS: z.number().positive(),
     rescueTarget: z.number().int().positive(),
+    rescue: z.object({
+      aimSpeedDegS: z.number().positive(),
+      bearingToleranceDeg: z.number().positive(),
+      lockDecayPerS: z.number().positive()
+    }),
     machinery: z.object({
       heatPerPoweredCircuitS: z.number().positive(),
       coolingPerS: z.number().positive(),
