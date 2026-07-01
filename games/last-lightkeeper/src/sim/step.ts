@@ -2,10 +2,13 @@ import type { InputVector } from '@automata/engine'
 import { nightDefinition } from '../data/night'
 import type { NightDefinition } from '../data/schema'
 import type { NightState } from '../state/night'
+import { advanceStormDirector, createStormSchedule, initializeStormDirector } from './director'
+import { advanceRepairs, getFailureConditions } from './failures'
 import { applyCarryIntent, findFocusedInteraction } from './interactions'
 import { advanceMachinery, type MachineryConditions } from './machinery'
 import { moveKeeper } from './movement'
 import { resolvePower } from './power'
+import { createRng } from './rng'
 
 export interface NightIntents {
   movement: InputVector
@@ -45,12 +48,24 @@ export function stepNight(
   if (intents.operate && next.focus?.kind === 'station' && next.keeper.mode !== 'climb') {
     next = { ...next, keeper: { ...next.keeper, mode: 'operate' } }
   }
+  next = advanceRepairs(next, intents.operate, dt, definition)
   next = resolvePower(next)
+  const failureConditions = getFailureConditions(next)
   next = advanceMachinery(
     next,
     dt,
-    services.machineryConditions ?? { pumpJammed: false, brokenWindows: 0 },
+    services.machineryConditions ?? {
+      pumpJammed: failureConditions.pumpJammed,
+      brokenWindows: failureConditions.brokenWindows,
+      beaconDisabled: failureConditions.beaconDisabled
+    },
     definition.rules.machinery
   )
-  return { ...next, timeS: next.timeS + dt }
+  if (next.storm.schedule.length === 0) {
+    next = initializeStormDirector(next, createStormSchedule(definition, createRng(next.seed)))
+  }
+  const targetTimeS = next.timeS + dt
+  next = { ...next, timeS: targetTimeS }
+  next = advanceStormDirector(next, targetTimeS, definition)
+  return next
 }

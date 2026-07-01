@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { nightDefinition } from '../../src/data/night'
+import { activateFailure } from '../../src/sim/failures'
 import { stepNight } from '../../src/sim/step'
 import { createInitialNight } from '../../src/state/night'
 
@@ -68,5 +70,48 @@ describe('night input step', () => {
     expect(next.circuits.bilge.powered).toBe(false)
     expect(next.flooding).toBeGreaterThan(10)
     expect(next.timeS).toBe(1)
+  })
+
+  it('completes repairs before applying storm events due on the same step', () => {
+    const failed = activateFailure(createInitialNight(1, 42), 'blown-fuse', 1, nightDefinition)
+    const duration = nightDefinition.failures.find((failure) => failure.id === 'blown-fuse')!.durationS
+    const state = {
+      ...failed,
+      timeS: 74,
+      keeper: {
+        ...failed.keeper,
+        floor: 'quarters' as const,
+        x: -8,
+        y: 120,
+        carriedItem: 'fuse' as const
+      },
+      items: { ...failed.items, fuse: 'carried' as const },
+      activeFailures: {
+        ...failed.activeFailures,
+        'blown-fuse': { ...failed.activeFailures['blown-fuse']!, progressS: duration - 1 }
+      },
+      storm: {
+        schedule: [{
+          id: 'same-step-failure',
+          kind: 'failure' as const,
+          timeS: 75,
+          failureId: 'blown-fuse' as const,
+          severity: 1
+        }],
+        nextEventIndex: 0
+      }
+    }
+
+    const next = stepNight(
+      state,
+      { movement: { x: 0, y: 0 }, operate: true, carryPressed: false },
+      1,
+      { playing: true }
+    )
+
+    expect(next.items.fuse).toBe('consumed')
+    expect(next.activeFailures['blown-fuse']).toMatchObject({ progressS: 0, activatedAtS: 75 })
+    expect(next.storm.nextEventIndex).toBe(1)
+    expect(next.timeS).toBe(75)
   })
 })

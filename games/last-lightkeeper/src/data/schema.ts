@@ -6,6 +6,13 @@ export const stationIdSchema = z.enum([
   'beacon', 'radio', 'chart', 'breaker', 'workbench', 'generator', 'pump'
 ])
 export const itemIdSchema = z.enum(['wrench', 'fuse', 'pump-handle', 'boards', 'coolant'])
+export const failureIdSchema = z.enum([
+  'blown-fuse', 'jammed-pump', 'broken-window', 'beacon-misalignment',
+  'generator-damage', 'overheating', 'lightning-damage', 'radio-interference'
+])
+export const stormPhaseIdSchema = z.enum([
+  'first-signal', 'rising-storm', 'severe-weather', 'blackout-crisis', 'dawn'
+])
 
 const positionedSchema = z.object({ floor: floorIdSchema, x: z.number().finite() })
 
@@ -36,6 +43,19 @@ const itemSchema = positionedSchema.extend({
   reusable: z.boolean()
 })
 
+const failureSchema = z.object({
+  id: failureIdSchema,
+  label: z.string().min(1),
+  station: stationIdSchema,
+  requiredItem: itemIdSchema,
+  durationS: z.number().positive(),
+  eligiblePhases: z.array(stormPhaseIdSchema).min(1),
+  consequence: z.enum([
+    'trip-workshop', 'jam-pump', 'window-ingress', 'disable-beacon',
+    'damage-generator', 'overheat', 'lightning', 'disable-radio'
+  ])
+})
+
 const callSchema = z.object({
   id: z.string().min(1),
   shipName: z.string().min(1),
@@ -57,7 +77,7 @@ const callSchema = z.object({
 })
 
 const phaseSchema = z.object({
-  id: z.enum(['first-signal', 'rising-storm', 'severe-weather', 'blackout-crisis', 'dawn']),
+  id: stormPhaseIdSchema,
   startS: z.number().nonnegative(),
   endS: z.number().positive(),
   eventBudget: z.number().int().nonnegative(),
@@ -77,6 +97,12 @@ export const nightDefinitionSchema = z.object({
     z.literal('beacon'), z.literal('radio'), z.literal('bilge'), z.literal('workshop')
   ]),
   items: z.array(itemSchema).length(5),
+  failures: z.array(failureSchema).length(8),
+  storm: z.object({
+    cooldownS: z.number().positive(),
+    maxActiveFailures: z.number().int().positive(),
+    finalBlackoutS: z.number().positive()
+  }),
   calls: z.array(callSchema).min(3),
   phases: z.array(phaseSchema).length(5),
   rules: z.object({
@@ -113,6 +139,9 @@ export const nightDefinitionSchema = z.object({
   if (!unique(night.items.map((item) => item.id))) {
     context.addIssue({ code: 'custom', message: 'Item ids must be unique' })
   }
+  if (!unique(night.failures.map((failure) => failure.id))) {
+    context.addIssue({ code: 'custom', message: 'Failure ids must be unique' })
+  }
   if (!unique(night.calls.map((call) => call.id))) {
     context.addIssue({ code: 'custom', message: 'Call ids must be unique' })
   }
@@ -130,6 +159,8 @@ export type FloorId = z.infer<typeof floorIdSchema>
 export type CircuitId = z.infer<typeof circuitIdSchema>
 export type StationId = z.infer<typeof stationIdSchema>
 export type ItemId = z.infer<typeof itemIdSchema>
+export type FailureId = z.infer<typeof failureIdSchema>
+export type StormPhaseId = z.infer<typeof stormPhaseIdSchema>
 export type NightDefinition = z.infer<typeof nightDefinitionSchema>
 
 export function parseNightDefinition(input: unknown): NightDefinition {

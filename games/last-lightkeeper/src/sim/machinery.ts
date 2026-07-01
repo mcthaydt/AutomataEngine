@@ -4,6 +4,7 @@ import type { FeedbackEvent, NightState } from '../state/night'
 export interface MachineryConditions {
   pumpJammed: boolean
   brokenWindows: number
+  beaconDisabled?: boolean
 }
 
 export type MachineryRates = NightDefinition['rules']['machinery']
@@ -54,7 +55,9 @@ export function advanceMachinery(
     0,
     100
   )
-  const darknessS = state.circuits.beacon.powered ? 0 : state.darknessS + dt
+  const darknessS = state.circuits.beacon.powered && !conditions.beaconDisabled
+    ? 0
+    : state.darknessS + dt
 
   const feedback = [
     ...state.feedback,

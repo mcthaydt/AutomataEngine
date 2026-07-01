@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 41% (54/133 steps complete)
+**Progress:** 45% (60/133 steps complete)
 
 ## Global Constraints
 
@@ -425,27 +425,27 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/sim/director.test.ts
 - Modify: games/last-lightkeeper/src/sim/step.ts
 
-- [ ] **Step 1: Write failure/repair tests**
+- [x] **Step 1: Write failure/repair tests**
 
   Cover blown fuse, jammed pump, broken window, beacon misalignment, generator damage, overheating, lightning damage, and radio interference. Assert station proximity, required item, held interaction, duration, interruption behavior, consumption/reuse, and consequence removal.
 
-- [ ] **Step 2: Run failure tests red**
+- [x] **Step 2: Run failure tests red**
 
   Confirm missing-module failure.
 
-- [ ] **Step 3: Implement failure activation and repair**
+- [x] **Step 3: Implement failure activation and repair**
 
   Use data-defined requirements and progress; do not special-case repairs in UI.
 
-- [ ] **Step 4: Write director tests**
+- [x] **Step 4: Write director tests**
 
   Assert exact schedules for two seeds, phase eligibility, event cooldowns, stack budget, rising severity, and the authored final-blackout event.
 
-- [ ] **Step 5: Implement the deterministic director**
+- [x] **Step 5: Implement the deterministic director**
 
   Advance only on simulation time and use injected RNG. Emit events once and preserve schedule in snapshots.
 
-- [ ] **Step 6: Integrate and commit**
+- [x] **Step 6: Integrate and commit**
 
   Prove repairs run before due storm events and terminal evaluation remains last. Commit as feat(last-lightkeeper): direct storm failures and repairs.
 

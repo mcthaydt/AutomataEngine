@@ -35,6 +35,17 @@ export const nightDefinition = parseNightDefinition({
     { id: 'boards', label: 'Window Boards', floor: 'workshop', x: 28, reusable: false },
     { id: 'coolant', label: 'Coolant', floor: 'workshop', x: 52, reusable: false }
   ],
+  failures: [
+    { id: 'blown-fuse', label: 'Blown Fuse', station: 'breaker', requiredItem: 'fuse', durationS: 3, eligiblePhases: ['first-signal', 'rising-storm', 'severe-weather', 'blackout-crisis'], consequence: 'trip-workshop' },
+    { id: 'jammed-pump', label: 'Jammed Pump', station: 'pump', requiredItem: 'pump-handle', durationS: 4, eligiblePhases: ['first-signal', 'rising-storm', 'severe-weather', 'blackout-crisis', 'dawn'], consequence: 'jam-pump' },
+    { id: 'broken-window', label: 'Broken Window', station: 'beacon', requiredItem: 'boards', durationS: 5, eligiblePhases: ['severe-weather', 'blackout-crisis', 'dawn'], consequence: 'window-ingress' },
+    { id: 'beacon-misalignment', label: 'Beacon Misalignment', station: 'beacon', requiredItem: 'wrench', durationS: 4, eligiblePhases: ['severe-weather', 'blackout-crisis'], consequence: 'disable-beacon' },
+    { id: 'generator-damage', label: 'Generator Damage', station: 'generator', requiredItem: 'wrench', durationS: 6, eligiblePhases: ['severe-weather', 'blackout-crisis'], consequence: 'damage-generator' },
+    { id: 'overheating', label: 'Generator Overheating', station: 'generator', requiredItem: 'coolant', durationS: 3, eligiblePhases: ['rising-storm', 'severe-weather', 'blackout-crisis'], consequence: 'overheat' },
+    { id: 'lightning-damage', label: 'Lightning Damage', station: 'beacon', requiredItem: 'wrench', durationS: 7, eligiblePhases: ['blackout-crisis'], consequence: 'lightning' },
+    { id: 'radio-interference', label: 'Radio Interference', station: 'radio', requiredItem: 'wrench', durationS: 4, eligiblePhases: ['rising-storm', 'severe-weather', 'blackout-crisis'], consequence: 'disable-radio' }
+  ],
+  storm: { cooldownS: 15, maxActiveFailures: 3, finalBlackoutS: 600 },
   calls: [
     {
       id: 'mercy-bell', shipName: 'Mercy Bell', shipVisual: 'cutter', arrivalS: 45,

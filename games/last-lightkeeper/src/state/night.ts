@@ -1,5 +1,5 @@
 import type { Reducer } from '@automata/engine'
-import type { CircuitId, FloorId, ItemId, StationId } from '../data/schema'
+import type { CircuitId, FailureId, FloorId, ItemId, StationId } from '../data/schema'
 import type { Action } from './actions'
 
 export type KeeperMode = 'idle' | 'run' | 'climb' | 'carry' | 'operate'
@@ -10,6 +10,23 @@ export type InteractionFocus =
   | { kind: 'item'; id: ItemId; prompt: string; distance: number }
 export type FeedbackEventType = 'generator-overheat' | 'high-water' | 'darkness-warning'
 export interface FeedbackEvent { type: FeedbackEventType; timeS: number }
+export interface ActiveFailure {
+  id: FailureId
+  severity: number
+  progressS: number
+  activatedAtS: number
+}
+export interface StormEvent {
+  id: string
+  kind: 'failure' | 'final-blackout'
+  timeS: number
+  failureId: FailureId | null
+  severity: number
+}
+export interface StormState {
+  schedule: StormEvent[]
+  nextEventIndex: number
+}
 
 export interface KeeperState {
   floor: FloorId
@@ -34,6 +51,8 @@ export interface NightState {
   items: Record<ItemId, ItemLifecycle>
   focus: InteractionFocus | null
   feedback: FeedbackEvent[]
+  activeFailures: Partial<Record<FailureId, ActiveFailure>>
+  storm: StormState
   circuits: Record<CircuitId, CircuitState>
   circuitPriority: CircuitId[]
   generator: { heat: number; damage: number; capacity: number }
@@ -72,6 +91,8 @@ export function createInitialNight(runId: number, seed: number): NightState {
     },
     focus: null,
     feedback: [],
+    activeFailures: {},
+    storm: { schedule: [], nextEventIndex: 0 },
     circuits: {
       beacon: { requested: true, powered: true, tripped: false },
       radio: { requested: true, powered: true, tripped: false },
