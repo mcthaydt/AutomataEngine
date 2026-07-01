@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
 
-**Progress:** 5% (6/133 steps complete)
+**Progress:** 11% (14/133 steps complete)
 
 ## Global Constraints
 
@@ -106,38 +106,38 @@ interface OrthographicCameraDef {
 }
 ~~~
 
-- [ ] **Step 1: Write animation timing tests**
+- [x] **Step 1: Write animation timing tests**
 
   Cover first-frame selection, multi-frame advancement, looping overflow, non-looping completion, zero/negative duration rejection, large dt, and emitted frame events.
 
-- [ ] **Step 2: Run animation tests red**
+- [x] **Step 2: Run animation tests red**
 
   Run npx vitest run --project engine packages/engine/tests/sprite/animation.test.ts.
   Expected: FAIL because packages/engine/src/sprite/animation.ts does not exist.
 
-- [ ] **Step 3: Implement animation contracts and advanceAnimation**
+- [x] **Step 3: Implement animation contracts and advanceAnimation**
 
   Add validated definitions and a pure advanceAnimation(def, state, dt) result containing next state plus crossed frame events.
 
-- [ ] **Step 4: Run animation tests green**
+- [x] **Step 4: Run animation tests green**
 
   Run the focused animation test.
   Expected: PASS.
 
-- [ ] **Step 5: Write orthographic camera tests**
+- [x] **Step 5: Write orthographic camera tests**
 
   Cover world-to-screen center/corners, zoom, logical pixel snapping, shake offsets, bounded shake sampling, and exponential shake decay.
 
-- [ ] **Step 6: Run camera tests red**
+- [x] **Step 6: Run camera tests red**
 
   Run npx vitest run --project engine packages/engine/tests/sprite/camera.test.ts.
   Expected: FAIL because the camera helpers do not exist.
 
-- [ ] **Step 7: Implement camera helpers and export the sprite API**
+- [x] **Step 7: Implement camera helpers and export the sprite API**
 
   Add pure worldToOrthographicScreen, snapWorldPixel, sampleCameraShake, and decayCameraShake functions. Export sprite types, animation, and camera from @automata/engine.
 
-- [ ] **Step 8: Run focused engine tests and commit**
+- [x] **Step 8: Run focused engine tests and commit**
 
   Run both sprite test files, npm run typecheck -w @automata/engine, and git diff --check.
   Commit as feat(engine): add sprite animation and orthographic camera math.
