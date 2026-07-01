@@ -252,7 +252,7 @@ The world renderer draws, back to front:
 
 Warm amber interior pools contrast with blue-green storm layers. Machinery has
 distinct idle, powered, damaged, overheated, jammed, and operating frames where
-applicable. Effects combine SpriteLab sprites with deterministic procedural rain,
+applicable. Effects combine PixelLab sprites with deterministic procedural rain,
 screen flash, camera shake, water fill, and light cones. Primitive debug art is
 never used as a final substitute for required production sprites.
 
@@ -262,9 +262,9 @@ carried item, requested/powered circuits, and the focused interaction prompt.
 It is compact enough not to obscure the tower at 16:9 and has warning-state
 color plus text/icon redundancy.
 
-## SpriteLab Production Asset Pipeline
+## PixelLab Production Asset Pipeline
 
-SpriteLab MCP is mandatory. Before generation, the implementation records one
+PixelLab MCP is mandatory. Before generation, the implementation records one
 concise style guide covering logical pixel density, palette, outline weight,
 lighting direction, silhouette scale, animation cadence, and transparent
 background rules. Assets are generated in coherent batches and retried in
@@ -284,7 +284,7 @@ Required batches:
 Generated files are normalized to local PNG sheets or frames under
 `games/last-lightkeeper/public/assets`. Runtime never hotlinks. A checked
 `assets/manifest.json` records every asset id, relative file, pixel dimensions,
-frame geometry, animation names, source prompt, SpriteLab generation mapping,
+frame geometry, animation names, source prompt, PixelLab generation mapping,
 and required-state tags. Loader validation rejects missing, malformed, duplicate,
 or dimensionally inconsistent entries and produces a useful boot error.
 
@@ -293,7 +293,7 @@ animation/state coverage, three ship silhouettes, and the absence of runtime
 URLs. Final visual inspection rejects placeholder rectangles or primitive-only
 characters, machines, ships, and environment.
 
-If SpriteLab MCP is not exposed or remains unavailable after retries, all other
+If PixelLab MCP is not exposed or remains unavailable after retries, all other
 work may continue, but the game cannot be declared complete and the missing MCP
 must be reported as the concrete blocker.
 
@@ -405,7 +405,7 @@ Completion requires current evidence for every gate:
     audit.
 
 Meaningful implementation slices are committed independently. The final tree is
-clean and the handoff reports gameplay, SpriteLab assets, verification results,
+clean and the handoff reports gameplay, PixelLab assets, verification results,
 production preview URL, controls, and commit hashes.
 
 ## Risks and Mitigations
@@ -419,7 +419,7 @@ production preview URL, controls, and commit hashes.
   priority ordering, generator capacity, and consequences are displayed
   together in the HUD and breaker panel.
 - **Required art is incomplete or inconsistent.** One style guide, coherent
-  SpriteLab batches, a strict manifest, asset completeness tests, and visual
+  PixelLab batches, a strict manifest, asset completeness tests, and visual
   release inspection guard the production set.
 - **A wide feature set hides incomplete terminal paths.** Scripted full victory
   and failure runs exercise the real ordered simulation before browser polish.

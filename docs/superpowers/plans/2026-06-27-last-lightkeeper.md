@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
-**Goal:** Ship LAST LIGHTKEEPER as a polished 12-15 minute deterministic side-view lighthouse action-management game with SpriteLab production art, Three.js orthographic sprite presentation, headless victory/failure runs, and complete repository/browser verification.
+**Goal:** Ship LAST LIGHTKEEPER as a polished 12-15 minute deterministic side-view lighthouse action-management game with PixelLab production art, Three.js orthographic sprite presentation, headless victory/failure runs, and complete repository/browser verification.
 
 **Architecture:** Gameplay is a pure fixed-step simulation under games/last-lightkeeper/src/sim. A minimal engine-owned SpriteRenderPort is implemented with Three.js textured planes on the XY plane, authored Z layers, and an OrthographicCamera; the game imports only @automata/engine APIs. Browser main.ts composes validated local assets, renderer, audio, input, scenes, and DOM HUD while the same rules run headlessly with recording ports.
 
-**Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
+**Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
 **Progress:** 31% (41/133 steps complete)
 
@@ -17,7 +17,7 @@
 - games/last-lightkeeper must not import Three.js, Rapier, Miniplex, Monkey Ball, PULSEBREAK, editor code, or internal engine paths.
 - Three.js remains wrapped under packages/engine. The game uses no physics adapter; movement and interactions are deterministic 2D rules.
 - Main browser composition stays in games/last-lightkeeper/src/main.ts. Do not add another untested engine browser shim.
-- SpriteLab MCP is required for final art. Do not substitute another generator or claim primitive/temporary art is final.
+- PixelLab MCP is required for final art. Do not substitute another generator or claim primitive/temporary art is final.
 - Mark each checkbox complete immediately when its step lands. Each task ends with its documented scoped commit.
 - Run npm run coverage after engine changes and before final completion. Repository thresholds remain 90% lines and 90% branches.
 
@@ -526,9 +526,9 @@ function createThreeSpriteRenderer(
 
 ---
 
-## Phase 3: SpriteLab Assets and Presentation
+## Phase 3: PixelLab Assets and Presentation
 
-### Task 12: Generate and normalize the SpriteLab production set
+### Task 12: Generate and normalize the PixelLab production set
 
 **Files:**
 - Create: games/last-lightkeeper/assets/style-guide.md
@@ -540,7 +540,7 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/assets/manifest.test.ts
 - Create: games/last-lightkeeper/tests/assets/load.test.ts
 
-- [ ] **Step 1: Inspect SpriteLab MCP tools**
+- [ ] **Step 1: Inspect PixelLab MCP tools**
 
   Record available generation/edit/animation/output controls. If absent, keep this task open and report the concrete MCP blocker; do not substitute another generator.
 
@@ -550,7 +550,7 @@ function createThreeSpriteRenderer(
 
 - [ ] **Step 3: Write asset manifest schema tests**
 
-  Require unique ids, local PNG paths, dimensions, frame geometry, animation names, SpriteLab mapping, source prompt, required-state tags, five keeper animation groups, all station states, five items, three ships, storm layers, dawn, and effects. Reject remote URLs and out-of-bounds frames.
+  Require unique ids, local PNG paths, dimensions, frame geometry, animation names, PixelLab mapping, source prompt, required-state tags, five keeper animation groups, all station states, five items, three ships, storm layers, dawn, and effects. Reject remote URLs and out-of-bounds frames.
 
 - [ ] **Step 4: Run manifest tests red**
 
@@ -560,7 +560,7 @@ function createThreeSpriteRenderer(
 
   Parse through zod, verify image lookup completeness, and return actionable missing/invalid asset errors.
 
-- [ ] **Step 6: Generate keeper and lighthouse batches with SpriteLab**
+- [ ] **Step 6: Generate keeper and lighthouse batches with PixelLab**
 
   Produce idle/run/climb/carry/operate-repair keeper frames plus modular cutaway exterior, ladders, and five distinct floors. Retry smaller coherent batches on failure.
 
@@ -578,7 +578,7 @@ function createThreeSpriteRenderer(
 
 - [ ] **Step 10: Commit**
 
-  Commit as feat(last-lightkeeper): add SpriteLab production art.
+  Commit as feat(last-lightkeeper): add PixelLab production art.
 
 ### Task 13: Bind simulation state to Three sprite presentation
 
@@ -771,7 +771,7 @@ function createThreeSpriteRenderer(
 
 - [ ] **Step 6: Write README**
 
-  Document premise, controls, six-step rescue loop, outcomes/scoring, architecture boundaries, SpriteLab provenance/manifest, headless/test/build/e2e commands, and production preview command/URL.
+  Document premise, controls, six-step rescue loop, outcomes/scoring, architecture boundaries, PixelLab provenance/manifest, headless/test/build/e2e commands, and production preview command/URL.
 
 - [ ] **Step 7: Commit**
 
