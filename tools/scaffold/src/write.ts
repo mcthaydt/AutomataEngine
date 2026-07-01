@@ -6,8 +6,8 @@ import {
   writeFile as nodeWriteFile
 } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
-import { planNewGame } from './plan'
-import { wirePackageJson, wirePlaywrightConfig } from './rootWiring'
+import { planNewGame } from './plan.ts'
+import { wirePackageJson, wirePlaywrightConfig } from './rootWiring.ts'
 
 export interface ScaffoldFs {
   lstat(path: string): Promise<unknown>
