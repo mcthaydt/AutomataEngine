@@ -12,6 +12,7 @@ export default defineConfig({
   webServer: [
     { command: 'npm run dev:game', url: 'http://127.0.0.1:5174', reuseExistingServer: !process.env.CI },
     { command: 'npm run dev:editor', url: 'http://127.0.0.1:5175', reuseExistingServer: !process.env.CI },
-    { command: 'npm run dev:pulsebreak', url: 'http://127.0.0.1:5176', reuseExistingServer: !process.env.CI }
+    { command: 'npm run dev:pulsebreak', url: 'http://127.0.0.1:5176', reuseExistingServer: !process.env.CI },
+    { command: 'npm run dev:last-lightkeeper', url: 'http://127.0.0.1:5177', reuseExistingServer: !process.env.CI }
   ]
 })

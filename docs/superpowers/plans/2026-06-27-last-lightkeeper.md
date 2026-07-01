@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
 
-**Progress:** 0% (0/133 steps complete)
+**Progress:** 5% (6/133 steps complete)
 
 ## Global Constraints
 
@@ -50,32 +50,32 @@ npm run new-game last-lightkeeper 5177
 => Playwright webServer includes http://127.0.0.1:5177
 ~~~
 
-- [ ] **Step 1: Run the existing scaffold generator**
+- [x] **Step 1: Run the existing scaffold generator**
 
   Run npm run new-game last-lightkeeper 5177.
   Expected: games/last-lightkeeper is created and root package/Playwright wiring is updated.
 
-- [ ] **Step 2: Install workspace links**
+- [x] **Step 2: Install workspace links**
 
   Run npm install.
   Expected: package-lock.json registers last-lightkeeper and node_modules/last-lightkeeper resolves.
 
-- [ ] **Step 3: Verify the generated package**
+- [x] **Step 3: Verify the generated package**
 
   Run npm run typecheck -w last-lightkeeper.
   Expected: PASS with no diagnostics.
 
-- [ ] **Step 4: Verify root wiring**
+- [x] **Step 4: Verify root wiring**
 
   Run rg -n "last-lightkeeper|5177" package.json playwright.config.ts package-lock.json.
   Expected: dev, build, workspace lock entry, and Playwright server are present exactly once.
 
-- [ ] **Step 5: Run the untouched generated test project**
+- [x] **Step 5: Run the untouched generated test project**
 
   Run npx vitest run --project last-lightkeeper --passWithNoTests.
   Expected: PASS with no tests collected.
 
-- [ ] **Step 6: Commit the scaffold**
+- [x] **Step 6: Commit the scaffold**
 
   Stage only the generated package and root wiring. Commit as feat(last-lightkeeper): scaffold game package.
 
