@@ -40,3 +40,23 @@ export interface OrthographicCameraDef {
   shakeY: number
   pixelSnap: number
 }
+
+export interface SpriteDef {
+  textureId: string
+  frame: SpriteSourceRect
+  width: number
+  height: number
+  pivot: Point2
+  tint?: string
+  alpha?: number
+}
+
+export interface SpritePose {
+  x: number
+  y: number
+  layer: number
+  depth: number
+  scaleX: number
+  scaleY: number
+  rotationRad: number
+}

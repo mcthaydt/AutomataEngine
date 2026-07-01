@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
 
-**Progress:** 11% (14/133 steps complete)
+**Progress:** 15% (20/133 steps complete)
 
 ## Global Constraints
 
@@ -179,29 +179,29 @@ interface SpriteRenderPort {
 }
 ~~~
 
-- [ ] **Step 1: Write recording-renderer tests**
+- [x] **Step 1: Write recording-renderer tests**
 
   Assert add idempotence, pose/frame/visibility/tint updates, unknown-entity no-ops, deterministic layer-to-Z mapping, camera recording, remove, object count, and idempotent dispose.
 
-- [ ] **Step 2: Run the recording tests red**
+- [x] **Step 2: Run the recording tests red**
 
   Run npx vitest run --project engine packages/engine/tests/sprite/recording.test.ts.
   Expected: FAIL because the port/recording modules do not exist.
 
-- [ ] **Step 3: Implement the port and createRecordingSpriteRenderer**
+- [x] **Step 3: Implement the port and createRecordingSpriteRenderer**
 
   Store immutable observable snapshots per entity and expose reads only from the recording test adapter.
 
-- [ ] **Step 4: Run the recording tests green**
+- [x] **Step 4: Run the recording tests green**
 
   Run the focused test.
   Expected: PASS.
 
-- [ ] **Step 5: Add package exports and boundary verification**
+- [x] **Step 5: Add package exports and boundary verification**
 
   Export the port/recording surface from @automata/engine and run npm run lint -- --quiet plus engine typecheck.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
   Commit as feat(engine): add sprite render port and recording adapter.
 
