@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
 
-**Progress:** 22% (29/133 steps complete)
+**Progress:** 26% (35/133 steps complete)
 
 ## Global Constraints
 
@@ -284,28 +284,28 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/data/night.test.ts
 - Create: games/last-lightkeeper/tests/sim/rng.test.ts
 
-- [ ] **Step 1: Write schema and authored-night failing tests**
+- [x] **Step 1: Write schema and authored-night failing tests**
 
   Assert five ordered floors, ladders connecting adjacent floors, all seven stations, four circuits, five tool/supply items, at least four calls including three ship visuals, five timed phases totaling 780 seconds, valid bearings/windows, and invalid-data rejection.
 
-- [ ] **Step 2: Run data tests red**
+- [x] **Step 2: Run data tests red**
 
   Run npx vitest run --project last-lightkeeper games/last-lightkeeper/tests/data/night.test.ts.
   Expected: FAIL because the data modules do not exist.
 
-- [ ] **Step 3: Implement schemas and the shipped night definition**
+- [x] **Step 3: Implement schemas and the shipped night definition**
 
   Use z from @automata/engine. Define exact floor/station/item/call/storm/score types and parse the local authored object at module load.
 
-- [ ] **Step 4: Write RNG failing tests**
+- [x] **Step 4: Write RNG failing tests**
 
   Assert identical sequences for identical seeds, distinct known sequence for another seed, bounded integer choice, deterministic shuffle, and zero-seed normalization.
 
-- [ ] **Step 5: Implement createRng**
+- [x] **Step 5: Implement createRng**
 
   Add a compact unsigned 32-bit deterministic generator with next, int, choose, and shuffle.
 
-- [ ] **Step 6: Run focused tests and commit**
+- [x] **Step 6: Run focused tests and commit**
 
   Run both test files and package typecheck. Commit as feat(last-lightkeeper): define the deterministic night.
 
