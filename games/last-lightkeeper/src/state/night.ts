@@ -1,9 +1,13 @@
 import type { Reducer } from '@automata/engine'
-import type { CircuitId, FloorId, ItemId } from '../data/schema'
+import type { CircuitId, FloorId, ItemId, StationId } from '../data/schema'
 import type { Action } from './actions'
 
 export type KeeperMode = 'idle' | 'run' | 'climb' | 'carry' | 'operate'
 export type NightOutcome = 'victory' | 'defeat' | null
+export type ItemLifecycle = 'racked' | 'carried' | 'consumed'
+export type InteractionFocus =
+  | { kind: 'station'; id: StationId; prompt: string; distance: number }
+  | { kind: 'item'; id: ItemId; prompt: string; distance: number }
 
 export interface KeeperState {
   floor: FloorId
@@ -25,6 +29,8 @@ export interface NightState {
   seed: number
   timeS: number
   keeper: KeeperState
+  items: Record<ItemId, ItemLifecycle>
+  focus: InteractionFocus | null
   circuits: Record<CircuitId, CircuitState>
   circuitPriority: CircuitId[]
   generator: { heat: number; damage: number; capacity: number }
@@ -54,6 +60,14 @@ export function createInitialNight(runId: number, seed: number): NightState {
       facing: 1,
       carriedItem: null
     },
+    items: {
+      wrench: 'racked',
+      fuse: 'racked',
+      'pump-handle': 'racked',
+      boards: 'racked',
+      coolant: 'racked'
+    },
+    focus: null,
     circuits: {
       beacon: { requested: true, powered: true, tripped: false },
       radio: { requested: true, powered: true, tripped: false },

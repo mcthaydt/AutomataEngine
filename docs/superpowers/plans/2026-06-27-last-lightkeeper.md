@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 31% (41/133 steps complete)
+**Progress:** 36% (48/133 steps complete)
 
 ## Global Constraints
 
@@ -355,31 +355,31 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/sim/interactions.test.ts
 - Create: games/last-lightkeeper/tests/sim/step.test.ts
 
-- [ ] **Step 1: Write movement tests**
+- [x] **Step 1: Write movement tests**
 
   Cover horizontal speed/direction, floor bounds, ladder enter/exit, vertical clamp, collision with floor platforms, fixed-step equivalence, and no movement outside playing.
 
-- [ ] **Step 2: Run movement tests red**
+- [x] **Step 2: Run movement tests red**
 
   Run the focused movement test and confirm missing implementation failure.
 
-- [ ] **Step 3: Implement movement**
+- [x] **Step 3: Implement movement**
 
   Consume normalized InputVector plus action intents; produce a new keeper pose with movement mode idle/run/climb/carry/operate.
 
-- [ ] **Step 4: Write interaction/carry tests**
+- [x] **Step 4: Write interaction/carry tests**
 
   Cover nearest focus with priority tie-break, one prompt, take/drop, one-item capacity, rack restoration for reusable tools, consumed supplies, and out-of-range no-op.
 
-- [ ] **Step 5: Implement focus and carry/drop**
+- [x] **Step 5: Implement focus and carry/drop**
 
   Keep interaction queries pure and station/item ids data-driven.
 
-- [ ] **Step 6: Compose ordered step input phase**
+- [x] **Step 6: Compose ordered step input phase**
 
   Add stepNight(state, intents, dt, services) and prove input/movement/interactions execute before systems that consume station operation.
 
-- [ ] **Step 7: Run focused sim tests and commit**
+- [x] **Step 7: Run focused sim tests and commit**
 
   Commit as feat(last-lightkeeper): add keeper movement and physical interactions.
 
