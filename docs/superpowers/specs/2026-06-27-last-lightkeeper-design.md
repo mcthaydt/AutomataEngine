@@ -184,42 +184,56 @@ exits non-zero when assertions fail. Two committed scenarios prove:
 The harness is also exercised by Vitest integration tests; the script exists as
 a useful developer and CI diagnostic.
 
-## Minimal Engine 2D Slice
+## Minimal Engine Sprite Slice
 
-The engine gains a focused, renderer-agnostic 2D module. It does not depend on
-Three.js or Rapier and it does not change the existing 3D renderer contracts.
+The engine gains a focused sprite module implemented on Three.js. The game is a
+2D simulation presented in a shallow 3D scene, matching a Unity-style 2D setup:
+textured quads sit on a fixed XY gameplay plane, Z encodes visual layers, and an
+orthographic camera looks straight down the Z axis. Three.js remains wrapped
+inside `@automata/engine`; game code never imports it directly. Rapier is not
+used and the existing perspective/primitive renderer contracts remain intact.
 
 ### Public types
 
 - `SpriteSource`: image id and source rectangle.
 - `SpriteFrame`: source, logical pivot, optional duration, and optional event.
 - `SpriteAnimation`: named ordered frames and loop mode.
-- `SpriteDraw`: sprite id/frame, world position, scale, flip, tint/alpha, layer,
-  depth, and stable insertion id.
-- `RectDraw` and `TextDraw`: deliberately small debug/UI-capable draw commands;
-  production world visuals use sprites rather than primitives.
-- `Camera2D`: position, viewport, zoom, pixel snap, and shake offset.
-- `Render2DPort`: begin frame, enqueue commands, end frame, resize, and dispose.
+- `SpriteDef`: texture id, frame/source rectangle, world-unit size, pivot, tint,
+  alpha, and transparency mode.
+- `SpritePose`: XY world position, Z layer/depth, scale, flip, and rotation around
+  the gameplay-plane normal.
+- `OrthographicCameraDef`: logical viewport, position, zoom, pixel snap, and
+  shake offset.
+- `SpriteRenderPort`: add/update/remove sprite, set frame/visibility/tint, update
+  camera, report object count, and dispose.
 
 ### Pure production logic
 
 - Animation timing selects frames deterministically, including non-looping
   completion and large-`dt` advancement.
-- Camera transforms convert world positions to logical screen positions and
-  apply bounded, seeded shake without changing simulation state.
-- Render queue sorting uses layer, depth, then insertion id for stable output.
-- Atlas/source-rectangle calculations and destination-pixel snapping are pure.
-- A recording renderer stores sorted frames and resize calls for unit and game
-  tests.
+- Camera transforms convert world positions to orthographic clip/screen space
+  and apply bounded, seeded shake without changing simulation state.
+- Layer/depth helpers map authored integer layers to stable Z positions; material
+  transparency and render order preserve deterministic overlap.
+- Atlas UV calculations and destination-pixel snapping are pure.
+- A recording sprite renderer stores definitions, poses, frames, camera calls,
+  and removals for unit and game tests.
 
-### Browser composition
+### Three.js composition
 
-Canvas drawing and image loading are injected adapters. The Canvas adapter
-receives a canvas context plus an image lookup function, so core behavior is
-testable without browser globals. App `main.ts` creates images, binds the
-renderer, and starts the loop. The app remains the only newly accepted untested
-browser shim; all transform, animation, sorting, sizing, and adapter behavior is
-covered under Vitest/happy-dom or fakes.
+`createThreeSpriteRenderer` owns a `Scene`, `OrthographicCamera`, shared plane
+geometry, texture/material caches, sprite meshes, and disposal. Texture creation
+uses nearest-neighbor min/mag filters, disables mipmap blur where appropriate,
+and updates atlas UVs without replacing simulation objects. Sprite materials are
+unlit so pixel colors remain authored; explicit ambient/light sprites and screen
+effects provide the visual lighting model.
+
+Image loading and WebGL canvas attachment remain thin browser composition.
+App `main.ts` resolves manifest images, passes them through the engine adapter,
+attaches the engine's renderer surface, and starts the loop. The app remains the
+only newly accepted untested browser shim; orthographic math, animation, UVs,
+layering, sizing, mesh reuse, and resource disposal are covered with pure tests
+and direct Three scene assertions.
 
 The runtime uses a 480x270 backing canvas and integer nearest-neighbor scaling.
 CSS letterboxes the canvas at 16:9. Resize logic selects the largest integer
@@ -297,7 +311,7 @@ idempotent teardown and tests assert listener cleanup and transition behavior.
 - Defeat: explicit terminal cause and score breakdown.
 
 `main.ts` loads and validates the asset manifest and required images, constructs
-storage/audio/input/render adapters, wires scenes, and starts `GameLoop`. Any
+storage/audio/input/Three sprite adapters, wires scenes, and starts `GameLoop`. Any
 failure before a valid runtime exists replaces the app with a clear boot-error
 panel. The visibility callback automatically pauses an active run. Cleanup is
 owned by `createCleanupStack` and covers the loop, renderer, input, audio,
@@ -327,9 +341,9 @@ not import Monkey Ball, PULSEBREAK, editor packages, Three.js, Rapier, Miniplex,
 or their implementation files. The game does not register with the generic
 project editor because a level editor is explicitly out of scope.
 
-The 2D engine slice lives under `packages/engine` and exports through the engine
-public surface. Third-party dependencies remain wrapped behind existing engine
-ports/adapters; the new slice requires no additional runtime dependency.
+The sprite engine slice lives under `packages/engine` and exports through the
+engine public surface. Three.js remains an engine implementation detail, and the
+new slice requires no additional runtime dependency.
 
 ## Test Strategy
 
@@ -340,10 +354,11 @@ implementation added.
 Engine tests cover:
 
 - animation timing, looping, completion, and frame events;
-- world/camera transforms, pixel snapping, shake bounds, and decay;
-- layer/depth/stable ordering and atlas destination math;
-- recording renderer behavior, resize, and disposal;
-- Canvas adapter composition with fake context and injected images.
+- orthographic world/camera transforms, pixel snapping, shake bounds, and decay;
+- layer/depth mapping, stable overlap, and atlas UV math;
+- recording sprite renderer behavior, resize, and disposal;
+- Three sprite mesh/material/texture caching and disposal through direct scene
+  assertions.
 
 Game unit and integration tests cover:
 
@@ -397,8 +412,9 @@ production preview URL, controls, and commit hashes.
 
 - **The pressure curve becomes unreadable.** Phase budgets, authored teaching
   events, deterministic seeds, and headless scenarios keep escalation tunable.
-- **Canvas code becomes browser-bound.** Pure transform/sort/animation logic and
-  injected images/context keep the adapter testable.
+- **Sprite presentation leaks Three.js into the game.** The sprite port, pure
+  animation/camera helpers, injected texture sources, and engine-owned Three
+  adapter keep game and headless code independent.
 - **Power tradeoffs feel arbitrary.** Requested versus powered circuits,
   priority ordering, generator capacity, and consequences are displayed
   together in the HUD and breaker panel.
