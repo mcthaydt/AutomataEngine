@@ -60,3 +60,9 @@ export interface SpritePose {
   scaleY: number
   rotationRad: number
 }
+
+export interface SpriteTextureSource {
+  image: TexImageSource
+  width: number
+  height: number
+}

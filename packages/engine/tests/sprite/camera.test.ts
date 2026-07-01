@@ -43,6 +43,8 @@ describe('orthographic camera math', () => {
     expect(sampleCameraShake(43, 3)).not.toEqual(first)
     expect(Math.hypot(first.x, first.y)).toBeLessThanOrEqual(3)
     expect(sampleCameraShake(42, 0)).toEqual({ x: 0, y: 0 })
+    expect(() => sampleCameraShake(42, -1)).toThrow(/amplitude/i)
+    expect(() => sampleCameraShake(42, Number.NaN)).toThrow(/amplitude/i)
   })
 
   it('decays shake exponentially and clamps invalid ranges', () => {
@@ -51,5 +53,6 @@ describe('orthographic camera math', () => {
     expect(decayCameraShake(4, 1, 0)).toBe(4)
     expect(() => decayCameraShake(-1, 1, 2)).toThrow(/amplitude/i)
     expect(() => decayCameraShake(1, -1, 2)).toThrow(/time/i)
+    expect(() => decayCameraShake(1, 1, -1)).toThrow(/rate/i)
   })
 })

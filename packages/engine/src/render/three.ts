@@ -13,6 +13,7 @@ export interface ThreeRenderer {
   port: RenderPort
   scene: Scene
   camera: PerspectiveCamera
+  resizeViewport(width: number, height: number): void
 }
 
 function createGeometry(def: RenderableDef): BufferGeometry {
@@ -192,5 +193,14 @@ export function createThreeRenderer(): ThreeRenderer {
     }
   }
 
-  return { port, scene, camera }
+  return {
+    port,
+    scene,
+    camera,
+    resizeViewport(width, height) {
+      if (width <= 0 || height <= 0) return
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+    }
+  }
 }

@@ -1,5 +1,11 @@
 import type { Camera, Scene } from 'three'
 
+export interface ThreeSceneRenderer {
+  scene: Scene
+  camera: Camera
+  resizeViewport(width: number, height: number): void
+}
+
 export interface CanvasRenderer {
   renderFrame(): void
   dispose(): void

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
 
-**Progress:** 15% (20/133 steps complete)
+**Progress:** 22% (29/133 steps complete)
 
 ## Global Constraints
 
@@ -231,42 +231,42 @@ function createThreeSpriteRenderer(
 ): ThreeSpriteRenderer
 ~~~
 
-- [ ] **Step 1: Write failing Three sprite construction tests**
+- [x] **Step 1: Write failing Three sprite construction tests**
 
   Assert OrthographicCamera creation, XY plane geometry, MeshBasicMaterial, NearestFilter textures, transparent sprite materials, source-rectangle UV mapping, pivot offsets, authored Z order, flip/rotation/scale, and camera updates.
 
-- [ ] **Step 2: Run Three sprite tests red**
+- [x] **Step 2: Run Three sprite tests red**
 
   Run npx vitest run --project engine packages/engine/tests/sprite/three.test.ts.
   Expected: FAIL because createThreeSpriteRenderer does not exist.
 
-- [ ] **Step 3: Implement the minimal Three adapter**
+- [x] **Step 3: Implement the minimal Three adapter**
 
   Use one shared PlaneGeometry, texture/material caches keyed by texture/frame/tint, MeshBasicMaterial, and orthographic bounds derived from the 480x270 logical viewport. Keep all Three imports inside packages/engine.
 
-- [ ] **Step 4: Run Three sprite tests green**
+- [x] **Step 4: Run Three sprite tests green**
 
   Run the focused sprite adapter test.
   Expected: PASS.
 
-- [ ] **Step 5: Write failing reuse/disposal tests**
+- [x] **Step 5: Write failing reuse/disposal tests**
 
   Assert detached mesh reuse, reset transforms/visibility/tint before reuse, shared geometry, and exactly-once geometry/material/texture disposal.
 
-- [ ] **Step 6: Implement pooling and disposal**
+- [x] **Step 6: Implement pooling and disposal**
 
   Reuse exact sprite-definition meshes, clear maps on dispose, and make unknown/remove/repeated-dispose calls safe.
 
-- [ ] **Step 7: Generalize canvas scene attachment**
+- [x] **Step 7: Generalize canvas scene attachment**
 
   Add resizeViewport to the shared Three scene renderer contract. Update createThreeRenderer and attachCanvasRenderer so perspective and orthographic renderers both resize correctly. Update existing browser tests before implementation and prove their intended red failure.
 
-- [ ] **Step 8: Verify the full engine render surface**
+- [x] **Step 8: Verify the full engine render surface**
 
   Run npx vitest run --project engine packages/engine/tests/sprite packages/engine/tests/render, engine typecheck, and lint.
   Expected: PASS.
 
-- [ ] **Step 9: Run coverage and commit**
+- [x] **Step 9: Run coverage and commit**
 
   Run npm run coverage. Fix uncovered new production branches with behavior tests. Commit as feat(engine): render orthographic sprites with Three.js.
 

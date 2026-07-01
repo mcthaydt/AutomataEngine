@@ -58,10 +58,13 @@ describe('recording sprite renderer', () => {
     expect(spriteDepth(0, 0)).toBe(0)
     expect(spriteDepth(4, 7)).toBeCloseTo(4.000007)
     expect(spriteDepth(5, -10)).toBeGreaterThan(spriteDepth(4, 999))
+    expect(spriteDepth(4, 2_000)).toBeCloseTo(4.000999)
+    expect(spriteDepth(4, -2_000)).toBeCloseTo(3.999001)
   })
 
   it('records a copied camera definition', () => {
     const renderer = createRecordingSpriteRenderer()
+    expect(renderer.camera()).toBeUndefined()
     const camera: OrthographicCameraDef = {
       x: 0, y: 10, viewportWidth: 480, viewportHeight: 270,
       zoom: 1, shakeX: 0, shakeY: 0, pixelSnap: 1
@@ -98,5 +101,12 @@ describe('recording sprite renderer', () => {
     renderer.port.dispose()
     expect(renderer.port.objectCount).toBe(0)
     expect(renderer.getSprite(second)).toBeUndefined()
+  })
+
+  it('uses white opaque defaults when tint and alpha are omitted', () => {
+    const renderer = createRecordingSpriteRenderer()
+    const entity = {}
+    renderer.port.add(entity, { ...definition, tint: undefined, alpha: undefined })
+    expect(renderer.getSprite(entity)).toMatchObject({ tint: '#ffffff', alpha: 1 })
   })
 })

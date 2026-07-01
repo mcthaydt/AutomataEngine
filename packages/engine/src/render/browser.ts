@@ -1,8 +1,13 @@
 import { WebGLRenderer } from 'three'
 import { canvasDims, createResizeReconciler } from './canvasSize'
 import { cappedPixelRatio } from './pixelRatio'
-import { resolveRendererFactory, type CanvasRenderer, type RendererFactory, type RendererSurface } from './rendererFactory'
-import type { ThreeRenderer } from './three'
+import {
+  resolveRendererFactory,
+  type CanvasRenderer,
+  type RendererFactory,
+  type RendererSurface,
+  type ThreeSceneRenderer
+} from './rendererFactory'
 
 export type { CanvasRenderer, RendererFactory, RendererSurface } from './rendererFactory'
 
@@ -21,7 +26,7 @@ export function createWebGLRenderer(canvas: HTMLCanvasElement): RendererSurface 
 
 /** Canvas glue. Untested shim, keep trivially thin. Default backend is WebGPU. */
 export async function attachCanvasRenderer(
-  renderer: ThreeRenderer,
+  renderer: ThreeSceneRenderer,
   canvas: HTMLCanvasElement,
   opts?: { sizeTo?: 'window' | 'element'; createRenderer?: RendererFactory }
 ): Promise<CanvasRenderer> {
@@ -31,8 +36,7 @@ export async function attachCanvasRenderer(
   const sizeTo = opts?.sizeTo ?? 'window'
   const reconcile = createResizeReconciler(({ w, h }) => {
     gl.setSize(w, h, sizeTo === 'window')
-    renderer.camera.aspect = w / h
-    renderer.camera.updateProjectionMatrix()
+    renderer.resizeViewport(w, h)
   })
   const resize = (): void => reconcile(canvasDims(canvas, sizeTo, window))
   window.addEventListener('resize', resize)

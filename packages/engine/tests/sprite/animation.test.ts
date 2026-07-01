@@ -57,5 +57,9 @@ describe('sprite animation timing', () => {
       name: 'bad', loop: true, frames: [{ ...loop.frames[0]!, durationS: 0 }]
     })).toThrow(/duration/i)
     expect(() => advanceAnimation(loop, createAnimationState(loop), -0.01)).toThrow(/time/i)
+    expect(() => advanceAnimation(loop, createAnimationState(loop), Number.NaN)).toThrow(/time/i)
+    expect(() => advanceAnimation(loop, { ...createAnimationState(loop), animation: 'idle' }, 0)).toThrow(/match/i)
+    expect(() => advanceAnimation(loop, { ...createAnimationState(loop), frame: -1 }, 0)).toThrow(/range/i)
+    expect(() => advanceAnimation(loop, { ...createAnimationState(loop), frame: 99 }, 0)).toThrow(/range/i)
   })
 })

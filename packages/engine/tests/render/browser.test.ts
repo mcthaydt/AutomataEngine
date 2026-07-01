@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { attachCanvasRenderer, type RendererFactory, type RendererSurface } from '../../src/render/browser'
 import { createThreeRenderer } from '../../src/render/three'
+import { createThreeSpriteRenderer } from '../../src/sprite/three'
 
 function fakeSurface(): RendererSurface {
   return {
@@ -96,6 +97,22 @@ describe('attachCanvasRenderer: swappable backend', () => {
     })
     expect(renderer.camera.aspect).toBeCloseTo(320 / 180, 5)
     expect(spies.setSize).toHaveBeenCalledWith(320, 180, false)
+    handle.dispose()
+  })
+
+  it('resizes an orthographic sprite renderer through the shared scene contract', async () => {
+    const surface = fakeSurface()
+    const renderer = createThreeSpriteRenderer(new Map())
+    const canvas = { clientWidth: 320, clientHeight: 320 } as unknown as HTMLCanvasElement
+    const handle = await attachCanvasRenderer(renderer, canvas, {
+      createRenderer: () => surface,
+      sizeTo: 'element'
+    })
+
+    expect(renderer.camera.left).toBe(-240)
+    expect(renderer.camera.right).toBe(240)
+    expect(renderer.camera.top).toBe(240)
+    expect(renderer.camera.bottom).toBe(-240)
     handle.dispose()
   })
 })
