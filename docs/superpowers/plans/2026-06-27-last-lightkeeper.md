@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, SpriteLab MCP PNG assets.
 
-**Progress:** 26% (35/133 steps complete)
+**Progress:** 31% (41/133 steps complete)
 
 ## Global Constraints
 
@@ -320,28 +320,28 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/state/progress.test.ts
 - Create: games/last-lightkeeper/tests/state/root.test.ts
 
-- [ ] **Step 1: Write initial-state and scene-action tests**
+- [x] **Step 1: Write initial-state and scene-action tests**
 
   Assert title defaults, seeded new-run reset, pause/resume restrictions, instructions/title transitions, and terminal scene transitions.
 
-- [ ] **Step 2: Run reducer tests red**
+- [x] **Step 2: Run reducer tests red**
 
   Run npx vitest run --project last-lightkeeper games/last-lightkeeper/tests/state.
   Expected: FAIL because state modules do not exist.
 
-- [ ] **Step 3: Implement actions and reducers with createStore**
+- [x] **Step 3: Implement actions and reducers with createStore**
 
   Keep scene/progress/night responsibilities separate. New runs construct fresh deterministic state and pause never mutates simulation time.
 
-- [ ] **Step 4: Write persistence validation tests**
+- [x] **Step 4: Write persistence validation tests**
 
   Cover missing value, valid value, malformed JSON, wrong schema version, NaN/negative score, storage read/write exceptions, lower-score no-op, and higher-score save.
 
-- [ ] **Step 5: Implement progress load/save**
+- [x] **Step 5: Implement progress load/save**
 
   Persist schemaVersion, bestScore, bestRescues, and completedRuns through StoragePort; all malformed/error paths return defaults.
 
-- [ ] **Step 6: Run state tests and commit**
+- [x] **Step 6: Run state tests and commit**
 
   Run state tests, package typecheck, and lint. Commit as feat(last-lightkeeper): add run state and safe progress.
 
