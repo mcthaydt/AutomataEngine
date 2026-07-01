@@ -64,6 +64,23 @@ export const nightDefinition = parseNightDefinition({
     { id: 'blackout-crisis', startS: 540, endS: 690, eventBudget: 7, severity: 1 },
     { id: 'dawn', startS: 690, endS: 780, eventBudget: 1, severity: 0.1 }
   ],
-  rules: { durationS: NIGHT_DURATION_S, defaultCapacity: 3, maxDarkS: 45, rescueTarget: 3 },
+  rules: {
+    durationS: NIGHT_DURATION_S,
+    defaultCapacity: 3,
+    maxDarkS: 45,
+    rescueTarget: 3,
+    machinery: {
+      heatPerPoweredCircuitS: 0.02,
+      coolingPerS: 0.04,
+      overheatThreshold: 0.9,
+      overheatDamagePerS: 0.04,
+      pumpDrainPerS: 2,
+      floodIngressPerS: 0.4,
+      brokenWindowIngressPerS: 0.6,
+      highWaterThreshold: 75,
+      highWaterDamagePerS: 0.5,
+      darknessWarningS: 30
+    }
+  },
   score: { rescue: 1000, integrity: 10, outagePenalty: 4, efficiency: 250 }
 })

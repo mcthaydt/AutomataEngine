@@ -3,7 +3,9 @@ import { nightDefinition } from '../data/night'
 import type { NightDefinition } from '../data/schema'
 import type { NightState } from '../state/night'
 import { applyCarryIntent, findFocusedInteraction } from './interactions'
+import { advanceMachinery, type MachineryConditions } from './machinery'
 import { moveKeeper } from './movement'
+import { resolvePower } from './power'
 
 export interface NightIntents {
   movement: InputVector
@@ -14,6 +16,7 @@ export interface NightIntents {
 export interface NightStepServices {
   playing: boolean
   definition?: NightDefinition
+  machineryConditions?: MachineryConditions
 }
 
 export function stepNight(
@@ -42,5 +45,12 @@ export function stepNight(
   if (intents.operate && next.focus?.kind === 'station' && next.keeper.mode !== 'climb') {
     next = { ...next, keeper: { ...next.keeper, mode: 'operate' } }
   }
-  return next
+  next = resolvePower(next)
+  next = advanceMachinery(
+    next,
+    dt,
+    services.machineryConditions ?? { pumpJammed: false, brokenWindows: 0 },
+    definition.rules.machinery
+  )
+  return { ...next, timeS: next.timeS + dt }
 }

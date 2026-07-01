@@ -83,7 +83,19 @@ export const nightDefinitionSchema = z.object({
     durationS: z.literal(780),
     defaultCapacity: z.literal(3),
     maxDarkS: z.number().positive(),
-    rescueTarget: z.number().int().positive()
+    rescueTarget: z.number().int().positive(),
+    machinery: z.object({
+      heatPerPoweredCircuitS: z.number().positive(),
+      coolingPerS: z.number().positive(),
+      overheatThreshold: z.number().min(0).max(1),
+      overheatDamagePerS: z.number().positive(),
+      pumpDrainPerS: z.number().positive(),
+      floodIngressPerS: z.number().nonnegative(),
+      brokenWindowIngressPerS: z.number().nonnegative(),
+      highWaterThreshold: z.number().min(0).max(100),
+      highWaterDamagePerS: z.number().positive(),
+      darknessWarningS: z.number().positive()
+    })
   }),
   score: z.object({
     rescue: z.number().int().nonnegative(),

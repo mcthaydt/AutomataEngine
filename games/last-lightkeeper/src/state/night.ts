@@ -8,6 +8,8 @@ export type ItemLifecycle = 'racked' | 'carried' | 'consumed'
 export type InteractionFocus =
   | { kind: 'station'; id: StationId; prompt: string; distance: number }
   | { kind: 'item'; id: ItemId; prompt: string; distance: number }
+export type FeedbackEventType = 'generator-overheat' | 'high-water' | 'darkness-warning'
+export interface FeedbackEvent { type: FeedbackEventType; timeS: number }
 
 export interface KeeperState {
   floor: FloorId
@@ -31,6 +33,7 @@ export interface NightState {
   keeper: KeeperState
   items: Record<ItemId, ItemLifecycle>
   focus: InteractionFocus | null
+  feedback: FeedbackEvent[]
   circuits: Record<CircuitId, CircuitState>
   circuitPriority: CircuitId[]
   generator: { heat: number; damage: number; capacity: number }
@@ -68,6 +71,7 @@ export function createInitialNight(runId: number, seed: number): NightState {
       coolant: 'racked'
     },
     focus: null,
+    feedback: [],
     circuits: {
       beacon: { requested: true, powered: true, tripped: false },
       radio: { requested: true, powered: true, tripped: false },

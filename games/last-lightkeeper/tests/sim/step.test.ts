@@ -50,4 +50,23 @@ describe('night input step', () => {
       { playing: false }
     )).toBe(state)
   })
+
+  it('resolves capacity and circuit priority before machinery consequences', () => {
+    const state = createInitialNight(1, 42)
+    state.generator.heat = 0.8
+    state.flooding = 10
+
+    const next = stepNight(
+      state,
+      { movement: { x: 0, y: 0 }, operate: false, carryPressed: false },
+      1,
+      { playing: true }
+    )
+
+    expect(next.generator.capacity).toBe(1)
+    expect(next.circuits.beacon.powered).toBe(true)
+    expect(next.circuits.bilge.powered).toBe(false)
+    expect(next.flooding).toBeGreaterThan(10)
+    expect(next.timeS).toBe(1)
+  })
 })

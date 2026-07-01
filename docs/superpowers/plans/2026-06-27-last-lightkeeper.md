@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 36% (48/133 steps complete)
+**Progress:** 41% (54/133 steps complete)
 
 ## Global Constraints
 
@@ -392,27 +392,27 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/sim/machinery.test.ts
 - Modify: games/last-lightkeeper/src/sim/step.ts
 
-- [ ] **Step 1: Write power tests**
+- [x] **Step 1: Write power tests**
 
   Assert healthy capacity three, explicit player priority, requested versus powered states, tripped circuits, heat/damage reductions to two/one, deterministic over-capacity cutoff, and breaker-only changes.
 
-- [ ] **Step 2: Run power tests red**
+- [x] **Step 2: Run power tests red**
 
   Confirm missing-module failure.
 
-- [ ] **Step 3: Implement resolvePower**
+- [x] **Step 3: Implement resolvePower**
 
   Resolve actual power from generator capacity, circuit availability, requested state, and priority order without hidden globals.
 
-- [ ] **Step 4: Write machinery tests**
+- [x] **Step 4: Write machinery tests**
 
   Cover generator heat rise/cooldown, overheat damage, pump water reduction, unpowered/jammed pump flooding rise, broken-window ingress, structure damage at high water, and darkness timeout accumulation/reset.
 
-- [ ] **Step 5: Implement machinery**
+- [x] **Step 5: Implement machinery**
 
   Keep rates in authored config and clamp all meters. Emit threshold feedback only on state crossings.
 
-- [ ] **Step 6: Integrate step order and commit**
+- [x] **Step 6: Integrate step order and commit**
 
   Prove power resolves before machinery consequences. Commit as feat(last-lightkeeper): simulate power and lighthouse machinery.
 
