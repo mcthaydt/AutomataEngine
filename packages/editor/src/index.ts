@@ -1,5 +1,6 @@
 export { EDITOR_VERSION } from './version'
 export * from './grid'
+export * from './project/catalog'
 export * from './project/registration'
 export * from './project/selection'
 export * from './project/actions'

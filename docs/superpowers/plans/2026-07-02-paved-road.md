@@ -23,7 +23,7 @@
 
 - [x] **M1.0 — Spec + plan docs.** This file and the spec; commit checkpoint.
 
-- [ ] **M1.1 — Catalog core in `@automata/editor`.**
+- [x] **M1.1 — Catalog core in `@automata/editor`.**
   Create `packages/editor/src/project/catalog.ts`: `RegistrationDeps`, `EditorRegistrationLoader`, module shape-check helper (clear error naming the offending path/export), `ProjectCatalog` interface (moved from level-editor), `createProjectCatalog(registrations)` with duplicate-gameId throw naming the id. Export from `src/index.ts` + `src/headless.ts`. TDD: `packages/editor/tests/project/catalog.test.ts` (dup detection, stable order, `get` miss). Verify: editor project tests + lint. Commit.
 
 - [ ] **M1.2 — Standardized loader exports in existing games.**

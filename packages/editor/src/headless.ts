@@ -1,5 +1,12 @@
 /** Browser-free project registration and tool-host surface for agents and MCP. */
 export {
+  createProjectCatalog,
+  resolveRegistrationLoader,
+  type EditorRegistrationLoader,
+  type ProjectCatalog,
+  type RegistrationDeps
+} from './project/catalog'
+export {
   registerEditorProject,
   type EditorProjectRegistration,
   type RegisteredEditorProject,
