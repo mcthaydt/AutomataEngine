@@ -74,6 +74,12 @@ root unless a task explicitly says otherwise.
   command/evaluation contracts, sandboxed agent tuning, and multi-game MCP
   loading (spec: `docs/superpowers/specs/2026-06-27-generic-project-editor-design.md`;
   plan: `docs/superpowers/plans/2026-06-27-generic-project-editor.md`).
+- [x] LAST LIGHTKEEPER (`games/last-lightkeeper`) — deterministic side-view
+  lighthouse action-management game with PixelLab production art, orthographic
+  engine sprite presentation, synthesized feedback, headless victory/failure,
+  and a real browser rescue playthrough (spec:
+  `docs/superpowers/specs/2026-06-27-last-lightkeeper-design.md`; plan:
+  `docs/superpowers/plans/2026-06-27-last-lightkeeper.md`).
 
 ## Verification Commands
 
@@ -81,4 +87,7 @@ root unless a task explicitly says otherwise.
 npm run ci
 npm run coverage
 npm run dev -w monkey-ball
+npm run dev:last-lightkeeper
+npm run build -w last-lightkeeper
+npm run e2e:last-lightkeeper
 ```

@@ -10,6 +10,7 @@ import manifest from '../../assets/manifest.json'
 import { parseAssetManifest } from '../../src/assets/schema'
 import {
   bootBrowserGame,
+  createDomPresentationFeedback,
   loadAssetSources,
   type BootAdapters,
   type BrowserGame
@@ -92,6 +93,18 @@ describe('browser boot seam', () => {
     expect(loadImage).not.toHaveBeenCalled()
   })
 
+  it('preserves simultaneous presentation triggers and clears them on dispose', () => {
+    const feedback = createDomPresentationFeedback(app)
+    feedback.port.trigger('sparks')
+    feedback.port.trigger('shake')
+    expect(app.classList).toContain('feedback-sparks')
+    expect(app.classList).toContain('feedback-shake')
+
+    feedback.dispose()
+    feedback.dispose()
+    expect([...app.classList]).toEqual([])
+  })
+
   it('reports a failed required image with its local asset path', async () => {
     const first = manifest.assets[0]!
     await expect(loadAssetSources(
@@ -99,6 +112,16 @@ describe('browser boot seam', () => {
       () => '/broken.png',
       async () => { throw new Error('decode failed') }
     )).rejects.toThrow(first.file)
+  })
+
+  it('rejects missing local URLs and decoded dimension mismatches', async () => {
+    const first = manifest.assets[0]!
+    await expect(loadAssetSources(manifest, () => undefined, vi.fn())).rejects.toThrow(first.file)
+    await expect(loadAssetSources(
+      manifest,
+      () => '/asset.png',
+      async () => ({ image: {} as TexImageSource, width: 1, height: 1 })
+    )).rejects.toThrow(/decoded at 1x1/i)
   })
 
   it('falls back to in-memory progress when browser storage creation fails', async () => {

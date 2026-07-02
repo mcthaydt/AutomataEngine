@@ -61,4 +61,23 @@ describe('world sprite presentation', () => {
     expect(renderer.getSprite(world.entity('keeper'))?.pose?.x).toBe(24)
     expect(renderer.getSprite(world.entity('keeper'))?.pose?.y).toBe(140)
   })
+
+  it('keeps PixelLab sparks and spray visible after queued feedback is drained', () => {
+    const renderer = createRecordingSpriteRenderer()
+    const world = createWorldPresentation(renderer.port, manifest)
+    const initial = createInitialNight(1, 42)
+    const overheating = activateFailure(initial, 'overheating', 1, nightDefinition)
+    world.update({ ...overheating, feedback: [] }, 1)
+
+    expect(renderer.getSprite(world.entity('effects'))?.visible).toBe(true)
+    expect(renderer.getSprite(world.entity('effects'))?.frame).toEqual({
+      x: 64, y: 0, width: 64, height: 64
+    })
+
+    world.update({ ...initial, flooding: 50, feedback: [] }, 1)
+    expect(renderer.getSprite(world.entity('effects'))?.visible).toBe(true)
+    expect(renderer.getSprite(world.entity('effects'))?.frame).toEqual({
+      x: 128, y: 0, width: 64, height: 64
+    })
+  })
 })

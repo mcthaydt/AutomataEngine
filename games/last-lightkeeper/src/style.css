@@ -49,10 +49,13 @@ html, body, #app {
 .hud {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 8px);
-  left: calc(env(safe-area-inset-left, 0px) + 8px);
-  right: calc(env(safe-area-inset-right, 0px) + 8px);
-  grid-template-columns: repeat(5, minmax(0, auto));
-  justify-content: center;
+  left: 0;
+  right: 0;
+  width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 16px);
+  max-width: 1200px;
+  margin-inline: auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: stretch;
   gap: 4px 8px;
   pointer-events: none;
   color: var(--foam);
@@ -69,6 +72,8 @@ html, body, #app {
   border: 1px solid var(--line);
   background: var(--glass);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hud-circuits {
@@ -191,23 +196,45 @@ html, body, #app {
   background: rgba(44, 12, 14, 0.96);
 }
 
-#app[data-feedback="shake"] .game-canvas { animation: shake 180ms steps(2, end); }
-#app[data-feedback="flash"]::after {
+#app.feedback-shake .game-canvas { animation: ll-shake 180ms steps(2, end); }
+#app.feedback-flash::after, #app.feedback-flare::after,
+#app.feedback-sparks::before, #app.feedback-spray::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: rgba(255, 255, 255, 0.55);
-  animation: flash 220ms ease-out both;
   z-index: 12;
 }
+#app.feedback-flash::after {
+  background: rgba(255, 255, 255, 0.55);
+  animation: ll-flash 220ms ease-out both;
+}
+#app.feedback-flare::after {
+  background: radial-gradient(circle at 75% 28%, rgba(255, 239, 151, 0.95), transparent 12%);
+  animation: ll-flare 600ms ease-out both;
+}
+#app.feedback-sparks::before {
+  background: radial-gradient(circle at 42% 72%, rgba(255, 194, 77, 0.8), transparent 8%);
+  animation: ll-sparks 420ms steps(3, end) both;
+}
+#app.feedback-spray::before {
+  background: linear-gradient(110deg, transparent 55%, rgba(133, 215, 226, 0.28) 56%, transparent 60%);
+  animation: ll-spray 420ms ease-out both;
+}
+#app.feedback-radio .hud-call { animation: ll-radio 420ms ease-out both; }
+#app.feedback-beacon .hud-beacon { animation: ll-beacon 420ms ease-out both; }
 
-@keyframes shake {
+@keyframes ll-shake {
   0%, 100% { transform: translate(0, 0); }
   33% { transform: translate(-3px, 2px); }
   66% { transform: translate(3px, -2px); }
 }
-@keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+@keyframes ll-flash { from { opacity: 1; } to { opacity: 0; } }
+@keyframes ll-flare { from { opacity: 1; } to { opacity: 0; transform: scale(1.1); } }
+@keyframes ll-sparks { 0%, 100% { opacity: 0; } 35%, 70% { opacity: 1; } }
+@keyframes ll-spray { from { opacity: 1; } to { opacity: 0; transform: translateX(-5%); } }
+@keyframes ll-radio { 50% { color: #fff; box-shadow: 0 0 12px var(--signal); } }
+@keyframes ll-beacon { 50% { color: #fff4c4; box-shadow: 0 0 14px var(--signal); } }
 
 @media (min-width: 960px) and (min-height: 540px) {
   .game-canvas { width: 960px; height: 540px; }
@@ -243,7 +270,11 @@ html, body, #app {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #app[data-feedback] .game-canvas, #app[data-feedback]::after {
+  #app[class*="feedback-"] .game-canvas,
+  #app[class*="feedback-"]::before,
+  #app[class*="feedback-"]::after,
+  #app[class*="feedback-"] .hud-call,
+  #app[class*="feedback-"] .hud-beacon {
     animation: none;
   }
   .overlay button { transition: none; }

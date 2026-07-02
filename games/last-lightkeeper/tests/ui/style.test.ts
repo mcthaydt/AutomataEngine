@@ -29,7 +29,11 @@ describe('last lightkeeper presentation styles', () => {
 
   it('keeps safe-area HUD text below overlays with compact responsive rules', () => {
     const css = readFileSync(stylePath, 'utf8')
-    expect(block(css, '.hud')).toContain('safe-area-inset-top')
+    const hud = block(css, '.hud')
+    expect(hud).toContain('safe-area-inset-top')
+    expect(hud).toMatch(/grid-template-columns\s*:\s*repeat\(4,/)
+    expect(hud).toMatch(/max-width\s*:\s*1200px/)
+    expect(hud).not.toMatch(/transform\s*:/)
     expect(zIndex(css, '#overlays')).toBeGreaterThan(zIndex(css, '.hud'))
     expect(css).toContain('@media (max-width: 700px)')
     expect(css).toContain('prefers-reduced-motion')

@@ -153,7 +153,20 @@ export function createWorldPresentation(port: SpriteRenderPort, input: unknown):
         })
         port.setVisible(requiredEntity(`ship:${visual}`), visible)
       })
-      port.setVisible(requiredEntity('effects'), state.feedback.length > 0)
+      const effectsSheet = assets.get('storm-effects')!
+      const sparksVisible = state.activeFailures.overheating !== undefined ||
+        state.activeFailures['generator-damage'] !== undefined
+      const sprayVisible = state.flooding > 0 ||
+        state.activeFailures['broken-window'] !== undefined ||
+        state.activeFailures['jammed-pump'] !== undefined
+      const rescueVisible = state.feedback.some((event) => event.type === 'ship-rescued')
+      const failureVisible = state.feedback.some((event) => event.type === 'ship-lost')
+      const effectFrame = sparksVisible ? 1 : sprayVisible ? 2 : rescueVisible ? 3 : failureVisible ? 4 : 0
+      port.setFrame(requiredEntity('effects'), effectsSheet.id, source(effectsSheet, effectFrame))
+      port.setVisible(
+        requiredEntity('effects'),
+        sparksVisible || sprayVisible || rescueVisible || failureVisible
+      )
       port.setVisible(requiredEntity('beacon-cone'), state.circuits.beacon.powered &&
         state.activeCallId !== null && state.calls[state.activeCallId]?.status === 'guiding')
 

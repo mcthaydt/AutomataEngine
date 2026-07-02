@@ -11,7 +11,13 @@ if (app !== null) {
     manifest,
     (file) => new URL(file, document.baseURI).href
   )
-  if (testMode) adapters.createSeed = () => 42
+  if (testMode) {
+    const seedParam = new URLSearchParams(window.location.search).get('seed')
+    const requestedSeed = seedParam === null ? Number.NaN : Number(seedParam)
+    adapters.createSeed = () => Number.isInteger(requestedSeed) && requestedSeed >= 0
+      ? requestedSeed >>> 0
+      : 42
+  }
   void bootBrowserGame(app, adapters).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
     const panel = document.createElement('div')

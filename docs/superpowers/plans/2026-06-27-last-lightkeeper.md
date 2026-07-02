@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 89% (119/133 steps complete)
+**Progress:** 100% (133/133 steps complete)
 
 ## Global Constraints
 
@@ -784,63 +784,63 @@ function createThreeSpriteRenderer(
 - Modify: AGENTS.md
 - Modify: any source/test/assets required by verification findings
 
-- [ ] **Step 1: Run the full game project**
+- [x] **Step 1: Run the full game project**
 
   Run npx vitest run --project last-lightkeeper.
   Expected: all test files pass.
 
-- [ ] **Step 2: Run headless victory and failure**
+- [x] **Step 2: Run headless victory and failure**
 
   Run both CLI modes and capture terminal reasons, rescue count, and score.
 
-- [ ] **Step 3: Run repository CI**
+- [x] **Step 3: Run repository CI**
 
   Run npm run ci.
   Expected: lint, all workspace typechecks, and full Vitest suite pass.
 
-- [ ] **Step 4: Run repository coverage**
+- [x] **Step 4: Run repository coverage**
 
   Run npm run coverage.
   Expected: at least 90% lines and branches with no uncovered new production code hidden by exclusions.
 
-- [ ] **Step 5: Run root production build**
+- [x] **Step 5: Run root production build**
 
   Run npm run build.
   Expected: Monkey Ball, editor, PULSEBREAK, and LAST LIGHTKEEPER production builds pass.
 
-- [ ] **Step 6: Run all Playwright e2e**
+- [x] **Step 6: Run all Playwright e2e**
 
   Run npm run e2e.
   Expected: all existing and new browser smokes pass.
 
-- [ ] **Step 7: Serve the production build**
+- [x] **Step 7: Serve the production build**
 
   Serve games/last-lightkeeper/dist at a documented local URL and verify that network requests resolve from built output rather than Vite source.
 
-- [ ] **Step 8: Inspect title and normal play**
+- [x] **Step 8: Inspect title and normal play**
 
   Verify crisp nearest-neighbor scaling, correct 16:9 letterboxing, readable HUD/prompts, production sprites, movement/ladders/carrying, and no console errors.
 
-- [ ] **Step 9: Inspect severe storm and rescue feedback**
+- [x] **Step 9: Inspect severe storm and rescue feedback**
 
   Reach overlapping failures and validate rain/water/sparks/lightning/shake, circuit readability, radio/bearing sequence, beacon aim/hold, three ship silhouettes, and clear success/failure feedback.
 
-- [ ] **Step 10: Inspect pause, victory, and defeat**
+- [x] **Step 10: Inspect pause, victory, and defeat**
 
   Verify simulation freeze/resume, visibility pause, dawn transition/score, each terminal reason, replay/title flows, and teardown without duplicate UI/listeners.
 
-- [ ] **Step 11: Audit architecture and assets**
+- [x] **Step 11: Audit architecture and assets**
 
   Search for forbidden direct imports, remote runtime URLs, diagnostic logging, dead code, primitive final art, missing manifest entries, unchecked shortcuts, and untracked generated files.
 
-- [ ] **Step 12: Review full diff and task checklist**
+- [x] **Step 12: Review full diff and task checklist**
 
   Run git diff --check, git status --short, and rg -n "^- \\[ \\]" this plan. Resolve every incomplete implementation requirement; leave no unchecked item except an explicitly reported unavailable external-tool blocker.
 
-- [ ] **Step 13: Update AGENTS.md only after gates prove completion**
+- [x] **Step 13: Update AGENTS.md only after gates prove completion**
 
   Add LAST LIGHTKEEPER to the completed/current designs board and record its real dev/build/e2e commands.
 
-- [ ] **Step 14: Commit release closure**
+- [x] **Step 14: Commit release closure**
 
   Commit as docs: mark Last Lightkeeper complete. Confirm a clean worktree and collect all branch commit hashes for handoff.

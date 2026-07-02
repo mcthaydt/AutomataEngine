@@ -35,6 +35,7 @@ import { createHud } from '../ui/hud'
 import { createInstructions } from '../ui/instructions'
 import { createDefeat, createPauseOverlay, createVictory } from '../ui/overlays'
 import { createTitle } from '../ui/title'
+import type { PresentationFeedbackPort, PresentationTrigger } from '../systems/feedback'
 
 export interface LoadedAssetSources {
   manifest: AssetManifest
@@ -84,6 +85,40 @@ export interface BootAdapters {
 export interface BrowserGame {
   store: GameStore
   dispose(): void
+}
+
+const PRESENTATION_TRIGGERS: readonly PresentationTrigger[] = [
+  'beacon', 'flare', 'flash', 'radio', 'shake', 'sparks', 'spray'
+]
+
+export function createDomPresentationFeedback(app: HTMLElement): {
+  port: PresentationFeedbackPort
+  dispose(): void
+} {
+  const classFor = (kind: PresentationTrigger): string => `feedback-${kind}`
+  const onAnimationEnd = (event: Event): void => {
+    const animation = (event as AnimationEvent).animationName
+    const kind = PRESENTATION_TRIGGERS.find((candidate) => animation === `ll-${candidate}`)
+    if (kind !== undefined) app.classList.remove(classFor(kind))
+  }
+  app.addEventListener('animationend', onAnimationEnd)
+  let disposed = false
+  return {
+    port: {
+      trigger(kind) {
+        const className = classFor(kind)
+        app.classList.remove(className)
+        void app.offsetWidth
+        app.classList.add(className)
+      }
+    },
+    dispose() {
+      if (disposed) return
+      disposed = true
+      app.removeEventListener('animationend', onAnimationEnd)
+      for (const kind of PRESENTATION_TRIGGERS) app.classList.remove(classFor(kind))
+    }
+  }
 }
 
 export interface KeeperTestSnapshot {
@@ -185,17 +220,15 @@ export async function bootBrowserGame(
 
     const input = adapters.createInput(window)
     cleanup.defer(() => input.dispose())
+    const presentationFeedback = createDomPresentationFeedback(app)
+    cleanup.defer(() => presentationFeedback.dispose())
     const game = createGameplay({
       store,
       manifest: assets.manifest,
       render: renderer.port,
       input,
       audio: audioRuntime.audio,
-      presentation: {
-        trigger(kind) {
-          app.dataset.feedback = kind
-        }
-      }
+      presentation: presentationFeedback.port
     })
     cleanup.defer(() => game.dispose())
 
@@ -259,12 +292,12 @@ export async function bootBrowserGame(
         advanceTimeTo(timeS) {
           const state = store.getState()
           if (state.scene !== 'playing' || !Number.isFinite(timeS)) return
-          const clamped = Math.max(state.night.timeS, Math.min(779, timeS))
+          const clamped = Math.max(state.night.timeS, Math.min(781, timeS))
           store.dispatch({ type: 'nightAdvanced', night: { ...state.night, timeS: clamped } })
         },
         step(seconds) {
           if (!Number.isFinite(seconds) || seconds <= 0) return
-          const target = Math.min(779, store.getState().night.timeS + seconds)
+          const target = Math.min(781, store.getState().night.timeS + seconds)
           while (store.getState().scene === 'playing' && store.getState().night.timeS < target) {
             const remaining = target - store.getState().night.timeS
             game.fixedUpdate(Math.min(1 / 30, remaining))

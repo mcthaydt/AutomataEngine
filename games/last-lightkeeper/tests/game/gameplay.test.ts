@@ -98,4 +98,37 @@ describe('createGameplay', () => {
     game.dispose()
     expect(renderer.port.objectCount).toBe(0)
   })
+
+  it('uses silent optional ports, toggles pause edges, and no-ops after disposal', () => {
+    const store = createGameStore({ seed: 17 })
+    const renderer = createRecordingSpriteRenderer()
+    let pausePressed = true
+    const game = createGameplay({
+      store,
+      manifest,
+      render: renderer.port,
+      input: {
+        movement: { read: () => ({ x: 0, y: 0 }), dispose() {} },
+        read: () => ({ operate: false }),
+        consume: () => {
+          const result = { carryPressed: false, pausePressed }
+          pausePressed = false
+          return result
+        }
+      }
+    })
+    store.dispatch({ type: 'runStarted', seed: 17 })
+
+    game.fixedUpdate(1 / 60)
+    expect(store.getState().scene).toBe('paused')
+    pausePressed = true
+    game.fixedUpdate(1 / 60)
+    expect(store.getState().scene).toBe('playing')
+
+    const timeS = store.getState().night.timeS
+    game.dispose()
+    game.fixedUpdate(1)
+    game.render(0.5)
+    expect(store.getState().night.timeS).toBe(timeS)
+  })
 })
