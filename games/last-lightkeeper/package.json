@@ -18,5 +18,8 @@
     "build": "vite build",
     "headless": "node --import tsx scripts/headless.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "automata": {
+    "devPort": 5177
   }
 }

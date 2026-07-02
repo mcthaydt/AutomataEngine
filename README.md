@@ -21,7 +21,7 @@ evaluation adapters; shared editor packages contain no game-specific code.
 ## Commands
 
 - `npm run dev:editor` — open the project chooser at `http://127.0.0.1:5175`
-- `npm run dev:game` — run Monkey Ball at `http://127.0.0.1:5174`
+- `npm run dev:monkey-ball` — run Monkey Ball at `http://127.0.0.1:5174`
 - `npm run dev:pulsebreak` — run PULSEBREAK at `http://127.0.0.1:5176`
 - `npm run ci` — lint, typecheck, and all unit tests
 - `npm run coverage` — repository-wide 90% line and branch gate

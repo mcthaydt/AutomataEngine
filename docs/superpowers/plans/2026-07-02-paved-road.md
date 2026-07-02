@@ -35,7 +35,7 @@
 - [x] **M1.4 — Node registry (editor-mcp-server).**
   Rewrite `tools/editor-mcp-server/src/projectCatalog.ts`: `discoverGames(repoRoot)` (dir scan + `exports["./project"]` filter + `name === dirname` assert) and `loadProjectRegistration(gameId, repoRoot)` (dynamic import, loader shape assert, `registration.gameId === gameId` assert, Node `readText` bound to the game's `public/`). Delete `PROJECT_GAME_IDS` + duplicated YAML code; drop game deps from `tools/editor-mcp-server/package.json`. Thread `repoRoot` through `headlessHost.ts`. Tests: discovery lists exactly the two games; unknown-id error lists discovered ids; monkey-ball loads against real YAML; existing host/smoke tests green. Verify + manual `--project` run. Commit.
 
-- [ ] **M1.5 — Convention-driven root wiring.**
+- [x] **M1.5 — Convention-driven root wiring.**
   `automata.devPort`: monkey-ball 5174, level-editor 5175, pulsebreak 5176, last-lightkeeper 5177; each vite.config reads its own package.json. `playwright.config.ts`: derive `webServer` from port scan; `testMatch` root `e2e/**` + `games/*/e2e/**`; `PLAYWRIGHT_ONLY=<workspace>` replaces `PLAYWRIGHT_LAST_LIGHTKEEPER`. Root package.json: `build` → `npm run build --workspaces --if-present`; portless dev delegations; `dev:game` → `dev:monkey-ball`. Delete `rootWiring.ts` + test; strip root-file writes/rollback from `write.ts`. New `tools/scaffold/tests/conventions.test.ts`: devPorts unique; every `games/*/src/project/editor.ts` has a `"./editor"` export. Verify: `npm run build`, `npm run e2e`, `npm run ci`; update AGENTS.md commands. Commit.
 
 - [ ] **M1.6 — Scaffold template rewrite.**

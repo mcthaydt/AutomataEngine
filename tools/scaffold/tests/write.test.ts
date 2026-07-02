@@ -1,30 +1,19 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { lstat, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { mkdtemp } from 'node:fs/promises'
 import { createNewGameWriter, writeNewGame, type ScaffoldFs } from '../src/write'
 
 const roots: string[] = []
-const packageJson = `${JSON.stringify({
-  name: 'repo',
-  scripts: { build: 'npm run build -w monkey-ball' }
-}, null, 2)}\n`
-const playwrightConfig = `import { defineConfig } from '@playwright/test'
+const rootPackageJson = `${JSON.stringify({ name: 'repo', scripts: { build: 'noop' } }, null, 2)}\n`
+const rootPlaywrightConfig = 'export default {}\n'
 
-export default defineConfig({
-  webServer: [
-    { command: 'npm run dev:game', url: 'http://127.0.0.1:5174' }
-  ]
-})
-`
-
-async function makeRepo(playwright = playwrightConfig): Promise<string> {
+async function makeRepo(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'automata-scaffold-'))
   roots.push(root)
   await mkdir(join(root, 'games'))
-  await writeFile(join(root, 'package.json'), packageJson)
-  await writeFile(join(root, 'playwright.config.ts'), playwright)
+  await writeFile(join(root, 'package.json'), rootPackageJson)
+  await writeFile(join(root, 'playwright.config.ts'), rootPlaywrightConfig)
   return root
 }
 
@@ -33,23 +22,19 @@ afterEach(async () => {
 })
 
 describe('writeNewGame', () => {
-  it('writes the game and automatically wires root configuration', async () => {
+  it('writes the game tree without touching any root files', async () => {
     const root = await makeRepo()
     await writeNewGame(root, 'starfall', 5188)
 
     const gamePackage = JSON.parse(await readFile(join(root, 'games/starfall/package.json'), 'utf8')) as {
       name: string
     }
-    const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')) as {
-      scripts: Record<string, string>
-    }
     expect(gamePackage.name).toBe('starfall')
-    expect(rootPackage.scripts['dev:starfall']).toContain('--port 5188')
-    expect(rootPackage.scripts.build).toContain('npm run build -w starfall')
-    expect(await readFile(join(root, 'playwright.config.ts'), 'utf8')).toContain('npm run dev:starfall')
+    expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(rootPackageJson)
+    expect(await readFile(join(root, 'playwright.config.ts'), 'utf8')).toBe(rootPlaywrightConfig)
   })
 
-  it('refuses an existing target before creating any files or changing root configuration', async () => {
+  it('refuses an existing target before creating any files', async () => {
     const root = await makeRepo()
     const existing = join(root, 'games/starfall/src/index.ts')
     await mkdir(join(root, 'games/starfall/src'), { recursive: true })
@@ -58,30 +43,18 @@ describe('writeNewGame', () => {
     await expect(writeNewGame(root, 'starfall', 5188)).rejects.toThrow(/already exists/i)
     await expect(lstat(join(root, 'games/starfall/package.json'))).rejects.toMatchObject({ code: 'ENOENT' })
     expect(await readFile(existing, 'utf8')).toBe('existing\n')
-    expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(packageJson)
-    expect(await readFile(join(root, 'playwright.config.ts'), 'utf8')).toBe(playwrightConfig)
   })
 
-  it('rejects malformed root configuration before creating the game tree', async () => {
-    const root = await makeRepo('export default {}\n')
-    await expect(writeNewGame(root, 'starfall', 5188)).rejects.toThrow(/webServer/i)
-    await expect(lstat(join(root, 'games/starfall'))).rejects.toMatchObject({ code: 'ENOENT' })
-    expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(packageJson)
-  })
-
-  it('rolls back the game tree and root files when a root write fails', async () => {
+  it('rolls back the whole game tree when a file write fails', async () => {
     const root = await makeRepo()
-    let failPlaywrightWrite = true
+    let remainingWrites = 2
     const fs: ScaffoldFs = {
       lstat,
       mkdir,
       readFile,
       rm,
       async writeFile(path, data, options) {
-        if (path === join(root, 'playwright.config.ts') && failPlaywrightWrite) {
-          failPlaywrightWrite = false
-          throw new Error('simulated write failure')
-        }
+        if (--remainingWrites < 0) throw new Error('simulated write failure')
         await writeFile(path, data, options)
       }
     }
@@ -89,7 +62,6 @@ describe('writeNewGame', () => {
 
     await expect(writer(root, 'starfall', 5188)).rejects.toThrow(/simulated write failure/i)
     await expect(lstat(join(root, 'games/starfall'))).rejects.toMatchObject({ code: 'ENOENT' })
-    expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(packageJson)
-    expect(await readFile(join(root, 'playwright.config.ts'), 'utf8')).toBe(playwrightConfig)
+    expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(rootPackageJson)
   })
 })

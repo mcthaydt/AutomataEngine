@@ -22,5 +22,8 @@
     "validate:project": "node --import tsx scripts/validate-project.ts",
     "build": "npm run validate:project && vite build",
     "typecheck": "tsc --noEmit"
+  },
+  "automata": {
+    "devPort": 5176
   }
 }

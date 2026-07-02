@@ -15,11 +15,16 @@
     "@automata/game-kit": "*",
     "@automata/project": "*"
   },
-  "devDependencies": { "tsx": "^4.20.6" },
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  },
   "scripts": {
     "dev": "vite",
     "validate:project": "node --import tsx scripts/validate-project.ts",
     "build": "npm run validate:project && vite build",
     "typecheck": "tsc --noEmit"
+  },
+  "automata": {
+    "devPort": 5174
   }
 }

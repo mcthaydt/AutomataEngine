@@ -7,7 +7,6 @@ import {
 } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { planNewGame } from './plan.ts'
-import { wirePackageJson, wirePlaywrightConfig } from './rootWiring.ts'
 
 export interface ScaffoldFs {
   lstat(path: string): Promise<unknown>
@@ -48,6 +47,11 @@ async function assertMissing(fs: ScaffoldFs, path: string): Promise<void> {
   throw new Error(`Game target already exists: ${path}`)
 }
 
+/**
+ * Root wiring is convention-driven (`automata.devPort`, Playwright workspace
+ * scan), so the scaffold writes exclusively inside `games/<name>/` — a failed
+ * write rolls back the new game directory and nothing else.
+ */
 export function createNewGameWriter(fs: ScaffoldFs) {
   return async function writeNewGame(root: string, name: string, port?: number): Promise<void> {
     const plan = planNewGame(name, port)
@@ -56,18 +60,7 @@ export function createNewGameWriter(fs: ScaffoldFs) {
     assertContained(gamesRoot, target)
     await assertMissing(fs, target)
 
-    const packagePath = resolve(root, 'package.json')
-    const playwrightPath = resolve(root, 'playwright.config.ts')
-    const [originalPackage, originalPlaywright] = await Promise.all([
-      fs.readFile(packagePath, 'utf8'),
-      fs.readFile(playwrightPath, 'utf8')
-    ])
-    const nextPackage = wirePackageJson(originalPackage, plan.name, plan.port)
-    const nextPlaywright = wirePlaywrightConfig(originalPlaywright, plan.name, plan.port)
-
     let createdTarget = false
-    let packageAttempted = false
-    let playwrightAttempted = false
     try {
       await fs.mkdir(target)
       createdTarget = true
@@ -77,24 +70,13 @@ export function createNewGameWriter(fs: ScaffoldFs) {
         await fs.mkdir(dirname(path), { recursive: true })
         await fs.writeFile(path, file.content, { flag: 'wx' })
       }
-
-      packageAttempted = true
-      await fs.writeFile(packagePath, nextPackage)
-      playwrightAttempted = true
-      await fs.writeFile(playwrightPath, nextPlaywright)
     } catch (error) {
-      const rollbackErrors: unknown[] = []
-      if (packageAttempted) {
-        try { await fs.writeFile(packagePath, originalPackage) } catch (rollbackError) { rollbackErrors.push(rollbackError) }
-      }
-      if (playwrightAttempted) {
-        try { await fs.writeFile(playwrightPath, originalPlaywright) } catch (rollbackError) { rollbackErrors.push(rollbackError) }
-      }
       if (createdTarget) {
-        try { await fs.rm(target, { recursive: true, force: true }) } catch (rollbackError) { rollbackErrors.push(rollbackError) }
-      }
-      if (rollbackErrors.length > 0) {
-        throw new AggregateError([error, ...rollbackErrors], 'Scaffold failed and rollback was incomplete')
+        try {
+          await fs.rm(target, { recursive: true, force: true })
+        } catch (rollbackError) {
+          throw new AggregateError([error, rollbackError], 'Scaffold failed and rollback was incomplete')
+        }
       }
       throw error
     }

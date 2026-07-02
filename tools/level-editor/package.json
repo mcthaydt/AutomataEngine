@@ -12,5 +12,8 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit"
+  },
+  "automata": {
+    "devPort": 5175
   }
 }

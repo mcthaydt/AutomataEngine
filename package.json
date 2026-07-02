@@ -14,15 +14,15 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "ci": "npm run lint && npm run typecheck && npm run test",
-    "dev:game": "npm run dev -w monkey-ball -- --host 127.0.0.1 --port 5174 --strictPort",
-    "dev:editor": "npm run dev -w level-editor -- --host 127.0.0.1 --port 5175 --strictPort",
-    "dev:pulsebreak": "npm run dev -w pulsebreak -- --host 127.0.0.1 --port 5176 --strictPort",
+    "dev:monkey-ball": "npm run dev -w monkey-ball",
+    "dev:editor": "npm run dev -w level-editor",
+    "dev:pulsebreak": "npm run dev -w pulsebreak",
+    "dev:last-lightkeeper": "npm run dev -w last-lightkeeper",
     "new-game": "node tools/scaffold/src/main.ts",
     "e2e": "playwright test",
-    "e2e:last-lightkeeper": "PLAYWRIGHT_LAST_LIGHTKEEPER=1 playwright test e2e/last-lightkeeper.spec.ts",
+    "e2e:last-lightkeeper": "PLAYWRIGHT_ONLY=last-lightkeeper playwright test e2e/last-lightkeeper.spec.ts",
     "preview:last-lightkeeper": "vite preview games/last-lightkeeper --host 127.0.0.1 --port 4177 --strictPort",
-    "build": "npm run build -w monkey-ball && npm run build -w level-editor && npm run build -w pulsebreak && npm run build -w last-lightkeeper",
-    "dev:last-lightkeeper": "npm run dev -w last-lightkeeper -- --host 127.0.0.1 --port 5177 --strictPort"
+    "build": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",
