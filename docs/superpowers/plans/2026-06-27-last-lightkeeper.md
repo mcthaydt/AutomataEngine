@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 73% (97/133 steps complete)
+**Progress:** 78% (104/133 steps complete)
 
 ## Global Constraints
 
@@ -668,31 +668,31 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/ui/hud.test.ts
 - Create: games/last-lightkeeper/tests/ui/overlays.test.ts
 
-- [ ] **Step 1: Write title/instructions tests**
+- [x] **Step 1: Write title/instructions tests**
 
   Assert LAST LIGHTKEEPER heading, premise, best score, start button, instructions route, controls, and numbered six-step rescue loop.
 
-- [ ] **Step 2: Implement title and instructions views**
+- [x] **Step 2: Implement title and instructions views**
 
   Use @automata/game-kit DOM helpers and idempotent dispose.
 
-- [ ] **Step 3: Write HUD tests**
+- [x] **Step 3: Write HUD tests**
 
   Assert time, rescues, integrity, flood, heat/capacity, beacon, active call, carried item, requested/powered/tripped circuits, and context prompt update from store without duplicate nodes.
 
-- [ ] **Step 4: Implement HUD**
+- [x] **Step 4: Implement HUD**
 
   Use text/icon/state-class redundancy and one unsubscribe owner.
 
-- [ ] **Step 5: Write terminal/pause overlay tests**
+- [x] **Step 5: Write terminal/pause overlay tests**
 
   Assert pause resume/restart/title actions and victory/defeat reason plus score breakdown. Verify all event listeners and subscriptions are removed on dispose.
 
-- [ ] **Step 6: Implement overlays**
+- [x] **Step 6: Implement overlays**
 
   Keep actions store-driven and views simulation-free.
 
-- [ ] **Step 7: Run UI tests and commit**
+- [x] **Step 7: Run UI tests and commit**
 
   Commit as feat(last-lightkeeper): add complete scene UI and HUD.
 
