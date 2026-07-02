@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 56% (74/133 steps complete)
+**Progress:** 63% (84/133 steps complete)
 
 ## Global Constraints
 
@@ -540,43 +540,43 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/assets/manifest.test.ts
 - Create: games/last-lightkeeper/tests/assets/load.test.ts
 
-- [ ] **Step 1: Inspect PixelLab MCP tools**
+- [x] **Step 1: Inspect PixelLab MCP tools**
 
   Record available generation/edit/animation/output controls. If absent, keep this task open and report the concrete MCP blocker; do not substitute another generator.
 
-- [ ] **Step 2: Write the concise style guide**
+- [x] **Step 2: Write the concise style guide**
 
   Lock palette, logical pixel density, outline weight, lighting direction, silhouette scale, frame size, cadence, transparency, and file naming before generation.
 
-- [ ] **Step 3: Write asset manifest schema tests**
+- [x] **Step 3: Write asset manifest schema tests**
 
   Require unique ids, local PNG paths, dimensions, frame geometry, animation names, PixelLab mapping, source prompt, required-state tags, five keeper animation groups, all station states, five items, three ships, storm layers, dawn, and effects. Reject remote URLs and out-of-bounds frames.
 
-- [ ] **Step 4: Run manifest tests red**
+- [x] **Step 4: Run manifest tests red**
 
   Confirm missing schema/manifest failure.
 
-- [ ] **Step 5: Implement manifest validation and loader**
+- [x] **Step 5: Implement manifest validation and loader**
 
   Parse through zod, verify image lookup completeness, and return actionable missing/invalid asset errors.
 
-- [ ] **Step 6: Generate keeper and lighthouse batches with PixelLab**
+- [x] **Step 6: Generate keeper and lighthouse batches with PixelLab**
 
   Produce idle/run/climb/carry/operate-repair keeper frames plus modular cutaway exterior, ladders, and five distinct floors. Retry smaller coherent batches on failure.
 
-- [ ] **Step 7: Generate machinery, item, ship, environment, and effect batches**
+- [x] **Step 7: Generate machinery, item, ship, environment, and effect batches**
 
   Produce beacon/radio/breaker/workshop/generator/pump active and damaged states; tools/supplies; at least three ships; sea/sky/storm/rocks/dawn; damage/rescue effects.
 
-- [ ] **Step 8: Normalize and document generated files**
+- [x] **Step 8: Normalize and document generated files**
 
   Store local PNGs, remove unused generations, record prompts and generated-file mappings, and ensure consistent runtime frame geometry.
 
-- [ ] **Step 9: Run asset tests and visually inspect sheets**
+- [x] **Step 9: Run asset tests and visually inspect sheets**
 
   Run the asset test directory. Open all sheets at original resolution and reject clipped, inconsistent, unreadable, or primitive-only results.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
   Commit as feat(last-lightkeeper): add PixelLab production art.
 

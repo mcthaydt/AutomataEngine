@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "generator": "PixelLab",
+  "styleGuide": "assets/style-guide.md",
+  "controls": {
+    "characterMode": "v3",
+    "characterView": "side",
+    "characterSize": 48,
+    "objectMode": "1-direction",
+    "objectView": "sidescroller",
+    "objectSize": 256,
+    "candidatePolicy": "Single 256px outputs are kept automatically; review multi-candidate jobs before selection.",
+    "outputPolicy": "Poll stable resource IDs, download completed PNGs, retain local files only, and record final dimensions in manifest.json."
+  },
+  "batches": {
+    "keeper": {
+      "resourceType": "character",
+      "resourceId": "1ab45329-20d7-4b61-acc7-45362ec61fcf",
+      "prompt": "Side-view weathered lighthouse keeper, compact sturdy silhouette, navy oilskin coat, ochre sou'wester hat, heavy boots, brass tool belt, face mostly shadowed, cool storm palette with warm lantern accents, strict crisp pixel art, transparent background.",
+      "animations": {
+        "idle": "breathing subtly while standing ready",
+        "run": "running purposefully in heavy boots",
+        "climb": "climbing a vertical ladder hand over hand",
+        "carry": "walking carefully while carrying a heavy repair item in both hands",
+        "operate-repair": "leaning forward and repairing machinery with a hand tool"
+      }
+    },
+    "lighthouse": {
+      "resourceType": "object",
+      "resourceId": "e39aed11-51a0-4e4a-99c3-c95fb16915bd",
+      "prompt": "Modular side-view lighthouse cutaway, clean 4x4 isolated grid: exterior shell, ladder, five distinct floors, wall, window, doorway, railing, roof, rocks, pipe and conduit; transparent, cool storm stone and warm lamps."
+    },
+    "machinery": {
+      "resourceType": "object",
+      "resourceId": "897733e2-23b5-42d9-90ff-bd45e378fb92",
+      "prompt": "Side-view machinery, clean 4x4 isolated grid: active/damaged beacon, radio, chart, breaker, workbench, generator and pump; silhouette-changing damage, transparent background."
+    },
+    "items": {
+      "resourceType": "object",
+      "resourceId": "dd18f979-6e23-4187-9c52-2f353fd26ed4",
+      "prompt": "Side-view item sheet: wrench, fuse, pump handle, boards, coolant and matching carried variants, clean isolated grid, strong silhouettes, transparent background."
+    },
+    "ships": {
+      "resourceType": "object",
+      "resourceId": "04c36a40-7c91-4000-80ee-78db53a66c6f",
+      "prompt": "Three isolated right-facing storm rescue ship silhouettes: small cutter, broad trawler and long low steamer, cool blue-black values with tiny warm cabin lights."
+    },
+    "environment": {
+      "resourceType": "object",
+      "resourceId": "b2d94bb5-130d-4b7f-9099-02a8a428e686",
+      "prompt": "Isolated side-view maritime layers: rolling sea, storm sky, cloud bank, distant rocks and warm dawn sky, restrained navy-teal-gray palette, transparent background."
+    },
+    "dawn": {
+      "resourceType": "ui",
+      "resourceId": "e2c3c8a9-2fcd-4d68-935d-cea222bb4c37",
+      "prompt": "Borderless opaque pixel-art background only: empty sunrise sky in navy, violet, rose, peach and gold horizontal bands above calm dark-teal ocean; no chrome, text, structures, or characters."
+    },
+    "effects": {
+      "resourceType": "object",
+      "resourceId": "8b92b39f-cc01-47bc-ae9c-9f880fc9e23c",
+      "prompt": "Clean 4x4 transparent effects grid: broken glass, sparks, spray, rescue flare, failure flash, smoke, steam, lightning, beacon glint, rain, splash and repair glint."
+    }
+  },
+  "rejectedResources": [
+    {
+      "resourceType": "object",
+      "resourceId": "abb8408d-59f9-464c-9458-aa373651e3bc",
+      "reason": "Visual inspection found a gothic cathedral instead of the required empty dawn environment; PixelLab deletion endpoint timed out."
+    },
+    {
+      "resourceType": "object",
+      "resourceId": "5aebb74d-8e55-41ce-9d0a-f3c0156d89db",
+      "reason": "Visual inspection found an effectively transparent black sky with no dawn color read; PixelLab deletion endpoint was unavailable."
+    }
+  ]
+}
