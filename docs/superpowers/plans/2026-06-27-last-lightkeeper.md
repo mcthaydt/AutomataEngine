@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 78% (104/133 steps complete)
+**Progress:** 84% (112/133 steps complete)
 
 ## Global Constraints
 
@@ -708,35 +708,35 @@ function createThreeSpriteRenderer(
 - Modify: games/last-lightkeeper/src/main.ts
 - Modify: games/last-lightkeeper/index.html
 
-- [ ] **Step 1: Write gameplay runner tests**
+- [x] **Step 1: Write gameplay runner tests**
 
   Assert playing-only fixed updates, paused/terminal freeze, interpolation render, feedback drain, restart disposal, and no DOM/real-time dependency.
 
-- [ ] **Step 2: Implement createGameplay**
+- [x] **Step 2: Implement createGameplay**
 
   Compose ordered simulation, recording/real sprite port, audio, and store with explicit dispose.
 
-- [ ] **Step 3: Write action-input tests**
+- [x] **Step 3: Write action-input tests**
 
   Cover E/Space interact, Q carry/drop, Escape/P pause, key repeat suppression, release state, disposal, and movement through existing keyboard InputSource.
 
-- [ ] **Step 4: Implement action input**
+- [x] **Step 4: Implement action input**
 
   Return an injected action source with read/consume/dispose; browser events remain outside simulation.
 
-- [ ] **Step 5: Write boot seam and scene-transition tests**
+- [x] **Step 5: Write boot seam and scene-transition tests**
 
   Exercise a testable boot helper for missing manifest, invalid manifest, failed image, storage failure fallback, scene manager transitions, automatic visibility pause, and complete teardown.
 
-- [ ] **Step 6: Implement main composition**
+- [x] **Step 6: Implement main composition**
 
   Load local manifest/images, create Three sprite renderer, attach canvas, create store/audio/inputs/game/HUD/scenes, start GameLoop, and show a graceful boot error for required data/assets.
 
-- [ ] **Step 7: Implement 16:9 pixel presentation CSS**
+- [x] **Step 7: Implement 16:9 pixel presentation CSS**
 
   Use a 480x270 logical canvas, nearest-neighbor textures, pixelated CSS scaling, integer-fit letterboxing where possible, safe-area HUD, readable compact prompts, and responsive overlays.
 
-- [ ] **Step 8: Run package tests/build and commit**
+- [x] **Step 8: Run package tests/build and commit**
 
   Run npx vitest run --project last-lightkeeper, package typecheck, and npm run build -w last-lightkeeper. Commit as feat(last-lightkeeper): ship browser game runtime.
 
