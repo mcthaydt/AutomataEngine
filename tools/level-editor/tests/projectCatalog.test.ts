@@ -23,4 +23,20 @@ describe('project catalog', () => {
     }
     expect(catalog.get('missing')).toBeUndefined()
   })
+
+  it('discovers games by convention rather than hardcoded imports', async () => {
+    const source = await readFile(resolve(repoRoot, 'tools/level-editor/src/projectCatalog.ts'), 'utf8')
+    expect(source).toContain('import.meta.glob')
+    expect(source).not.toMatch(/from '(monkey-ball|pulsebreak)\/editor'/)
+  })
+
+  it('skips games without a project editor entry and keeps previews', async () => {
+    const catalog = await createProjectCatalog({
+      readText: (path) => readFile(resolve(repoRoot, 'games/monkey-ball/public', path.replace(/^\//, '')), 'utf8')
+    })
+    expect(catalog.get('last-lightkeeper')).toBeUndefined()
+    for (const registration of catalog.list()) {
+      expect(registration.createPreview).toBeDefined()
+    }
+  })
 })

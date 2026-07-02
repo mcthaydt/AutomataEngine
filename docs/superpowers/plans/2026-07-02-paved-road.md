@@ -29,7 +29,7 @@
 - [x] **M1.2 — Standardized loader exports in existing games.**
   Pulsebreak: `loadEditorRegistration` (async wrapper) in `src/project/editor.ts`, `loadHeadlessRegistration` in `src/project/index.ts`. Monkey-ball: `loadEditorRegistration(deps)` delegating to `loadMonkeyBallEditorRegistration` with public-relative YAML path; new `src/project/headless.ts` holding the `parseData` + `evaluateMonkeyBallProject` closure moved out of the MCP server catalog, re-exported from `src/project/index.ts`. Tests: loaders resolve; monkey-ball headless loader with stub `readText` + fixture YAML. Verify: both games' test projects. Commit.
 
-- [ ] **M1.3 — Browser registry (level-editor).**
+- [x] **M1.3 — Browser registry (level-editor).**
   Rewrite `tools/level-editor/src/projectCatalog.ts` on eager `import.meta.glob('../../../games/*/src/project/editor.ts')`; validate module exports via M1.1 helper; keep the external `createProjectCatalog({ readText })` signature so `main.ts`/`editorApp.ts` are untouched. Verify glob typing under vitest FIRST (fallback: scaffold-regenerated catalog module). Test: monkey-ball + pulsebreak listed, last-lightkeeper absent. Verify: level-editor tests, `npm run dev:editor` chooser check, editor e2e. Commit.
 
 - [ ] **M1.4 — Node registry (editor-mcp-server).**

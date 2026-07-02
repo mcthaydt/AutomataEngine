@@ -1,33 +1,35 @@
-import { registerEditorProject, type RegisteredEditorProject } from '@automata/editor'
-import { loadMonkeyBallEditorRegistration } from 'monkey-ball/editor'
-import { pulsebreakEditorRegistration } from 'pulsebreak/editor'
+import {
+  createProjectCatalog as catalogFromRegistrations,
+  registerEditorProject,
+  resolveRegistrationLoader,
+  type ProjectCatalog,
+  type RegisteredEditorProject
+} from '@automata/editor'
 
-export interface ProjectCatalog {
-  list(): RegisteredEditorProject[]
-  get(gameId: string): RegisteredEditorProject | undefined
-}
+export type { ProjectCatalog } from '@automata/editor'
 
 export interface ProjectCatalogDependencies {
   /** Browser or test text reader used by registrations with code-owned data. */
   readText(path: string): Promise<string>
 }
 
-/** Register every shipped game once and expose stable, game-ID based lookup. */
+/**
+ * Convention discovery: any game exposing `src/project/editor.ts` with a
+ * `loadEditorRegistration` export appears in the chooser — no per-game wiring.
+ * Eager so every registration failure surfaces at startup, not first click.
+ */
+const editorEntryModules = import.meta.glob('../../../games/*/src/project/editor.ts', { eager: true })
+
+/** Register every discovered game once and expose stable, game-ID based lookup. */
 export async function createProjectCatalog(
   dependencies: ProjectCatalogDependencies
 ): Promise<ProjectCatalog> {
-  const registrations = [
-    // Registry loaders take public-relative paths; this host serves them at /.
-    registerEditorProject(await loadMonkeyBallEditorRegistration({
-      readText: (path) => dependencies.readText(`/${path}`)
-    })),
-    registerEditorProject(pulsebreakEditorRegistration)
-  ]
-  const byGameId = new Map(registrations.map((registration) => [registration.gameId, registration]))
-  if (byGameId.size !== registrations.length) throw new Error('Project catalog contains duplicate game IDs')
-
-  return {
-    list: () => [...registrations],
-    get: (gameId) => byGameId.get(gameId)
+  // Registry loaders take public-relative paths; this host serves them at /.
+  const deps = { readText: (path: string) => dependencies.readText(`/${path}`) }
+  const registrations: RegisteredEditorProject[] = []
+  for (const [modulePath, module] of Object.entries(editorEntryModules)) {
+    const loader = resolveRegistrationLoader(module, 'loadEditorRegistration', modulePath)
+    registrations.push(registerEditorProject(await loader(deps)))
   }
+  return catalogFromRegistrations(registrations)
 }

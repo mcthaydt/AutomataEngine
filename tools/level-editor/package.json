@@ -6,9 +6,7 @@
   "dependencies": {
     "@automata/editor": "*",
     "@automata/engine": "*",
-    "@automata/project": "*",
-    "monkey-ball": "*",
-    "pulsebreak": "*"
+    "@automata/project": "*"
   },
   "scripts": {
     "dev": "vite",
