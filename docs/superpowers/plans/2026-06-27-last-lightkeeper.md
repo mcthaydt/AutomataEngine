@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 63% (84/133 steps complete)
+**Progress:** 68% (91/133 steps complete)
 
 ## Global Constraints
 
@@ -592,31 +592,31 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/render/effects.test.ts
 - Create: games/last-lightkeeper/tests/render/camera.test.ts
 
-- [ ] **Step 1: Write world-binding tests**
+- [x] **Step 1: Write world-binding tests**
 
   With createRecordingSpriteRenderer, assert layers for sky/sea/rocks/tower/stations/items/water/keeper/ships/effects, add/update/remove behavior, station state frames, carried-item pose, and stable object counts.
 
-- [ ] **Step 2: Run world-binding tests red**
+- [x] **Step 2: Run world-binding tests red**
 
   Confirm missing render modules.
 
-- [ ] **Step 3: Implement createWorldPresentation**
+- [x] **Step 3: Implement createWorldPresentation**
 
   Build sprite entities from manifest ids and update solely from NightState plus render alpha. Keep HUD out of the world renderer.
 
-- [ ] **Step 4: Write and implement animation tests**
+- [x] **Step 4: Write and implement animation tests**
 
   Map keeper idle/run/climb/carry/operate modes, machinery powered/damaged states, rescue ships, and one-shot effect completion through engine animation timing.
 
-- [ ] **Step 5: Write and implement effect tests**
+- [x] **Step 5: Write and implement effect tests**
 
   Cover seeded rain/spray/sparks, water-height visualization, lightning flash, beacon glow/cone, rescue flare, and bounded screen shake triggers.
 
-- [ ] **Step 6: Write and implement camera tests**
+- [x] **Step 6: Write and implement camera tests**
 
   Assert fixed full-tower framing, small focus offset, 480x270 logical viewport, pixel snapping, and shake decay without simulation mutation.
 
-- [ ] **Step 7: Run render tests and commit**
+- [x] **Step 7: Run render tests and commit**
 
   Commit as feat(last-lightkeeper): present the lighthouse with Three sprites.
 
