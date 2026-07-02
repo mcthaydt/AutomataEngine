@@ -19,6 +19,8 @@
     "dev:pulsebreak": "npm run dev -w pulsebreak -- --host 127.0.0.1 --port 5176 --strictPort",
     "new-game": "node tools/scaffold/src/main.ts",
     "e2e": "playwright test",
+    "e2e:last-lightkeeper": "PLAYWRIGHT_LAST_LIGHTKEEPER=1 playwright test e2e/last-lightkeeper.spec.ts",
+    "preview:last-lightkeeper": "vite preview games/last-lightkeeper --host 127.0.0.1 --port 4177 --strictPort",
     "build": "npm run build -w monkey-ball && npm run build -w level-editor && npm run build -w pulsebreak && npm run build -w last-lightkeeper",
     "dev:last-lightkeeper": "npm run dev -w last-lightkeeper -- --host 127.0.0.1 --port 5177 --strictPort"
   },

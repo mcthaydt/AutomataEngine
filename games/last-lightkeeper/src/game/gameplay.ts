@@ -17,7 +17,7 @@ import {
 export interface GameplayInput {
   movement: InputSource
   read(): { operate: boolean }
-  consume(): { carryPressed: boolean; pausePressed: boolean }
+  consume(): { carryPressed: boolean; interactPressed?: boolean; pausePressed: boolean }
 }
 
 export interface GameplayDeps {
@@ -68,7 +68,8 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
         {
           movement: deps.input.movement.read(),
           operate: actions.operate,
-          carryPressed: presses.carryPressed
+          carryPressed: presses.carryPressed,
+          interactPressed: presses.interactPressed ?? false
         },
         dt,
         { playing: true }

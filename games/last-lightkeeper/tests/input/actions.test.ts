@@ -12,6 +12,12 @@ describe('keeper action input', () => {
     const input = createActionInput(target)
     key(target, 'keydown', 'KeyE')
     expect(input.read()).toEqual({ operate: true })
+    expect(input.consume()).toEqual({
+      carryPressed: false,
+      interactPressed: true,
+      pausePressed: false
+    })
+    expect(input.consume().interactPressed).toBe(false)
     key(target, 'keydown', 'Space')
     key(target, 'keyup', 'KeyE')
     expect(input.read()).toEqual({ operate: true })
@@ -26,8 +32,16 @@ describe('keeper action input', () => {
     key(target, 'keydown', 'KeyQ')
     key(target, 'keydown', 'KeyQ', true)
 
-    expect(input.consume()).toEqual({ carryPressed: true, pausePressed: false })
-    expect(input.consume()).toEqual({ carryPressed: false, pausePressed: false })
+    expect(input.consume()).toEqual({
+      carryPressed: true,
+      interactPressed: false,
+      pausePressed: false
+    })
+    expect(input.consume()).toEqual({
+      carryPressed: false,
+      interactPressed: false,
+      pausePressed: false
+    })
     key(target, 'keyup', 'KeyQ')
     key(target, 'keydown', 'KeyQ')
     expect(input.consume().carryPressed).toBe(true)
@@ -68,7 +82,11 @@ describe('keeper action input', () => {
     input.dispose()
 
     expect(input.read()).toEqual({ operate: false })
-    expect(input.consume()).toEqual({ carryPressed: false, pausePressed: false })
+    expect(input.consume()).toEqual({
+      carryPressed: false,
+      interactPressed: false,
+      pausePressed: false
+    })
     expect(input.movement.read()).toEqual({ x: 0, y: 0 })
     key(target, 'keydown', 'KeyE')
     key(target, 'keydown', 'KeyD')

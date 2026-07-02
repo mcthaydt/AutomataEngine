@@ -45,3 +45,23 @@ export function setCircuitRequested(
   const circuit: CircuitState = { ...state.circuits[circuitId], requested }
   return { ...state, circuits: { ...state.circuits, [circuitId]: circuit } }
 }
+
+export function cycleCircuitPriority(state: NightState): NightState {
+  if (
+    state.keeper.mode !== 'operate' ||
+    state.focus?.kind !== 'station' ||
+    state.focus.id !== 'breaker'
+  ) return state
+
+  const [first, ...remaining] = state.circuitPriority
+  if (first === undefined) return state
+  const circuits = { ...state.circuits }
+  for (const id of state.circuitPriority) {
+    circuits[id] = { ...circuits[id], requested: true }
+  }
+  return {
+    ...state,
+    circuits,
+    circuitPriority: [...remaining, first]
+  }
+}

@@ -72,6 +72,31 @@ describe('night input step', () => {
     expect(next.timeS).toBe(1)
   })
 
+  it('cycles breaker priority on an interaction edge and requests all routed circuits', () => {
+    const initial = createInitialNight(1, 42)
+    const state = {
+      ...initial,
+      keeper: { ...initial.keeper, x: -8 }
+    }
+
+    const next = stepNight(
+      state,
+      {
+        movement: { x: 0, y: 0 },
+        operate: true,
+        carryPressed: false,
+        interactPressed: true
+      },
+      1 / 60,
+      { playing: true }
+    )
+
+    expect(next.circuitPriority).toEqual(['radio', 'bilge', 'workshop', 'beacon'])
+    expect(Object.values(next.circuits).every((circuit) => circuit.requested)).toBe(true)
+    expect(next.circuits.beacon.powered).toBe(false)
+    expect(next.circuits.workshop.powered).toBe(true)
+  })
+
   it('completes repairs before applying storm events due on the same step', () => {
     const failed = activateFailure(createInitialNight(1, 42), 'blown-fuse', 1, nightDefinition)
     const duration = nightDefinition.failures.find((failure) => failure.id === 'blown-fuse')!.durationS

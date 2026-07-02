@@ -4,7 +4,7 @@ import { createKeyboardInput } from '@automata/engine/browser'
 export interface ActionInputSource {
   movement: InputSource
   read(): { operate: boolean }
-  consume(): { carryPressed: boolean; pausePressed: boolean }
+  consume(): { carryPressed: boolean; interactPressed: boolean; pausePressed: boolean }
   dispose(): void
 }
 
@@ -16,6 +16,7 @@ export function createActionInput(target: EventTarget): ActionInputSource {
   const movement = createKeyboardInput(target)
   const pressed = new Set<string>()
   let carryPressed = false
+  let interactPressed = false
   let pausePressed = false
   let disposed = false
 
@@ -24,6 +25,7 @@ export function createActionInput(target: EventTarget): ActionInputSource {
     if (keyboard.repeat || !ACTION_CODES.has(keyboard.code) || pressed.has(keyboard.code)) return
     pressed.add(keyboard.code)
     if (keyboard.code === 'KeyQ') carryPressed = true
+    if (OPERATE_CODES.has(keyboard.code)) interactPressed = true
     if (PAUSE_CODES.has(keyboard.code)) pausePressed = true
   }
   const onUp = (event: Event): void => {
@@ -38,8 +40,9 @@ export function createActionInput(target: EventTarget): ActionInputSource {
       return { operate: [...OPERATE_CODES].some((code) => pressed.has(code)) }
     },
     consume() {
-      const actions = { carryPressed, pausePressed }
+      const actions = { carryPressed, interactPressed, pausePressed }
       carryPressed = false
+      interactPressed = false
       pausePressed = false
       return actions
     },
@@ -51,6 +54,7 @@ export function createActionInput(target: EventTarget): ActionInputSource {
       movement.dispose()
       pressed.clear()
       carryPressed = false
+      interactPressed = false
       pausePressed = false
     }
   }

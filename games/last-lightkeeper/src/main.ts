@@ -3,19 +3,15 @@ import './style.css'
 
 import { bootBrowserGame, createDefaultBootAdapters } from './main/boot'
 
-const assetUrls = import.meta.glob('../assets/**/*.png', {
-  eager: true,
-  query: '?url',
-  import: 'default'
-}) as Record<string, string>
-
 const app = document.getElementById('app')
 
 if (app !== null) {
+  const testMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get('e2e') === '1'
   const adapters = createDefaultBootAdapters(
     manifest,
-    (file) => assetUrls[`../${file}`]
+    (file) => new URL(file, document.baseURI).href
   )
+  if (testMode) adapters.createSeed = () => 42
   void bootBrowserGame(app, adapters).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
     const panel = document.createElement('div')

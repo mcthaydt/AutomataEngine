@@ -47,7 +47,7 @@ function harness(overrides: Partial<BootAdapters> = {}) {
     createInput: vi.fn(() => ({
       movement: { read: () => ({ x: 0, y: 0 }), dispose: vi.fn() },
       read: () => ({ operate: false }),
-      consume: () => ({ carryPressed: false, pausePressed: false }),
+      consume: () => ({ carryPressed: false, interactPressed: false, pausePressed: false }),
       dispose: inputDispose
     })),
     createStorage: vi.fn(() => memoryStorage()),

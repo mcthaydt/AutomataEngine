@@ -7,7 +7,7 @@ import { advanceRepairs, getFailureConditions } from './failures'
 import { applyCarryIntent, findFocusedInteraction } from './interactions'
 import { advanceMachinery, type MachineryConditions } from './machinery'
 import { moveKeeper } from './movement'
-import { resolvePower } from './power'
+import { cycleCircuitPriority, resolvePower } from './power'
 import { advanceBeaconGuidance, advanceRadioCalls } from './rescue'
 import { createRng } from './rng'
 import { calculateScoreBreakdown } from './score'
@@ -17,6 +17,7 @@ export interface NightIntents {
   movement: InputVector
   operate: boolean
   carryPressed: boolean
+  interactPressed?: boolean
 }
 
 export interface NightStepServices {
@@ -51,6 +52,7 @@ export function stepNight(
   if (intents.operate && next.focus?.kind === 'station' && next.keeper.mode !== 'climb') {
     next = { ...next, keeper: { ...next.keeper, mode: 'operate' } }
   }
+  if (intents.interactPressed) next = cycleCircuitPriority(next)
   next = advanceRepairs(next, intents.operate, dt, definition)
   next = resolvePower(next)
   const failureConditions = getFailureConditions(next)

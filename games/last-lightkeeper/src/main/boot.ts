@@ -86,6 +86,28 @@ export interface BrowserGame {
   dispose(): void
 }
 
+export interface KeeperTestSnapshot {
+  scene: SceneId
+  timeS: number
+  x: number
+  floor: string
+  activeCallId: string | null
+  callStatus: string | null
+  rescues: number
+  beaconBearingDeg: number
+  circuits: ReturnType<GameStore['getState']>['night']['circuits']
+}
+
+declare global {
+  interface Window {
+    __LAST_LIGHTKEEPER_TEST__?: {
+      snapshot(): KeeperTestSnapshot
+      advanceTimeTo(timeS: number): void
+      step(seconds: number): void
+    }
+  }
+}
+
 function browserImage(url: string): Promise<SpriteTextureSource> {
   return new Promise((resolve, reject) => {
     const image = new Image()
@@ -212,6 +234,45 @@ export async function bootBrowserGame(
       if (store.getState().scene === 'playing') store.dispatch({ type: 'paused' })
     })
     cleanup.defer(() => driver.stop())
+
+    const testMode = import.meta.env.DEV &&
+      new URLSearchParams(window.location.search).get('e2e') === '1'
+    if (testMode) {
+      window.__LAST_LIGHTKEEPER_TEST__ = {
+        snapshot() {
+          const state = store.getState()
+          const activeCall = state.night.activeCallId === null
+            ? null
+            : state.night.calls[state.night.activeCallId]
+          return {
+            scene: state.scene,
+            timeS: state.night.timeS,
+            x: state.night.keeper.x,
+            floor: state.night.keeper.floor,
+            activeCallId: state.night.activeCallId,
+            callStatus: activeCall?.status ?? null,
+            rescues: state.night.rescues,
+            beaconBearingDeg: state.night.beaconBearingDeg,
+            circuits: state.night.circuits
+          }
+        },
+        advanceTimeTo(timeS) {
+          const state = store.getState()
+          if (state.scene !== 'playing' || !Number.isFinite(timeS)) return
+          const clamped = Math.max(state.night.timeS, Math.min(779, timeS))
+          store.dispatch({ type: 'nightAdvanced', night: { ...state.night, timeS: clamped } })
+        },
+        step(seconds) {
+          if (!Number.isFinite(seconds) || seconds <= 0) return
+          const target = Math.min(779, store.getState().night.timeS + seconds)
+          while (store.getState().scene === 'playing' && store.getState().night.timeS < target) {
+            const remaining = target - store.getState().night.timeS
+            game.fixedUpdate(Math.min(1 / 30, remaining))
+          }
+        }
+      }
+      cleanup.defer(() => { delete window.__LAST_LIGHTKEEPER_TEST__ })
+    }
 
     const onBeforeUnload = (): void => cleanup.dispose()
     window.addEventListener('beforeunload', onBeforeUnload)

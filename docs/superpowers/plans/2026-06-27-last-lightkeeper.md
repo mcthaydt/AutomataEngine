@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 84% (112/133 steps complete)
+**Progress:** 89% (119/133 steps complete)
 
 ## Global Constraints
 
@@ -748,32 +748,32 @@ function createThreeSpriteRenderer(
 - Modify: package.json
 - Modify: playwright.config.ts
 
-- [ ] **Step 1: Write the Playwright smoke**
+- [x] **Step 1: Write the Playwright smoke**
 
   Assert boot/title, instructions, start, visible Three canvas/HUD, keyboard movement, one interaction prompt/action, pause/resume, no page errors, and no failed asset requests.
 
-- [ ] **Step 2: Run e2e red**
+- [x] **Step 2: Run e2e red**
 
   Run npx playwright test e2e/last-lightkeeper.spec.ts.
   Expected: FAIL until stable test hooks and browser flow are complete.
 
-- [ ] **Step 3: Add minimal deterministic browser test hooks**
+- [x] **Step 3: Add minimal deterministic browser test hooks**
 
   Expose only environment-gated seed/time helpers needed to reach a real call/rescue loop; do not bypass movement, interactions, power, radio, or beacon rules.
 
-- [ ] **Step 4: Add automated rescue-loop e2e**
+- [x] **Step 4: Add automated rescue-loop e2e**
 
   Drive the keeper far enough to acknowledge a call, identify its bearing, route power, operate the beacon, and observe rescue confirmation.
 
-- [ ] **Step 5: Run last-lightkeeper e2e green**
+- [x] **Step 5: Run last-lightkeeper e2e green**
 
   Run the focused Playwright spec and confirm no console errors or failed requests.
 
-- [ ] **Step 6: Write README**
+- [x] **Step 6: Write README**
 
   Document premise, controls, six-step rescue loop, outcomes/scoring, architecture boundaries, PixelLab provenance/manifest, headless/test/build/e2e commands, and production preview command/URL.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
   Commit as test(last-lightkeeper): add browser playthrough and release docs.
 
