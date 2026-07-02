@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript strict ESM, Three.js through @automata/engine, Vitest/happy-dom, Vite, Playwright, zod through @automata/engine, npm workspaces, PixelLab MCP PNG assets.
 
-**Progress:** 68% (91/133 steps complete)
+**Progress:** 73% (97/133 steps complete)
 
 ## Global Constraints
 
@@ -628,27 +628,27 @@ function createThreeSpriteRenderer(
 - Create: games/last-lightkeeper/tests/audio/sounds.test.ts
 - Create: games/last-lightkeeper/tests/systems/feedback.test.ts
 
-- [ ] **Step 1: Write sound registration tests**
+- [x] **Step 1: Write sound registration tests**
 
   Require storm, machinery, radio, alarm, repair, beacon, rescue, failure, dawn, and UI definitions with valid frequency/duration/gain.
 
-- [ ] **Step 2: Run audio tests red**
+- [x] **Step 2: Run audio tests red**
 
   Confirm missing sound table.
 
-- [ ] **Step 3: Implement registerSounds**
+- [x] **Step 3: Implement registerSounds**
 
   Register synthesized definitions through AudioPort only.
 
-- [ ] **Step 4: Write feedback-routing tests**
+- [x] **Step 4: Write feedback-routing tests**
 
   Assert each simulation feedback kind maps to the correct sound and presentation trigger exactly once, with unknown feedback safely ignored.
 
-- [ ] **Step 5: Implement feedback drain**
+- [x] **Step 5: Implement feedback drain**
 
   Consume queued feedback after simulation and before render; use recording audio/presentation in tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
   Commit as feat(last-lightkeeper): add storm and rescue feedback.
 
