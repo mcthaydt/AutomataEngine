@@ -23,6 +23,8 @@ export interface HeadlessHostOptions {
   projectDir?: string
   bundleJson?: string
   baseline?: unknown
+  /** Overrides the monorepo root used for game discovery (tests, clones). */
+  repoRoot?: string
 }
 
 export interface HeadlessHost {
@@ -40,7 +42,7 @@ export async function createHeadlessHost(options: HeadlessHostOptions = {}): Pro
   const snapshot = options.bundleJson !== undefined
     ? parseProjectBundle(options.bundleJson)
     : await loadProjectFiles(createProjectDirectoryReader(options.projectDir ?? DEFAULT_PROJECT_DIR))
-  const registration = await loadProjectRegistration(snapshot.manifest.gameId)
+  const registration = await loadProjectRegistration(snapshot.manifest.gameId, options.repoRoot)
   const errors = registration.validate(snapshot).filter((issue) => issue.severity === 'error')
   if (errors.length > 0) {
     throw new Error(

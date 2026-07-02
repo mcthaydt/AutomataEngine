@@ -32,7 +32,7 @@
 - [x] **M1.3 — Browser registry (level-editor).**
   Rewrite `tools/level-editor/src/projectCatalog.ts` on eager `import.meta.glob('../../../games/*/src/project/editor.ts')`; validate module exports via M1.1 helper; keep the external `createProjectCatalog({ readText })` signature so `main.ts`/`editorApp.ts` are untouched. Verify glob typing under vitest FIRST (fallback: scaffold-regenerated catalog module). Test: monkey-ball + pulsebreak listed, last-lightkeeper absent. Verify: level-editor tests, `npm run dev:editor` chooser check, editor e2e. Commit.
 
-- [ ] **M1.4 — Node registry (editor-mcp-server).**
+- [x] **M1.4 — Node registry (editor-mcp-server).**
   Rewrite `tools/editor-mcp-server/src/projectCatalog.ts`: `discoverGames(repoRoot)` (dir scan + `exports["./project"]` filter + `name === dirname` assert) and `loadProjectRegistration(gameId, repoRoot)` (dynamic import, loader shape assert, `registration.gameId === gameId` assert, Node `readText` bound to the game's `public/`). Delete `PROJECT_GAME_IDS` + duplicated YAML code; drop game deps from `tools/editor-mcp-server/package.json`. Thread `repoRoot` through `headlessHost.ts`. Tests: discovery lists exactly the two games; unknown-id error lists discovered ids; monkey-ball loads against real YAML; existing host/smoke tests green. Verify + manual `--project` run. Commit.
 
 - [ ] **M1.5 — Convention-driven root wiring.**

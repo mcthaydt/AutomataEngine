@@ -1,0 +1,9 @@
+{
+  "name": "not-mismatch",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./project": "./src/project/index.ts"
+  }
+}
