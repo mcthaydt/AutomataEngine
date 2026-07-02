@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
-import { pulsebreakEditorRegistration } from '../../src/project/editor'
+import { loadEditorRegistration, pulsebreakEditorRegistration } from '../../src/project/editor'
+import { loadHeadlessRegistration, pulsebreakProjectDefinition } from '../../src/project'
 import { createPulsebreakTemplate } from '../../src/project/template'
+
+const unusedDeps = { readText: () => Promise.reject(new Error('pulsebreak loaders read no data files')) }
 
 function nullPhysics(): PhysicsPort {
   return {
@@ -51,5 +54,18 @@ describe('Pulsebreak editor registration', () => {
       metrics: { enemiesRemaining: 1, wave: 1 }
     })
     expect(Number.isFinite(result.score)).toBe(true)
+  })
+})
+
+describe('Pulsebreak registry loader convention', () => {
+  it('exposes the conventional editor loader', async () => {
+    await expect(loadEditorRegistration(unusedDeps)).resolves.toBe(pulsebreakEditorRegistration)
+  })
+
+  it('exposes the conventional headless loader without preview', async () => {
+    const registration = await loadHeadlessRegistration(unusedDeps)
+    expect(registration.project).toBe(pulsebreakProjectDefinition)
+    expect(registration.preview).toBeUndefined()
+    expect(registration.evaluation).toBeDefined()
   })
 })

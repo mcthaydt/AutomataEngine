@@ -26,7 +26,7 @@
 - [x] **M1.1 — Catalog core in `@automata/editor`.**
   Create `packages/editor/src/project/catalog.ts`: `RegistrationDeps`, `EditorRegistrationLoader`, module shape-check helper (clear error naming the offending path/export), `ProjectCatalog` interface (moved from level-editor), `createProjectCatalog(registrations)` with duplicate-gameId throw naming the id. Export from `src/index.ts` + `src/headless.ts`. TDD: `packages/editor/tests/project/catalog.test.ts` (dup detection, stable order, `get` miss). Verify: editor project tests + lint. Commit.
 
-- [ ] **M1.2 — Standardized loader exports in existing games.**
+- [x] **M1.2 — Standardized loader exports in existing games.**
   Pulsebreak: `loadEditorRegistration` (async wrapper) in `src/project/editor.ts`, `loadHeadlessRegistration` in `src/project/index.ts`. Monkey-ball: `loadEditorRegistration(deps)` delegating to `loadMonkeyBallEditorRegistration` with public-relative YAML path; new `src/project/headless.ts` holding the `parseData` + `evaluateMonkeyBallProject` closure moved out of the MCP server catalog, re-exported from `src/project/index.ts`. Tests: loaders resolve; monkey-ball headless loader with stub `readText` + fixture YAML. Verify: both games' test projects. Commit.
 
 - [ ] **M1.3 — Browser registry (level-editor).**

@@ -17,7 +17,10 @@ export async function createProjectCatalog(
   dependencies: ProjectCatalogDependencies
 ): Promise<ProjectCatalog> {
   const registrations = [
-    registerEditorProject(await loadMonkeyBallEditorRegistration(dependencies.readText)),
+    // Registry loaders take public-relative paths; this host serves them at /.
+    registerEditorProject(await loadMonkeyBallEditorRegistration({
+      readText: (path) => dependencies.readText(`/${path}`)
+    })),
     registerEditorProject(pulsebreakEditorRegistration)
   ]
   const byGameId = new Map(registrations.map((registration) => [registration.gameId, registration]))

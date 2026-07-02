@@ -1,4 +1,4 @@
-import type { EditorProjectRegistration, ProjectPlayHandle } from '@automata/editor'
+import type { EditorProjectRegistration, EditorRegistrationLoader, ProjectPlayHandle } from '@automata/editor'
 import { createKeyboardInput } from '@automata/engine/browser'
 import { CORE_TYPE_IDS } from '@automata/project'
 import { createGameplay } from '../game/gameplay'
@@ -70,3 +70,6 @@ export const pulsebreakEditorRegistration: EditorProjectRegistration<PulsebreakC
   },
   evaluation: { evaluate: evaluatePulsebreakProject }
 }
+
+/** Registry convention entry: the browser editor discovers and calls this. */
+export const loadEditorRegistration: EditorRegistrationLoader = async () => pulsebreakEditorRegistration

@@ -9,7 +9,8 @@ import {
   type RigidBodyDef
 } from '@automata/engine'
 import { loadProjectFiles } from '@automata/project'
-import { createMonkeyBallEditorRegistration } from '../../src/project/editor'
+import { createMonkeyBallEditorRegistration, loadEditorRegistration } from '../../src/project/editor'
+import { loadHeadlessRegistration } from '../../src/project'
 import {
   createSeekGoalPlayer,
   scoreMonkeyBallFitness,
@@ -66,6 +67,38 @@ describe('Monkey Ball editor registration', () => {
       outcome: 'incomplete',
       steps: 1,
       metrics: { falls: 0, bananas: 0 }
+    })
+  })
+})
+
+describe('Monkey Ball registry loader convention', () => {
+  const recordingDeps = () => {
+    const requested: string[] = []
+    return {
+      requested,
+      readText: async (path: string) => {
+        requested.push(path)
+        return readDataFile('archetypes/standard.yaml')
+      }
+    }
+  }
+
+  it('loads the editor registration through public-relative deps', async () => {
+    const deps = recordingDeps()
+    const registration = await loadEditorRegistration(deps)
+    expect(deps.requested).toEqual(['data/archetypes/standard.yaml'])
+    expect(registration.project.gameId).toBe('monkey-ball')
+    expect(registration.preview).toBeDefined()
+  })
+
+  it('loads the headless registration without preview and evaluates', async () => {
+    const deps = recordingDeps()
+    const registration = await loadHeadlessRegistration(deps)
+    expect(deps.requested).toEqual(['data/archetypes/standard.yaml'])
+    expect(registration.project.gameId).toBe('monkey-ball')
+    expect(registration.preview).toBeUndefined()
+    await expect(registration.evaluation!.evaluate(snapshot, { maxSteps: 1 })).resolves.toMatchObject({
+      outcome: 'incomplete'
     })
   })
 })
