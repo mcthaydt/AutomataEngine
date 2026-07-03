@@ -61,4 +61,27 @@ describe('deriveObjectSchema', () => {
     expect(() => deriveObjectSchema(z.strictObject({ u: z.union([z.string(), z.number()]) })))
       .toThrow(/unsupported zod construct/)
   })
+
+  it('rejects exclusive number bounds with the offending path', () => {
+    const schema = z.strictObject({ n: z.number().gt(0) })
+    expect(() => deriveObjectSchema(schema)).toThrow(SchemaDeriveError)
+    expect(() => deriveObjectSchema(schema)).toThrow(/exclusive/)
+    expect(() => deriveObjectSchema(schema)).toThrow(/\/n/)
+  })
+
+  it('keeps metadata attached after .optional()', () => {
+    const derived = deriveObjectSchema(
+      z.strictObject({ s: z.string().optional().meta({ label: 'X' }) })
+    )
+    expect(derived.fields).toEqual([
+      { kind: 'string', key: 's', label: 'X', required: false }
+    ])
+  })
+
+  it('derives unconstrained numbers without min/max keys', () => {
+    const derived = deriveObjectSchema(z.strictObject({ n: z.number() }))
+    expect(derived.fields).toEqual([{ kind: 'number', key: 'n', required: true }])
+    expect(derived.fields[0]).not.toHaveProperty('min')
+    expect(derived.fields[0]).not.toHaveProperty('max')
+  })
 })

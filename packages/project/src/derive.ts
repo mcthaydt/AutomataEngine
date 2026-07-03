@@ -27,14 +27,18 @@ function metaOf(schema: z.ZodType): FieldMeta {
   return (schema.meta() ?? {}) as FieldMeta
 }
 
-function unwrapOptional(schema: z.ZodType): { inner: z.ZodType; required: boolean } {
+function unwrapOptional(schema: z.ZodType): { inner: z.ZodType; required: boolean; meta: FieldMeta } {
   let inner = schema
   let required = true
+  let meta = metaOf(schema)
   while (inner.def.type === 'optional') {
     required = false
     inner = (inner as z.ZodOptional<z.ZodType>).unwrap()
+    // Inner layers take precedence so helper-attached `automata` markers can
+    // never be clobbered; wrapper-only keys (e.g. `.optional().meta({...})`) survive.
+    meta = { ...meta, ...metaOf(inner) }
   }
-  return { inner, required }
+  return { inner, required, meta }
 }
 
 /** Derive the object-root IR for one component/resource data schema. */
@@ -46,8 +50,7 @@ export function deriveObjectSchema(dataSchema: ProjectDataSchema): ObjectSchema 
   return root
 }
 
-function deriveNode(schema: z.ZodType, path: string): PropertySchema {
-  const meta = metaOf(schema)
+function deriveNode(schema: z.ZodType, path: string, meta: FieldMeta = metaOf(schema)): PropertySchema {
   const common = {
     ...(meta.label !== undefined ? { label: meta.label } : {}),
     ...(meta.description !== undefined ? { description: meta.description } : {})
@@ -57,6 +60,18 @@ function deriveNode(schema: z.ZodType, path: string): PropertySchema {
   switch (schema.def.type) {
     case 'number': {
       const number = schema as z.ZodNumber
+      // `minValue`/`maxValue` merge inclusive and exclusive bounds
+      // indistinguishably; the bag keeps them apart. Verified against the
+      // installed zod: `z.number().gt(0)._zod.bag` is `{ exclusiveMinimum: 0 }`.
+      const bag = (number as unknown as {
+        _zod: { bag: { exclusiveMinimum?: number; exclusiveMaximum?: number } }
+      })._zod.bag
+      if (bag.exclusiveMinimum !== undefined || bag.exclusiveMaximum !== undefined) {
+        throw new SchemaDeriveError(
+          'exclusive number bounds (.gt/.lt/.positive/.negative) are not supported; use .min()/.max()',
+          path
+        )
+      }
       return {
         kind: 'number',
         ...common,
@@ -93,8 +108,8 @@ function deriveNode(schema: z.ZodType, path: string): PropertySchema {
       }
       const shape = (schema as ProjectDataSchema).shape
       const fields = Object.entries(shape).map(([key, field]) => {
-        const { inner, required } = unwrapOptional(field as z.ZodType)
-        const node = deriveNode(inner, `${path}/${escapePointerToken(key)}`)
+        const { inner, required, meta: fieldMeta } = unwrapOptional(field as z.ZodType)
+        const node = deriveNode(inner, `${path}/${escapePointerToken(key)}`, fieldMeta)
         return { ...node, key, required }
       })
       return { kind: 'object', ...common, fields }
