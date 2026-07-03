@@ -6,13 +6,13 @@
 
 **Architecture:** Games author zod schemas (plus typed helpers for `vec3`/`color`/`reference`/arrays). One deriver module (`packages/project/src/derive.ts`) converts zod into the existing closed `PropertySchema` IR at registration time, so the editor UI is untouched. Validation runs through `safeParse` with zod issues mapped to the existing `PropertyIssue` codes and JSON pointers. `z.toJSONSchema` output is precomputed per spec and appended to project-mode MCP tool descriptions.
 
-**Tech Stack:** TypeScript, zod ^4.4.3, vitest 4 (workspace projects named by package, e.g. `npx vitest run --project @automata/project`), @modelcontextprotocol/sdk.
+**Tech Stack:** TypeScript, zod ^4.4.3, vitest 4 (workspace projects named by package, e.g. `npx vitest run --project project`), @modelcontextprotocol/sdk.
 
 Spec: `docs/superpowers/specs/2026-07-03-schema-unification-design.md` (approved).
 
 ## Global Constraints
 
-- zod stays pinned `^4.4.3` everywhere; zod internals (`schema.def`, `.minValue`, `.meta()`, `.unwrap()`, `.shape`, `.options`, `.element`) are touched ONLY inside `packages/project/src/derive.ts` and `authoring.ts`.
+- zod stays pinned `^4.4.3` everywhere; zod internals (`schema.def`, `.minValue`, `_zod.bag`, `.meta()`, `.unwrap()`, `.shape`, `.options`, `.element`) are touched ONLY inside `packages/project/src/derive.ts` and `authoring.ts`.
 - Coverage gate: `npm run coverage` enforces 90% lines AND branches (istanbul) across `packages/*/src`, `games/*/src`, `tools/*/src`.
 - Polarity port rule (mechanical, applies to every DSL→zod port): DSL fields with `required: true` become plain zod fields; **all other fields (`required: false` or `required` absent) gain `.optional()`**. The DSL is optional-by-default; zod is required-by-default.
 - Component/resource root schemas MUST be `z.strictObject(...)` (unknown keys rejected). Nested objects too.
@@ -115,7 +115,7 @@ describe('authoring helpers', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project @automata/project tests/authoring.test.ts`
+Run: `npx vitest run --project project tests/authoring.test.ts`
 Expected: FAIL — `'../src'` has no export named `vec3`.
 
 - [ ] **Step 3: Write the implementation**
@@ -217,7 +217,7 @@ export * from './authoring'
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run --project @automata/project tests/authoring.test.ts`
+Run: `npx vitest run --project project tests/authoring.test.ts`
 Expected: PASS (5 tests).
 
 - [ ] **Step 5: Lint, typecheck, commit**
@@ -316,7 +316,7 @@ describe('deriveObjectSchema', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project @automata/project tests/derive.test.ts`
+Run: `npx vitest run --project project tests/derive.test.ts`
 Expected: FAIL — no export named `deriveObjectSchema`.
 
 - [ ] **Step 3: Write the implementation**
@@ -453,7 +453,7 @@ export * from './derive'
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run --project @automata/project tests/derive.test.ts`
+Run: `npx vitest run --project project tests/derive.test.ts`
 Expected: PASS. (If `.def.catchall` typing fights the compiler, the casts shown above are the sanctioned escape hatch — they are already the loosest allowed.)
 
 - [ ] **Step 5: Lint, typecheck, commit**
@@ -591,7 +591,7 @@ describe('validateDataSchema parity with the DSL validator', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project @automata/project tests/validateData.test.ts`
+Run: `npx vitest run --project project tests/validateData.test.ts`
 Expected: FAIL — no export named `validateDataSchema`.
 
 - [ ] **Step 3: Implement the mapper in `derive.ts`**
@@ -764,8 +764,8 @@ Note: zod reports missing-vs-wrong-type identically (`invalid_type`), so the map
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run --project @automata/project tests/validateData.test.ts`
-Expected: PASS (10 tests). Also run the full package to confirm nothing regressed: `npx vitest run --project @automata/project`.
+Run: `npx vitest run --project project tests/validateData.test.ts`
+Expected: PASS (10 tests). Also run the full package to confirm nothing regressed: `npx vitest run --project project`.
 
 - [ ] **Step 5: Lint, typecheck, commit**
 
@@ -859,7 +859,7 @@ describe('defineGameProject with zod schemas', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project @automata/project tests/registration.test.ts`
+Run: `npx vitest run --project project tests/registration.test.ts`
 Expected: FAIL — zod schema not assignable / `dataSchema` undefined behavior missing.
 
 - [ ] **Step 3: Implement the adapter**
@@ -998,7 +998,7 @@ function assertSchemaData(
 
 - [ ] **Step 4: Run tests to verify everything passes**
 
-Run: `npx vitest run --project @automata/project && npx vitest run --project @automata/editor`
+Run: `npx vitest run --project project && npx vitest run --project editor`
 Expected: PASS — all existing DSL-based tests plus the three new zod cases.
 
 - [ ] **Step 5: Lint, typecheck, commit**
@@ -1108,7 +1108,7 @@ const camera: ComponentTypeRegistration = normalizeComponentType({
 
 - [ ] **Step 2: Run the affected suites**
 
-Run: `npx vitest run --project @automata/project && npx vitest run --project @automata/editor`
+Run: `npx vitest run --project project && npx vitest run --project editor`
 Expected: PASS — core behavior is pinned by the existing validation/edit/editor tests.
 
 - [ ] **Step 3: Lint, typecheck, commit**
@@ -1248,7 +1248,7 @@ In `games/pulsebreak/package.json` `dependencies`, add `"zod": "^4.4.3"`.
 
 - [ ] **Step 3: Run the affected suites**
 
-Run: `npx vitest run --project pulsebreak && npx vitest run --project @automata/project`
+Run: `npx vitest run --project pulsebreak && npx vitest run --project project`
 Expected: PASS — pulsebreak's content round-trip and definition tests pin the behavior.
 
 - [ ] **Step 4: Lint, typecheck, commit**
@@ -1342,7 +1342,7 @@ In `tools/scaffold/src/templates/configFiles.ts`, the generated `dependencies` b
 
 - [ ] **Step 3: Run the scaffold suite**
 
-Run: `npx vitest run --project @automata/scaffold`
+Run: `npx vitest run --project scaffold`
 Expected: PASS. If a template snapshot/content test asserts the old `definition.ts` text, update the expectation to the new zod template — that test exists to catch template drift, and this is intentional drift.
 
 - [ ] **Step 4: Lint, typecheck, commit**
@@ -1474,7 +1474,7 @@ In `games/monkey-ball/package.json` `dependencies`, add `"zod": "^4.4.3"`.
 
 - [ ] **Step 3: Run the affected suites**
 
-Run: `npx vitest run --project monkey-ball && npx vitest run --project @automata/editor-mcp-server`
+Run: `npx vitest run --project monkey-ball && npx vitest run --project editor-mcp-server`
 Expected: PASS — monkey-ball's content tests and the MCP server's real-YAML loading test pin behavior.
 
 - [ ] **Step 4: Lint, typecheck, commit**
@@ -1542,7 +1542,7 @@ If the fixture's snapshot shape fights `ProjectSnapshot`'s zod model (`formatVer
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project @automata/editor tests/project/toolHost.test.ts`
+Run: `npx vitest run --project editor tests/project/toolHost.test.ts`
 Expected: FAIL — descriptions carry no schema text.
 
 - [ ] **Step 3: Implement decoration in `toolHost.ts`**
@@ -1593,7 +1593,7 @@ Inside `createProjectToolHost`, compute once and serve from `listTools`:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run --project @automata/editor`
+Run: `npx vitest run --project editor`
 Expected: PASS.
 
 - [ ] **Step 5: Add the end-to-end assertion through the real server**
@@ -1618,7 +1618,7 @@ Append to `tools/editor-mcp-server/tests/server.test.ts` (inside the existing `d
   })
 ```
 
-Run: `npx vitest run --project @automata/editor-mcp-server`
+Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS.
 
 - [ ] **Step 6: Lint, typecheck, commit**
@@ -1678,7 +1678,7 @@ const stats = z.strictObject({
 
 - [ ] **Step 2: Run every affected suite**
 
-Run: `npx vitest run --project @automata/project && npx vitest run --project @automata/editor && npx vitest run --project @automata/editor-agent`
+Run: `npx vitest run --project project && npx vitest run --project editor && npx vitest run --project editor-agent`
 Expected: PASS.
 
 - [ ] **Step 3: Lint, typecheck, commit**
@@ -1824,7 +1824,7 @@ describe('workspace prompts', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project @automata/contracts tests/prompts.test.ts`
+Run: `npx vitest run --project contracts tests/prompts.test.ts`
 Expected: FAIL — no export named `workspacePromptDefs`.
 
 - [ ] **Step 3: Implement `prompts.ts`**
@@ -1914,7 +1914,7 @@ Add `export * from './prompts'` to `packages/contracts/src/index.ts`.
 
 - [ ] **Step 4: Run the contracts tests**
 
-Run: `npx vitest run --project @automata/contracts`
+Run: `npx vitest run --project contracts`
 Expected: PASS.
 
 - [ ] **Step 5: Register the prompts capability in the server**
@@ -2030,7 +2030,7 @@ In `tools/editor-mcp-server/tests/workspaceHost.test.ts`, update the existing `c
 
 - [ ] **Step 8: Run the suites**
 
-Run: `npx vitest run --project @automata/contracts && npx vitest run --project @automata/editor-mcp-server`
+Run: `npx vitest run --project contracts && npx vitest run --project editor-mcp-server`
 Expected: PASS.
 
 - [ ] **Step 9: Lint, typecheck, commit**
