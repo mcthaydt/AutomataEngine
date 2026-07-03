@@ -8,7 +8,7 @@
 
 **Architecture:** Convention entry files (`src/project/editor.ts` → `loadEditorRegistration`, `src/project/index.ts` → `loadHeadlessRegistration`, both async taking `RegistrationDeps { readText }` with public-relative paths) discovered by `import.meta.glob` in the browser and a package-exports scan + dynamic import in Node, with shared catalog policy in `@automata/editor`. Ports live in each workspace's `package.json` under `automata.devPort`; Playwright derives webServers by scanning. The scaffold generates a complete pulsebreak-shaped game and is exposed over MCP via a `--workspace` server mode.
 
-**Progress:** 0% (0/9 tasks complete)
+**Progress:** 100% (9/9 tasks complete; `npm run verify:new-game` passed 2026-07-02)
 
 ## Global Constraints
 
@@ -44,5 +44,5 @@
 - [x] **M1.7 — `createGame` over MCP.**
   `packages/contracts/src/workspaceTools.ts`: `workspaceToolArgSchemas` (`createGame {name: slug, port?}`, `listGames {}`), `workspaceToolDefs()`, `parseWorkspaceToolArgs()`. Rename scaffold package → `@automata/scaffold` with exports map (root `new-game` script path unchanged). `tools/editor-mcp-server`: `--workspace <repoRoot>` mode (exclusive with `--project`/`--bundle`); new `src/workspaceHost.ts` over `@automata/scaffold` + M1.4 discovery; `createGame` returns `{ gameDir, devPort, nextSteps }`; loosen `createMcpServer`/`mcpAdapter` host param to a structural type. Tests: contracts schemas (slug rejection, JSON-schema emission); workspaceHost with injected in-memory FS; server lists workspace tools in workspace mode. Verify + manual stdio call. Commit.
 
-- [ ] **M1.8 — End-to-end proof + docs.**
+- [x] **M1.8 — End-to-end proof + docs.**
   `tools/scaffold/scripts/verify-new-game.ts` + root `verify:new-game`: `git clone --local . <tmp>` → scaffold `probe-game` → `npm install` → `npm run ci` → `npm run build -w probe-game` → spawn MCP server `--project games/probe-game/public/project`, assert ready line → `PLAYWRIGHT_ONLY=probe-game` e2e smoke. Update AGENTS.md (registry convention, commands) + root README. Run full M1 acceptance. Commit.
