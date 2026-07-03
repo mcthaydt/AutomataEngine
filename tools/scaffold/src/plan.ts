@@ -1,58 +1,76 @@
-export interface ScaffoldFile { path: string; content: string }
-export interface ScaffoldPlan { name: string; port: number; files: ScaffoldFile[] }
+import { buildProjectSnapshot, projectFilesFromSnapshot } from './templates/projectData.ts'
+import * as config from './templates/configFiles.ts'
+import * as project from './templates/projectFiles.ts'
+import * as src from './templates/srcFiles.ts'
+import * as tests from './templates/testFiles.ts'
 
-/** Plans validated game files plus the metadata needed for root wiring. Pure. */
-export function planNewGame(name: string, port = 5177): ScaffoldPlan {
+export interface ScaffoldFile { path: string; content: string }
+export interface ScaffoldPlan { name: string; label: string; port: number; files: ScaffoldFile[] }
+
+export interface PlanOptions {
+  /** Explicit dev port; must not collide with `existingPorts`. */
+  port?: number
+  /** `automata.devPort` values already taken; drives auto-assignment. */
+  existingPorts?: readonly number[]
+}
+
+/** 'beacon-run' -> 'Beacon Run'. */
+export function titleCase(slug: string): string {
+  return slug.split('-').map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join(' ')
+}
+
+/**
+ * Plans a complete registered game: deterministic sim, render wiring, project
+ * definition + template, registry loader entries, passing tests, e2e smoke,
+ * and the authored `public/project` files. Pure — no filesystem access.
+ */
+export function planNewGame(name: string, options: PlanOptions = {}): ScaffoldPlan {
   if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
     throw new Error('Game name must be a lowercase alphanumeric slug with optional hyphens')
   }
+  const existingPorts = options.existingPorts ?? []
+  const port = options.port ?? Math.max(5177, ...existingPorts) + 1
   if (!Number.isInteger(port) || port < 1 || port > 65_535) {
     throw new Error('Port must be an integer from 1 through 65535')
   }
+  if (existingPorts.includes(port)) {
+    throw new Error(`Port ${port} is already used by another workspace`)
+  }
+
+  const label = titleCase(name)
+  const snapshot = buildProjectSnapshot(name, label)
   const dir = `games/${name}`
+  const at = (path: string, content: string): ScaffoldFile => ({ path: `${dir}/${path}`, content })
+
   const files: ScaffoldFile[] = [
-    {
-      path: `${dir}/package.json`,
-      content: JSON.stringify({
-        name,
-        private: true,
-        version: '0.0.0',
-        type: 'module',
-        exports: { '.': './src/index.ts' },
-        dependencies: { '@automata/engine': '*', '@automata/game-kit': '*' },
-        scripts: { dev: 'vite', build: 'vite build', typecheck: 'tsc --noEmit' }
-      }, null, 2) + '\n'
-    },
-    {
-      path: `${dir}/tsconfig.json`,
-      content: JSON.stringify({
-        extends: '../../tsconfig.base.json',
-        compilerOptions: { lib: ['ES2022', 'DOM', 'DOM.Iterable'] },
-        include: ['src', 'tests', 'vitest.config.ts']
-      }, null, 2) + '\n'
-    },
-    { path: `${dir}/vite.config.ts`, content: "import { defineConfig } from 'vite'\n\nexport default defineConfig({ base: './' })\n" },
-    {
-      path: `${dir}/vitest.config.ts`,
-      content: "import { defineConfig } from 'vitest/config'\n\n" +
-        `export default defineConfig({\n  test: { name: '${name}', environment: 'happy-dom', include: ['tests/**/*.test.ts'] }\n})\n`
-    },
-    {
-      path: `${dir}/index.html`,
-      content: '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n' +
-        '    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />\n' +
-        `    <title>${name}</title>\n  </head>\n  <body>\n    <div id="app"></div>\n` +
-        '    <script type="module" src="/src/main.ts"></script>\n  </body>\n</html>\n'
-    },
-    { path: `${dir}/src/index.ts`, content: `// Public entry for ${name}; re-export anything other packages import.\nexport {}\n` },
-    { path: `${dir}/src/vite-env.d.ts`, content: '/// <reference types="vite/client" />\n' },
-    {
-      path: `${dir}/src/main.ts`,
-      content: "// Browser composition root. Wire renderer, audio, input, store, and the\n" +
-        "// game loop here using @automata/engine and @automata/game-kit.\n" +
-        "const app = document.getElementById('app')\n" +
-        "if (!app) throw new Error('Missing #app')\n"
-    }
+    at('package.json', config.packageJson(name, port)),
+    at('tsconfig.json', config.tsconfigJson()),
+    at('vite.config.ts', config.viteConfigTs()),
+    at('vitest.config.ts', config.vitestConfigTs(name)),
+    at('index.html', config.indexHtml(label)),
+    at('README.md', config.readmeMd(name, label, port)),
+    at('src/index.ts', src.indexTs()),
+    at('src/vite-env.d.ts', src.viteEnvDts()),
+    at('src/main.ts', src.mainTs(name)),
+    at('src/sim/sim.ts', src.simTs()),
+    at('src/game/gameplay.ts', src.gameplayTs()),
+    at('src/project/types.ts', project.typesTs(name)),
+    at('src/project/template.ts', project.templateTs(JSON.stringify(snapshot, null, 2))),
+    at('src/project/compiler.ts', project.compilerTs()),
+    at('src/project/definition.ts', project.definitionTs(name, label)),
+    at('src/project/evaluation.ts', project.evaluationTs()),
+    at('src/project/editor.ts', project.editorTs()),
+    at('src/project/index.ts', project.projectIndexTs()),
+    at('src/project/load.ts', project.loadTs(name, label)),
+    at('scripts/validate-project.ts', src.validateProjectScript(name)),
+    at('scripts/generate-project.ts', src.generateProjectScript()),
+    at('tests/sim/sim.test.ts', tests.simTest()),
+    at('tests/game/gameplay.test.ts', tests.gameplayTest()),
+    at('tests/project/definition.test.ts', tests.definitionTest(name)),
+    at('tests/project/content.test.ts', tests.contentTest(name, label)),
+    at('tests/project/editor.test.ts', tests.editorTest()),
+    at('e2e/smoke.spec.ts', tests.e2eSmokeSpec(name, port)),
+    ...projectFilesFromSnapshot(snapshot).map((file) => at(file.path, file.content))
   ]
-  return { name, port, files }
+  return { name, label, port, files }
 }

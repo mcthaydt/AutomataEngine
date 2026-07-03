@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { lstat, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createNewGameWriter, writeNewGame, type ScaffoldFs } from '../src/write'
@@ -52,6 +52,7 @@ describe('writeNewGame', () => {
       lstat,
       mkdir,
       readFile,
+      readdir: async (path) => readdir(path),
       rm,
       async writeFile(path, data, options) {
         if (--remainingWrites < 0) throw new Error('simulated write failure')

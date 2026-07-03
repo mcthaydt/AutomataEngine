@@ -55,7 +55,7 @@ describe('headless MCP host', () => {
     const bundleJson = stringifyProjectBundle(toProjectBundle(snapshot))
 
     await expect(createHeadlessHost({ bundleJson })).rejects.toThrow(
-      'Unknown project gameId "unknown-game". Available: monkey-ball, pulsebreak'
+      /Unknown project gameId "unknown-game"\. Available: .*monkey-ball.*pulsebreak/
     )
   })
 

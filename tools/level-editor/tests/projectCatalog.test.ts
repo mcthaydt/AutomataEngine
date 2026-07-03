@@ -7,16 +7,14 @@ import { createProjectCatalog } from '../src/projectCatalog'
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 
 describe('project catalog', () => {
-  it('registers exactly the two shipped games with valid templates', async () => {
+  it('registers the shipped games with valid templates', async () => {
     const catalog = await createProjectCatalog({
       readText: (path) => readFile(resolve(repoRoot, 'games/monkey-ball/public', path.replace(/^\//, '')), 'utf8')
     })
 
-    expect(catalog.list().map((registration) => registration.gameId)).toEqual([
-      'monkey-ball',
-      'pulsebreak'
-    ])
-    expect(new Set(catalog.list().map((registration) => registration.gameId)).size).toBe(2)
+    const gameIds = catalog.list().map((registration) => registration.gameId)
+    expect(gameIds).toEqual(expect.arrayContaining(['monkey-ball', 'pulsebreak']))
+    expect(new Set(gameIds).size).toBe(gameIds.length)
     for (const registration of catalog.list()) {
       expect(registration.createTemplate().manifest.gameId).toBe(registration.gameId)
       expect(catalog.get(registration.gameId)).toBe(registration)

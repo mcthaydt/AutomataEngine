@@ -7,8 +7,11 @@ const testDir = dirname(fileURLToPath(import.meta.url))
 const badRepoRoot = resolve(testDir, 'fixtures/badRepo')
 
 describe('project catalog discovery', () => {
-  it('discovers exactly the games exposing the ./project export convention', async () => {
-    await expect(discoverGames()).resolves.toEqual(['monkey-ball', 'pulsebreak'])
+  it('discovers the games exposing the ./project export convention', async () => {
+    const ids = await discoverGames()
+    expect(ids).toEqual(expect.arrayContaining(['monkey-ball', 'pulsebreak']))
+    expect(ids).not.toContain('last-lightkeeper')
+    expect(new Set(ids).size).toBe(ids.length)
   })
 
   it('rejects games whose package name does not match their directory', async () => {
@@ -29,6 +32,6 @@ describe('project catalog discovery', () => {
   })
 
   it('rejects unknown game ids, listing what was discovered', async () => {
-    await expect(loadProjectRegistration('nope')).rejects.toThrow(/monkey-ball, pulsebreak/)
+    await expect(loadProjectRegistration('nope')).rejects.toThrow(/Unknown project gameId "nope".*monkey-ball.*pulsebreak/)
   })
 })
