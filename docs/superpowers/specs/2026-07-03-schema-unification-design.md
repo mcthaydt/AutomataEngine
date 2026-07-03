@@ -1,6 +1,6 @@
 # Schema unification: zod single source of truth + agent prompt layer (M2)
 
-Status: draft — awaiting user review. Date: 2026-07-03.
+Status: approved design. Date: 2026-07-03.
 
 ## Motivation
 
