@@ -10,23 +10,49 @@ evaluation adapters; shared editor packages contain no game-specific code.
 |---|---|---|
 | `packages/engine` | `@automata/engine` | ECS, store, data, loop, input, physics, rendering, audio |
 | `packages/project` | `@automata/project` | Persisted project schemas, commands, validation, and bundles |
-| `packages/contracts` | `@automata/contracts` | Agent/MCP project tool and evaluation contracts |
-| `packages/editor` | `@automata/editor` | Generic project session, storage, viewport, and generated UI |
+| `packages/contracts` | `@automata/contracts` | Agent/MCP project and workspace tool contracts |
+| `packages/editor` | `@automata/editor` | Generic project session, registry catalog, storage, viewport, generated UI |
 | `packages/editor-agent` | `@automata/editor-agent` | Sandboxed assistant and tuning workflow |
+| `packages/game-kit` | `@automata/game-kit` | Shared browser game-shell helpers |
 | `games/monkey-ball` | `monkey-ball` | Physics platform game and project registration |
 | `games/pulsebreak` | `pulsebreak` | Deterministic neon arena roguelite and project registration |
+| `games/last-lightkeeper` | `last-lightkeeper` | Deterministic lighthouse action-management game |
 | `tools/level-editor` | `level-editor` | Multi-game project editor app |
-| `tools/editor-mcp-server` | `editor-mcp-server` | Generic project MCP server |
+| `tools/editor-mcp-server` | `editor-mcp-server` | Project + workspace MCP server |
+| `tools/scaffold` | `@automata/scaffold` | `new-game` generator for registered games |
 
 ## Commands
 
 - `npm run dev:editor` — open the project chooser at `http://127.0.0.1:5175`
 - `npm run dev:monkey-ball` — run Monkey Ball at `http://127.0.0.1:5174`
 - `npm run dev:pulsebreak` — run PULSEBREAK at `http://127.0.0.1:5176`
+- `npm run dev:last-lightkeeper` — run LAST LIGHTKEEPER at `http://127.0.0.1:5177`
+- `npm run new-game <name> [port]` — scaffold a registered game under `games/<name>`
 - `npm run ci` — lint, typecheck, and all unit tests
 - `npm run coverage` — repository-wide 90% line and branch gate
-- `npm run build` — production builds for both games and the editor
-- `npm run e2e` — Playwright browser/release smokes
+- `npm run build` — production builds for every workspace with a build script
+- `npm run e2e` — Playwright browser/release smokes (`PLAYWRIGHT_ONLY=<workspace>` narrows servers)
+- `npm run verify:new-game` — clean-clone proof that a scaffolded game passes the whole gate
+
+## Creating a game
+
+`npm run new-game <name>` emits a complete registered game: a deterministic
+sim, engine render wiring, a project definition (schemas, template,
+validation, compilation, evaluation), passing tests at the coverage gate, an
+e2e smoke, and the authored `public/project` files. No root files are edited —
+dev/build/Playwright wiring derives from the game's own `package.json`
+(`automata.devPort`), and both the editor chooser and the MCP server discover
+games by convention:
+
+- `src/project/editor.ts` exports `loadEditorRegistration` (browser; prefabs
+  and preview), and the package exposes it as `./editor`.
+- `src/project/index.ts` exports `loadHeadlessRegistration` (Node-safe), and
+  the package exposes it as `./project`.
+- Package name, directory name, and `gameId` are identical.
+
+After scaffolding, run `npm install` once so Node can resolve the new
+workspace package. Run `npm run verify:new-game` whenever the scaffold
+templates or the APIs they target change.
 
 ## Project format
 
@@ -53,15 +79,17 @@ each game's registered schemas.
 
 ## MCP
 
-Run the project MCP server against either directory:
+Run the project MCP server against any registered game's project directory:
 
 ```bash
 node_modules/.bin/automata-editor-mcp --project games/monkey-ball/public/project
 node_modules/.bin/automata-editor-mcp --project games/pulsebreak/public/project
 ```
 
-It also accepts `--bundle <file>`. See
-`tools/editor-mcp-server/README.md` for tool/resource lists and client configs.
+It also accepts `--bundle <file>`, and `--workspace <repoRoot>` serves the
+workspace tools (`createGame`, `listGames`) so agents can scaffold games over
+MCP. See `tools/editor-mcp-server/README.md` for tool/resource lists and
+client configs.
 
 ## Game data
 

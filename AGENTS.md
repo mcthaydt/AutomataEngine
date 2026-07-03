@@ -80,6 +80,25 @@ root unless a task explicitly says otherwise.
   and a real browser rescue playthrough (spec:
   `docs/superpowers/specs/2026-06-27-last-lightkeeper-design.md`; plan:
   `docs/superpowers/plans/2026-06-27-last-lightkeeper.md`).
+- [x] Paved road — `npm run new-game` emits a registered, playable,
+  MCP-visible game; games are discovered by convention
+  (`loadEditorRegistration` via the `./editor` export in the browser,
+  `loadHeadlessRegistration` via `./project` in Node,
+  `gameId === package name === directory name`); root dev/build/Playwright
+  wiring derives from each workspace's `automata.devPort`; the MCP server's
+  `--workspace` mode serves `createGame`/`listGames`
+  (spec: `docs/superpowers/specs/2026-07-02-paved-road-scaffold-registry-design.md`;
+  plan: `docs/superpowers/plans/2026-07-02-paved-road.md`).
+
+## Registry Convention
+
+A game participates in the editor chooser and MCP server iff it exposes the
+loader entries above and its package/directory/game IDs match. The scaffold
+generates all of this; never hand-wire a game into `tools/*` — there is no
+catalog to edit. Root `package.json` and `playwright.config.ts` must not be
+edited per game either; declare `automata.devPort` in the game's own
+`package.json`. Run `npm run verify:new-game` after changing scaffold
+templates or the engine/project APIs they use.
 
 ## Verification Commands
 
@@ -90,4 +109,6 @@ npm run dev -w monkey-ball
 npm run dev:last-lightkeeper
 npm run build -w last-lightkeeper
 npm run e2e:last-lightkeeper
+npm run new-game <name>
+npm run verify:new-game
 ```
