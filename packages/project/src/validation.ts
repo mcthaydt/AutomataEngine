@@ -1,9 +1,9 @@
 import { indexComponents, indexResources } from './core'
 import { escapePointerToken } from './pointer'
-import { validateProperty } from './schema'
 import { isSafeProjectPath } from './files'
 import type { ObjectSchema, PropertySchema, ReferenceProperty } from './schema'
 import type { ProjectSnapshot, SceneDocument } from './model'
+import { validateSpecData } from './registration'
 import type { ComponentTypeRegistration, GameProjectDefinition, ResourceTypeRegistration, ValidationIssue } from './registration'
 
 /**
@@ -101,7 +101,7 @@ function validateRegistration(
           continue
         }
         typeCounts.set(component.typeId, (typeCounts.get(component.typeId) ?? 0) + 1)
-        for (const issue of validateProperty(registration.schema, component.data)) {
+        for (const issue of validateSpecData(registration, component.data)) {
           issues.push({ severity: 'error', code: issue.code, message: issue.message, sceneId, entityId: entity.id, componentId: component.id, pointer: issue.pointer })
         }
       }
@@ -122,7 +122,7 @@ function validateRegistration(
       continue
     }
     resourceTypeCounts.set(resource.typeId, (resourceTypeCounts.get(resource.typeId) ?? 0) + 1)
-    for (const issue of validateProperty(registration.schema, resource.data)) {
+    for (const issue of validateSpecData(registration, resource.data)) {
       issues.push({ severity: 'error', code: issue.code, message: issue.message, resourceId, pointer: issue.pointer })
     }
   }

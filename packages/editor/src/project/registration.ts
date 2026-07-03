@@ -1,7 +1,7 @@
 import type { PhysicsPort, RenderPort } from '@automata/engine'
 import type { ProjectEvaluationResult } from '@automata/contracts'
 import {
-  CORE_COMPONENTS, validateProject, validateProperty,
+  CORE_COMPONENTS, validateProject, validateSpecData,
   type ComponentTypeRegistration, type GameProjectDefinition,
   type ProjectSnapshot, type ResourceTypeRegistration, type ValidationIssue
 } from '@automata/project'
@@ -80,7 +80,7 @@ export function registerEditorProject<Compiled>(registration: EditorProjectRegis
     for (const component of prefab.components) {
       const componentType = byTypeId.get(component.typeId)
       if (!componentType) throw new Error(`registerEditorProject: prefab "${prefab.id}" uses unknown component "${component.typeId}"`)
-      const issues = validateProperty(componentType.schema, component.data)
+      const issues = validateSpecData(componentType, component.data)
       if (issues.length > 0) {
         throw new Error(`registerEditorProject: prefab "${prefab.id}" has invalid default for "${component.typeId}": ${issues.map((issue) => issue.code).join(', ')}`)
       }

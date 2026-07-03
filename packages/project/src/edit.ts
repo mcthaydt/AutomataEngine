@@ -4,9 +4,9 @@ import {
 } from './model'
 import type { EntityDocument, ResourceDocument, SceneDocument, ProjectSnapshot } from './model'
 import { indexComponents, indexResources } from './core'
-import { collectReferences, validateProperty } from './schema'
-import type { ObjectSchema } from './schema'
-import type { GameProjectDefinition } from './registration'
+import { collectReferences } from './schema'
+import { validateSpecData } from './registration'
+import type { ComponentTypeRegistration, GameProjectDefinition, ResourceTypeRegistration } from './registration'
 import { insertAtPointer, moveAtPointer, removeAtPointer, setAtPointer } from './pointer'
 import type { ProjectCommand, ProjectTarget } from './command'
 import type { ZodType } from 'zod'
@@ -134,7 +134,7 @@ function resolveTarget(definition: AnyDefinition, snapshot: ProjectSnapshot, tar
           const components = entity.components.map((c) => (c.id === component.id ? { ...c, data: next } : c))
           return replaceScene(snapshot, target.sceneId, { ...scene, entities: scene.entities.map((e) => (e.id === entity.id ? { ...entity, components } : e)) })
         },
-        validate: (next) => assertSchemaData(registration?.schema, next, 'component', component.typeId, target)
+        validate: (next) => assertSchemaData(registration, next, 'component', component.typeId, target)
       }
     }
     case 'resource': {
@@ -143,29 +143,32 @@ function resolveTarget(definition: AnyDefinition, snapshot: ProjectSnapshot, tar
       return {
         base: resource.data,
         writeBack: (next) => ({ ...snapshot, resources: { ...snapshot.resources, [resource.id]: { ...resource, data: next } } }),
-        validate: (next) => assertSchemaData(registration?.schema, next, 'resource', resource.typeId, target)
+        validate: (next) => assertSchemaData(registration, next, 'resource', resource.typeId, target)
       }
     }
   }
 }
 
-function assertSchemaData(schema: ObjectSchema | undefined, data: unknown, label: string, typeId: string, target: ProjectTarget): void {
-  if (!schema) return
-  const issues = validateProperty(schema, data)
+function assertSchemaData(
+  spec: ComponentTypeRegistration | ResourceTypeRegistration | undefined,
+  data: unknown, label: string, typeId: string, target: ProjectTarget
+): void {
+  if (!spec) return
+  const issues = validateSpecData(spec, data)
   if (issues.length > 0) throw new ProjectCommandError(`Invalid ${label} data for "${typeId}": ${formatIssues(issues)}`, `${label}.invalid`, target)
 }
 
 function assertComponentData(definition: AnyDefinition, component: { typeId: string; data: unknown }, code: string): void {
   const registration = indexComponents(definition).get(component.typeId)
   if (!registration) return
-  const issues = validateProperty(registration.schema, component.data)
+  const issues = validateSpecData(registration, component.data)
   if (issues.length > 0) throw new ProjectCommandError(`Invalid component data for "${component.typeId}": ${formatIssues(issues)}`, code)
 }
 
 function assertResourceData(definition: AnyDefinition, resource: ResourceDocument, code: string): void {
   const registration = indexResources(definition).get(resource.typeId)
   if (!registration) return
-  const issues = validateProperty(registration.schema, resource.data)
+  const issues = validateSpecData(registration, resource.data)
   if (issues.length > 0) throw new ProjectCommandError(`Invalid resource data for "${resource.typeId}": ${formatIssues(issues)}`, code)
 }
 
@@ -339,7 +342,7 @@ function assertEntityComponents(definition: AnyDefinition, entity: EntityDocumen
       if ((counts.get(component.typeId) ?? 0) > registration.cardinality.max) {
         throw new ProjectCommandError(`Component "${component.typeId}" exceeds cardinality`, 'component.cardinality')
       }
-      const issues = validateProperty(registration.schema, component.data)
+      const issues = validateSpecData(registration, component.data)
       if (issues.length > 0) throw new ProjectCommandError(`Invalid component data for "${component.typeId}": ${formatIssues(issues)}`, 'component.invalid')
     }
   }
