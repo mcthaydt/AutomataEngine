@@ -1,5 +1,6 @@
 import {
   RESOURCE_URIS,
+  parseToolArgs,
   toolDefs,
   type ToolHost
 } from '@automata/contracts'
@@ -32,7 +33,7 @@ describe('MCP project adapter', () => {
   })
 
   it('wraps project tool results as MCP text and error state', async () => {
-    const ok = await callToolResult(fakeHost, 'getProject', {})
+    const ok = await callToolResult(fakeHost, 'getProject', {}, parseToolArgs)
     expect(ok).toEqual({
       content: [{ type: 'text', text: JSON.stringify({ tool: 'getProject' }) }],
       isError: false
@@ -44,7 +45,7 @@ describe('MCP project adapter', () => {
     }
     expect(await callToolResult(erroring, 'addEntity', {
       sceneId: 'arena', entity: { id: 'x', name: 'X', enabled: true, components: [] }
-    })).toMatchObject({ isError: true })
+    }, parseToolArgs)).toMatchObject({ isError: true })
   })
 
   it('maps invalid tool names and arguments to InvalidParams before host execution', async () => {
@@ -53,20 +54,20 @@ describe('MCP project adapter', () => {
 
     await expect(callToolResult(host, 'removeArrayItem', {
       target: { kind: 'manifest' }, pointer: 'not-a-pointer', index: -1
-    })).rejects.toMatchObject({ code: ErrorCode.InvalidParams })
-    await expect(callToolResult(host, 'missingTool', {}))
+    }, parseToolArgs)).rejects.toMatchObject({ code: ErrorCode.InvalidParams })
+    await expect(callToolResult(host, 'missingTool', {}, parseToolArgs))
       .rejects.toMatchObject({ code: ErrorCode.InvalidParams })
     expect(executeTool).not.toHaveBeenCalled()
   })
 
   it('defaults omitted arguments to an empty object', async () => {
     const executeTool = vi.fn(fakeHost.executeTool)
-    await callToolResult({ ...fakeHost, executeTool }, 'getProject', undefined)
+    await callToolResult({ ...fakeHost, executeTool }, 'getProject', undefined, parseToolArgs)
     expect(executeTool).toHaveBeenCalledWith('getProject', {})
   })
 
   it('lists and reads all generic project resources', async () => {
-    expect(listResourcesResult().resources.map((resource) => resource.uri)).toEqual(
+    expect(listResourcesResult(Object.values(RESOURCE_URIS)).resources.map((resource) => resource.uri)).toEqual(
       Object.values(RESOURCE_URIS)
     )
     for (const uri of Object.values(RESOURCE_URIS)) {

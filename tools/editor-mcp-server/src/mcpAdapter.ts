@@ -1,10 +1,4 @@
-import {
-  RESOURCE_URIS,
-  parseToolArgs,
-  type ResourceUri,
-  type ToolHost,
-  type ToolName
-} from '@automata/contracts'
+import { RESOURCE_URIS, type McpToolHost, type ParseToolArgs, type ResourceUri } from '@automata/contracts'
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
 
 export type McpToolsResult = {
@@ -21,7 +15,7 @@ export type McpReadResult = {
   contents: { uri: string; mimeType: string; text: string }[]
 }
 
-export function listToolsResult(host: ToolHost): McpToolsResult {
+export function listToolsResult(host: McpToolHost): McpToolsResult {
   return {
     tools: host.listTools().map((definition) => ({
       name: definition.name,
@@ -32,32 +26,29 @@ export function listToolsResult(host: ToolHost): McpToolsResult {
 }
 
 export async function callToolResult(
-  host: ToolHost,
+  host: McpToolHost,
   name: string,
-  args: unknown
+  args: unknown,
+  parseArgs: ParseToolArgs
 ): Promise<McpCallResult> {
   const input = args ?? {}
   try {
-    parseToolArgs(name as ToolName, input)
+    parseArgs(name, input)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for ${name}: ${message}`)
   }
 
-  const result = await host.executeTool(name as ToolName, input)
+  const result = await host.executeTool(name, input)
   return {
     content: [{ type: 'text', text: JSON.stringify(result.content) }],
     isError: !result.ok || result.isError === true
   }
 }
 
-export function listResourcesResult(): McpResourcesResult {
+export function listResourcesResult(uris: readonly string[]): McpResourcesResult {
   return {
-    resources: Object.values(RESOURCE_URIS).map((uri) => ({
-      uri,
-      name: uri,
-      mimeType: 'application/json'
-    }))
+    resources: uris.map((uri) => ({ uri, name: uri, mimeType: 'application/json' }))
   }
 }
 
@@ -66,8 +57,8 @@ export function isProjectResourceUri(uri: string): uri is ResourceUri {
 }
 
 export async function readResourceResult(
-  host: ToolHost,
-  uri: ResourceUri
+  host: McpToolHost,
+  uri: string
 ): Promise<McpReadResult> {
   const content = await host.readResource(uri)
   return {

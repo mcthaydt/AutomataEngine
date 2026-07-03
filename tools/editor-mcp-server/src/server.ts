@@ -7,17 +7,25 @@ import {
   McpError,
   ReadResourceRequestSchema
 } from '@modelcontextprotocol/sdk/types.js'
-import type { ToolHost } from '@automata/contracts'
+import { RESOURCE_URIS, parseToolArgs, type McpToolHost, type ParseToolArgs } from '@automata/contracts'
 import {
   callToolResult,
-  isProjectResourceUri,
   listResourcesResult,
   listToolsResult,
   readResourceResult
 } from './mcpAdapter'
 
-/** Bind one isolated project host to the MCP tools/resources protocol. */
-export function createMcpServer(host: ToolHost): Server {
+export interface McpServerOptions {
+  /** Protocol-level argument validation; defaults to the project tool schemas. */
+  parseArgs?: ParseToolArgs
+  /** Resources the host serves; defaults to the project resource URIs. */
+  resourceUris?: readonly string[]
+}
+
+/** Bind one isolated host (project or workspace) to the MCP tools/resources protocol. */
+export function createMcpServer(host: McpToolHost, options: McpServerOptions = {}): Server {
+  const parseArgs = options.parseArgs ?? parseToolArgs
+  const resourceUris = options.resourceUris ?? Object.values(RESOURCE_URIS)
   const server = new Server(
     { name: 'automata-editor', version: '0.1.0' },
     { capabilities: { tools: {}, resources: {} } }
@@ -25,12 +33,12 @@ export function createMcpServer(host: ToolHost): Server {
 
   server.setRequestHandler(ListToolsRequestSchema, async () => listToolsResult(host))
   server.setRequestHandler(CallToolRequestSchema, async (req) =>
-    callToolResult(host, req.params.name, req.params.arguments)
+    callToolResult(host, req.params.name, req.params.arguments, parseArgs)
   )
-  server.setRequestHandler(ListResourcesRequestSchema, async () => listResourcesResult())
+  server.setRequestHandler(ListResourcesRequestSchema, async () => listResourcesResult(resourceUris))
   server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
     const { uri } = req.params
-    if (!isProjectResourceUri(uri)) {
+    if (!resourceUris.includes(uri)) {
       throw new McpError(ErrorCode.InvalidParams, `Resource ${uri} not found`)
     }
     return readResourceResult(host, uri)

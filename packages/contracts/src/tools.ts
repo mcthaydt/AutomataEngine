@@ -81,7 +81,7 @@ const TOOL_DESCRIPTIONS: Record<ToolName, string> = {
 }
 
 export interface ToolDef {
-  name: ToolName
+  name: string
   description: string
   schema: unknown
 }
@@ -114,6 +114,19 @@ export interface ToolHost {
   readResource(uri: ResourceUri): Promise<unknown>
 }
 
+/**
+ * Structural host shape shared by protocol adapters. Project (`ToolHost`) and
+ * workspace hosts both satisfy it, so one MCP server binding serves either.
+ */
+export interface McpToolHost {
+  listTools(): ToolDef[]
+  executeTool(name: string, args: unknown): Promise<ToolResult>
+  readResource(uri: string): Promise<unknown>
+}
+
+/** Validates protocol-level tool arguments before a host executes them. */
+export type ParseToolArgs = (name: string, args: unknown) => unknown
+
 export function toolDefs(): ToolDef[] {
   return TOOL_NAMES.map((name) => ({
     name,
@@ -122,8 +135,8 @@ export function toolDefs(): ToolDef[] {
   }))
 }
 
-export function parseToolArgs(name: ToolName, args: unknown): unknown {
-  const schema: z.ZodType | undefined = toolArgSchemas[name]
+export function parseToolArgs(name: string, args: unknown): unknown {
+  const schema: z.ZodType | undefined = (toolArgSchemas as Record<string, z.ZodType>)[name]
   if (!schema) throw new Error(`Unknown project tool "${name}"`)
   return schema.parse(args)
 }

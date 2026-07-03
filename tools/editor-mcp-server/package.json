@@ -14,6 +14,7 @@
     "@automata/contracts": "*",
     "@automata/editor": "*",
     "@automata/project": "*",
+    "@automata/scaffold": "*",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "tsx": "^4.20.0"
   }

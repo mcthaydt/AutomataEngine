@@ -7,7 +7,7 @@ import {
   writeFile as nodeWriteFile
 } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
-import { planNewGame } from './plan.ts'
+import { planNewGame, type ScaffoldPlan } from './plan.ts'
 
 export interface ScaffoldFs {
   lstat(path: string): Promise<unknown>
@@ -18,7 +18,7 @@ export interface ScaffoldFs {
   writeFile(path: string, data: string, options?: { flag?: string }): Promise<void>
 }
 
-const nodeFs: ScaffoldFs = {
+export const nodeScaffoldFs: ScaffoldFs = {
   async lstat(path) { await nodeLstat(path) },
   async mkdir(path, options) { await nodeMkdir(path, options) },
   async readFile(path, encoding) { return nodeReadFile(path, encoding) },
@@ -81,7 +81,7 @@ async function assertMissing(fs: ScaffoldFs, path: string): Promise<void> {
  * write rolls back the new game directory and nothing else.
  */
 export function createNewGameWriter(fs: ScaffoldFs) {
-  return async function writeNewGame(root: string, name: string, port?: number): Promise<void> {
+  return async function writeNewGame(root: string, name: string, port?: number): Promise<ScaffoldPlan> {
     const existingPorts = await scanDevPorts(fs, root)
     const plan = planNewGame(name, { port, existingPorts })
     const gamesRoot = resolve(root, 'games')
@@ -109,7 +109,8 @@ export function createNewGameWriter(fs: ScaffoldFs) {
       }
       throw error
     }
+    return plan
   }
 }
 
-export const writeNewGame = createNewGameWriter(nodeFs)
+export const writeNewGame = createNewGameWriter(nodeScaffoldFs)
