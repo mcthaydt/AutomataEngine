@@ -261,6 +261,10 @@ function mapZodIssues(ir: ObjectSchema, root: unknown, zodIssues: readonly ZodIs
         break
       case 'too_small':
         if (node?.kind === 'array') {
+          // zod's array .min()/.max() fire on any value with a .length (e.g.
+          // strings); the DSL emitted only array.type for wrong-typed values,
+          // so suppress bounds issues unless the value really is an array.
+          if (!Array.isArray(valueAt(root, issue.path))) break
           push({ code: 'array.minItems', message: `Expected at least ${node.minItems} item(s)`, pointer })
         } else {
           push({ code: 'number.min', message: `Must be ≥ ${node?.kind === 'number' ? node.min : ''}`.trimEnd(), pointer })
@@ -268,6 +272,7 @@ function mapZodIssues(ir: ObjectSchema, root: unknown, zodIssues: readonly ZodIs
         break
       case 'too_big':
         if (node?.kind === 'array') {
+          if (!Array.isArray(valueAt(root, issue.path))) break
           push({ code: 'array.maxItems', message: `Expected at most ${node.maxItems} item(s)`, pointer })
         } else {
           push({ code: 'number.max', message: `Must be ≤ ${node?.kind === 'number' ? node.max : ''}`.trimEnd(), pointer })

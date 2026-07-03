@@ -101,6 +101,11 @@ describe('validateDataSchema parity with the DSL validator', () => {
     })[0]).toMatchObject({ code: 'array.maxItems', pointer: '/rows' })
     expect(validate(table, { rows: [{ speed: -1, mode: 'chase', tint: '#fff' }] })[0])
       .toMatchObject({ pointer: '/rows/0/speed', code: 'number.min' })
-    expect(validate(table, { rows: 'not-array' })[0]).toMatchObject({ code: 'array.type', pointer: '/rows' })
+    // Pin the FULL list: the DSL emitted only array.type for a wrong-typed
+    // value; zod's array .min()/.max() also fire on anything with a .length
+    // (e.g. strings), and those spurious bounds issues must be suppressed.
+    expect(validate(table, { rows: 'not-array' })).toEqual([
+      expect.objectContaining({ code: 'array.type', pointer: '/rows' })
+    ])
   })
 })
