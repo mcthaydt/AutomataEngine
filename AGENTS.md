@@ -62,9 +62,6 @@ must not import `zod` directly; lint enforces this). Rules:
 npm run ci
 npm run coverage
 npm run dev -w monkey-ball
-npm run dev:last-lightkeeper
-npm run build -w last-lightkeeper
-npm run e2e:last-lightkeeper
 npm run new-game <name>
 npm run verify:new-game
 ```

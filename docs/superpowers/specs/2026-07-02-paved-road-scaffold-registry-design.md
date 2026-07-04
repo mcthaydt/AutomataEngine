@@ -17,9 +17,8 @@ that goal:
 - Root wiring (`package.json` scripts, `playwright.config.ts` webServer) is
   done by string surgery from `tools/scaffold/src/rootWiring.ts`.
 
-The cost of this road is measurable: the third game, LAST LIGHTKEEPER, shipped
-entirely outside the project/editor/MCP system. Agents amplify whatever the
-road is; this effort paves it.
+Each manually wired game increases divergence risk. Agents amplify whatever
+the road is; this effort paves it.
 
 ## Goals
 
@@ -38,8 +37,8 @@ road is; this effort paves it.
 ## Non-goals
 
 - No schema-language change (zod unification is phase P2).
-- No project-format migrations (P3), game-kit extraction (P4), MCP session
-  tools like `openProject` (P5), or LAST LIGHTKEEPER retrofit (P7).
+- No project-format migrations (P3), game-kit extraction (P4), or MCP session
+  tools like `openProject` (P5).
 - `createGame` takes a name only; description-driven generation is the agent's
   job on top of the skeleton.
 - No in-server `npm install`; the tool result tells the client what to run.

@@ -16,7 +16,6 @@ evaluation adapters; shared editor packages contain no game-specific code.
 | `packages/game-kit` | `@automata/game-kit` | Shared browser game-shell helpers |
 | `games/monkey-ball` | `monkey-ball` | Physics platform game and project registration |
 | `games/pulsebreak` | `pulsebreak` | Deterministic neon arena roguelite and project registration |
-| `games/last-lightkeeper` | `last-lightkeeper` | Deterministic lighthouse action-management game |
 | `tools/level-editor` | `level-editor` | Multi-game project editor app |
 | `tools/editor-mcp-server` | `editor-mcp-server` | Project + workspace MCP server |
 | `tools/scaffold` | `@automata/scaffold` | `new-game` generator for registered games |
@@ -26,7 +25,6 @@ evaluation adapters; shared editor packages contain no game-specific code.
 - `npm run dev:editor` — open the project chooser at `http://127.0.0.1:5175`
 - `npm run dev:monkey-ball` — run Monkey Ball at `http://127.0.0.1:5174`
 - `npm run dev:pulsebreak` — run PULSEBREAK at `http://127.0.0.1:5176`
-- `npm run dev:last-lightkeeper` — run LAST LIGHTKEEPER at `http://127.0.0.1:5177`
 - `npm run new-game <name> [port]` — scaffold a registered game under `games/<name>`
 - `npm run ci` — lint, typecheck, and all unit tests
 - `npm run coverage` — repository-wide 90% line and branch gate

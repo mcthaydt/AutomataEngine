@@ -17,11 +17,8 @@
     "dev:monkey-ball": "npm run dev -w monkey-ball",
     "dev:editor": "npm run dev -w level-editor",
     "dev:pulsebreak": "npm run dev -w pulsebreak",
-    "dev:last-lightkeeper": "npm run dev -w last-lightkeeper",
     "new-game": "node tools/scaffold/src/main.ts",
     "e2e": "playwright test",
-    "e2e:last-lightkeeper": "PLAYWRIGHT_ONLY=last-lightkeeper playwright test e2e/last-lightkeeper.spec.ts",
-    "preview:last-lightkeeper": "vite preview games/last-lightkeeper --host 127.0.0.1 --port 4177 --strictPort",
     "build": "npm run build --workspaces --if-present",
     "verify:new-game": "node tools/scaffold/scripts/verify-new-game.ts"
   },

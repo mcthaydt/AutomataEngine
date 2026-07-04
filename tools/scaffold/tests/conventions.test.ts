@@ -29,7 +29,7 @@ describe('workspace conventions', () => {
     const ports = manifests
       .filter((manifest) => manifest.automata?.devPort !== undefined)
       .map((manifest) => manifest.automata!.devPort!)
-    expect(ports.length).toBeGreaterThanOrEqual(4)
+    expect(ports.length).toBeGreaterThanOrEqual(3)
     expect(new Set(ports).size).toBe(ports.length)
     for (const port of ports) {
       expect(Number.isInteger(port)).toBe(true)

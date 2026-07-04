@@ -28,11 +28,10 @@ describe('project catalog', () => {
     expect(source).not.toMatch(/from '(monkey-ball|pulsebreak)\/editor'/)
   })
 
-  it('skips games without a project editor entry and keeps previews', async () => {
+  it('keeps previews for discovered games', async () => {
     const catalog = await createProjectCatalog({
       readText: (path) => readFile(resolve(repoRoot, 'games/monkey-ball/public', path.replace(/^\//, '')), 'utf8')
     })
-    expect(catalog.get('last-lightkeeper')).toBeUndefined()
     for (const registration of catalog.list()) {
       expect(registration.createPreview).toBeDefined()
     }

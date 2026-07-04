@@ -10,7 +10,6 @@ describe('project catalog discovery', () => {
   it('discovers the games exposing the ./project export convention', async () => {
     const ids = await discoverGames()
     expect(ids).toEqual(expect.arrayContaining(['monkey-ball', 'pulsebreak']))
-    expect(ids).not.toContain('last-lightkeeper')
     expect(new Set(ids).size).toBe(ids.length)
   })
 

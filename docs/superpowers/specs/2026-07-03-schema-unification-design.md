@@ -48,8 +48,8 @@ description into the full workflow.
 ## Non-goals
 
 - No project-file migrations (P3) — `formatVersion` stays `z.literal(1)`.
-- No game-kit extraction (P4), no `openProject` session tools (P5), no
-  llms.txt/API digest (P6), no Last Lightkeeper retrofit (P7).
+- No game-kit extraction (P4), no `openProject` session tools (P5), and no
+  llms.txt/API digest (P6).
 - No new editor controls or property kinds; the closed nine-kind language is
   preserved, only its authoring representation changes.
 - `packages/editor-agent` only needs to keep compiling; P5 decides whether it
