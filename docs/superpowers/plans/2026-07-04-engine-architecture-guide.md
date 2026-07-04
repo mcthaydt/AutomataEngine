@@ -21,7 +21,7 @@
 - Reference: `games/*/package.json`
 - Reference: `tools/*/package.json`
 
-- [ ] **Step 1: Add the audience contract and concept map**
+- [x] **Step 1: Add the audience contract and concept map**
 
 Create `docs/engine-architecture.md` with this opening structure:
 
@@ -63,7 +63,7 @@ approximate:
 | Play button / PIE | registration `preview.create(...)` | Each game owns compilation and preview wiring; the editor stays generic. |
 | Automation test / commandlet | evaluation adapter | Evaluations run deterministically without browser rendering. |
 
-- [ ] **Step 2: Add the whole-system and dependency diagrams**
+- [x] **Step 2: Add the whole-system and dependency diagrams**
 
 Add a **Whole-system map** section using this diagram shape:
 
@@ -124,7 +124,7 @@ State that arrows mean "may depend on," not runtime event flow. Explain the
 persisted-model leaf, third-party adapter boundary, optional AI boundary, and
 generic-editor rule. Link `eslint.config.js` as the executable policy.
 
-- [ ] **Step 3: Add the runtime architecture section**
+- [x] **Step 3: Add the runtime architecture section**
 
 Use this Mermaid flowchart:
 
@@ -155,7 +155,7 @@ the entry points `packages/engine/src/loop/gameLoop.ts`,
 Include the boundary warning: games consume engine ports and types; they do not
 import Three, Rapier, Miniplex, zod, YAML, or TOML directly.
 
-- [ ] **Step 4: Add the authoring and editor sections**
+- [x] **Step 4: Add the authoring and editor sections**
 
 Use this authoring flow:
 
@@ -206,7 +206,7 @@ File System Access with bundle fallback, game-owned preview adapters, and why
 the editor cannot contain game-specific branches. Link the editor store, host,
 UI index, storage port, and catalog.
 
-- [ ] **Step 5: Add the AI/MCP and paved-road sections**
+- [x] **Step 5: Add the AI/MCP and paved-road sections**
 
 Use this MCP command sequence:
 
@@ -255,7 +255,7 @@ Explain convention discovery, `automata.devPort`, generated project parity,
 and `verify:new-game`. Clarify that description-to-finished-game orchestration
 is the north star, while M1 currently provides the reliable skeleton and tools.
 
-- [ ] **Step 6: Add repository navigation, boundaries, and roadmap**
+- [x] **Step 6: Add repository navigation, boundaries, and roadmap**
 
 Add a task-oriented repository map with at least these rows:
 
@@ -281,34 +281,35 @@ Add a **Roadmap, not current behavior** section containing only:
 Do not list Last Lightkeeper as current or planned. End with a concise
 maintenance trigger list matching the design spec.
 
-- [ ] **Step 7: Run structural documentation checks**
+- [x] **Step 7: Run structural documentation checks**
 
 Run:
 
 ```bash
-test "$(rg -c '^```mermaid$' docs/engine-architecture.md)" -eq 7
-test "$(rg -c '^```$' docs/engine-architecture.md)" -eq 7
+node --input-type=module --eval '
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+const doc = "docs/engine-architecture.md";
+const source = readFileSync(doc, "utf8");
+const mermaid = (source.match(/^```mermaid$/gm) ?? []).length;
+const fences = (source.match(/^```(?:mermaid|text)?$/gm) ?? []).length;
+if (mermaid !== 7) throw new Error(`expected 7 Mermaid blocks, got ${mermaid}`);
+if (fences !== 16) throw new Error(`expected 8 paired code blocks, got ${fences} fences`);
+const links = [...source.matchAll(/\[[^\]]+\]\((?!https?:|#)([^)]+)\)/g)].map((m) => m[1]);
+const missing = links.filter((path) => !existsSync(resolve(dirname(doc), path)));
+if (missing.length) throw new Error(`missing links: ${missing.join(", ")}`);
+console.log("Mermaid blocks OK:", mermaid);
+console.log("local links OK:", links.length);
+'
 rg -n '^## ' docs/engine-architecture.md
 rg -n 'Last Lightkeeper|ObjectSchema|TBD|TODO|FIXME' docs/engine-architecture.md
 ```
 
-Expected: both `test` commands exit 0; the heading scan shows all nine layered
-sections; the stale-term/placeholder scan produces no output and exits 1.
-
-Run a local-link check:
-
-```bash
-node --input-type=module --eval "
-import { readFileSync, existsSync } from 'node:fs';
-const text = readFileSync('docs/engine-architecture.md', 'utf8');
-const links = [...text.matchAll(/\[[^\]]+\]\((?!https?:|#)([^)]+)\)/g)].map(m => m[1]);
-const missing = links.filter(p => !existsSync(p));
-if (missing.length) { console.error(missing.join('\n')); process.exit(1); }
-console.log('local links OK:', links.length);
-"
-```
-
-Expected: `local links OK:` followed by a positive count.
+Expected: the Node check reports seven Mermaid blocks and a positive local-link
+count; the heading scan shows all nine layered sections; the stale-term and
+placeholder scan produces no output and exits 1. A Mermaid renderer was not
+installed in the repository, so the diagrams received structural verification
+against GitHub-compatible syntax rather than a local visual render.
 
 ### Task 2: Make the guide discoverable and verify repository health
 
@@ -316,7 +317,7 @@ Expected: `local links OK:` followed by a positive count.
 - Modify: `README.md`
 - Modify: `docs/superpowers/plans/2026-07-04-engine-architecture-guide.md`
 
-- [ ] **Step 1: Link the guide from the root README**
+- [x] **Step 1: Link the guide from the root README**
 
 Immediately after the opening paragraph in `README.md`, add:
 
@@ -326,7 +327,7 @@ for a Godot/Unity/UE5-oriented map of the runtime, project editor, and AI/MCP
 layers.
 ```
 
-- [ ] **Step 2: Verify formatting and the normal repository gate**
+- [x] **Step 2: Verify formatting and the normal repository gate**
 
 Run:
 
@@ -338,7 +339,7 @@ npm run ci
 Expected: `git diff --check` produces no output; lint and every workspace
 typecheck pass; all Vitest files and tests pass.
 
-- [ ] **Step 3: Review current-versus-roadmap accuracy**
+- [x] **Step 3: Review current-versus-roadmap accuracy**
 
 Run:
 
@@ -351,7 +352,7 @@ Expected: migration and MCP session claims appear only in the explicitly
 labeled roadmap/current-limitations context; Last Lightkeeper and ObjectSchema
 do not appear; the final diff contains only the new guide and README link.
 
-- [ ] **Step 4: Mark the plan complete and commit**
+- [x] **Step 4: Mark the plan complete and commit**
 
 Mark every completed checkbox in this plan, then run:
 
@@ -362,3 +363,15 @@ git commit -m "docs: add engine architecture guide"
 
 Expected: one documentation commit containing the guide, its README link, and
 the completed implementation checklist.
+
+## Deviations
+
+- The live aggregate dependency graph includes game-to-editor adapter imports,
+  direct tool-to-engine usage, and the MCP server's scaffold dependency. The
+  final diagram includes those real arrows instead of the simplified draft.
+- MCP command application enforces command-level structure, schemas, and
+  cardinality; whole-project game validation is a separate tool and evaluation
+  gate. The final sequence diagram makes that distinction explicit.
+- The guide includes one non-Mermaid project-layout block, so structural
+  verification counts eight paired code blocks rather than assuming every code
+  block is Mermaid. Local links resolve relative to the guide's directory.

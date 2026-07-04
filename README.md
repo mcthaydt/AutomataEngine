@@ -4,6 +4,10 @@ Web-first game engine with two shipped games and one generic project editor.
 Games register authored component/resource schemas, compilation, preview, and
 evaluation adapters; shared editor packages contain no game-specific code.
 
+New to the codebase? Read the [engine architecture guide](docs/engine-architecture.md)
+for a Godot/Unity/UE5-oriented map of the runtime, project editor, and AI/MCP
+layers.
+
 ## Workspace
 
 | Path | Package | Purpose |
