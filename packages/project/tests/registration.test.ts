@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { color, defineGameProject } from '../src'
-import type { ObjectSchema, ProjectSnapshot } from '../src'
+import type { ProjectSnapshot } from '../src'
 
-const stats = {
-  kind: 'object',
-  fields: [
-    { key: 'speed', label: 'Speed', kind: 'number', required: true, min: 0, max: 20, step: 0.5 },
-    { key: 'mode', label: 'Mode', kind: 'enum', required: true, values: ['chase', 'kite'] },
-    { key: 'tint', label: 'Tint', kind: 'color', required: true }
-  ]
-} as const satisfies ObjectSchema
+const stats = z.strictObject({
+  speed: z.number().min(0).max(20).meta({ label: 'Speed', step: 0.5 }),
+  mode: z.enum(['chase', 'kite']).meta({ label: 'Mode' }),
+  tint: color({ label: 'Tint' })
+})
 
 const goodComponent = {
   typeId: 'fake.stats', label: 'Stats', schema: stats,
@@ -63,22 +60,11 @@ describe('defineGameProject', () => {
     expect(def.components.map((c) => c.typeId)).toEqual(['fake.stats'])
     expect(def.compile(makeTemplate())).toEqual({ id: 'fake' })
   })
-})
-
-describe('defineGameProject with zod schemas', () => {
-  const zodStats = z.strictObject({
-    speed: z.number().min(0).max(20).meta({ label: 'Speed', step: 0.5 }),
-    mode: z.enum(['chase', 'kite']).meta({ label: 'Mode' }),
-    tint: color({ label: 'Tint' })
-  })
 
   it('derives the IR, keeps the zod source, and emits a JSON schema', () => {
     const def = defineGameProject({
       gameId: 'fake', label: 'Fake', createTemplate: makeTemplate,
-      components: [{
-        typeId: 'fake.stats', label: 'Stats', schema: zodStats,
-        defaultData: { speed: 1, mode: 'chase', tint: '#fff' }, cardinality: { min: 0, max: 1 }
-      }],
+      components: [goodComponent],
       resources: [], validate: () => [], compile: () => ({})
     })
     const spec = def.components[0]!
@@ -90,30 +76,7 @@ describe('defineGameProject with zod schemas', () => {
         expect.objectContaining({ kind: 'color', key: 'tint' })
       ]
     })
-    expect(spec.dataSchema).toBe(zodStats)
+    expect(spec.dataSchema).toBe(stats)
     expect(spec.jsonSchema).toMatchObject({ type: 'object', additionalProperties: false })
-  })
-
-  it('rejects zod-authored defaults that fail their own schema', () => {
-    expect(() => defineGameProject({
-      gameId: 'fake', label: 'Fake', createTemplate: makeTemplate,
-      components: [{
-        typeId: 'fake.stats', label: 'Stats', schema: zodStats,
-        defaultData: { speed: -1, mode: 'chase', tint: '#fff' }, cardinality: { min: 0, max: 1 }
-      }],
-      resources: [], validate: () => [], compile: () => ({})
-    })).toThrow(/number\.min/)
-  })
-
-  it('accepts mixed DSL and zod specs during the migration window', () => {
-    const def = defineGameProject({
-      gameId: 'fake', label: 'Fake', createTemplate: makeTemplate,
-      components: [goodComponent, {
-        typeId: 'fake.zod', label: 'Zod', schema: zodStats,
-        defaultData: { speed: 1, mode: 'kite', tint: '#000' }, cardinality: { min: 0, max: 1 }
-      }],
-      resources: [], validate: () => [], compile: () => ({})
-    })
-    expect(def.components.map((component) => component.dataSchema !== undefined)).toEqual([false, true])
   })
 })

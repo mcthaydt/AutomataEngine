@@ -1,6 +1,6 @@
 import { createNullRenderer, type PhysicsPort } from '@automata/engine'
 import { createProjectEditor, type EditorProjectRegistration, type ProjectEditorCore } from '@automata/editor'
-import { defineGameProject, type ProjectSnapshot } from '@automata/project'
+import { defineGameProject, z, type ProjectSnapshot } from '@automata/project'
 
 /** A small third-game project used by agent tests without game-specific behavior. */
 export function fakeSnapshot(): ProjectSnapshot {
@@ -53,20 +53,14 @@ export const fakeProjectDefinition = defineGameProject<FakeCompiledProject>({
   components: [{
     typeId: 'pulsebreak.spawn-zone',
     label: 'Spawn Zone',
-    schema: {
-      kind: 'object',
-      fields: [{ key: 'weight', label: 'Weight', kind: 'number', required: true, min: 0 }]
-    },
+    schema: z.strictObject({ weight: z.number().min(0).meta({ label: 'Weight' }) }),
     defaultData: { weight: 1 },
     cardinality: { min: 0, max: 1 }
   }],
   resources: [{
     typeId: 'pulsebreak.wave-set',
     label: 'Wave Set',
-    schema: {
-      kind: 'object',
-      fields: [{ key: 'count', label: 'Count', kind: 'number', required: true, min: 0 }]
-    },
+    schema: z.strictObject({ count: z.number().min(0).meta({ label: 'Count' }) }),
     defaultData: { count: 1 },
     singleton: true
   }],

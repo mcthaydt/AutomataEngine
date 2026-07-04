@@ -1,35 +1,37 @@
-import type { GameProjectDefinition, ProjectSnapshot } from '../../src'
+import { defineGameProject, reference, z } from '../../src'
+import type { GameProjectDefinitionInput, ProjectSnapshot } from '../../src'
 
 /**
  * Shared fixture for validation/bundle/files tests: a minimal but
  * fully-valid two-entity project plus its registration. Tests clone
- * `sampleSnapshot()` and mutate copies to exercise negative cases.
+ * `sampleSnapshot()` and mutate copies to exercise negative cases;
+ * ad-hoc variants spread `sampleDefinitionInput` back through
+ * `defineGameProject`.
  */
 
-export const sampleDefinition: GameProjectDefinition<{ ok: true }> = {
+export const sampleDefinitionInput: GameProjectDefinitionInput<{ ok: true }> = {
   gameId: 'fake',
   label: 'Fake',
   components: [{
     typeId: 'fake.spawn', label: 'Spawn',
-    schema: {
-      kind: 'object',
-      fields: [
-        { key: 'team', label: 'Team', kind: 'enum', required: true, values: ['red', 'blue'] },
-        { key: 'tuning', label: 'Tuning', kind: 'reference', required: false, target: 'resource', typeIds: ['fake.tuning'] }
-      ]
-    },
+    schema: z.strictObject({
+      team: z.enum(['red', 'blue']).meta({ label: 'Team' }),
+      tuning: reference({ target: 'resource', typeIds: ['fake.tuning'], label: 'Tuning' }).optional()
+    }),
     defaultData: { team: 'red', tuning: '' },
     cardinality: { min: 0, max: 1 }
   }],
   resources: [{
     typeId: 'fake.tuning', label: 'Tuning',
-    schema: { kind: 'object', fields: [{ key: 'speed', label: 'Speed', kind: 'number', required: true, min: 0 }] },
+    schema: z.strictObject({ speed: z.number().min(0).meta({ label: 'Speed' }) }),
     defaultData: { speed: 4 }, singleton: true
   }],
   createTemplate: () => sampleSnapshot(),
   validate: () => [],
   compile: () => ({ ok: true })
 }
+
+export const sampleDefinition = defineGameProject(sampleDefinitionInput)
 
 export function sampleSnapshot(): ProjectSnapshot {
   return {

@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { CORE_COMPONENTS, type ComponentTypeRegistration, type SceneDocument } from '@automata/project'
+import { CORE_COMPONENTS, normalizeComponentType, z, type ComponentTypeRegistration, type SceneDocument } from '@automata/project'
 import { buildProjectSpatialItems } from '../../src/project/spatial'
 
-const tag: ComponentTypeRegistration = {
+const tag: ComponentTypeRegistration = normalizeComponentType({
   typeId: 'fake.tag', label: 'Tag',
-  schema: { kind: 'object', fields: [] }, defaultData: {}, cardinality: { min: 0, max: 1 }
-}
-const spawn: ComponentTypeRegistration = {
+  schema: z.strictObject({}), defaultData: {}, cardinality: { min: 0, max: 1 }
+})
+const spawn: ComponentTypeRegistration = normalizeComponentType({
   typeId: 'fake.spawn', label: 'Spawn',
-  schema: { kind: 'object', fields: [] }, defaultData: {}, cardinality: { min: 0, max: 1 },
+  schema: z.strictObject({}), defaultData: {}, cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', size: 0.5, color: '#ffd166' }
-}
-const area: ComponentTypeRegistration = {
+})
+const area: ComponentTypeRegistration = normalizeComponentType({
   typeId: 'fake.area', label: 'Area',
-  schema: { kind: 'object', fields: [] }, defaultData: {}, cardinality: { min: 0, max: 1 },
+  schema: z.strictObject({}), defaultData: {}, cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'zone' }
-}
+})
 const componentTypes = [...CORE_COMPONENTS, tag, spawn, area]
 
 const transform = (position: { x: number; y: number; z: number }) => ({

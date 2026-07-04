@@ -1,4 +1,4 @@
-import { defineGameProject, type ProjectSnapshot } from '@automata/project'
+import { color, defineGameProject, tableOf, z, type ProjectSnapshot } from '@automata/project'
 import type { EditorProjectRegistration, ProjectPlayHandle } from '../../src/project/registration'
 
 /**
@@ -47,22 +47,19 @@ export const fakeProjectDefinition = defineGameProject<FakeCompiled>({
   createTemplate: fakeSnapshot,
   components: [{
     typeId: 'fake.spawn', label: 'Spawn',
-    schema: { kind: 'object', fields: [{ key: 'team', label: 'Team', kind: 'enum', required: true, values: ['red', 'blue'] }] },
+    schema: z.strictObject({ team: z.enum(['red', 'blue']).meta({ label: 'Team' }) }),
     defaultData: { team: 'red' },
     cardinality: { min: 0, max: 1 },
     gizmo: { kind: 'point', color: '#ffd166' }
   }],
   resources: [{
     typeId: 'fake.tuning', label: 'Tuning',
-    schema: {
-      kind: 'object',
-      fields: [
-        { key: 'speed', label: 'Speed', kind: 'number', required: true, min: 0 },
-        { key: 'mode', label: 'Mode', kind: 'enum', required: true, values: ['chase', 'kite'] },
-        { key: 'tint', label: 'Tint', kind: 'color', required: true },
-        { key: 'waves', label: 'Waves', kind: 'array', presentation: 'table', item: { kind: 'object', fields: [{ key: 'count', label: 'Count', kind: 'number', required: true, min: 0 }] } }
-      ]
-    },
+    schema: z.strictObject({
+      speed: z.number().min(0).meta({ label: 'Speed' }),
+      mode: z.enum(['chase', 'kite']).meta({ label: 'Mode' }),
+      tint: color({ label: 'Tint' }),
+      waves: tableOf(z.strictObject({ count: z.number().min(0).meta({ label: 'Count' }) }), { label: 'Waves' }).optional()
+    }),
     defaultData: { speed: 4, mode: 'chase', tint: '#ffffff', waves: [] },
     singleton: true
   }],

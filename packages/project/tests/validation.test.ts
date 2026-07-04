@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { validateProject } from '../src'
+import { defineGameProject, reference, validateProject, z } from '../src'
 import type { GameProjectDefinition } from '../src'
-import { sampleDefinition, sampleSnapshot } from './fixtures/sampleProject'
+import { sampleDefinition, sampleDefinitionInput, sampleSnapshot } from './fixtures/sampleProject'
 
 const codes = (issues: ReadonlyArray<{ code: string }>) => issues.map((issue) => issue.code)
 
@@ -111,38 +111,36 @@ describe('project validation', () => {
     wrongType.resources.other = { formatVersion: 1, id: 'other', typeId: 'fake.other', data: {} }
     wrongType.manifest.resources.push({ id: 'other', typeId: 'fake.other', path: 'resources/other.resource.json' })
     ;(wrongType.scenes.main!.entities[1]!.components[0]!.data as { tuning: string }).tuning = 'other'
-    const definition: GameProjectDefinition<{ ok: true }> = {
-      ...sampleDefinition,
+    const definition = defineGameProject({
+      ...sampleDefinitionInput,
       resources: [
-        ...sampleDefinition.resources,
-        { typeId: 'fake.other', label: 'Other', schema: { kind: 'object', fields: [] }, defaultData: {} }
+        ...sampleDefinitionInput.resources,
+        { typeId: 'fake.other', label: 'Other', schema: z.strictObject({}), defaultData: {} }
       ]
-    }
+    })
     expect(codes(validateProject(definition, wrongType))).toContain('reference.type')
   })
 
   it('resolves entity references in components and resources', () => {
-    const definition: GameProjectDefinition<{ ok: true }> = {
-      ...sampleDefinition,
+    const definition = defineGameProject({
+      ...sampleDefinitionInput,
       components: [{
-        ...sampleDefinition.components[0]!,
-        schema: {
-          kind: 'object',
-          fields: [
-            ...sampleDefinition.components[0]!.schema.fields,
-            { key: 'target', label: 'Target', kind: 'reference', required: false, target: 'entity' }
-          ]
-        }
+        ...sampleDefinitionInput.components[0]!,
+        schema: z.strictObject({
+          team: z.enum(['red', 'blue']).meta({ label: 'Team' }),
+          tuning: reference({ target: 'resource', typeIds: ['fake.tuning'], label: 'Tuning' }).optional(),
+          target: reference({ target: 'entity', label: 'Target' }).optional()
+        })
       }],
       resources: [
-        ...sampleDefinition.resources,
+        ...sampleDefinitionInput.resources,
         {
           typeId: 'fake.links', label: 'Links',
-          schema: { kind: 'object', fields: [{ key: 'target', kind: 'reference', target: 'entity' }] },
+          schema: z.strictObject({ target: reference({ target: 'entity' }).optional() }),
           defaultData: { target: '' }
         }
       ]
-    }
+    })
     const valid = sampleSnapshot()
     ;(valid.scenes.main!.entities[1]!.components[0]!.data as Record<string, unknown>).target = 'root'
     valid.resources.links = { formatVersion: 1, id: 'links', typeId: 'fake.links', data: { target: 'spawn' } }

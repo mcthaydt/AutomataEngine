@@ -1,29 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { applyProjectCommand, applyProjectCommands, ProjectCommandError, projectCommandSchema } from '../src'
+import { applyProjectCommand, applyProjectCommands, defineGameProject, listOf, ProjectCommandError, projectCommandSchema, z } from '../src'
 import type { GameProjectDefinition, ProjectSnapshot } from '../src'
 
-const definition: GameProjectDefinition<{ snapshot: ProjectSnapshot }> = {
+const definition = defineGameProject<{ snapshot: ProjectSnapshot }>({
   gameId: 'fake',
   label: 'Fake',
   components: [{
     typeId: 'fake.spawn', label: 'Spawn',
-    schema: { kind: 'object', fields: [{ key: 'team', label: 'Team', kind: 'enum', required: true, values: ['red', 'blue'] }] },
+    schema: z.strictObject({ team: z.enum(['red', 'blue']).meta({ label: 'Team' }) }),
     defaultData: { team: 'red' },
     cardinality: { min: 0, max: 1 }
   }],
   resources: [{
     typeId: 'fake.tuning', label: 'Tuning',
-    schema: { kind: 'object', fields: [{ key: 'speed', label: 'Speed', kind: 'number', required: true, min: 0 }] },
+    schema: z.strictObject({ speed: z.number().min(0).meta({ label: 'Speed' }) }),
     defaultData: { speed: 4 }, singleton: true
   }, {
     typeId: 'fake.list', label: 'List',
-    schema: { kind: 'object', fields: [{ key: 'items', label: 'Items', kind: 'array', presentation: 'list', item: { kind: 'string' } }] },
+    schema: z.strictObject({ items: listOf(z.string(), { label: 'Items' }).optional() }),
     defaultData: { items: [] }
   }],
   createTemplate: () => baseSnapshot(),
   validate: () => [],
   compile: (snapshot) => ({ snapshot })
-}
+})
 
 function baseSnapshot(): ProjectSnapshot {
   return {
