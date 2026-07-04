@@ -56,7 +56,7 @@ These are load-bearing for Tasks 1–3; they were verified empirically, do not r
     `listOf(item: z.ZodType, opts?: { minItems?: number; maxItems?: number } & ProjectFieldMeta)`,
     `tableOf(item: z.ZodType, opts?: { minItems?: number; maxItems?: number } & ProjectFieldMeta)` — all returning zod schemas with `.meta({ ...fieldMeta, automata: {...} })` attached.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/project/tests/authoring.test.ts`:
 
@@ -114,12 +114,12 @@ describe('authoring helpers', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project project tests/authoring.test.ts`
 Expected: FAIL — `'../src'` has no export named `vec3`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `packages/project/src/authoring.ts`:
 
@@ -216,12 +216,12 @@ Add to `packages/project/src/index.ts` (after the `./schema` export):
 export * from './authoring'
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run --project project tests/authoring.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Lint, typecheck, commit**
+- [x] **Step 5: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -244,7 +244,7 @@ git commit -m "feat(project): zod authoring helpers for editor schema kinds"
   - `class SchemaDeriveError extends Error { readonly path: string }`
   - `deriveObjectSchema(dataSchema: ProjectDataSchema): ObjectSchema`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/project/tests/derive.test.ts`:
 
@@ -315,12 +315,12 @@ describe('deriveObjectSchema', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project project tests/derive.test.ts`
 Expected: FAIL — no export named `deriveObjectSchema`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `packages/project/src/derive.ts` (the ONLY module allowed to introspect zod):
 
@@ -452,12 +452,12 @@ Add to `packages/project/src/index.ts`:
 export * from './derive'
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run --project project tests/derive.test.ts`
 Expected: PASS. (If `.def.catchall` typing fights the compiler, the casts shown above are the sanctioned escape hatch — they are already the loosest allowed.)
 
-- [ ] **Step 5: Lint, typecheck, commit**
+- [x] **Step 5: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -477,7 +477,7 @@ git commit -m "feat(project): derive the closed editor IR from zod schemas"
 - Consumes: Task 2 IR shapes; `PropertyIssue` from `./schema`.
 - Produces (used by Task 4): `validateDataSchema(dataSchema: ProjectDataSchema, ir: ObjectSchema, value: unknown): PropertyIssue[]` — same codes, messages, and RFC 6901 pointers as the DSL `validateProperty`.
 
-- [ ] **Step 1: Write the failing parity test**
+- [x] **Step 1: Write the failing parity test**
 
 `packages/project/tests/validateData.test.ts` — these cases are ports of `tests/schema.test.ts`, re-authored in zod. The expected codes/pointers are copied from the DSL tests verbatim:
 
@@ -590,12 +590,12 @@ describe('validateDataSchema parity with the DSL validator', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project project tests/validateData.test.ts`
 Expected: FAIL — no export named `validateDataSchema`.
 
-- [ ] **Step 3: Implement the mapper in `derive.ts`**
+- [x] **Step 3: Implement the mapper in `derive.ts`**
 
 Append to `packages/project/src/derive.ts`:
 
@@ -763,12 +763,12 @@ function emptyRequiredReferences(node: PropertySchema, value: unknown, pointer: 
 
 Note: zod reports missing-vs-wrong-type identically (`invalid_type`), so the mapper inspects the input value to emit `required` exactly where the DSL did. The vec3 collapse handles issues zod raises *inside* the `{x,y,z}` object.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run --project project tests/validateData.test.ts`
 Expected: PASS (10 tests). Also run the full package to confirm nothing regressed: `npx vitest run --project project`.
 
-- [ ] **Step 5: Lint, typecheck, commit**
+- [x] **Step 5: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -796,7 +796,7 @@ git commit -m "feat(project): zod validation with DSL-parity issue codes and poi
   - `normalizeComponentType(input: ComponentTypeInput): ComponentTypeRegistration`, `normalizeResourceType(...)`.
   - `validateSpecData(spec: { schema: ObjectSchema; dataSchema?: ProjectDataSchema }, value: unknown): PropertyIssue[]` — zod path when `dataSchema` exists, DSL walker otherwise.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/project/tests/registration.test.ts`:
 
@@ -858,12 +858,12 @@ describe('defineGameProject with zod schemas', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project project tests/registration.test.ts`
 Expected: FAIL — zod schema not assignable / `dataSchema` undefined behavior missing.
 
-- [ ] **Step 3: Implement the adapter**
+- [x] **Step 3: Implement the adapter**
 
 In `packages/project/src/registration.ts`:
 
@@ -997,12 +997,12 @@ function assertSchemaData(
      Its two callers in `resolveTarget` pass `registration` instead of `registration?.schema`. `assertComponentData`, `assertResourceData`, and `assertEntityComponents` replace `validateProperty(registration.schema, …)` with `validateSpecData(registration, …)`. Update imports (`validateSpecData`, `ComponentTypeRegistration`, `ResourceTypeRegistration` from `./registration`; drop `validateProperty` and the now-unused `ObjectSchema` type import).
    - `packages/editor/src/project/registration.ts` — the prefab check (line ~83) becomes `const issues = validateSpecData(componentType, component.data)`; import `validateSpecData` from `@automata/project` (replacing `validateProperty` in that import list).
 
-- [ ] **Step 4: Run tests to verify everything passes**
+- [x] **Step 4: Run tests to verify everything passes**
 
 Run: `npx vitest run --project project && npx vitest run --project editor`
 Expected: PASS — all existing DSL-based tests plus the three new zod cases.
 
-- [ ] **Step 5: Lint, typecheck, commit**
+- [x] **Step 5: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1021,7 +1021,7 @@ git commit -m "feat(project): registration accepts zod schemas alongside the DSL
 - Consumes: Task 1 helpers, Task 4 `normalizeComponentType`.
 - Produces: `CORE_COMPONENTS` entries all carry `dataSchema`/`jsonSchema`; IR/labels/bounds identical to today (existing validation/edit/editor tests prove it).
 
-- [ ] **Step 1: Rewrite the six core component schemas**
+- [x] **Step 1: Rewrite the six core component schemas**
 
 Replace the DSL literals in `packages/project/src/core.ts`. New imports:
 
@@ -1107,12 +1107,12 @@ const camera: ComponentTypeRegistration = normalizeComponentType({
 })
 ```
 
-- [ ] **Step 2: Run the affected suites**
+- [x] **Step 2: Run the affected suites**
 
 Run: `npx vitest run --project project && npx vitest run --project editor`
 Expected: PASS — core behavior is pinned by the existing validation/edit/editor tests.
 
-- [ ] **Step 3: Lint, typecheck, commit**
+- [x] **Step 3: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1132,7 +1132,7 @@ git commit -m "feat(project): author core components in zod"
 - Consumes: Task 1 helpers, Task 4 input types.
 - Produces: pulsebreak's definition authored in zod; exported symbol `pulsebreakProjectDefinition` unchanged.
 
-- [ ] **Step 1: Rewrite the schema literals**
+- [x] **Step 1: Rewrite the schema literals**
 
 In `games/pulsebreak/src/project/definition.ts`, replace the import block and the five spec constants (the `validatePulsebreakProject` half of the file is untouched):
 
@@ -1243,16 +1243,16 @@ const upgradeSet: ResourceTypeInput = {
 
 Every field that lacked `required: true` in the DSL carries `.optional()` above (`enemies`, `waves`, `spawns`, `upgrades`) — that is the polarity port rule, not a judgment call.
 
-- [ ] **Step 2: Add the zod dependency**
+- [x] **Step 2: Add the zod dependency**
 
 In `games/pulsebreak/package.json` `dependencies`, add `"zod": "^4.4.3"`.
 
-- [ ] **Step 3: Run the affected suites**
+- [x] **Step 3: Run the affected suites**
 
 Run: `npx vitest run --project pulsebreak && npx vitest run --project project`
 Expected: PASS — pulsebreak's content round-trip and definition tests pin the behavior.
 
-- [ ] **Step 4: Lint, typecheck, commit**
+- [x] **Step 4: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1272,7 +1272,7 @@ git commit -m "feat(pulsebreak): author project schemas in zod"
 - Consumes: Task 1 helpers, Task 4 input types (inside the generated code).
 - Produces: `npm run new-game <name>` emits a zod-native `definition.ts`.
 
-- [ ] **Step 1: Replace `definitionTs`**
+- [x] **Step 1: Replace `definitionTs`**
 
 In `tools/scaffold/src/templates/projectFiles.ts`, replace the body of `definitionTs(name, label)` with (note: everything below is inside the template literal the function returns; `${name}`/`${label}` are template substitutions, and inner backticks stay escaped exactly as in the current file):
 
@@ -1327,16 +1327,16 @@ const tuning: ResourceTypeInput = {
 
 Concretely: only the import block, the `numberField` helper (now `num`), and the two spec constants change inside the template string; the `/** … */` docblock, `export const projectDefinition = defineGameProject<CompiledProject>({ … })`, and `validateSnapshot` stay byte-identical.
 
-- [ ] **Step 2: Generated package.json needs no zod dependency**
+- [x] **Step 2: Generated package.json needs no zod dependency**
 
 `z` reaches the generated definition through `@automata/project` (already a generated dependency); `tools/scaffold/src/templates/configFiles.ts` stays untouched.
 
-- [ ] **Step 3: Run the scaffold suite**
+- [x] **Step 3: Run the scaffold suite**
 
 Run: `npx vitest run --project scaffold`
 Expected: PASS. If a template snapshot/content test asserts the old `definition.ts` text, update the expectation to the new zod template — that test exists to catch template drift, and this is intentional drift.
 
-- [ ] **Step 4: Lint, typecheck, commit**
+- [x] **Step 4: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1358,7 +1358,7 @@ git commit -m "feat(scaffold): generate zod-native project definitions"
 - Consumes: Task 1 helpers, Task 4 input types.
 - Produces: monkey-ball's definition authored in zod; `monkeyBallProjectDefinition` unchanged.
 
-- [ ] **Step 1: Rewrite the schema literals**
+- [x] **Step 1: Rewrite the schema literals**
 
 Replace the import block and the five spec constants in `games/monkey-ball/src/project/definition.ts` (the `validateMonkeyBallProject` half stays untouched):
 
@@ -1458,16 +1458,16 @@ const worlds: ResourceTypeInput = {
 
 Polarity notes (from the DSL source, not judgment calls): `waypoints`, `speed`, `mode`, `shape`, `overrides`, `archetypeId`, all `physics` fields, `id`, `name` had `required: true` → plain. `movingPlatform`, `renderable`, `rigidBody`, `radius`/`height` (renderable), `worlds`, `levels` lacked it → `.optional()`.
 
-- [ ] **Step 2: No zod dependency needed**
+- [x] **Step 2: No zod dependency needed**
 
 `z` reaches the definition through `@automata/project`; `games/monkey-ball/package.json` stays untouched.
 
-- [ ] **Step 3: Run the affected suites**
+- [x] **Step 3: Run the affected suites**
 
 Run: `npx vitest run --project monkey-ball && npx vitest run --project editor-mcp-server`
 Expected: PASS — monkey-ball's content tests and the MCP server's real-YAML loading test pin behavior.
 
-- [ ] **Step 4: Lint, typecheck, commit**
+- [x] **Step 4: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1488,7 +1488,7 @@ git commit -m "feat(monkey-ball): author project schemas in zod"
 - Consumes: `RegisteredEditorProject.componentTypes` / `.resourceTypes` (each spec now carries `jsonSchema?` after Task 4); `toolDefs()` from `@automata/contracts`.
 - Produces: project-mode `listTools()` descriptions for data-carrying tools end with `" Component data schemas by typeId: {…}"` and/or `" Resource data schemas by typeId: {…}"` (compact JSON).
 
-- [ ] **Step 1: Write the failing editor test**
+- [x] **Step 1: Write the failing editor test**
 
 Append to `packages/editor/tests/project/toolHost.test.ts` (self-contained fixture; reuse the file's existing imports where they overlap):
 
@@ -1529,12 +1529,12 @@ describe('listTools schema decoration', () => {
 
 If the fixture's snapshot shape fights `ProjectSnapshot`'s zod model (`formatVersion` fields, scene entries), copy the minimal working snapshot literal from an existing fixture in the same test file — the assertion block is the contract here.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project editor tests/project/toolHost.test.ts`
 Expected: FAIL — descriptions carry no schema text.
 
-- [ ] **Step 3: Implement decoration in `toolHost.ts`**
+- [x] **Step 3: Implement decoration in `toolHost.ts`**
 
 Add before `createProjectToolHost`:
 
@@ -1580,12 +1580,12 @@ Inside `createProjectToolHost`, compute once and serve from `listTools`:
     },
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run --project editor`
 Expected: PASS.
 
-- [ ] **Step 5: Add the end-to-end assertion through the real server**
+- [x] **Step 5: Add the end-to-end assertion through the real server**
 
 Append to `tools/editor-mcp-server/tests/server.test.ts` (inside the existing `describe`, using its `connected` helper and `pulsebreakProject` path):
 
@@ -1610,7 +1610,7 @@ Append to `tools/editor-mcp-server/tests/server.test.ts` (inside the existing `d
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS.
 
-- [ ] **Step 6: Lint, typecheck, commit**
+- [x] **Step 6: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1634,7 +1634,7 @@ git commit -m "feat(editor): project MCP tools advertise per-type JSON schemas"
 - Consumes: Tasks 1 and 4.
 - Produces: no test file passes a DSL `ObjectSchema` literal into `defineGameProject`, `normalizeComponentType`, or a `ComponentTypeInput`/`ResourceTypeInput` position — the precondition for Task 11's type tightening.
 
-- [ ] **Step 1: Port each fixture using the mechanical table**
+- [x] **Step 1: Port each fixture using the mechanical table**
 
 | DSL construct | zod replacement |
 | --- | --- |
@@ -1665,12 +1665,12 @@ const stats = z.strictObject({
 
 (If Task 4 already introduced a zod `zodStats` in this file, unify on one fixture.) Apply the same table to each listed file; behavior assertions in the tests themselves do not change — if an assertion starts failing, the port broke polarity or a bound, fix the port, not the assertion.
 
-- [ ] **Step 2: Run every affected suite**
+- [x] **Step 2: Run every affected suite**
 
 Run: `npx vitest run --project project && npx vitest run --project editor && npx vitest run --project editor-agent`
 Expected: PASS.
 
-- [ ] **Step 3: Lint, typecheck, commit**
+- [x] **Step 3: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -1691,7 +1691,7 @@ git commit -m "test: author schema fixtures in zod"
 - Consumes: Tasks 5–10 (every producer of specs now authors zod).
 - Produces: `ComponentTypeInput.schema: ProjectDataSchema` (zod only); `ComponentTypeRegistration.dataSchema: ProjectDataSchema` and `jsonSchema: Record<string, unknown>` (required, not optional); `validateSpecData` drops the DSL branch.
 
-- [ ] **Step 1: Tighten `registration.ts`**
+- [x] **Step 1: Tighten `registration.ts`**
 
 ```ts
 export type ComponentTypeInput = Omit<ComponentTypeRegistration, 'schema' | 'dataSchema' | 'jsonSchema'> & {
@@ -1715,25 +1715,25 @@ export function validateSpecData(
 
 Remove the `validateProperty` import.
 
-- [ ] **Step 2: Shrink `schema.ts`**
+- [x] **Step 2: Shrink `schema.ts`**
 
 Delete `validateProperty`, `validateObject`, `validateArray`, `COLOR_RE`, `isRecord`/`isFiniteVec3` (only used by the deleted validator), and the `escapePointerToken` import. Update the module docblock: the file now holds the **derived** IR (produced by `derive.ts` from zod), `PropertyIssue`, and the IR walkers `defaultObject`/`collectReferences`.
 
-- [ ] **Step 3: Trim `schema.test.ts`**
+- [x] **Step 3: Trim `schema.test.ts`**
 
 Delete the `describe('property schemas')` block (every case now lives in `tests/validateData.test.ts` in zod form). Keep `defaultObject` and `collectReferences` blocks unchanged.
 
-- [ ] **Step 4: Chase the compiler**
+- [x] **Step 4: Chase the compiler**
 
 Run: `npm run typecheck`
 Expected: errors ONLY at leftover `validateProperty` imports — there should be none if Tasks 4–10 were complete. Any survivor gets the `validateSpecData` treatment from Task 4 Step 3.6.
 
-- [ ] **Step 5: Run the full suite**
+- [x] **Step 5: Run the full suite**
 
 Run: `npm run test`
 Expected: PASS across all workspaces.
 
-- [ ] **Step 6: Lint, commit**
+- [x] **Step 6: Lint, commit**
 
 ```bash
 npm run lint
@@ -1764,7 +1764,7 @@ git commit -m "feat(project)!: delete the ObjectSchema DSL; zod is the single sc
   - `workspacePromptDefs(): PromptDef[]` and `getWorkspacePrompt(name: string, args: unknown): PromptResult`
   - `McpServerOptions.prompts?: { list(): PromptDef[]; get(name: string, args: unknown): PromptResult }`
 
-- [ ] **Step 1: Write the failing contracts test**
+- [x] **Step 1: Write the failing contracts test**
 
 `packages/contracts/tests/prompts.test.ts`:
 
@@ -1811,12 +1811,12 @@ describe('workspace prompts', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project contracts tests/prompts.test.ts`
 Expected: FAIL — no export named `workspacePromptDefs`.
 
-- [ ] **Step 3: Implement `prompts.ts`**
+- [x] **Step 3: Implement `prompts.ts`**
 
 First, in `workspaceTools.ts`, change `const gameSlugSchema` to `export const gameSlugSchema`.
 
@@ -1901,12 +1901,12 @@ Conventions: gameId === package name === games/<dir> name; schemas are zod autho
 
 Add `export * from './prompts'` to `packages/contracts/src/index.ts`.
 
-- [ ] **Step 4: Run the contracts tests**
+- [x] **Step 4: Run the contracts tests**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS.
 
-- [ ] **Step 5: Register the prompts capability in the server**
+- [x] **Step 5: Register the prompts capability in the server**
 
 `tools/editor-mcp-server/src/server.ts` — extend the options and handlers:
 
@@ -1964,7 +1964,7 @@ import { getWorkspacePrompt, parseWorkspaceToolArgs, workspacePromptDefs } from 
     })
 ```
 
-- [ ] **Step 6: Enrich `createGame` nextSteps**
+- [x] **Step 6: Enrich `createGame` nextSteps**
 
 In `tools/editor-mcp-server/src/workspaceHost.ts`, replace the `nextSteps` array:
 
@@ -1979,7 +1979,7 @@ In `tools/editor-mcp-server/src/workspaceHost.ts`, replace the `nextSteps` array
           ]
 ```
 
-- [ ] **Step 7: Add server + host tests**
+- [x] **Step 7: Add server + host tests**
 
 Append to `tools/editor-mcp-server/tests/server.test.ts`:
 
@@ -2017,12 +2017,12 @@ import { getWorkspacePrompt, workspacePromptDefs } from '@automata/contracts'
 
 In `tools/editor-mcp-server/tests/workspaceHost.test.ts`, update the existing `createGame` result assertion so `nextSteps` expectations match the new six entries (assert `nextSteps` has length 6 and that one entry contains `--project games/` and another contains `evaluate` — keep it resilient to copy tweaks).
 
-- [ ] **Step 8: Run the suites**
+- [x] **Step 8: Run the suites**
 
 Run: `npx vitest run --project contracts && npx vitest run --project editor-mcp-server`
 Expected: PASS.
 
-- [ ] **Step 9: Lint, typecheck, commit**
+- [x] **Step 9: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck
@@ -2038,7 +2038,7 @@ git commit -m "feat(mcp): build-game prompt and workflow-grade createGame nextSt
 - Modify: `AGENTS.md` (schema authoring convention)
 - Modify: `docs/superpowers/plans/2026-07-03-schema-unification.md` (check off tasks)
 
-- [ ] **Step 1: Document the authoring convention in AGENTS.md**
+- [x] **Step 1: Document the authoring convention in AGENTS.md**
 
 Add a "Component/resource schemas" subsection near the existing registry-convention docs:
 
@@ -2063,7 +2063,7 @@ re-exports the helpers). Rules:
 
 Also update any AGENTS.md sentence that still describes the `ObjectSchema` DSL.
 
-- [ ] **Step 2: Run every gate**
+- [x] **Step 2: Run every gate**
 
 ```bash
 npm run ci          # lint + typecheck + tests + coverage thresholds
@@ -2074,14 +2074,14 @@ npm run verify:new-game   # clean-clone: scaffold → install → ci → build �
 
 Expected: all green. `verify:new-game` is the proof that the zod-native scaffold output is registered, playable, MCP-visible, and CI-green.
 
-- [ ] **Step 3: Walk the spec's acceptance criteria**
+- [x] **Step 3: Walk the spec's acceptance criteria**
 
 - `grep -rn "kind: 'object'" games tools/scaffold --include='*.ts'` → no hits (no DSL literals left in games/scaffold).
 - `grep -rn "validateProperty" packages games tools --include='*.ts'` → no hits.
 - `automata-editor-mcp --project games/pulsebreak/public/project` → `listTools` descriptions include pulsebreak's schemas (pinned by the Task 9 server test).
 - `automata-editor-mcp --workspace .` → `prompts/list` shows `build-game`; `prompts/get` embeds the description; `createGame` returns the six-step `nextSteps` (pinned by Task 12 tests).
 
-- [ ] **Step 4: Close out**
+- [x] **Step 4: Close out**
 
 ```bash
 find . -name "* 2*" -not -path "*/node_modules/*"   # must be empty

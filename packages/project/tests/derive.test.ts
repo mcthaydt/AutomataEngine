@@ -57,6 +57,10 @@ describe('deriveObjectSchema', () => {
       .toThrow(/listOf|tableOf/)
   })
 
+  it('rejects a non-object root (e.g. a bare vec3 helper)', () => {
+    expect(() => deriveObjectSchema(vec3())).toThrow(/must be zod objects/)
+  })
+
   it('rejects unsupported zod constructs with the offending path', () => {
     expect(() => deriveObjectSchema(z.strictObject({ u: z.union([z.string(), z.number()]) })))
       .toThrow(/unsupported zod construct/)

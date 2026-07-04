@@ -35,6 +35,7 @@ describe('workspace prompts', () => {
   it('rejects unknown prompts and bad arguments', () => {
     expect(() => getWorkspacePrompt('nope', {})).toThrow(/unknown prompt/i)
     expect(() => getWorkspacePrompt('build-game', {})).toThrow()
+    expect(() => getWorkspacePrompt('build-game', undefined)).toThrow()
     expect(() => getWorkspacePrompt('build-game', { description: 'x', name: 'Bad Name' })).toThrow()
   })
 })

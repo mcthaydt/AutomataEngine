@@ -119,6 +119,27 @@ describe('MCP server', () => {
     }
   })
 
+  it('maps non-Error prompt failures to InvalidParams', async () => {
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+    const server = createMcpServer(fakeHost, {
+      resourceUris: [],
+      prompts: {
+        list: workspacePromptDefs,
+        get: () => { throw 'string failure' }
+      }
+    })
+    const client = new Client({ name: 'prompt-throw-test', version: '0.0.0' })
+    await server.connect(serverTransport)
+    await client.connect(clientTransport)
+    try {
+      await expect(client.getPrompt({ name: 'build-game', arguments: { description: 'x' } }))
+        .rejects.toMatchObject({ code: ErrorCode.InvalidParams, message: expect.stringContaining('string failure') })
+    } finally {
+      await client.close()
+      await server.close()
+    }
+  })
+
   it('decorates project tool descriptions with per-type JSON schemas', async () => {
     const { host } = await createHeadlessHost({ projectDir: pulsebreakProject })
     const { client, server } = await connected(host)

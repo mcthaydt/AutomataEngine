@@ -44,6 +44,15 @@ describe('authoring helpers', () => {
     })
   })
 
+  it('applies one-sided array bounds independently', () => {
+    const atLeast = listOf(z.string(), { minItems: 1 })
+    expect(atLeast.safeParse([]).success).toBe(false)
+    expect(atLeast.safeParse(['a', 'b', 'c']).success).toBe(true)
+    const atMost = listOf(z.string(), { maxItems: 1 })
+    expect(atMost.safeParse([]).success).toBe(true)
+    expect(atMost.safeParse(['a', 'b']).success).toBe(false)
+  })
+
   it('metadata survives .optional() on the inner schema', () => {
     const schema = vec3({ label: 'Eye' }).optional()
     expect(schema.unwrap().meta()).toEqual({ label: 'Eye', automata: { kind: 'vec3' } })

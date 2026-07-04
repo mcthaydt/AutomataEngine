@@ -100,6 +100,28 @@ edited per game either; declare `automata.devPort` in the game's own
 `package.json`. Run `npm run verify:new-game` after changing scaffold
 templates or the engine/project APIs they use.
 
+### Component/resource schemas (zod)
+
+Component and resource data schemas are authored in zod v4 via
+`@automata/project` (which re-exports `z` — games, tools, and editor code
+must not import `zod` directly; lint enforces this). Rules:
+
+- Roots and nested objects are `z.strictObject({...})`; unknown keys are
+  rejected.
+- Scalars are plain zod: `z.number().min(0).max(20).meta({ label: 'Speed',
+  step: 0.5 })`, `z.string()`, `z.boolean()`, `z.enum([...])`. Call `.meta()`
+  before `.optional()`. Exclusive bounds (`.gt`/`.lt`/`.positive`/`.negative`)
+  are rejected — use `.min()`/`.max()`.
+- Editor kinds use the helpers: `vec3({ label })`, `color({ label })`,
+  `reference({ target: 'entity' | 'resource', typeIds?, label })`,
+  `listOf(item, { minItems?, maxItems?, label })`, `tableOf(item, {...})`.
+  Never call `.meta()` on a helper result — pass the label as an argument.
+- Fields are required by default; add `.optional()` for optional ones.
+- `defineGameProject` derives the editor UI descriptors and the per-type
+  JSON schema (`spec.jsonSchema`) that project-mode MCP tools advertise;
+  anything zod can express but the editor cannot render fails at
+  registration time.
+
 ## Verification Commands
 
 ```bash
