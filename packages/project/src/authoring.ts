@@ -11,6 +11,14 @@ import { z } from 'zod'
  * label/description as arguments instead.
  */
 
+/**
+ * Games author schemas with this `z`, re-exported here because game and
+ * editor code may not import third-party packages directly (lint-enforced);
+ * @automata/project is the wrap point for the schema language the way
+ * @automata/engine is for rendering/physics.
+ */
+export { z } from 'zod'
+
 /** A zod object schema authored for one component/resource data record. */
 export type ProjectDataSchema = z.ZodObject<z.ZodRawShape>
 

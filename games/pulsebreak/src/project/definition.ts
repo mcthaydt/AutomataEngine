@@ -1,7 +1,7 @@
 import {
-  defineGameProject,
-  type ComponentTypeRegistration, type GameProjectDefinition,
-  type ProjectSnapshot, type ResourceTypeRegistration, type ValidationIssue
+  color, defineGameProject, listOf, tableOf, vec3, z,
+  type ComponentTypeInput, type GameProjectDefinition,
+  type ProjectSnapshot, type ResourceTypeInput, type ValidationIssue
 } from '@automata/project'
 import { compilePulsebreakProject } from './compiler'
 import { createPulsebreakTemplate } from './template'
@@ -13,113 +13,95 @@ import { ENEMY_KINDS } from '../entity'
  * pure `validate`/`compile`. It is runtime-safe (no editor/engine UI imports) so
  * the headless graph and the shipped game can both depend on it.
  */
-const numberField = (key: string, label: string) => ({ key, label, kind: 'number' as const, required: true, min: 0 })
-const optionalNumber = (key: string, label: string) => ({ key, label, kind: 'number' as const, required: false, min: 0 })
+const num = (label: string) => z.number().min(0).meta({ label })
+const optionalNum = (label: string) => z.number().min(0).meta({ label }).optional()
 
-const playerStart: ComponentTypeRegistration = {
+const playerStart: ComponentTypeInput = {
   typeId: PULSEBREAK_TYPE_IDS.playerStart, label: 'Player Start',
-  schema: { kind: 'object', fields: [] },
+  schema: z.strictObject({}),
   defaultData: {}, cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', color: '#27e0ff' }
 }
 
-const spawnZone: ComponentTypeRegistration = {
+const spawnZone: ComponentTypeInput = {
   typeId: PULSEBREAK_TYPE_IDS.spawnZone, label: 'Spawn Zone',
-  schema: {
-    kind: 'object',
-    fields: [
-      { key: 'mode', label: 'Mode', kind: 'enum', required: true, values: ['ring', 'point'] },
-      numberField('radius', 'Radius'),
-      numberField('weight', 'Weight'),
-      { key: 'enemies', label: 'Enemy Types', kind: 'array', presentation: 'list', item: { kind: 'string' } },
-      numberField('minSeparation', 'Min Separation'),
-      numberField('edgePaddingMin', 'Edge Padding Min'),
-      numberField('edgePaddingMax', 'Edge Padding Max'),
-      numberField('angleJitterRad', 'Angle Jitter (rad)')
-    ]
-  },
+  schema: z.strictObject({
+    mode: z.enum(['ring', 'point']).meta({ label: 'Mode' }),
+    radius: num('Radius'),
+    weight: num('Weight'),
+    enemies: listOf(z.string(), { label: 'Enemy Types' }).optional(),
+    minSeparation: num('Min Separation'),
+    edgePaddingMin: num('Edge Padding Min'),
+    edgePaddingMax: num('Edge Padding Max'),
+    angleJitterRad: num('Angle Jitter (rad)')
+  }),
   defaultData: { mode: 'ring', radius: 13, weight: 1, enemies: [], minSeparation: 0, edgePaddingMin: 1, edgePaddingMax: 3, angleJitterRad: 0.35 },
   cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'zone', color: '#ff2e88' }
 }
 
-const tuning: ResourceTypeRegistration = {
+const tuning: ResourceTypeInput = {
   typeId: PULSEBREAK_TYPE_IDS.tuning, label: 'Tuning', singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [
-      { key: 'arena', label: 'Arena', kind: 'object', required: true, fields: [numberField('half', 'Half'), { key: 'y', label: 'Y', kind: 'number', required: true }] },
-      { key: 'camera', label: 'Camera', kind: 'object', required: true, fields: [{ key: 'eye', label: 'Eye', kind: 'vec3', required: true }, { key: 'look', label: 'Look', kind: 'vec3', required: true }] },
-      {
-        key: 'player', label: 'Player', kind: 'object', required: true, fields: [
-          numberField('radius', 'Radius'), numberField('startHealth', 'Start Health'), numberField('baseDamage', 'Base Damage'),
-          numberField('baseFireRate', 'Base Fire Rate'), numberField('baseMoveSpeed', 'Base Move Speed'), numberField('projectileSpeed', 'Projectile Speed'),
-          numberField('projectileRadius', 'Projectile Radius'), numberField('range', 'Range'), numberField('invulnS', 'Invuln (s)'),
-          { key: 'color', label: 'Color', kind: 'color', required: true }
-        ]
-      },
-      numberField('projectileLifetimeS', 'Projectile Lifetime (s)')
-    ]
-  },
+  schema: z.strictObject({
+    arena: z.strictObject({
+      half: num('Half'),
+      y: z.number().meta({ label: 'Y' })
+    }).meta({ label: 'Arena' }),
+    camera: z.strictObject({
+      eye: vec3({ label: 'Eye' }),
+      look: vec3({ label: 'Look' })
+    }).meta({ label: 'Camera' }),
+    player: z.strictObject({
+      radius: num('Radius'), startHealth: num('Start Health'), baseDamage: num('Base Damage'),
+      baseFireRate: num('Base Fire Rate'), baseMoveSpeed: num('Base Move Speed'), projectileSpeed: num('Projectile Speed'),
+      projectileRadius: num('Projectile Radius'), range: num('Range'), invulnS: num('Invuln (s)'),
+      color: color({ label: 'Color' })
+    }).meta({ label: 'Player' }),
+    projectileLifetimeS: num('Projectile Lifetime (s)')
+  }),
   defaultData: createPulsebreakTemplate().resources.tuning!.data as Record<string, unknown>
 }
 
-const enemyTypes: ResourceTypeRegistration = {
+const enemyTypes: ResourceTypeInput = {
   typeId: PULSEBREAK_TYPE_IDS.enemyTypes, label: 'Enemy Types', singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [{
-      key: 'enemies', label: 'Enemies', kind: 'array', presentation: 'table', item: {
-        kind: 'object', fields: [
-          { key: 'id', label: 'ID', kind: 'string', required: true },
-          numberField('health', 'Health'), numberField('radius', 'Radius'), numberField('speed', 'Speed'),
-          numberField('contactDamage', 'Contact Damage'), numberField('scoreValue', 'Score'),
-          { key: 'color', label: 'Color', kind: 'color', required: true },
-          optionalNumber('cooldownS', 'Cooldown (s)'), optionalNumber('projectileSpeed', 'Projectile Speed'),
-          optionalNumber('projectileDamage', 'Projectile Damage'), optionalNumber('projectileRadius', 'Projectile Radius'),
-          optionalNumber('range', 'Range'), optionalNumber('preferredRange', 'Preferred Range'), optionalNumber('burst', 'Burst')
-        ]
-      }
-    }]
-  },
+  schema: z.strictObject({
+    enemies: tableOf(z.strictObject({
+      id: z.string().meta({ label: 'ID' }),
+      health: num('Health'), radius: num('Radius'), speed: num('Speed'),
+      contactDamage: num('Contact Damage'), scoreValue: num('Score'),
+      color: color({ label: 'Color' }),
+      cooldownS: optionalNum('Cooldown (s)'), projectileSpeed: optionalNum('Projectile Speed'),
+      projectileDamage: optionalNum('Projectile Damage'), projectileRadius: optionalNum('Projectile Radius'),
+      range: optionalNum('Range'), preferredRange: optionalNum('Preferred Range'), burst: optionalNum('Burst')
+    }), { label: 'Enemies' }).optional()
+  }),
   defaultData: { enemies: [] }
 }
 
-const waveSet: ResourceTypeRegistration = {
+const waveSet: ResourceTypeInput = {
   typeId: PULSEBREAK_TYPE_IDS.waveSet, label: 'Wave Set', singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [{
-      key: 'waves', label: 'Waves', kind: 'array', presentation: 'list', item: {
-        kind: 'object', fields: [
-          { key: 'id', label: 'ID', kind: 'string', required: true },
-          {
-            key: 'spawns', label: 'Spawns', kind: 'array', presentation: 'table', item: {
-              kind: 'object', fields: [{ key: 'enemyTypeId', label: 'Enemy', kind: 'string', required: true }, numberField('count', 'Count')]
-            }
-          }
-        ]
-      }
-    }]
-  },
+  schema: z.strictObject({
+    waves: listOf(z.strictObject({
+      id: z.string().meta({ label: 'ID' }),
+      spawns: tableOf(z.strictObject({
+        enemyTypeId: z.string().meta({ label: 'Enemy' }),
+        count: num('Count')
+      }), { label: 'Spawns' }).optional()
+    }), { label: 'Waves' }).optional()
+  }),
   defaultData: { waves: [] }
 }
 
-const upgradeSet: ResourceTypeRegistration = {
+const upgradeSet: ResourceTypeInput = {
   typeId: PULSEBREAK_TYPE_IDS.upgradeSet, label: 'Upgrade Set', singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [{
-      key: 'upgrades', label: 'Upgrades', kind: 'array', presentation: 'table', item: {
-        kind: 'object', fields: [
-          { key: 'id', label: 'ID', kind: 'enum', required: true, values: ['damage', 'fireRate', 'moveSpeed', 'maxHealth'] },
-          { key: 'label', label: 'Label', kind: 'string', required: true },
-          { key: 'description', label: 'Description', kind: 'string', required: true },
-          numberField('step', 'Step')
-        ]
-      }
-    }]
-  },
+  schema: z.strictObject({
+    upgrades: tableOf(z.strictObject({
+      id: z.enum(['damage', 'fireRate', 'moveSpeed', 'maxHealth']).meta({ label: 'ID' }),
+      label: z.string().meta({ label: 'Label' }),
+      description: z.string().meta({ label: 'Description' }),
+      step: num('Step')
+    }), { label: 'Upgrades' }).optional()
+  }),
   defaultData: { upgrades: [] }
 }
 
