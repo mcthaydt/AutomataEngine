@@ -13,6 +13,7 @@ Spec: `docs/superpowers/specs/2026-07-03-schema-unification-design.md` (approved
 ## Global Constraints
 
 - zod stays pinned `^4.4.3` everywhere; zod internals (`schema.def`, `.minValue`, `_zod.bag`, `.meta()`, `.unwrap()`, `.shape`, `.options`, `.element`) are touched ONLY inside `packages/project/src/derive.ts` and `authoring.ts`.
+- Game, tool, and editor code may not import `zod` directly (eslint no-restricted-imports); author with `z` re-exported from `@automata/project`. Only packages/project and packages/contracts import zod directly.
 - Coverage gate: `npm run coverage` enforces 90% lines AND branches (istanbul) across `packages/*/src`, `games/*/src`, `tools/*/src`.
 - Polarity port rule (mechanical, applies to every DSL→zod port): DSL fields with `required: true` become plain zod fields; **all other fields (`required: false` or `required` absent) gain `.optional()`**. The DSL is optional-by-default; zod is required-by-default.
 - Component/resource root schemas MUST be `z.strictObject(...)` (unknown keys rejected). Nested objects too.
@@ -1277,9 +1278,8 @@ In `tools/scaffold/src/templates/projectFiles.ts`, replace the body of `definiti
 
 ```ts
 export function definitionTs(name: string, label: string): string {
-  return `import { z } from 'zod'
-import {
-  color, defineGameProject,
+  return `import {
+  color, defineGameProject, z,
   type ComponentTypeInput, type GameProjectDefinition,
   type ProjectSnapshot, type ResourceTypeInput, type ValidationIssue
 } from '@automata/project'
@@ -1327,18 +1327,9 @@ const tuning: ResourceTypeInput = {
 
 Concretely: only the import block, the `numberField` helper (now `num`), and the two spec constants change inside the template string; the `/** … */` docblock, `export const projectDefinition = defineGameProject<CompiledProject>({ … })`, and `validateSnapshot` stay byte-identical.
 
-- [ ] **Step 2: Add zod to the generated package.json**
+- [ ] **Step 2: Generated package.json needs no zod dependency**
 
-In `tools/scaffold/src/templates/configFiles.ts`, the generated `dependencies` block becomes:
-
-```ts
-    dependencies: {
-      '@automata/editor': '*',
-      '@automata/engine': '*',
-      '@automata/project': '*',
-      zod: '^4.4.3'
-    },
-```
+`z` reaches the generated definition through `@automata/project` (already a generated dependency); `tools/scaffold/src/templates/configFiles.ts` stays untouched.
 
 - [ ] **Step 3: Run the scaffold suite**
 
@@ -1372,9 +1363,8 @@ git commit -m "feat(scaffold): generate zod-native project definitions"
 Replace the import block and the five spec constants in `games/monkey-ball/src/project/definition.ts` (the `validateMonkeyBallProject` half stays untouched):
 
 ```ts
-import { z } from 'zod'
 import {
-  defineGameProject, listOf, vec3,
+  defineGameProject, listOf, vec3, z,
   type ComponentTypeInput,
   type GameProjectDefinition,
   type ProjectSnapshot,
@@ -1468,9 +1458,9 @@ const worlds: ResourceTypeInput = {
 
 Polarity notes (from the DSL source, not judgment calls): `waypoints`, `speed`, `mode`, `shape`, `overrides`, `archetypeId`, all `physics` fields, `id`, `name` had `required: true` → plain. `movingPlatform`, `renderable`, `rigidBody`, `radius`/`height` (renderable), `worlds`, `levels` lacked it → `.optional()`.
 
-- [ ] **Step 2: Add the zod dependency**
+- [ ] **Step 2: No zod dependency needed**
 
-In `games/monkey-ball/package.json` `dependencies`, add `"zod": "^4.4.3"`.
+`z` reaches the definition through `@automata/project`; `games/monkey-ball/package.json` stays untouched.
 
 - [ ] **Step 3: Run the affected suites**
 
@@ -1503,8 +1493,7 @@ git commit -m "feat(monkey-ball): author project schemas in zod"
 Append to `packages/editor/tests/project/toolHost.test.ts` (self-contained fixture; reuse the file's existing imports where they overlap):
 
 ```ts
-import { z } from 'zod'
-import { defineGameProject } from '@automata/project'
+import { defineGameProject, z } from '@automata/project'
 import { registerEditorProject } from '../../src/project/registration'
 
 describe('listTools schema decoration', () => {
