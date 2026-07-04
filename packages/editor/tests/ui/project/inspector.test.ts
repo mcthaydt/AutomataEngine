@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { registerEditorProject } from '../../../src/project/registration'
 import { mountProjectInspector } from '../../../src/ui/project/inspector'
 import { fakeEditorRegistration, fakeSnapshot } from '../../fixtures/fakeProject'
-import type { ProjectCommand } from '@automata/project'
+import { normalizeResourceType, reference, z, type ProjectCommand } from '@automata/project'
 
 function setup() {
   const registration = registerEditorProject(fakeEditorRegistration)
@@ -94,16 +94,14 @@ describe('project inspector', () => {
 
   it('builds filtered resource and entity reference options', () => {
     const { registration, snapshot, parent, inspector } = setup()
-    registration.resourceTypes.push({
+    registration.resourceTypes.push(normalizeResourceType({
       typeId: 'fake.links', label: 'Links', defaultData: {},
-      schema: {
-        kind: 'object', fields: [
-          { key: 'any', label: 'Any', kind: 'reference', target: 'resource' },
-          { key: 'typed', label: 'Typed', kind: 'reference', target: 'resource', typeIds: ['fake.tuning'] },
-          { key: 'entity', label: 'Entity', kind: 'reference', required: true, target: 'entity' }
-        ]
-      }
-    })
+      schema: z.strictObject({
+        any: reference({ target: 'resource', label: 'Any' }).optional(),
+        typed: reference({ target: 'resource', typeIds: ['fake.tuning'], label: 'Typed' }).optional(),
+        entity: reference({ target: 'entity', label: 'Entity' })
+      })
+    }))
     snapshot.resources.links = {
       formatVersion: 1, id: 'links', typeId: 'fake.links',
       data: { any: 'tuning', typed: 'tuning', entity: 'box' }

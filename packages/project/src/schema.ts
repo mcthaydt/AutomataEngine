@@ -1,19 +1,18 @@
 /**
- * The finite, declarative property-schema language.
+ * The finite, closed property-descriptor IR.
  *
- * Registrations describe component/resource data with these schemas; the editor
- * generates controls from them, and `validateProperty` checks authored values
- * against them. The language is intentionally small and closed: every kind here
- * maps to exactly one generated control, so no game can smuggle bespoke UI into
- * the generic editor.
+ * Schemas are authored in zod (see `authoring.ts`) and `derive.ts` produces
+ * these descriptors from them at registration time; the editor generates
+ * controls from the IR, and validation runs through zod (`validateSpecData`).
+ * The language is intentionally small and closed: every kind here maps to
+ * exactly one generated control, so no game can smuggle bespoke UI into the
+ * generic editor.
  *
  * Common metadata (`key`, `label`, `description`, `required`) is optional at the
  * type level because the same node shape is reused in three positions: as a
  * top-level object/array schema (no key/label), as a keyed field inside an
  * object (key/label present), and as an array's item type (no key/label).
  */
-
-import { escapePointerToken } from './pointer'
 
 /** Metadata shared by every property; present on object fields, omitted at roots. */
 export interface CommonProperty {
@@ -95,96 +94,8 @@ export interface PropertyIssue {
   pointer: string
 }
 
-const COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function isFiniteVec3(value: unknown): boolean {
-  if (!isRecord(value)) return false
-  return (['x', 'y', 'z'] as const).every((axis) => typeof value[axis] === 'number' && Number.isFinite(value[axis]))
-}
-
-/**
- * Validate `value` against `schema`, returning every issue with its JSON Pointer.
- * Recurses into objects/arrays, rejects unknown object keys, enforces required
- * fields, numeric ranges, enum membership, color format, and array bounds.
- * References are only checked to be non-empty strings here; cross-document
- * resolution is a higher layer's job.
- */
-export function validateProperty(schema: ObjectSchema | PropertySchema, value: unknown, pointer = ''): PropertyIssue[] {
-  switch (schema.kind) {
-    case 'number': {
-      if (typeof value !== 'number' || !Number.isFinite(value)) {
-        return [{ code: 'number.type', message: 'Expected a finite number', pointer }]
-      }
-      if (schema.min !== undefined && value < schema.min) {
-        return [{ code: 'number.min', message: `Must be ≥ ${schema.min}`, pointer }]
-      }
-      if (schema.max !== undefined && value > schema.max) {
-        return [{ code: 'number.max', message: `Must be ≤ ${schema.max}`, pointer }]
-      }
-      return []
-    }
-    case 'string':
-      return typeof value === 'string' ? [] : [{ code: 'string.type', message: 'Expected a string', pointer }]
-    case 'boolean':
-      return typeof value === 'boolean' ? [] : [{ code: 'boolean.type', message: 'Expected a boolean', pointer }]
-    case 'enum':
-      return typeof value === 'string' && schema.values.includes(value)
-        ? []
-        : [{ code: 'enum.value', message: `Must be one of ${schema.values.join(', ')}`, pointer }]
-    case 'color': {
-      if (typeof value !== 'string') return [{ code: 'color.type', message: 'Expected a color string', pointer }]
-      return COLOR_RE.test(value) ? [] : [{ code: 'color.format', message: 'Expected a #hex color', pointer }]
-    }
-    case 'vec3':
-      return isFiniteVec3(value) ? [] : [{ code: 'vec3.type', message: 'Expected { x, y, z } numbers', pointer }]
-    case 'reference': {
-      if (typeof value !== 'string') return [{ code: 'reference.type', message: 'Expected a reference id string', pointer }]
-      if (value === '') return schema.required ? [{ code: 'reference.empty', message: 'A reference is required', pointer }] : []
-      return []
-    }
-    case 'object':
-      return validateObject(schema, value, pointer)
-    case 'array':
-      return validateArray(schema, value, pointer)
-  }
-}
-
-function validateObject(schema: ObjectProperty, value: unknown, pointer: string): PropertyIssue[] {
-  if (!isRecord(value)) return [{ code: 'object.type', message: 'Expected an object', pointer }]
-  const issues: PropertyIssue[] = []
-  const known = new Set<string>()
-  for (const field of schema.fields) {
-    if (field.key === undefined) continue
-    known.add(field.key)
-    const childPointer = `${pointer}/${escapePointerToken(field.key)}`
-    const present = field.key in value && value[field.key] !== undefined
-    if (!present) {
-      if (field.required) issues.push({ code: 'required', message: `${field.label ?? field.key} is required`, pointer: childPointer })
-      continue
-    }
-    issues.push(...validateProperty(field, value[field.key], childPointer))
-  }
-  for (const key of Object.keys(value)) {
-    if (!known.has(key)) issues.push({ code: 'object.unknownKey', message: `Unknown key "${key}"`, pointer: `${pointer}/${escapePointerToken(key)}` })
-  }
-  return issues
-}
-
-function validateArray(schema: ArrayProperty, value: unknown, pointer: string): PropertyIssue[] {
-  if (!Array.isArray(value)) return [{ code: 'array.type', message: 'Expected an array', pointer }]
-  const issues: PropertyIssue[] = []
-  if (schema.minItems !== undefined && value.length < schema.minItems) {
-    issues.push({ code: 'array.minItems', message: `Expected at least ${schema.minItems} item(s)`, pointer })
-  }
-  if (schema.maxItems !== undefined && value.length > schema.maxItems) {
-    issues.push({ code: 'array.maxItems', message: `Expected at most ${schema.maxItems} item(s)`, pointer })
-  }
-  value.forEach((item, index) => issues.push(...validateProperty(schema.item, item, `${pointer}/${index}`)))
-  return issues
 }
 
 /** Build a complete default value record for an object schema, field by field. */

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { normalizeResourceType, z } from '@automata/project'
 import { createProjectEditorStore } from '../../../src/project/store'
 import { mountProjectResources } from '../../../src/ui/project/resources'
 import { fakeEditorRegistration, fakeSnapshot } from '../../fixtures/fakeProject'
@@ -24,10 +25,10 @@ describe('project resources', () => {
 
   it('adds non-singleton resources with collision-free IDs', () => {
     const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
-    const extra = {
+    const extra = normalizeResourceType({
       typeId: 'fake.extra', label: 'Extra',
-      schema: { kind: 'object' as const, fields: [] }, defaultData: { value: 1 }
-    }
+      schema: z.strictObject({}), defaultData: { value: 1 }
+    })
     const state = {
       ...store.getState(),
       registration: {

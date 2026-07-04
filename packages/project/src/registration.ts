@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { validateProperty } from './schema'
 import type { ObjectSchema, PropertyIssue } from './schema'
 import type { ProjectDataSchema } from './authoring'
 import { deriveObjectSchema, validateDataSchema } from './derive'
@@ -34,10 +33,10 @@ export interface ComponentTypeRegistration {
   label: string
   /** Derived editor IR. Populated by normalization; consumers read this. */
   schema: ObjectSchema
-  /** Authored zod schema — the validation source of truth when present. */
-  dataSchema?: ProjectDataSchema
+  /** Authored zod schema — the validation source of truth. */
+  dataSchema: ProjectDataSchema
   /** `z.toJSONSchema(dataSchema)`, precomputed for MCP tool descriptions. */
-  jsonSchema?: Record<string, unknown>
+  jsonSchema: Record<string, unknown>
   defaultData: Record<string, unknown>
   /** How many of this component an entity may carry. `max` may be `Infinity`. */
   cardinality: { min: number; max: number }
@@ -51,10 +50,10 @@ export interface ResourceTypeRegistration {
   label: string
   /** Derived editor IR. Populated by normalization; consumers read this. */
   schema: ObjectSchema
-  /** Authored zod schema — the validation source of truth when present. */
-  dataSchema?: ProjectDataSchema
+  /** Authored zod schema — the validation source of truth. */
+  dataSchema: ProjectDataSchema
   /** `z.toJSONSchema(dataSchema)`, precomputed for MCP tool descriptions. */
-  jsonSchema?: Record<string, unknown>
+  jsonSchema: Record<string, unknown>
   defaultData: Record<string, unknown>
   /** When true, exactly one document of this type may exist in a project. */
   singleton?: boolean
@@ -86,12 +85,12 @@ export interface GameProjectDefinition<Compiled> {
   compile: (snapshot: ProjectSnapshot) => Compiled
 }
 
-/** Authoring-time spec: `schema` may be the legacy DSL or a zod object. */
+/** Authoring-time spec: `schema` is the authored zod object. */
 export type ComponentTypeInput = Omit<ComponentTypeRegistration, 'schema' | 'dataSchema' | 'jsonSchema'> & {
-  schema: ObjectSchema | ProjectDataSchema
+  schema: ProjectDataSchema
 }
 export type ResourceTypeInput = Omit<ResourceTypeRegistration, 'schema' | 'dataSchema' | 'jsonSchema'> & {
-  schema: ObjectSchema | ProjectDataSchema
+  schema: ProjectDataSchema
 }
 
 export type GameProjectDefinitionInput<Compiled> = Omit<GameProjectDefinition<Compiled>, 'components' | 'resources'> & {
@@ -99,13 +98,8 @@ export type GameProjectDefinitionInput<Compiled> = Omit<GameProjectDefinition<Co
   resources: ResourceTypeInput[]
 }
 
-function isDataSchema(schema: ObjectSchema | ProjectDataSchema): schema is ProjectDataSchema {
-  return schema instanceof z.ZodType
-}
-
 /** Normalize one authored component spec: zod → derived IR + JSON schema. */
 export function normalizeComponentType(input: ComponentTypeInput): ComponentTypeRegistration {
-  if (!isDataSchema(input.schema)) return input as ComponentTypeRegistration
   const { schema, ...rest } = input
   return {
     ...rest,
@@ -117,7 +111,6 @@ export function normalizeComponentType(input: ComponentTypeInput): ComponentType
 
 /** Normalize one authored resource spec: zod → derived IR + JSON schema. */
 export function normalizeResourceType(input: ResourceTypeInput): ResourceTypeRegistration {
-  if (!isDataSchema(input.schema)) return input as ResourceTypeRegistration
   const { schema, ...rest } = input
   return {
     ...rest,
@@ -127,19 +120,18 @@ export function normalizeResourceType(input: ResourceTypeInput): ResourceTypeReg
   }
 }
 
-/** Validate a data record against a spec — zod when authored, DSL fallback otherwise. */
+/** Validate a data record against its spec's authored zod schema. */
 export function validateSpecData(
-  spec: { schema: ObjectSchema; dataSchema?: ProjectDataSchema },
+  spec: { schema: ObjectSchema; dataSchema: ProjectDataSchema },
   value: unknown
 ): PropertyIssue[] {
-  return spec.dataSchema
-    ? validateDataSchema(spec.dataSchema, spec.schema, value)
-    : validateProperty(spec.schema, value)
+  return validateDataSchema(spec.dataSchema, spec.schema, value)
 }
 
 /**
- * Validate a registration's structural invariants and return it unchanged.
- * Throws on the first violation: empty/duplicate type IDs, bad cardinality,
+ * Normalize authored specs (deriving the editor IR and JSON schema from each
+ * zod schema) and validate the registration's structural invariants. Throws
+ * on the first violation: empty/duplicate type IDs, bad cardinality,
  * defaults that fail their own schema, or a template whose `gameId` mismatches.
  */
 export function defineGameProject<Compiled>(input: GameProjectDefinitionInput<Compiled>): GameProjectDefinition<Compiled> {
@@ -185,7 +177,7 @@ function assertUniqueTypes(entries: ReadonlyArray<{ typeId: string }>, label: st
 function assertValidDefault(
   label: string,
   typeId: string,
-  spec: { schema: ObjectSchema; dataSchema?: ProjectDataSchema },
+  spec: { schema: ObjectSchema; dataSchema: ProjectDataSchema },
   defaultData: Record<string, unknown>
 ): void {
   const issues = validateSpecData(spec, defaultData)
