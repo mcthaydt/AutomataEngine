@@ -26,7 +26,16 @@ describe('authoring helpers', () => {
     expect(schema.safeParse(3).success).toBe(false)
     expect(schema.meta()).toEqual({
       label: 'Target',
+      description: 'Id of an existing resource of type fake.target; must be non-empty unless this field is optional',
       automata: { kind: 'reference', target: 'resource', typeIds: ['fake.target'] }
+    })
+  })
+
+  it('reference keeps an author-supplied description', () => {
+    const schema = reference({ target: 'entity', description: 'custom' })
+    expect(schema.meta()).toEqual({
+      description: 'custom',
+      automata: { kind: 'reference', target: 'entity' }
     })
   })
 

@@ -6,9 +6,9 @@ import { z } from 'zod'
  * Plain zod covers scalars (`z.number().min(0)`, `z.string()`, `z.boolean()`,
  * `z.enum([...])`). The helpers below cover the kinds the editor needs to
  * recognize structurally; each attaches a closed `automata` marker via
- * `.meta()` that `derive.ts` reads. Never call `.meta()` on a helper result —
- * it would replace the registered metadata and lose the marker; pass
- * label/description as arguments instead.
+ * `.meta()` that `derive.ts` reads. Zod merges chained `.meta()` calls, so
+ * the marker survives further chaining, but pass label/description as helper
+ * arguments anyway — one authoring shape keeps definitions greppable.
  */
 
 /**
@@ -62,8 +62,15 @@ export function reference(
   opts: { target: 'entity' | 'resource'; typeIds?: readonly string[] } & ProjectFieldMeta
 ) {
   const { target, typeIds, ...meta } = opts
+  // The default description travels into `z.toJSONSchema` output, so agents
+  // reading the advertised schema learn the '' rule that plain `type: string`
+  // cannot express (empty is rejected unless the field is optional).
+  const description =
+    meta.description ??
+    `Id of an existing ${target}${typeIds ? ` of type ${typeIds.join(' | ')}` : ''}; must be non-empty unless this field is optional`
   return z.string().meta({
     ...meta,
+    description,
     automata: { kind: 'reference', target, ...(typeIds ? { typeIds } : {}) } satisfies AutomataMeta
   })
 }

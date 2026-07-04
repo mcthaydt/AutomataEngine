@@ -5,7 +5,15 @@ Whole-branch review, high effort: 8 finder angles, verification pass
 by probe). CI/coverage/e2e/verify:new-game were green at review time,
 including after the last-lightkeeper removal commits.
 
-## Confirmed (reproduced by execution)
+## Confirmed (reproduced by execution) — ALL FIXED same day (see commit touching derive.ts/authoring.ts)
+
+Resolutions: (1) array elements are treated as required in the
+reference-emptiness walk; (2)+(3) derive time now rejects string
+length/format constraints on plain strings and number constraints beyond
+.min()/.max() (.int/.multipleOf), same closed-surface error as exclusive
+bounds; (4) vec3 unrecognized_keys collapse to one vec3.type at the vec3
+pointer; (5) reference() carries a default description into the advertised
+JSON schema stating the non-emptiness rule. Regression tests pin all five.
 
 1. **`listOf(reference(...))` loses the empty-reference check** —
    `packages/project/src/derive.ts` (deriveNode array case): array element

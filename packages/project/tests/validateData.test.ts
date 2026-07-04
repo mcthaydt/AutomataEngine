@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { color, deriveObjectSchema, reference, tableOf, validateDataSchema, vec3 } from '../src'
+import { color, deriveObjectSchema, listOf, reference, tableOf, validateDataSchema, vec3 } from '../src'
 import type { ProjectDataSchema } from '../src'
 
 const stats = z.strictObject({
@@ -84,6 +84,38 @@ describe('validateDataSchema parity with the DSL validator', () => {
     expect(validate(optionalRef, { r: '' })).toEqual([])
   })
 
+  it('flags empty references used as array elements, indexed by pointer', () => {
+    const refs = z.strictObject({ refs: listOf(reference({ target: 'entity' })) })
+    expect(validate(refs, { refs: ['spawn', '', 'goal'] })).toEqual([
+      expect.objectContaining({ code: 'reference.empty', pointer: '/refs/1' })
+    ])
+    expect(validate(refs, { refs: ['spawn', 'goal'] })).toEqual([])
+    // Optional reference fields on objects nested inside items stay exempt.
+    const rows = z.strictObject({
+      rows: listOf(z.strictObject({ link: reference({ target: 'entity' }).optional() }))
+    })
+    expect(validate(rows, { rows: [{ link: '' }] })).toEqual([])
+  })
+
+  it('collapses vec3 extra-key rejections to one vec3.type at the vec3 pointer', () => {
+    const schema = z.strictObject({ eye: vec3() })
+    expect(validate(schema, { eye: { x: 0, y: 0, z: 0, w: 9 } })).toEqual([
+      expect.objectContaining({ code: 'vec3.type', pointer: '/eye' })
+    ])
+  })
+
+  it('accepts an optional field explicitly present as undefined', () => {
+    const schema = z.strictObject({ note: z.string().optional() })
+    expect(validate(schema, { note: undefined })).toEqual([])
+  })
+
+  it('maps a non-string color value to color.type', () => {
+    const schema = z.strictObject({ tint: color() })
+    expect(validate(schema, { tint: 3 })).toEqual([
+      expect.objectContaining({ code: 'color.type', pointer: '/tint' })
+    ])
+  })
+
   it('rejects non-objects at the root', () => {
     expect(validate(stats, null)[0]).toMatchObject({ code: 'object.type', pointer: '' })
   })
@@ -101,6 +133,7 @@ describe('validateDataSchema parity with the DSL validator', () => {
     })[0]).toMatchObject({ code: 'array.maxItems', pointer: '/rows' })
     expect(validate(table, { rows: [{ speed: -1, mode: 'chase', tint: '#fff' }] })[0])
       .toMatchObject({ pointer: '/rows/0/speed', code: 'number.min' })
+    expect(validate(table, { rows: [{ speed: 4, mode: 'chase', tint: '#fff' }] })).toEqual([])
     // Pin the FULL list: the DSL emitted only array.type for a wrong-typed
     // value; zod's array .min()/.max() also fire on anything with a .length
     // (e.g. strings), and those spurious bounds issues must be suppressed.

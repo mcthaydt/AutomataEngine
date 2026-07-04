@@ -30,6 +30,7 @@ describe('deriveObjectSchema', () => {
         { kind: 'vec3', key: 'position', label: 'Position', required: true },
         {
           kind: 'reference', key: 'target', label: 'Target', required: false,
+          description: 'Id of an existing resource of type fake.target; must be non-empty unless this field is optional',
           target: 'resource', typeIds: ['fake.target']
         },
         {
@@ -59,6 +60,34 @@ describe('deriveObjectSchema', () => {
 
   it('rejects a non-object root (e.g. a bare vec3 helper)', () => {
     expect(() => deriveObjectSchema(vec3())).toThrow(/must be zod objects/)
+  })
+
+  it('rejects .int() and .multipleOf() with the offending path', () => {
+    expect(() => deriveObjectSchema(z.strictObject({ count: z.number().int() })))
+      .toThrow(/beyond \.min\(\)\/\.max\(\)/)
+    expect(() => deriveObjectSchema(z.strictObject({ count: z.number().int() })))
+      .toThrow(/\/count/)
+    expect(() => deriveObjectSchema(z.strictObject({ n: z.number().multipleOf(5) })))
+      .toThrow(/beyond \.min\(\)\/\.max\(\)/)
+  })
+
+  it('rejects length/format constraints on plain strings', () => {
+    expect(() => deriveObjectSchema(z.strictObject({ name: z.string().min(1) })))
+      .toThrow(/string constraints/)
+    expect(() => deriveObjectSchema(z.strictObject({ name: z.string().min(1) })))
+      .toThrow(/\/name/)
+    expect(() => deriveObjectSchema(z.strictObject({ name: z.string().max(9) })))
+      .toThrow(/string constraints/)
+    expect(() => deriveObjectSchema(z.strictObject({ slug: z.string().regex(/^a/) })))
+      .toThrow(/string constraints/)
+  })
+
+  it('still accepts the constrained-string helpers (color, reference)', () => {
+    const derived = deriveObjectSchema(z.strictObject({
+      tint: color(),
+      target: reference({ target: 'entity' })
+    }))
+    expect(derived.fields.map((field) => field.kind)).toEqual(['color', 'reference'])
   })
 
   it('rejects unsupported zod constructs with the offending path', () => {

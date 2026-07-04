@@ -62,13 +62,21 @@ function deriveNode(schema: z.ZodType, path: string, meta: FieldMeta = metaOf(sc
       const number = schema as z.ZodNumber
       // `minValue`/`maxValue` merge inclusive and exclusive bounds
       // indistinguishably; the bag keeps them apart. Verified against the
-      // installed zod: `z.number().gt(0)._zod.bag` is `{ exclusiveMinimum: 0 }`.
+      // installed zod: `z.number().gt(0)._zod.bag` is `{ exclusiveMinimum: 0 }`,
+      // `.int()` sets `format: 'safeint'` (plus ±MAX_SAFE_INTEGER bounds),
+      // `.multipleOf(n)` sets `multipleOf: n`.
       const bag = (number as unknown as {
-        _zod: { bag: { exclusiveMinimum?: number; exclusiveMaximum?: number } }
+        _zod: { bag: { exclusiveMinimum?: number; exclusiveMaximum?: number; format?: string; multipleOf?: number } }
       })._zod.bag
       if (bag.exclusiveMinimum !== undefined || bag.exclusiveMaximum !== undefined) {
         throw new SchemaDeriveError(
           'exclusive number bounds (.gt/.lt/.positive/.negative) are not supported; use .min()/.max()',
+          path
+        )
+      }
+      if (bag.format !== undefined || bag.multipleOf !== undefined) {
+        throw new SchemaDeriveError(
+          'number constraints beyond .min()/.max() (.int/.multipleOf/...) are not supported — the editor cannot represent or report them',
           path
         )
       }
@@ -89,6 +97,19 @@ function deriveNode(schema: z.ZodType, path: string, meta: FieldMeta = metaOf(sc
           target: marker.target,
           ...(marker.typeIds ? { typeIds: marker.typeIds } : {})
         }
+      }
+      // Plain strings must be unconstrained: length/format checks have no IR
+      // representation, so zod would enforce them at runtime with issue codes
+      // the mapper mislabels (e.g. `.min()` → `number.min`). Constrained
+      // strings belong to helpers (`color()`), which return above.
+      const stringBag = (schema as unknown as {
+        _zod: { bag: { minimum?: number; maximum?: number; format?: string } }
+      })._zod.bag
+      if (stringBag.minimum !== undefined || stringBag.maximum !== undefined || stringBag.format !== undefined) {
+        throw new SchemaDeriveError(
+          'string constraints (.min/.max/.length/.regex/...) are not supported on plain strings',
+          path
+        )
       }
       return { kind: 'string', ...common, ...(meta.multiline ? { multiline: true } : {}) }
     }
@@ -226,7 +247,11 @@ function mapZodIssues(ir: ObjectSchema, root: unknown, zodIssues: readonly ZodIs
   for (const issue of zodIssues) {
     const { node, pointer, collapsed } = locate(ir, issue.path)
 
-    if (collapsed || (node?.kind === 'vec3' && issue.code !== 'invalid_type' && issue.code !== 'unrecognized_keys')) {
+    // A vec3 is atomic in the IR: issues raised inside it (collapsed) and
+    // extra-key rejections on it both surface as one vec3.type at the vec3's
+    // own pointer. Its invalid_type issues fall through so missing-field
+    // detection still emits `required`.
+    if (collapsed || (node?.kind === 'vec3' && issue.code === 'unrecognized_keys')) {
       push({ code: 'vec3.type', message: TYPE_CODES.vec3.message, pointer })
       continue
     }
@@ -288,11 +313,16 @@ function mapZodIssues(ir: ObjectSchema, root: unknown, zodIssues: readonly ZodIs
   return out
 }
 
-/** DSL semantic preserved post-parse: a required reference may not be ''. */
-function emptyRequiredReferences(node: PropertySchema, value: unknown, pointer: string): PropertyIssue[] {
+/**
+ * DSL semantic preserved post-parse: a required reference may not be ''.
+ * Array elements are required by nature (a slot cannot be absent), so a
+ * reference used directly as a list/table element is always non-empty;
+ * optional reference fields on objects nested inside items stay exempt.
+ */
+function emptyRequiredReferences(node: PropertySchema, value: unknown, pointer: string, isArrayItem = false): PropertyIssue[] {
   switch (node.kind) {
     case 'reference':
-      return node.required === true && value === ''
+      return (node.required === true || isArrayItem) && value === ''
         ? [{ code: 'reference.empty', message: 'A reference is required', pointer }]
         : []
     case 'object': {
@@ -306,7 +336,7 @@ function emptyRequiredReferences(node: PropertySchema, value: unknown, pointer: 
     }
     case 'array':
       return Array.isArray(value)
-        ? value.flatMap((item, index) => emptyRequiredReferences(node.item, item, `${pointer}/${index}`))
+        ? value.flatMap((item, index) => emptyRequiredReferences(node.item, item, `${pointer}/${index}`, true))
         : []
     default:
       return []
