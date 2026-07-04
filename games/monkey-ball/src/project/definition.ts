@@ -1,136 +1,92 @@
 import {
-  defineGameProject,
-  type ComponentTypeRegistration,
+  defineGameProject, listOf, vec3, z,
+  type ComponentTypeInput,
   type GameProjectDefinition,
   type ProjectSnapshot,
-  type ResourceTypeRegistration,
+  type ResourceTypeInput,
   type ValidationIssue
 } from '@automata/project'
 import { compileMonkeyBallProject } from './compiler'
 import { createMonkeyBallTemplate } from './template'
 import { MONKEY_BALL_TYPE_IDS, type CompiledMonkeyBallProject } from './types'
 
-const vec3Array = {
-  kind: 'array' as const,
-  presentation: 'list' as const,
-  item: { kind: 'vec3' as const }
-}
-
-const spawn: ComponentTypeRegistration = {
+const spawn: ComponentTypeInput = {
   typeId: MONKEY_BALL_TYPE_IDS.spawn,
   label: 'Spawn',
-  schema: {
-    kind: 'object',
-    fields: [
-      { key: 'timeLimitS', label: 'Time Limit (s)', kind: 'number', required: true, min: 1 },
-      { key: 'fallY', label: 'Fall Height', kind: 'number', required: true }
-    ]
-  },
+  schema: z.strictObject({
+    timeLimitS: z.number().min(1).meta({ label: 'Time Limit (s)' }),
+    fallY: z.number().meta({ label: 'Fall Height' })
+  }),
   defaultData: { timeLimitS: 60, fallY: -10 },
   cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', color: '#ff5964' }
 }
 
-const goal: ComponentTypeRegistration = {
+const goal: ComponentTypeInput = {
   typeId: MONKEY_BALL_TYPE_IDS.goal,
   label: 'Goal',
-  schema: { kind: 'object', fields: [] },
+  schema: z.strictObject({}),
   defaultData: {},
   cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', color: '#4ecdc4' }
 }
 
-const archetype: ComponentTypeRegistration = {
+const archetype: ComponentTypeInput = {
   typeId: MONKEY_BALL_TYPE_IDS.archetype,
   label: 'Archetype',
-  schema: {
-    kind: 'object',
-    fields: [
-      {
-        key: 'archetypeId', label: 'Archetype', kind: 'enum', required: true,
-        values: ['banana', 'bumper', 'moving-platform']
-      },
-      {
-        key: 'overrides', label: 'Overrides', kind: 'object', required: true,
-        fields: [
-          {
-            key: 'movingPlatform', label: 'Moving Platform', kind: 'object', required: false,
-            fields: [
-              { key: 'waypoints', label: 'Waypoints', ...vec3Array, required: true },
-              { key: 'speed', label: 'Speed', kind: 'number', required: true, min: 0 },
-              { key: 'mode', label: 'Mode', kind: 'enum', required: true, values: ['loop', 'pingpong'] }
-            ]
-          },
-          {
-            key: 'renderable', label: 'Renderable', kind: 'object', required: false,
-            fields: [
-              { key: 'radius', label: 'Radius', kind: 'number', required: false, min: 0 },
-              { key: 'height', label: 'Height', kind: 'number', required: false, min: 0 }
-            ]
-          },
-          {
-            key: 'rigidBody', label: 'Rigid Body', kind: 'object', required: false,
-            fields: [{
-              key: 'shape', label: 'Shape', kind: 'object', required: true,
-              fields: [
-                { key: 'type', label: 'Type', kind: 'enum', required: true, values: ['cylinder'] },
-                { key: 'halfHeight', label: 'Half Height', kind: 'number', required: true, min: 0 },
-                { key: 'radius', label: 'Radius', kind: 'number', required: true, min: 0 }
-              ]
-            }]
-          }
-        ]
-      }
-    ]
-  },
+  schema: z.strictObject({
+    archetypeId: z.enum(['banana', 'bumper', 'moving-platform']).meta({ label: 'Archetype' }),
+    overrides: z.strictObject({
+      movingPlatform: z.strictObject({
+        waypoints: listOf(vec3(), { label: 'Waypoints' }),
+        speed: z.number().min(0).meta({ label: 'Speed' }),
+        mode: z.enum(['loop', 'pingpong']).meta({ label: 'Mode' })
+      }).meta({ label: 'Moving Platform' }).optional(),
+      renderable: z.strictObject({
+        radius: z.number().min(0).meta({ label: 'Radius' }).optional(),
+        height: z.number().min(0).meta({ label: 'Height' }).optional()
+      }).meta({ label: 'Renderable' }).optional(),
+      rigidBody: z.strictObject({
+        shape: z.strictObject({
+          type: z.enum(['cylinder']).meta({ label: 'Type' }),
+          halfHeight: z.number().min(0).meta({ label: 'Half Height' }),
+          radius: z.number().min(0).meta({ label: 'Radius' })
+        }).meta({ label: 'Shape' })
+      }).meta({ label: 'Rigid Body' }).optional()
+    }).meta({ label: 'Overrides' })
+  }),
   defaultData: { archetypeId: 'banana', overrides: {} },
   cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', color: '#ffd23f' }
 }
 
-const physics: ResourceTypeRegistration = {
+const physics: ResourceTypeInput = {
   typeId: MONKEY_BALL_TYPE_IDS.physics,
   label: 'Physics',
   singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [
-      { key: 'maxTiltRad', label: 'Max Tilt (rad)', kind: 'number', required: true, min: 0, max: Math.PI / 4 },
-      { key: 'tiltSmooth', label: 'Tilt Smoothing', kind: 'number', required: true, min: 0, max: 1 },
-      { key: 'gravity', label: 'Gravity', kind: 'number', required: true, min: 0 },
-      {
-        key: 'ball', label: 'Ball', kind: 'object', required: true,
-        fields: [
-          { key: 'radius', label: 'Radius', kind: 'number', required: true, min: 0 },
-          { key: 'friction', label: 'Friction', kind: 'number', required: true, min: 0 }
-        ]
-      }
-    ]
-  },
+  schema: z.strictObject({
+    maxTiltRad: z.number().min(0).max(Math.PI / 4).meta({ label: 'Max Tilt (rad)' }),
+    tiltSmooth: z.number().min(0).max(1).meta({ label: 'Tilt Smoothing' }),
+    gravity: z.number().min(0).meta({ label: 'Gravity' }),
+    ball: z.strictObject({
+      radius: z.number().min(0).meta({ label: 'Radius' }),
+      friction: z.number().min(0).meta({ label: 'Friction' })
+    }).meta({ label: 'Ball' })
+  }),
   defaultData: createMonkeyBallTemplate().resources.physics!.data as Record<string, unknown>
 }
 
-const worlds: ResourceTypeRegistration = {
+const worlds: ResourceTypeInput = {
   typeId: MONKEY_BALL_TYPE_IDS.worlds,
   label: 'Worlds',
   singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [{
-      key: 'worlds', label: 'Worlds', kind: 'array', presentation: 'list', minItems: 1,
-      item: {
-        kind: 'object',
-        fields: [
-          { key: 'id', label: 'ID', kind: 'string', required: true },
-          { key: 'name', label: 'Name', kind: 'string', required: true },
-          {
-            key: 'levels', label: 'Levels', kind: 'array', presentation: 'list', minItems: 1,
-            item: { kind: 'string' }
-          }
-        ]
-      }
-    }]
-  },
+  schema: z.strictObject({
+    worlds: listOf(z.strictObject({
+      id: z.string().meta({ label: 'ID' }),
+      name: z.string().meta({ label: 'Name' }),
+      levels: listOf(z.string(), { label: 'Levels', minItems: 1 }).optional()
+    }), { label: 'Worlds', minItems: 1 }).optional()
+  }),
   defaultData: createMonkeyBallTemplate().resources.worlds!.data as Record<string, unknown>
 }
 
