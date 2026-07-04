@@ -1243,9 +1243,9 @@ const upgradeSet: ResourceTypeInput = {
 
 Every field that lacked `required: true` in the DSL carries `.optional()` above (`enemies`, `waves`, `spawns`, `upgrades`) — that is the polarity port rule, not a judgment call.
 
-- [x] **Step 2: Add the zod dependency**
+- [x] **Step 2: No zod dependency needed**
 
-In `games/pulsebreak/package.json` `dependencies`, add `"zod": "^4.4.3"`.
+`z` reaches the definition through `@automata/project`; `games/pulsebreak/package.json` stays untouched.
 
 - [x] **Step 3: Run the affected suites**
 
