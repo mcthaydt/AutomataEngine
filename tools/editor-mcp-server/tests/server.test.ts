@@ -89,6 +89,22 @@ describe('MCP server', () => {
     }
   })
 
+  it('decorates project tool descriptions with per-type JSON schemas', async () => {
+    const { host } = await createHeadlessHost({ projectDir: pulsebreakProject })
+    const { client, server } = await connected(host)
+    try {
+      const tools = (await client.listTools()).tools
+      const addComponent = tools.find((tool) => tool.name === 'addComponent')!
+      expect(addComponent.description).toContain('pulsebreak.spawn-zone')
+      expect(addComponent.description).toContain('core.transform')
+      const addResource = tools.find((tool) => tool.name === 'addResource')!
+      expect(addResource.description).toContain('pulsebreak.tuning')
+    } finally {
+      await client.close()
+      await server.close()
+    }
+  })
+
   it('stdio smoke starts through the declared executable', async () => {
     const manifest = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8')) as {
       bin: Record<string, string>

@@ -35,6 +35,35 @@ const WRITE_TOOLS = new Set<ToolName>([
   'moveArrayItem'
 ])
 
+/** Which tool descriptions carry which schema map. */
+const SCHEMA_SCOPES: Partial<Record<ToolName, 'components' | 'resources' | 'both'>> = {
+  addEntity: 'components',
+  addComponent: 'components',
+  addResource: 'resources',
+  setProperty: 'both',
+  insertArrayItem: 'both',
+  removeArrayItem: 'both',
+  moveArrayItem: 'both'
+}
+
+function schemaMap(specs: ReadonlyArray<{ typeId: string; jsonSchema?: Record<string, unknown> }>): string {
+  return JSON.stringify(
+    Object.fromEntries(specs.flatMap((spec) => (spec.jsonSchema ? [[spec.typeId, spec.jsonSchema]] : [])))
+  )
+}
+
+/** Decorate the generic tool defs with this game's typed data schemas. */
+function decorateToolDefs(registration: RegisteredEditorProject): ToolDef[] {
+  const components = ` Component data schemas by typeId: ${schemaMap(registration.componentTypes)}`
+  const resources = ` Resource data schemas by typeId: ${schemaMap(registration.resourceTypes)}`
+  return toolDefs().map((def) => {
+    const scope = SCHEMA_SCOPES[def.name as ToolName]
+    if (!scope) return def
+    const suffix = scope === 'components' ? components : scope === 'resources' ? resources : components + resources
+    return { ...def, description: def.description + suffix }
+  })
+}
+
 function errorResult(error: unknown): ToolResult {
   return {
     ok: false,
@@ -46,6 +75,7 @@ function errorResult(error: unknown): ToolResult {
 /** Create an isolated command/read/evaluation surface over one project snapshot. */
 export function createProjectToolHost(options: ProjectToolHostOptions): EditorProjectToolHost {
   const { registration } = options
+  const decoratedTools = decorateToolDefs(registration)
   let snapshot = options.initialSnapshot
   const commands: ProjectCommand[] = []
 
@@ -75,7 +105,7 @@ export function createProjectToolHost(options: ProjectToolHostOptions): EditorPr
     get snapshot() { return snapshot },
     get commands() { return commands },
     listTools(): ToolDef[] {
-      return toolDefs()
+      return decoratedTools
     },
     async executeTool(name, args): Promise<ToolResult> {
       let parsed: unknown

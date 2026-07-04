@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { defineGameProject, z } from '@automata/project'
 import { registerEditorProject } from '../../src/project/registration'
 import { createProjectToolHost } from '../../src/project/toolHost'
 import {
@@ -6,6 +7,39 @@ import {
   fakeEditorRegistration,
   fakeSnapshot
 } from '../fixtures/fakeProject'
+
+describe('listTools schema decoration', () => {
+  const registration = registerEditorProject({
+    project: defineGameProject({
+      gameId: 'deco', label: 'Deco',
+      createTemplate: () => ({
+        manifest: {
+          formatVersion: 1, id: 'deco', name: 'Deco', gameId: 'deco', entrySceneId: 'main',
+          scenes: [{ id: 'main', path: 'scenes/main.scene.json' }], resources: []
+        },
+        scenes: { main: { formatVersion: 1, id: 'main', name: 'Main', entities: [] } },
+        resources: {}
+      }),
+      components: [{
+        typeId: 'deco.stats', label: 'Stats',
+        schema: z.strictObject({ speed: z.number().min(0).meta({ label: 'Speed' }) }),
+        defaultData: { speed: 1 }, cardinality: { min: 0, max: 1 }
+      }],
+      resources: [], validate: () => [], compile: () => ({})
+    }),
+    prefabs: []
+  })
+
+  it('appends per-type JSON schemas to data-carrying tool descriptions', () => {
+    const host = createProjectToolHost({ registration, initialSnapshot: registration.createTemplate() })
+    const tools = new Map(host.listTools().map((tool) => [tool.name, tool.description]))
+    expect(tools.get('addComponent')).toContain('deco.stats')
+    expect(tools.get('addComponent')).toContain('"minimum":0')
+    expect(tools.get('addComponent')).toContain('core.transform')
+    expect(tools.get('setProperty')).toContain('deco.stats')
+    expect(tools.get('validate')).not.toContain('deco.stats')
+  })
+})
 
 describe('project ToolHost', () => {
   it('applies semantic writes only to the sandbox and records exact commands', async () => {
