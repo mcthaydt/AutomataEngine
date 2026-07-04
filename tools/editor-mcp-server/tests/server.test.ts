@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  getWorkspacePrompt,
   toolDefs,
+  workspacePromptDefs,
   type ToolHost
 } from '@automata/contracts'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
@@ -83,6 +85,34 @@ describe('MCP server', () => {
       expect(result.isError).toBe(true)
       expect(host.snapshot).toBe(before)
       expect(host.commands).toHaveLength(0)
+    } finally {
+      await client.close()
+      await server.close()
+    }
+  })
+
+  it('serves workspace prompts when configured', async () => {
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+    const server = createMcpServer(fakeHost, {
+      resourceUris: [],
+      prompts: { list: workspacePromptDefs, get: getWorkspacePrompt }
+    })
+    const client = new Client({ name: 'prompt-test', version: '0.0.0' })
+    await server.connect(serverTransport)
+    await client.connect(clientTransport)
+    try {
+      expect((await client.listPrompts()).prompts).toEqual([
+        expect.objectContaining({ name: 'build-game' })
+      ])
+      const prompt = await client.getPrompt({
+        name: 'build-game',
+        arguments: { description: 'a chill fishing game' }
+      })
+      const text = (prompt.messages[0]!.content as { text: string }).text
+      expect(text).toContain('a chill fishing game')
+      expect(text).toContain('createGame')
+      await expect(client.getPrompt({ name: 'build-game', arguments: {} }))
+        .rejects.toMatchObject({ code: ErrorCode.InvalidParams })
     } finally {
       await client.close()
       await server.close()

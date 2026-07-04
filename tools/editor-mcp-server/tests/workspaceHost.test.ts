@@ -35,7 +35,12 @@ describe('workspace MCP host', () => {
     expect(created.content).toMatchObject({
       gameDir: 'games/beacon-run',
       devPort: 5178,
-      nextSteps: expect.arrayContaining(['npm install'])
+      nextSteps: expect.arrayContaining([
+        expect.stringContaining('npm install'),
+        expect.stringContaining('--project games/beacon-run/public/project'),
+        expect.stringContaining('evaluate'),
+        expect.stringContaining('npm run ci')
+      ])
     })
     await expect(lstat(join(root, 'games/beacon-run/src/project/definition.ts'))).resolves.toBeDefined()
 

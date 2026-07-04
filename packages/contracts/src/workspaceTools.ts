@@ -8,7 +8,7 @@ import type { ToolDef } from './tools'
 
 export type WorkspaceToolName = 'createGame' | 'listGames'
 
-const gameSlugSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'lowercase alphanumeric slug with optional hyphens')
+export const gameSlugSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'lowercase alphanumeric slug with optional hyphens')
 
 export const workspaceToolArgSchemas = {
   createGame: z.object({

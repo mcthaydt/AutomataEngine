@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { parseWorkspaceToolArgs } from '@automata/contracts'
+import { getWorkspacePrompt, parseWorkspaceToolArgs, workspacePromptDefs } from '@automata/contracts'
 import { createHeadlessHost } from './headlessHost'
 import { createMcpServer } from './server'
 import { createWorkspaceHost } from './workspaceHost'
@@ -59,7 +59,8 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     const repoRoot = resolve(options.workspaceDir)
     const server = createMcpServer(createWorkspaceHost({ repoRoot }), {
       parseArgs: parseWorkspaceToolArgs,
-      resourceUris: []
+      resourceUris: [],
+      prompts: { list: workspacePromptDefs, get: getWorkspacePrompt }
     })
     await server.connect(new StdioServerTransport())
     process.stderr.write(`automata-editor MCP ready: workspace mode (${repoRoot})\n`)
