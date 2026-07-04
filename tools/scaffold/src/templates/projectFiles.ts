@@ -84,53 +84,44 @@ export function compileProject(snapshot: ProjectSnapshot): CompiledProject {
 
 export function definitionTs(name: string, label: string): string {
   return `import {
-  defineGameProject,
-  type ComponentTypeRegistration, type GameProjectDefinition,
-  type ProjectSnapshot, type ResourceTypeRegistration, type ValidationIssue
+  color, defineGameProject, z,
+  type ComponentTypeInput, type GameProjectDefinition,
+  type ProjectSnapshot, type ResourceTypeInput, type ValidationIssue
 } from '@automata/project'
 import { compileProject } from './compiler'
 import { createTemplate } from './template'
 import { GAME_TYPE_IDS, type CompiledProject } from './types'
 
-const numberField = (key: string, label: string, min = 0) => ({ key, label, kind: 'number' as const, required: true, min })
+const num = (label: string, min = 0) => z.number().min(min).meta({ label })
 
-const spawnPoint: ComponentTypeRegistration = {
+const spawnPoint: ComponentTypeInput = {
   typeId: GAME_TYPE_IDS.spawnPoint,
   label: 'Spawn Point',
-  schema: { kind: 'object', fields: [] },
+  schema: z.strictObject({}),
   defaultData: {},
   cardinality: { min: 0, max: 1 },
   gizmo: { kind: 'point', color: '#27e0ff' }
 }
 
-const tuning: ResourceTypeRegistration = {
+const tuning: ResourceTypeInput = {
   typeId: GAME_TYPE_IDS.tuning,
   label: 'Tuning',
   singleton: true,
-  schema: {
-    kind: 'object',
-    fields: [
-      numberField('arenaHalf', 'Arena Half-Extent', 1),
-      numberField('moveSpeed', 'Move Speed'),
-      {
-        key: 'goal', label: 'Goal', kind: 'object', required: true,
-        fields: [
-          { key: 'x', label: 'X', kind: 'number', required: true },
-          { key: 'z', label: 'Z', kind: 'number', required: true }
-        ]
-      },
-      numberField('goalRadius', 'Goal Radius'),
-      numberField('timeLimitS', 'Time Limit (s)'),
-      {
-        key: 'colors', label: 'Colors', kind: 'object', required: true,
-        fields: [
-          { key: 'floor', label: 'Floor', kind: 'color', required: true },
-          { key: 'player', label: 'Player', kind: 'color', required: true },
-          { key: 'goal', label: 'Goal', kind: 'color', required: true }
-        ]
-      }
-    ]
-  },
+  schema: z.strictObject({
+    arenaHalf: num('Arena Half-Extent', 1),
+    moveSpeed: num('Move Speed'),
+    goal: z.strictObject({
+      x: z.number().meta({ label: 'X' }),
+      z: z.number().meta({ label: 'Z' })
+    }).meta({ label: 'Goal' }),
+    goalRadius: num('Goal Radius'),
+    timeLimitS: num('Time Limit (s)'),
+    colors: z.strictObject({
+      floor: color({ label: 'Floor' }),
+      player: color({ label: 'Player' }),
+      goal: color({ label: 'Goal' })
+    }).meta({ label: 'Colors' })
+  }),
   defaultData: createTemplate().resources.tuning!.data as Record<string, unknown>
 }
 
