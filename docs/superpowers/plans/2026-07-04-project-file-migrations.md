@@ -982,7 +982,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 **Interfaces:**
 - Produces: `PROJECT_FORMAT_VERSION = 2`; scene/resource document schemas without `formatVersion`; `ProjectBundle` without root `formatVersion`; core migration `{ from: 1 }`.
 
-- [ ] **Step 1: Pin the v1 format as a frozen fixture**
+- [x] **Step 1: Pin the v1 format as a frozen fixture**
 
 Create `packages/project/tests/fixtures/v1Project.ts`:
 
@@ -1025,7 +1025,7 @@ export function v1BundleText(): string {
 }
 ```
 
-- [ ] **Step 2: Failing 1→2 tests in `migrate.test.ts`**
+- [x] **Step 2: Failing 1→2 tests in `migrate.test.ts`**
 
 ```ts
 import { v1BundleText, v1RawDocuments } from './fixtures/v1Project'
@@ -1065,14 +1065,14 @@ describe('migration 1→2', () => {
 Run: `npx vitest run --project @automata/project tests/migrate.test.ts`
 Expected: FAIL (`PROJECT_FORMAT_VERSION` is still 1; no migration registered).
 
-- [ ] **Step 3: Bump the model**
+- [x] **Step 3: Bump the model**
 
 `packages/project/src/model.ts`:
 - `export const PROJECT_FORMAT_VERSION = 2 as const`
 - Delete the `formatVersion: z.literal(PROJECT_FORMAT_VERSION),` line from `sceneDocumentSchema` and `resourceDocumentSchema`. The manifest keeps its line.
 - Update the module doc comment's last sentence to: `The manifest is the single formatVersion authority; bumping PROJECT_FORMAT_VERSION plus a core migration in migrate.ts is the only sanctioned way to evolve this shape.`
 
-- [ ] **Step 4: Register the 1→2 migration**
+- [x] **Step 4: Register the 1→2 migration**
 
 In `packages/project/src/migrate.ts`, replace the empty `CORE_MIGRATIONS`:
 
@@ -1098,11 +1098,11 @@ const CORE_MIGRATIONS: ProjectMigration[] = [
 ]
 ```
 
-- [ ] **Step 5: Drop the bundle root version**
+- [x] **Step 5: Drop the bundle root version**
 
 `packages/project/src/bundle.ts`: remove `formatVersion: typeof PROJECT_FORMAT_VERSION` from the `ProjectBundle` interface, remove `formatVersion: PROJECT_FORMAT_VERSION,` from `toProjectBundle`'s return object, and drop the now-unused `PROJECT_FORMAT_VERSION` import. Update the module doc comment to note the manifest carries the version.
 
-- [ ] **Step 6: Writer sweep (compiler- and grep-enumerated)**
+- [x] **Step 6: Writer sweep (compiler- and grep-enumerated)**
 
 Run `npm run typecheck`, then `grep -rn "formatVersion" packages games tools e2e --include="*.ts" --include="*.json" | grep -v node_modules | grep -v dist | grep -v v1Project`. Fix every hit by exactly one of two patterns:
 
@@ -1120,12 +1120,12 @@ Known sites (the sweep may find more in tests — same two patterns):
 
 Do NOT touch: `packages/project/tests/fixtures/v1Project.ts` (frozen), `games/*/public/project/**` JSON (Task 9), `docs/**`.
 
-- [ ] **Step 7: Run everything**
+- [x] **Step 7: Run everything**
 
 Run: `npm run test`
 Expected: PASS — including pulsebreak's `content.test.ts` and both `validate:project` paths, which still read v1 JSON from `public/project` and now succeed *through the migration* (that is the pipeline working; the files are normalized on disk in Task 9).
 
-- [ ] **Step 8: Lint, typecheck, commit**
+- [x] **Step 8: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck

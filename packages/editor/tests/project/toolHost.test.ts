@@ -14,10 +14,10 @@ describe('listTools schema decoration', () => {
       gameId: 'deco', label: 'Deco',
       createTemplate: () => ({
         manifest: {
-          formatVersion: 1, id: 'deco', name: 'Deco', gameId: 'deco', entrySceneId: 'main',
+          formatVersion: 2, id: 'deco', name: 'Deco', gameId: 'deco', entrySceneId: 'main',
           scenes: [{ id: 'main', path: 'scenes/main.scene.json' }], resources: []
         },
-        scenes: { main: { formatVersion: 1, id: 'main', name: 'Main', entities: [] } },
+        scenes: { main: { id: 'main', name: 'Main', entities: [] } },
         resources: {}
       }),
       components: [{

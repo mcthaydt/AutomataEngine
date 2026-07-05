@@ -15,7 +15,7 @@ describe('project files', () => {
   it('loads a project folder back into a snapshot', async () => {
     const snapshot = sampleSnapshot()
     const { reader } = readerFor(snapshot)
-    expect(await loadProjectFiles(reader)).toEqual({ snapshot, fromVersion: 1 })
+    expect(await loadProjectFiles(reader)).toEqual({ snapshot, fromVersion: 2 })
   })
 
   it('emits documents manifest-first then scenes and resources in manifest order', () => {

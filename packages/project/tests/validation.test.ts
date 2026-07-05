@@ -28,7 +28,7 @@ describe('project validation', () => {
     expect(codes(validateProject(sampleDefinition, snapshot))).toContain('manifest.sceneMismatch')
 
     const unlisted = sampleSnapshot()
-    unlisted.scenes.extra = { formatVersion: 1, id: 'extra', name: 'Extra', entities: [] }
+    unlisted.scenes.extra = { id: 'extra', name: 'Extra', entities: [] }
     expect(codes(validateProject(sampleDefinition, unlisted))).toContain('manifest.sceneMismatch')
   })
 
@@ -97,7 +97,7 @@ describe('project validation', () => {
     expect(codes(validateProject(sampleDefinition, invalid))).toContain('number.min')
 
     const duplicate = sampleSnapshot()
-    duplicate.resources.other = { formatVersion: 1, id: 'other', typeId: 'fake.tuning', data: { speed: 2 } }
+    duplicate.resources.other = { id: 'other', typeId: 'fake.tuning', data: { speed: 2 } }
     duplicate.manifest.resources.push({ id: 'other', typeId: 'fake.tuning', path: 'resources/other.resource.json' })
     expect(codes(validateProject(sampleDefinition, duplicate))).toContain('resource.singleton')
   })
@@ -108,7 +108,7 @@ describe('project validation', () => {
     expect(codes(validateProject(sampleDefinition, missing))).toContain('reference.missing')
 
     const wrongType = sampleSnapshot()
-    wrongType.resources.other = { formatVersion: 1, id: 'other', typeId: 'fake.other', data: {} }
+    wrongType.resources.other = { id: 'other', typeId: 'fake.other', data: {} }
     wrongType.manifest.resources.push({ id: 'other', typeId: 'fake.other', path: 'resources/other.resource.json' })
     ;(wrongType.scenes.main!.entities[1]!.components[0]!.data as { tuning: string }).tuning = 'other'
     const definition = defineGameProject({
@@ -143,7 +143,7 @@ describe('project validation', () => {
     })
     const valid = sampleSnapshot()
     ;(valid.scenes.main!.entities[1]!.components[0]!.data as Record<string, unknown>).target = 'root'
-    valid.resources.links = { formatVersion: 1, id: 'links', typeId: 'fake.links', data: { target: 'spawn' } }
+    valid.resources.links = { id: 'links', typeId: 'fake.links', data: { target: 'spawn' } }
     valid.manifest.resources.push({ id: 'links', typeId: 'fake.links', path: 'resources/links.resource.json' })
     expect(validateProject(definition, valid)).toEqual([])
 

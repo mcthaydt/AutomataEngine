@@ -18,13 +18,13 @@ export interface FakeCompiled {
 export function fakeSnapshot(): ProjectSnapshot {
   return {
     manifest: {
-      formatVersion: 1, id: 'fake-demo', name: 'Fake Demo', gameId: 'fake', entrySceneId: 'main',
+      formatVersion: 2, id: 'fake-demo', name: 'Fake Demo', gameId: 'fake', entrySceneId: 'main',
       scenes: [{ id: 'main', path: 'scenes/main.scene.json' }],
       resources: [{ id: 'tuning', typeId: 'fake.tuning', path: 'resources/tuning.resource.json' }]
     },
     scenes: {
       main: {
-        formatVersion: 1, id: 'main', name: 'Main',
+        id: 'main', name: 'Main',
         entities: [{
           id: 'box', name: 'Box', enabled: true,
           components: [
@@ -36,7 +36,7 @@ export function fakeSnapshot(): ProjectSnapshot {
       }
     },
     resources: {
-      tuning: { formatVersion: 1, id: 'tuning', typeId: 'fake.tuning', data: { speed: 4, mode: 'chase', tint: '#ffffff', waves: [] } }
+      tuning: { id: 'tuning', typeId: 'fake.tuning', data: { speed: 4, mode: 'chase', tint: '#ffffff', waves: [] } }
     }
   }
 }

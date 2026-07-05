@@ -36,13 +36,13 @@ export const sampleDefinition = defineGameProject(sampleDefinitionInput)
 export function sampleSnapshot(): ProjectSnapshot {
   return {
     manifest: {
-      formatVersion: 1, id: 'demo', name: 'Demo', gameId: 'fake', entrySceneId: 'main',
+      formatVersion: 2, id: 'demo', name: 'Demo', gameId: 'fake', entrySceneId: 'main',
       scenes: [{ id: 'main', path: 'scenes/main.scene.json' }],
       resources: [{ id: 'tuning', typeId: 'fake.tuning', path: 'resources/tuning.resource.json' }]
     },
     scenes: {
       main: {
-        formatVersion: 1, id: 'main', name: 'Main',
+        id: 'main', name: 'Main',
         entities: [
           {
             id: 'root', name: 'Root', enabled: true,
@@ -55,6 +55,6 @@ export function sampleSnapshot(): ProjectSnapshot {
         ]
       }
     },
-    resources: { tuning: { formatVersion: 1, id: 'tuning', typeId: 'fake.tuning', data: { speed: 4 } } }
+    resources: { tuning: { id: 'tuning', typeId: 'fake.tuning', data: { speed: 4 } } }
   }
 }

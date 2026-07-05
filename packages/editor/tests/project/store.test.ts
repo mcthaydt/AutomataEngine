@@ -134,7 +134,7 @@ describe('project editor store', () => {
 
   it('reconciles the active scene when it is removed', () => {
     const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
-    const scene2 = { formatVersion: 1 as const, id: 'two', name: 'Two', entities: [] }
+    const scene2 = { id: 'two', name: 'Two', entities: [] }
     store.dispatch({ type: 'projectCommand', command: { type: 'addScene', scene: scene2, path: 'scenes/two.scene.json' } })
     store.dispatch({ type: 'setActiveScene', sceneId: 'two' })
     expect(store.getState().activeSceneId).toBe('two')

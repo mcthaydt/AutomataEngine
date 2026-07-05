@@ -75,7 +75,6 @@ describe('MCP server', () => {
         arguments: {
           path: 'resources/duplicate.resource.json',
           resource: {
-            formatVersion: 1,
             id: 'waves',
             typeId: 'pulsebreak.wave-set',
             data: { waves: [] }

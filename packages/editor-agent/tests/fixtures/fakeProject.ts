@@ -6,7 +6,7 @@ import { defineGameProject, z, type ProjectSnapshot } from '@automata/project'
 export function fakeSnapshot(): ProjectSnapshot {
   return {
     manifest: {
-      formatVersion: 1,
+      formatVersion: 2,
       id: 'fake-project',
       name: 'Fake Project',
       gameId: 'fake',
@@ -16,7 +16,6 @@ export function fakeSnapshot(): ProjectSnapshot {
     },
     scenes: {
       arena: {
-        formatVersion: 1,
         id: 'arena',
         name: 'Arena',
         entities: [{
@@ -33,7 +32,6 @@ export function fakeSnapshot(): ProjectSnapshot {
     },
     resources: {
       waves: {
-        formatVersion: 1,
         id: 'waves',
         typeId: 'pulsebreak.wave-set',
         data: { count: 3 }

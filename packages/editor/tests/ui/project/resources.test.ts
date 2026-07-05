@@ -39,7 +39,7 @@ describe('project resources', () => {
         ...store.getState().snapshot,
         resources: {
           ...store.getState().snapshot.resources,
-          extra: { formatVersion: 1 as const, id: 'extra', typeId: 'fake.extra', data: {} }
+          extra: { id: 'extra', typeId: 'fake.extra', data: {} }
         }
       }
     }

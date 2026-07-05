@@ -17,7 +17,7 @@ const goodComponent = {
 
 function makeTemplate(): ProjectSnapshot {
   return {
-    manifest: { formatVersion: 1, id: 'fake', name: 'Fake', gameId: 'fake', entrySceneId: 'main', scenes: [], resources: [] },
+    manifest: { formatVersion: 2, id: 'fake', name: 'Fake', gameId: 'fake', entrySceneId: 'main', scenes: [], resources: [] },
     scenes: {}, resources: {}
   }
 }

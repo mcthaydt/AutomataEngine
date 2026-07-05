@@ -6,17 +6,17 @@ import { fakeSnapshot } from './fixtures/fakeProject'
 function changedSnapshots(): { before: ProjectSnapshot; after: ProjectSnapshot } {
   const before = fakeSnapshot()
   before.manifest.scenes.push({ id: 'retired', path: 'scenes/retired.scene.json' })
-  before.scenes.retired = { formatVersion: 1, id: 'retired', name: 'Retired', entities: [] }
+  before.scenes.retired = { id: 'retired', name: 'Retired', entities: [] }
   before.scenes.arena!.entities.push({ id: 'retired', name: 'Retired Spawn', enabled: true, components: [] })
   before.manifest.resources.push({ id: 'old', typeId: 'pulsebreak.wave-set', path: 'resources/old.resource.json' })
-  before.resources.old = { formatVersion: 1, id: 'old', typeId: 'pulsebreak.wave-set', data: { count: 1 } }
+  before.resources.old = { id: 'old', typeId: 'pulsebreak.wave-set', data: { count: 1 } }
 
   const after = structuredClone(before)
   after.manifest.name = 'Changed Project'
   after.manifest.scenes = after.manifest.scenes.filter((entry) => entry.id !== 'retired')
   after.manifest.scenes.push({ id: 'bonus', path: 'scenes/bonus.scene.json' })
   delete after.scenes.retired
-  after.scenes.bonus = { formatVersion: 1, id: 'bonus', name: 'Bonus', entities: [] }
+  after.scenes.bonus = { id: 'bonus', name: 'Bonus', entities: [] }
   after.scenes.arena!.name = 'Changed Arena'
 
   const spawn = after.scenes.arena!.entities.find((entity) => entity.id === 'spawn-east')!
@@ -30,7 +30,7 @@ function changedSnapshots(): { before: ProjectSnapshot; after: ProjectSnapshot }
   after.manifest.resources.push({ id: 'tuning', typeId: 'pulsebreak.wave-set', path: 'resources/tuning.resource.json' })
   delete after.resources.old
   ;(after.resources.waves!.data as { count: number }).count = 4
-  after.resources.tuning = { formatVersion: 1, id: 'tuning', typeId: 'pulsebreak.wave-set', data: { count: 2 } }
+  after.resources.tuning = { id: 'tuning', typeId: 'pulsebreak.wave-set', data: { count: 2 } }
   return { before, after }
 }
 

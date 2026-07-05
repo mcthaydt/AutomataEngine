@@ -11,7 +11,7 @@ function withSpeed(speed: number) {
 describe('memory project storage', () => {
   it('opens, saves only dirty paths, and round-trips', async () => {
     const storage = createMemoryProjectStorage(fakeSnapshot())
-    expect(await storage.open()).toEqual({ snapshot: fakeSnapshot(), fromVersion: 1 })
+    expect(await storage.open()).toEqual({ snapshot: fakeSnapshot(), fromVersion: 2 })
 
     const result = await storage.save(withSpeed(9), ['resources/tuning.resource.json'])
     expect(result).toEqual({ saved: ['resources/tuning.resource.json'], failed: [] })

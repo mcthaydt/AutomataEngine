@@ -72,10 +72,10 @@ import { mountProjectSession } from '../src/editorApp'
 
 const snapshot = {
   manifest: {
-    formatVersion: 1, id: 'test', name: 'Test', gameId: 'fake', entrySceneId: 'main',
+    formatVersion: 2, id: 'test', name: 'Test', gameId: 'fake', entrySceneId: 'main',
     scenes: [{ id: 'main', path: 'scenes/main.scene.json' }], resources: []
   },
-  scenes: { main: { formatVersion: 1, id: 'main', name: 'Main', entities: [] } },
+  scenes: { main: { id: 'main', name: 'Main', entities: [] } },
   resources: {}
 }
 

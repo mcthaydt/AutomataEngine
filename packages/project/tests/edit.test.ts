@@ -28,20 +28,20 @@ const definition = defineGameProject<{ snapshot: ProjectSnapshot }>({
 function baseSnapshot(): ProjectSnapshot {
   return {
     manifest: {
-      formatVersion: 1, id: 'demo', name: 'Demo', gameId: 'fake', entrySceneId: 'main',
+      formatVersion: 2, id: 'demo', name: 'Demo', gameId: 'fake', entrySceneId: 'main',
       scenes: [{ id: 'main', path: 'scenes/main.scene.json' }],
       resources: [{ id: 'tuning', typeId: 'fake.tuning', path: 'resources/tuning.resource.json' }]
     },
     scenes: {
       main: {
-        formatVersion: 1, id: 'main', name: 'Main',
+        id: 'main', name: 'Main',
         entities: [{
           id: 'root', name: 'Root', enabled: true,
           components: [{ id: 'transform', typeId: 'core.transform', data: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } } }]
         }]
       }
     },
-    resources: { tuning: { formatVersion: 1, id: 'tuning', typeId: 'fake.tuning', data: { speed: 4 } } }
+    resources: { tuning: { id: 'tuning', typeId: 'fake.tuning', data: { speed: 4 } } }
   }
 }
 
@@ -131,7 +131,7 @@ describe('project commands', () => {
   it('inserts, removes, and moves array items via array commands', () => {
     const withList = applyProjectCommand(definition, baseSnapshot(), {
       type: 'addResource', path: 'resources/list.resource.json',
-      resource: { formatVersion: 1, id: 'list', typeId: 'fake.list', data: { items: ['a', 'c'] } }
+      resource: { id: 'list', typeId: 'fake.list', data: { items: ['a', 'c'] } }
     })
     const inserted = applyProjectCommand(definition, withList, {
       type: 'insertArrayItem', target: { kind: 'resource', resourceId: 'list' }, pointer: '/items', index: 1, value: 'b'
@@ -151,7 +151,7 @@ describe('project commands', () => {
 
   it('adds and removes non-entry scenes while rejecting duplicates and missing scenes', () => {
     const snapshot = baseSnapshot()
-    const scene = { formatVersion: 1 as const, id: 'second', name: 'Second', entities: [] }
+    const scene = { id: 'second', name: 'Second', entities: [] }
     const added = applyProjectCommand(definition, snapshot, {
       type: 'addScene', path: 'scenes/second.scene.json', scene
     })
@@ -245,20 +245,20 @@ describe('project commands', () => {
     const snapshot = baseSnapshot()
     expect(() => applyProjectCommand(definition, snapshot, {
       type: 'addResource', path: 'resources/dup.resource.json',
-      resource: { formatVersion: 1, id: 'tuning', typeId: 'fake.tuning', data: { speed: 1 } }
+      resource: { id: 'tuning', typeId: 'fake.tuning', data: { speed: 1 } }
     })).toThrow(/duplicate/i)
     expect(() => applyProjectCommand(definition, snapshot, {
       type: 'addResource', path: 'resources/second.resource.json',
-      resource: { formatVersion: 1, id: 'second', typeId: 'fake.tuning', data: { speed: 1 } }
+      resource: { id: 'second', typeId: 'fake.tuning', data: { speed: 1 } }
     })).toThrow(/singleton/i)
     expect(() => applyProjectCommand(definition, snapshot, {
       type: 'addResource', path: 'resources/bad.resource.json',
-      resource: { formatVersion: 1, id: 'bad', typeId: 'fake.list', data: { items: 4 } }
+      resource: { id: 'bad', typeId: 'fake.list', data: { items: 4 } }
     })).toThrow(/invalid resource/i)
 
     const withList = applyProjectCommand(definition, snapshot, {
       type: 'addResource', path: 'resources/list.resource.json',
-      resource: { formatVersion: 1, id: 'list', typeId: 'fake.list', data: { items: [] } }
+      resource: { id: 'list', typeId: 'fake.list', data: { items: [] } }
     })
     const removed = applyProjectCommand(definition, withList, { type: 'removeResource', resourceId: 'list' })
     expect(removed.resources.list).toBeUndefined()
@@ -266,7 +266,7 @@ describe('project commands', () => {
 
     const unknown = applyProjectCommand(definition, snapshot, {
       type: 'addResource', path: 'resources/unknown.resource.json',
-      resource: { formatVersion: 1, id: 'unknown', typeId: 'other.type', data: {} }
+      resource: { id: 'unknown', typeId: 'other.type', data: {} }
     })
     expect(unknown.resources.unknown).toBeDefined()
   })
@@ -300,7 +300,7 @@ describe('project commands', () => {
   it('removes array items, preserves no-op moves, and validates loaded snapshots', () => {
     const withList = applyProjectCommand(definition, baseSnapshot(), {
       type: 'addResource', path: 'resources/list.resource.json',
-      resource: { formatVersion: 1, id: 'list', typeId: 'fake.list', data: { items: ['a', 'b'] } }
+      resource: { id: 'list', typeId: 'fake.list', data: { items: ['a', 'b'] } }
     })
     const removed = applyProjectCommand(definition, withList, {
       type: 'removeArrayItem', target: { kind: 'resource', resourceId: 'list' }, pointer: '/items', index: 0

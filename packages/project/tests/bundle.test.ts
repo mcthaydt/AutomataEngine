@@ -27,7 +27,7 @@ describe('project bundle', () => {
     const snapshot = sampleSnapshot()
     const parsed = parseProjectBundle(stringifyProjectBundle(toProjectBundle(snapshot)))
     expect(parsed.snapshot).toEqual(snapshot)
-    expect(parsed.fromVersion).toBe(1)
+    expect(parsed.fromVersion).toBe(2)
   })
 
   it('rejects a future manifest formatVersion and non-bundle shapes', () => {

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { applyGameMigration, parseProjectSnapshot, PROJECT_FORMAT_VERSION } from '../src'
+import { applyGameMigration, parseProjectBundle, parseProjectSnapshot, PROJECT_FORMAT_VERSION } from '../src'
 import type { RawProjectDocuments } from '../src'
 import { sampleSnapshot } from './fixtures/sampleProject'
+import { v1BundleText, v1RawDocuments } from './fixtures/v1Project'
 
 /** Explode a snapshot into the raw pre-validation shape the pipeline consumes. */
 function rawDocs(): RawProjectDocuments {
@@ -70,6 +71,36 @@ describe('parseProjectSnapshot', () => {
     const migrate = vi.fn()
     parseProjectSnapshot(rawDocs(), { migrate })
     expect(migrate).not.toHaveBeenCalled()
+  })
+})
+
+describe('migration 1→2', () => {
+  it('migrates v1 raw documents: manifest owns the version, docs lose theirs', () => {
+    const parsed = parseProjectSnapshot(v1RawDocuments())
+    expect(parsed.fromVersion).toBe(1)
+    expect(parsed.snapshot.manifest.formatVersion).toBe(2)
+    expect('formatVersion' in parsed.snapshot.scenes.main!).toBe(false)
+    expect('formatVersion' in parsed.snapshot.resources.tuning!).toBe(false)
+    expect(parsed.snapshot.scenes.main!.entities).toHaveLength(2)
+  })
+
+  it('parses a v1 bundle (root formatVersion ignored) to the same snapshot', () => {
+    const fromBundle = parseProjectBundle(v1BundleText())
+    expect(fromBundle.fromVersion).toBe(1)
+    expect(fromBundle.snapshot).toEqual(parseProjectSnapshot(v1RawDocuments()).snapshot)
+  })
+
+  it('fires the game hook with the post-core snapshot and the original fromVersion', () => {
+    const calls: number[] = []
+    const parsed = parseProjectSnapshot(v1RawDocuments(), {
+      migrate: (snapshot, fromVersion) => {
+        calls.push(fromVersion)
+        expect(snapshot.manifest.formatVersion).toBe(2) // core migrations ran first
+        return snapshot
+      }
+    })
+    expect(calls).toEqual([1])
+    expect(parsed.fromVersion).toBe(1)
   })
 })
 

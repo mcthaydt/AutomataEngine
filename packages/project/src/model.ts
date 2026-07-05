@@ -7,11 +7,12 @@ import { z } from 'zod'
  * written to a project folder or bundle. Component/resource payloads stay
  * `z.unknown()` here on purpose: the persisted layer must round-trip authored
  * data verbatim, while typed validation against registered schemas happens in a
- * higher layer (`validation.ts`). Bumping `PROJECT_FORMAT_VERSION` is the only
- * sanctioned way to evolve this shape.
+ * higher layer (`validation.ts`). The manifest is the single formatVersion
+ * authority; bumping PROJECT_FORMAT_VERSION plus a core migration in migrate.ts
+ * is the only sanctioned way to evolve this shape.
  */
 
-export const PROJECT_FORMAT_VERSION = 1 as const
+export const PROJECT_FORMAT_VERSION = 2 as const
 
 /** Non-empty stable identifier used for projects, scenes, entities, etc. */
 export const projectIdSchema = z.string().min(1)
@@ -36,7 +37,6 @@ export const entityDocumentSchema = z.object({
 
 /** A single authored scene document. */
 export const sceneDocumentSchema = z.object({
-  formatVersion: z.literal(PROJECT_FORMAT_VERSION),
   id: projectIdSchema,
   name: projectIdSchema,
   entities: z.array(entityDocumentSchema)
@@ -44,7 +44,6 @@ export const sceneDocumentSchema = z.object({
 
 /** A standalone, typed resource document (tuning tables, manifests, etc.). */
 export const resourceDocumentSchema = z.object({
-  formatVersion: z.literal(PROJECT_FORMAT_VERSION),
   id: projectIdSchema,
   typeId: projectIdSchema,
   data: z.unknown()

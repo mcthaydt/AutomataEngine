@@ -103,7 +103,7 @@ describe('project inspector', () => {
       })
     }))
     snapshot.resources.links = {
-      formatVersion: 1, id: 'links', typeId: 'fake.links',
+      id: 'links', typeId: 'fake.links',
       data: { any: 'tuning', typed: 'tuning', entity: 'box' }
     }
     inspector.update({ registration, snapshot, selection: { kind: 'resource', resourceId: 'links' } })

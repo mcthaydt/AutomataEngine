@@ -23,7 +23,7 @@ const transform = (position: { x: number; y: number; z: number }) => ({
 })
 
 function scene(entities: SceneDocument['entities']): SceneDocument {
-  return { formatVersion: 1, id: 's', name: 'S', entities }
+  return { id: 's', name: 'S', entities }
 }
 
 describe('project spatial projection', () => {

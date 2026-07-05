@@ -11,7 +11,7 @@ export function buildProjectSnapshot(name: string, label: string): ProjectSnapsh
   const one = { x: 1, y: 1, z: 1 }
   return {
     manifest: {
-      formatVersion: 1,
+      formatVersion: 2,
       id: name,
       name: label,
       gameId: name,
@@ -21,7 +21,6 @@ export function buildProjectSnapshot(name: string, label: string): ProjectSnapsh
     },
     scenes: {
       main: {
-        formatVersion: 1,
         id: 'main',
         name: 'Main',
         entities: [
@@ -43,7 +42,6 @@ export function buildProjectSnapshot(name: string, label: string): ProjectSnapsh
     },
     resources: {
       tuning: {
-        formatVersion: 1,
         id: 'tuning',
         typeId: `${name}.tuning`,
         data: {

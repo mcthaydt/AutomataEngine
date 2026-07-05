@@ -44,7 +44,7 @@ export function importLegacyMonkeyBallProject(input: LegacyMonkeyBallProjectInpu
   const projectId = input.projectId ?? 'monkey-ball'
   return {
     manifest: {
-      formatVersion: 1,
+      formatVersion: 2,
       id: projectId,
       name: input.projectName ?? 'Monkey Ball',
       gameId: 'monkey-ball',
@@ -58,13 +58,11 @@ export function importLegacyMonkeyBallProject(input: LegacyMonkeyBallProjectInpu
     scenes,
     resources: {
       physics: {
-        formatVersion: 1,
         id: 'physics',
         typeId: MONKEY_BALL_TYPE_IDS.physics,
         data: structuredClone(input.tuning)
       },
       worlds: {
-        formatVersion: 1,
         id: 'worlds',
         typeId: MONKEY_BALL_TYPE_IDS.worlds,
         data: structuredClone(input.manifest)
@@ -86,7 +84,7 @@ function importScene(level: Level): SceneDocument {
     ...level.entities.map(importArchetype)
   ]
   assertUniqueEntityIds(level.id, entities)
-  return { formatVersion: 1, id: level.id, name: level.name, entities }
+  return { id: level.id, name: level.name, entities }
 }
 
 function markerEntity(id: string, name: string, position: readonly number[], marker: ComponentInstance): EntityDocument {

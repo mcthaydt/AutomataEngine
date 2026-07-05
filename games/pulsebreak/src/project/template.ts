@@ -23,7 +23,7 @@ function entity(id: string, name: string, position: { x: number; y: number; z: n
 export function createPulsebreakTemplate(): ProjectSnapshot {
   return {
     manifest: {
-      formatVersion: 1, id: 'pulsebreak', name: 'Pulsebreak', gameId: 'pulsebreak', entrySceneId: 'arena',
+      formatVersion: 2, id: 'pulsebreak', name: 'Pulsebreak', gameId: 'pulsebreak', entrySceneId: 'arena',
       scenes: [{ id: 'arena', path: 'scenes/arena.scene.json' }],
       resources: [
         { id: 'tuning', typeId: PULSEBREAK_TYPE_IDS.tuning, path: 'resources/tuning.resource.json' },
@@ -34,7 +34,7 @@ export function createPulsebreakTemplate(): ProjectSnapshot {
     },
     scenes: {
       arena: {
-        formatVersion: 1, id: 'arena', name: 'Arena',
+        id: 'arena', name: 'Arena',
         entities: [
           entity('floor', 'Floor', { x: 0, y: -0.15, z: 0 }, [
             { id: 'primitive', typeId: CORE_TYPE_IDS.primitive, data: { shape: 'box', size: { x: 28, y: 0.3, z: 28 } } },
@@ -54,7 +54,7 @@ export function createPulsebreakTemplate(): ProjectSnapshot {
     },
     resources: {
       tuning: {
-        formatVersion: 1, id: 'tuning', typeId: PULSEBREAK_TYPE_IDS.tuning,
+        id: 'tuning', typeId: PULSEBREAK_TYPE_IDS.tuning,
         data: {
           arena: { half: 13, y: 0.5 },
           camera: { eye: { x: 0, y: 24, z: 19 }, look: { x: 0, y: 0, z: 0 } },
@@ -66,7 +66,7 @@ export function createPulsebreakTemplate(): ProjectSnapshot {
         }
       },
       enemies: {
-        formatVersion: 1, id: 'enemies', typeId: PULSEBREAK_TYPE_IDS.enemyTypes,
+        id: 'enemies', typeId: PULSEBREAK_TYPE_IDS.enemyTypes,
         data: {
           enemies: [
             { id: 'rammer', health: 18, radius: 0.6, speed: 4.6, contactDamage: 10, scoreValue: 100, color: '#ff2e88' },
@@ -76,7 +76,7 @@ export function createPulsebreakTemplate(): ProjectSnapshot {
         }
       },
       waves: {
-        formatVersion: 1, id: 'waves', typeId: PULSEBREAK_TYPE_IDS.waveSet,
+        id: 'waves', typeId: PULSEBREAK_TYPE_IDS.waveSet,
         data: {
           waves: [
             { id: 'wave-1', spawns: [{ enemyTypeId: 'rammer', count: 3 }] },
@@ -88,7 +88,7 @@ export function createPulsebreakTemplate(): ProjectSnapshot {
         }
       },
       upgrades: {
-        formatVersion: 1, id: 'upgrades', typeId: PULSEBREAK_TYPE_IDS.upgradeSet,
+        id: 'upgrades', typeId: PULSEBREAK_TYPE_IDS.upgradeSet,
         data: {
           upgrades: [
             { id: 'damage', label: 'Overcharge', description: '+ pulse damage', step: 6 },

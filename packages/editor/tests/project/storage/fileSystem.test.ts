@@ -78,6 +78,6 @@ describe('filesystem project storage', () => {
   it('opens a folder back into a snapshot', async () => {
     const snapshot = fakeSnapshot()
     const { dir } = fakeDir(Object.fromEntries(projectFileDocuments(snapshot).map((doc) => [doc.path, doc.text])))
-    expect(await createFileSystemProjectStorage(dir).open()).toEqual({ snapshot, fromVersion: 1 })
+    expect(await createFileSystemProjectStorage(dir).open()).toEqual({ snapshot, fromVersion: 2 })
   })
 })

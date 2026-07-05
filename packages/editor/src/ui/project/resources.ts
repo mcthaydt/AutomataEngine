@@ -74,7 +74,7 @@ function addResourceCommand(state: ProjectEditorState, type: ResourceTypeRegistr
   while (state.snapshot.resources[id]) id = `${base}-${++counter}`
   return {
     type: 'addResource',
-    resource: { formatVersion: 1, id, typeId: type.typeId, data: structuredClone(type.defaultData) },
+    resource: { id, typeId: type.typeId, data: structuredClone(type.defaultData) },
     path: `resources/${id}.resource.json`
   }
 }

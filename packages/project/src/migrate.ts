@@ -34,7 +34,26 @@ interface ProjectMigration {
   migrate(docs: RawProjectDocuments): RawProjectDocuments
 }
 
-const CORE_MIGRATIONS: ProjectMigration[] = []
+function stripDocFormatVersion(doc: unknown): unknown {
+  if (doc === null || typeof doc !== 'object') return doc
+  const rest = { ...(doc as Record<string, unknown>) }
+  delete rest.formatVersion
+  return rest
+}
+
+const CORE_MIGRATIONS: ProjectMigration[] = [
+  {
+    // v2: the manifest is the single version authority — scene/resource
+    // documents (and the bundle root) no longer carry formatVersion.
+    // Every core migration must stamp its target version into the manifest.
+    from: 1,
+    migrate: (docs) => ({
+      manifest: { ...(docs.manifest as Record<string, unknown>), formatVersion: 2 },
+      scenes: docs.scenes.map(stripDocFormatVersion),
+      resources: docs.resources.map(stripDocFormatVersion)
+    })
+  }
+]
 
 // A gap in the chain is a programmer error; fail at module load, not at parse time.
 if (CORE_MIGRATIONS.length !== PROJECT_FORMAT_VERSION - 1) {

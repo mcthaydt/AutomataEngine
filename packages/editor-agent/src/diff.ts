@@ -53,7 +53,7 @@ function entityProperties(entity: EntityDocument): unknown {
 }
 
 function sceneProperties(scene: SceneDocument): unknown {
-  return { formatVersion: scene.formatVersion, id: scene.id, name: scene.name }
+  return { id: scene.id, name: scene.name }
 }
 
 function manifestProperties(snapshot: ProjectSnapshot): unknown {

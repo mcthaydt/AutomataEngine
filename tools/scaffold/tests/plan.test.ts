@@ -63,7 +63,7 @@ describe('planNewGame', () => {
         return content
       }
     }
-    const snapshot = await loadProjectFiles(reader)
+    const { snapshot } = await loadProjectFiles(reader)
     expect(projectSnapshotSchema.parse(snapshot)).toEqual(buildProjectSnapshot('starfall', 'Starfall'))
     const template = byPath.get('games/starfall/src/project/template.ts')!
     expect(template).toContain('"gameId": "starfall"')

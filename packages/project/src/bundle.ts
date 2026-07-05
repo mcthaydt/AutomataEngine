@@ -1,5 +1,4 @@
 import { parseProjectSnapshot, type GameMigrateHook, type ParsedProject } from './migrate'
-import { PROJECT_FORMAT_VERSION } from './model'
 import type { ProjectManifest, ProjectSnapshot, SceneDocument, ResourceDocument } from './model'
 
 /**
@@ -8,11 +7,11 @@ import type { ProjectManifest, ProjectSnapshot, SceneDocument, ResourceDocument 
  * `toProjectBundle` produces a deterministically-ordered view (scenes,
  * resources, entities, and components all sorted by stable ID) so two equal
  * projects serialize byte-for-byte identically — the parity backbone for the
- * Monkey Ball importer. Bundles are loaded back into the map-shaped snapshot.
+ * Monkey Ball importer. Bundles are loaded back into the map-shaped snapshot;
+ * the manifest carries the single formatVersion.
  */
 
 export interface ProjectBundle {
-  formatVersion: typeof PROJECT_FORMAT_VERSION
   manifest: ProjectManifest
   scenes: SceneDocument[]
   resources: ResourceDocument[]
@@ -29,7 +28,6 @@ export function toProjectBundle(snapshot: ProjectSnapshot): ProjectBundle {
     entities: byId(scene.entities).map((entity) => ({ ...entity, components: byId(entity.components) }))
   }))
   return {
-    formatVersion: PROJECT_FORMAT_VERSION,
     manifest: snapshot.manifest,
     scenes,
     resources: byId(Object.values(snapshot.resources))
