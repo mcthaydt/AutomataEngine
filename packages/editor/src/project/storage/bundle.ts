@@ -1,4 +1,4 @@
-import { parseProjectBundle, stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
+import { parseProjectBundle, stringifyProjectBundle, toProjectBundle, type ParsedProject, type ProjectSnapshot } from '@automata/project'
 import type { ProjectBundleExport, ProjectStorageValidation } from './port'
 
 /**
@@ -12,6 +12,6 @@ export function exportProjectBundle(snapshot: ProjectSnapshot, options: ProjectS
   return { text: stringifyProjectBundle(toProjectBundle(snapshot)), issues: options.validate?.(snapshot) ?? [] }
 }
 
-export function importProjectBundle(text: string): ProjectSnapshot {
+export function importProjectBundle(text: string): ParsedProject {
   return parseProjectBundle(text)
 }

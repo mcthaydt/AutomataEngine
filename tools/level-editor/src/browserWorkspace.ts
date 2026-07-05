@@ -47,7 +47,7 @@ export function createBrowserWorkspace(dependencies: BrowserWorkspaceDependencie
   const openBundle = async (registration?: RegisteredEditorProject): Promise<OpenedBrowserProject | null> => {
     const text = await dependencies.pickBundleText()
     if (text === null) return null
-    const snapshot = importProjectBundle(text)
+    const snapshot = importProjectBundle(text).snapshot
     if (registration) assertGame(registration, snapshot)
     return { snapshot, storage: null, source: 'bundle' }
   }

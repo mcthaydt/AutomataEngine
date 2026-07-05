@@ -9,13 +9,13 @@ describe('project bundle storage', () => {
     const exported = exportProjectBundle(snapshot, { validate: () => [{ severity: 'warning', code: 'demo', message: 'heads up' }] })
     expect(exported.issues).toHaveLength(1)
     // Bundles are canonical (stable-id ordered), so compare canonical forms.
-    expect(toProjectBundle(importProjectBundle(exported.text))).toEqual(toProjectBundle(snapshot))
+    expect(toProjectBundle(importProjectBundle(exported.text).snapshot)).toEqual(toProjectBundle(snapshot))
   })
 
   it('exports a game-invalid but structurally-parseable work-in-progress snapshot', () => {
     const wip = fakeSnapshot()
     wip.scenes.main!.entities[0]!.components.push({ id: 'u', typeId: 'fake.unknown', data: {} })
     const exported = exportProjectBundle(wip)
-    expect(toProjectBundle(importProjectBundle(exported.text))).toEqual(toProjectBundle(wip))
+    expect(toProjectBundle(importProjectBundle(exported.text).snapshot)).toEqual(toProjectBundle(wip))
   })
 })

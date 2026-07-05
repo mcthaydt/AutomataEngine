@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import { projectManifestSchema, sceneDocumentSchema, resourceDocumentSchema, projectSnapshotSchema, PROJECT_FORMAT_VERSION } from './model'
+import { parseProjectSnapshot, type GameMigrateHook, type ParsedProject } from './migrate'
+import { PROJECT_FORMAT_VERSION } from './model'
 import type { ProjectManifest, ProjectSnapshot, SceneDocument, ResourceDocument } from './model'
 
 /**
@@ -41,19 +41,11 @@ export function stringifyProjectBundle(bundle: ProjectBundle): string {
   return `${JSON.stringify(bundle, null, 2)}\n`
 }
 
-const projectBundleSchema = z.object({
-  formatVersion: z.literal(PROJECT_FORMAT_VERSION),
-  manifest: projectManifestSchema,
-  scenes: z.array(sceneDocumentSchema),
-  resources: z.array(resourceDocumentSchema)
-})
-
-/** Parse bundle text back into a validated snapshot; never silently repairs. */
-export function parseProjectBundle(text: string): ProjectSnapshot {
-  const bundle = projectBundleSchema.parse(JSON.parse(text))
-  return projectSnapshotSchema.parse({
-    manifest: bundle.manifest,
-    scenes: Object.fromEntries(bundle.scenes.map((scene) => [scene.id, scene])),
-    resources: Object.fromEntries(bundle.resources.map((resource) => [resource.id, resource]))
-  })
+/** Parse bundle text through the central migration-aware entry. */
+export function parseProjectBundle(text: string, opts: { migrate?: GameMigrateHook } = {}): ParsedProject {
+  const raw = JSON.parse(text) as { manifest?: unknown; scenes?: unknown; resources?: unknown } | null
+  if (raw === null || typeof raw !== 'object' || !Array.isArray(raw.scenes) || !Array.isArray(raw.resources)) {
+    throw new Error('Not a project bundle: expected { manifest, scenes[], resources[] }')
+  }
+  return parseProjectSnapshot({ manifest: raw.manifest, scenes: raw.scenes, resources: raw.resources }, opts)
 }

@@ -45,6 +45,6 @@ export function createMemoryProjectStorage(initial: ProjectSnapshot, options: Me
       return { saved, failed }
     },
     exportBundle(snapshot) { return exportProjectBundle(snapshot, options) },
-    importBundle(text) { return importProjectBundle(text) }
+    importBundle(text) { return importProjectBundle(text).snapshot }
   }
 }

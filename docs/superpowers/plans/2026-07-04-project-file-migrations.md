@@ -515,7 +515,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 Behavior strengthenings this task ships (already unit-tested in migrate.test.ts, smoke-tested here): bundles gain manifest/doc cross-checks; duplicate ids stop silently last-winning through `Object.fromEntries`.
 
-- [ ] **Step 1: Update `bundle.test.ts` (failing first)**
+- [x] **Step 1: Update `bundle.test.ts` (failing first)**
 
 Lines 26–30 (`round-trips a snapshot through stringify/parse`):
 ```ts
@@ -544,12 +544,12 @@ it('rejects duplicate ids instead of silently last-winning', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failures**
+- [x] **Step 2: Run to verify failures**
 
 Run: `npx vitest run --project @automata/project tests/bundle.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Replace `parseProjectBundle`**
+- [x] **Step 3: Replace `parseProjectBundle`**
 
 In `packages/project/src/bundle.ts`: delete the `projectBundleSchema` const and the `z` import; add `import { parseProjectSnapshot, type GameMigrateHook, type ParsedProject } from './migrate'`; drop now-unused schema imports from `./model` (keep `PROJECT_FORMAT_VERSION` — the `ProjectBundle` interface still carries the root field until Task 8):
 
@@ -572,7 +572,7 @@ export function importProjectBundle(text: string): ParsedProject {
 ```
 (adjust the import to pull `ParsedProject` from `@automata/project`).
 
-- [ ] **Step 4: Fix compiler-enumerated consumers (temporary unwraps, replaced in Task 7)**
+- [x] **Step 4: Fix compiler-enumerated consumers (temporary unwraps, replaced in Task 7)**
 
 Run `npm run typecheck`; apply:
 
@@ -582,7 +582,7 @@ Run `npm run typecheck`; apply:
 
 `tools/editor-mcp-server/src/headlessHost.ts:43`: `? parseProjectBundle(options.bundleJson).snapshot`
 
-- [ ] **Step 5: Run affected suites; commit**
+- [x] **Step 5: Run affected suites; commit**
 
 Run: `npx vitest run --project @automata/project --project @automata/editor --project level-editor --project editor-mcp-server`
 Expected: PASS.

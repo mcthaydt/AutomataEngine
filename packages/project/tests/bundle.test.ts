@@ -26,11 +26,21 @@ describe('project bundle', () => {
   it('round-trips a snapshot through stringify/parse', () => {
     const snapshot = sampleSnapshot()
     const parsed = parseProjectBundle(stringifyProjectBundle(toProjectBundle(snapshot)))
-    expect(parsed).toEqual(snapshot)
+    expect(parsed.snapshot).toEqual(snapshot)
+    expect(parsed.fromVersion).toBe(1)
   })
 
-  it('rejects an invalid bundle without silently repairing it', () => {
-    const broken = stringifyProjectBundle(toProjectBundle(sampleSnapshot())).replace('"formatVersion": 1', '"formatVersion": 2')
-    expect(() => parseProjectBundle(broken)).toThrow()
+  it('rejects a future manifest formatVersion and non-bundle shapes', () => {
+    const bundle = toProjectBundle(sampleSnapshot())
+    const future = { ...bundle, manifest: { ...bundle.manifest, formatVersion: 99 } }
+    expect(() => parseProjectBundle(JSON.stringify(future))).toThrow(/newer than this build supports/i)
+    expect(() => parseProjectBundle('42')).toThrow(/not a project bundle/i)
+    expect(() => parseProjectBundle('{"manifest":{}}')).toThrow(/not a project bundle/i)
+  })
+
+  it('rejects duplicate ids instead of silently last-winning', () => {
+    const bundle = toProjectBundle(sampleSnapshot())
+    const dup = { ...bundle, scenes: [...bundle.scenes, structuredClone(bundle.scenes[0]!)] }
+    expect(() => parseProjectBundle(JSON.stringify(dup))).toThrow(/duplicate scene id/i)
   })
 })

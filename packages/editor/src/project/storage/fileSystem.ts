@@ -84,7 +84,7 @@ export function createFileSystemProjectStorage(directory: DirectoryHandleLike, o
       return { saved, failed }
     },
     exportBundle(snapshot) { return exportProjectBundle(snapshot, options) },
-    importBundle(text) { return importProjectBundle(text) }
+    importBundle(text) { return importProjectBundle(text).snapshot }
   }
 }
 
