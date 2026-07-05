@@ -67,7 +67,7 @@ Tasks 2–3 leave the editor storage port unchanged by unwrapping `.snapshot` at
 
 Notes for the implementer: `PROJECT_FORMAT_VERSION` is `1` right now, so no older version exists yet. `parseProjectSnapshot`'s hook-*fires* path is therefore exercised through `applyGameMigration` with a fabricated `fromVersion: 0` (it only compares numbers); the real 1→2 hook test is added in Task 8.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `packages/project/tests/migrate.test.ts`:
 
@@ -182,12 +182,12 @@ describe('applyGameMigration', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project @automata/project tests/migrate.test.ts`
 Expected: FAIL — `parseProjectSnapshot` is not exported.
 
-- [ ] **Step 3: Implement `migrate.ts`**
+- [x] **Step 3: Implement `migrate.ts`**
 
 Create `packages/project/src/migrate.ts`:
 
@@ -333,12 +333,12 @@ Add to `packages/project/src/index.ts` (after the `./model` export line):
 export * from './migrate'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project @automata/project`
 Expected: PASS (migrate.test.ts and all existing project tests).
 
-- [ ] **Step 5: Lint, typecheck, commit**
+- [x] **Step 5: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck

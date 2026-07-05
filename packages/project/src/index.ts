@@ -1,5 +1,6 @@
 export const PROJECT_VERSION = '0.1.0'
 export * from './model'
+export * from './migrate'
 export * from './schema'
 export * from './authoring'
 export * from './derive'
