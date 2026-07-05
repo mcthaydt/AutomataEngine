@@ -188,7 +188,7 @@ const rewriting = (edit: (path: string, text: string) => string): ProjectFileRea
 
 describe('project content', () => {
   it('ships public files equal to the in-code template', async () => {
-    const snapshot = await loadProjectFiles(reader)
+    const { snapshot } = await loadProjectFiles(reader)
     expect(validateProject(projectDefinition, snapshot)).toEqual([])
     expect(snapshot).toEqual(createTemplate())
   })

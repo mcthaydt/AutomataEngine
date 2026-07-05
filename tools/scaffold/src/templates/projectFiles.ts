@@ -292,7 +292,7 @@ import type { CompiledProject } from './types'
  * code/path so boot failures are diagnosable.
  */
 export async function loadProject(reader: ProjectFileReader): Promise<CompiledProject> {
-  const snapshot = await loadProjectFiles(reader)
+  const { snapshot } = await loadProjectFiles(reader, { migrate: projectDefinition.migrate })
   if (snapshot.manifest.gameId !== '${name}') {
     throw new Error(\`Expected a ${label} project, got gameId "\${snapshot.manifest.gameId}"\`)
   }

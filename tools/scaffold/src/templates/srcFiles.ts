@@ -212,7 +212,7 @@ import { projectDefinition } from '../src/project/definition'
  * print structured errors to stderr, and exit non-zero on any error.
  */
 const root = resolve(import.meta.dirname, '../public/project')
-const snapshot = await loadProjectFiles({ readText: (path) => readFile(resolve(root, path), 'utf8') })
+const { snapshot } = await loadProjectFiles({ readText: (path) => readFile(resolve(root, path), 'utf8') })
 
 const errors = validateProject(projectDefinition, snapshot).filter((issue) => issue.severity === 'error')
 if (errors.length > 0) {
