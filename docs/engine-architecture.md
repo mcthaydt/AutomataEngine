@@ -533,26 +533,15 @@ roots and show construction order, but not the contracts each subsystem owns.
 
 ### Roadmap, not current behavior
 
-The following architecture work is planned or incomplete:
+Architecture work beyond what is on `main` — project-file migrations, richer
+`@automata/game-kit`, persistent MCP project sessions, generated agent
+documentation, and deeper product acceptance — is tracked authoritatively in
+[`docs/ROADMAP.md`](ROADMAP.md), the living, status-tracked roadmap. It maps the
+near-term P-series onto the [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md),
+the strategic destination for the prompt-to-game direction.
 
-- **Project-file migrations:** centralize every load path behind one ordered
-  migration pipeline and move the project format from v1 to v2.
-- **Richer `@automata/game-kit`:** extract more browser boot, loop, visibility,
-  HUD, and project-reader behavior shared by games.
-- **Persistent MCP project sessions:** support create, open, author, evaluate,
-  and tune in one MCP connection.
-- **Generated agent documentation:** publish an API digest and game-building
-  walkthrough with drift checks.
-- **Deeper product acceptance:** expand beyond browser boot smokes into
-  save/reopen recovery, longer editor sessions, accessibility, and complete
-  gameplay flows.
-
-These items are the platform-integrity foundation ("Phase 0" and "Phase 1")
-of the [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md),
-the strategic destination document for the prompt-to-game direction.
-
-These items should not be assumed available merely because their design or
-implementation plan exists.
+Nothing on that roadmap should be assumed available merely because its design or
+implementation plan exists; check its status there.
 
 ### Keeping this guide accurate
 

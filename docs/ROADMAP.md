@@ -1,0 +1,185 @@
+# AutomataEngine Roadmap
+
+**North star:** an agent (Claude Code/Codex/OpenCode via MCP) turns a natural-language
+description into a complete, coherent browser game. MCP-first is the blessed AI
+path; the in-editor chat agent is a thin client, not the product. The full
+destination is the [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md);
+this document is the living map of how we get there.
+
+## How to read this
+
+- **This file is the single source of truth for status and sequencing.** Specs
+  describe a design at a point in time; plans are per-initiative checklists;
+  this roadmap is the one place that says what is shipped, what is in flight,
+  and what comes next.
+- **Status vocabulary** (used everywhere below): `Shipped` · `In progress` ·
+  `Next` · `Planned` · `Moot`.
+- **Granularity rule:** in-progress and next work carry task breakdowns. Later
+  phases stay scoped headings — their detail arrives just-in-time in their own
+  spec→plan cycle, not written speculatively here.
+- **Keeping this current:** update this file whenever a phase or item changes
+  status, and at the end of every spec→plan→merge cycle (the same discipline
+  AGENTS.md already requires for plans).
+
+---
+
+## 1. Shipped
+
+Newest first. Each links to the spec/plan that defines it.
+
+- **P3 — Project-file migrations** (2026-07-05, main @ `39439b9`). One central
+  parse entry (`parseProjectSnapshot`) behind every load path; an ordered core
+  migration chain; an optional per-game `migrate` hook; **formatVersion 2** with
+  the manifest as the single version authority. Checked-in games normalized to
+  v2. Spec: [`specs/2026-07-04-project-file-migrations-design.md`](superpowers/specs/2026-07-04-project-file-migrations-design.md);
+  plan: [`plans/2026-07-04-project-file-migrations.md`](superpowers/plans/2026-07-04-project-file-migrations.md).
+- **M2 / P2 — Schema unification + agent prompt layer** (2026-07-04, main @
+  `82dcf9e`). zod is the single authored-schema language (the `ObjectSchema` DSL
+  is gone); per-type JSON schemas ride in MCP tool descriptions; the `build-game`
+  prompt and workflow-grade `createGame` nextSteps land. Spec:
+  [`specs/2026-07-03-schema-unification-design.md`](superpowers/specs/2026-07-03-schema-unification-design.md);
+  plan: [`plans/2026-07-03-schema-unification.md`](superpowers/plans/2026-07-03-schema-unification.md).
+- **M1 — Paved road: scaffold + convention registry** (2026-07-02).
+  `npm run new-game` / MCP `createGame` emit a registered, playable, MCP-visible
+  game; a convention registry replaced both hardcoded catalogs;
+  `npm run verify:new-game` is the clean-clone acceptance proof. Spec:
+  [`specs/2026-07-02-paved-road-scaffold-registry-design.md`](superpowers/specs/2026-07-02-paved-road-scaffold-registry-design.md);
+  plan: [`plans/2026-07-02-paved-road.md`](superpowers/plans/2026-07-02-paved-road.md).
+- **M0–M16 — Engine build era** (2026-06). The original arc: engine foundation
+  (M0–M6) → the Monkey Ball game (M7–M10) → generic project/scene editor,
+  content, and polish (M11–M15) → editor MCP server + tuning agent + chat overlay
+  (M16). Founding spec:
+  [`specs/2026-06-09-automata-engine-monkey-ball-design.md`](superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md).
+
+---
+
+## 2. Numbering key
+
+Three numbering schemes coexist in the history; this table reconciles them so
+nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
+(capability packs).**
+
+| P-series | Restarted milestone | Factory phase | What it is | Status |
+|---|---|---|---|---|
+| (P1) | M1 | Phase 0 precursor | Paved road: scaffold + convention registry | Shipped |
+| P2 | M2 | Phase 0 precursor | Schema unification (zod) + agent prompt layer | Shipped |
+| P3 | M3 | Phase 0 (part) | Project-file migrations, formatVersion 2 | Shipped |
+| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Planned |
+| P5 | — | Phase 1 | Persistent MCP build sessions | Next |
+| P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
+| P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
+| P8 | — | Standalone | Hygiene | Planned |
+
+Two axes to keep separate: the **old M0–M16** labels belong to the completed
+engine-build era (section 1) and are *closed*. The **restarted M1/M2/M3** labels
+belong to the AI-first series and equal P1/P2/P3. The **factory Phases 0–7**
+(section 3) are the destination-oriented axis that absorbs the P-series.
+
+---
+
+## 3. Forward roadmap (factory Phases 0–7)
+
+In-progress and next phases carry Goal · Depends-on · Tasks · Exit. Later phases
+are scoped headings — Goal · Exit only — until their own spec exists. Phase
+definitions derive from the
+[Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md).
+
+### Phase 0 — Platform integrity · `In progress`
+
+- **Goal:** generated projects survive engine evolution and long editing
+  sessions.
+- **Depends on:** M1, M2/P2 (shipped).
+- **Tasks:**
+  - **P3 project-file migrations** — `Shipped` (2026-07-05).
+  - Editor entity-ID and render-timing hardening — `Planned`.
+  - **P4** — expand `@automata/game-kit` around the literal game duplication
+    (shared browser boot, loop, visibility, HUD, project-reader) — `Planned`.
+  - Save/reopen recovery and longer browser acceptance coverage — `Planned`.
+- **Exit:** generated projects survive engine evolution and long editing
+  sessions; the remaining hardening/game-kit/acceptance tasks are all done.
+
+### Phase 1 — Persistent MCP build sessions (P5) · `Next`
+
+- **Goal:** an agent can create, reopen, modify, evaluate, and repair a game
+  across process and context resets.
+- **Depends on:** Phase 0 complete.
+- **Tasks:**
+  - Add project open/swap behavior to workspace MCP mode.
+  - Persist session state, artifacts, findings, budgets, and resume position
+    outside model context.
+  - Expose changed-file, build, test, browser, and evaluation results.
+  - Make every operation idempotent or artifact-hash guarded.
+- **Exit:** an agent creates, reopens, modifies, evaluates, and repairs a game
+  across process and context resets without replaying successful work blindly.
+
+### Phase 2 — Versioned `GameSpec` · `Planned`
+
+- **Goal:** a prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
+  design checkpoint. **Exit:** ten differently worded prompts produce valid,
+  bounded, reviewable specs.
+
+### Phase 3 — Capability packs · `Planned`
+
+- **Goal:** the initial seven reusable gameplay packs (interaction/inventory,
+  dialogue/quests, schedules/relationships, combat/AI, economy/shops/progression,
+  hub-navigation + one vehicle, save/load) compose cleanly. **Exit:** packs
+  compose without game-specific editor or MCP changes.
+
+### Phase 4 — Asset pipeline · `Planned`
+
+- **Goal:** a normalized, versioned asset manifest with provider adapters,
+  provenance, validation, optimization, and stable independent replacement.
+  **Exit:** a failed asset regenerates independently and every release asset has
+  valid provenance and browser budgets.
+
+### Phase 5 — Content compiler · `Planned`
+
+- **Goal:** generate complete world, cast, quest, dialogue, encounter, economy,
+  and progression content from `GameSpec` within budgets. **Exit:** deterministic
+  automation can complete the generated critical path.
+
+### Phase 6 — Closed-loop repair · `Planned`
+
+- **Goal:** integrate structural, simulation, browser, visual, narrative, and
+  performance findings with bounded repair planning. **Exit:** seeded
+  platform/content/asset defects are detected and repaired without human
+  intervention.
+
+### Phase 7 — Golden validation game · `Planned`
+
+- **Goal:** generate the compact social/crime hub game from a fresh prompt using
+  only the three product checkpoints. **Exit:** three consecutive fresh runs
+  deliver complete one-to-two-hour games with no manual code edits.
+
+---
+
+## 4. Cross-cutting and standalone
+
+Work that supports the arc but does not sit inside a single phase.
+
+- **P4 — Richer `@automata/game-kit`** · `Planned`. Also listed under Phase 0;
+  tracked here because it is a reusable-layer investment the later phases lean on.
+- **P6 — Generated agent documentation (llms.txt / API digest)** · `Planned`.
+  Publish an API digest and game-building walkthrough with drift checks, so the
+  MCP-first agent path has authoritative, current docs.
+- **P8 — Hygiene** · `Planned`. Monkey Ball `legacyImporter` retirement; stray
+  iCloud `" 2"` duplicate directories (see the standing note in project memory);
+  level-editor `publicDir` coupling.
+- **P7 — Retrofit Last Lightkeeper** · `Moot`. The game was deleted on
+  2026-07-04; paved-road validation is covered by `verify:new-game` instead.
+
+---
+
+## Keeping this document accurate
+
+Update this file when any of the following happen:
+
+- a phase or item changes status (start it, ship it, drop it);
+- a spec→plan→merge cycle completes (move the item to `Shipped` with its merge
+  commit, and promote the next item to `Next` / `In progress`);
+- a new initiative is scoped (add it under the right phase or the cross-cutting
+  section with a `Planned` status).
+
+Detailed design belongs in a spec under `docs/superpowers/specs/`; the
+step-by-step lives in a plan under `docs/superpowers/plans/`. This document
+stays the map, not the territory.

@@ -386,6 +386,11 @@ test merely to declare success.
 This design spans independent subsystems. It must be executed as separate
 spec/plan/verification cycles rather than one monolithic implementation plan.
 
+The phases below are the design of record — their goals and exit criteria.
+**Live status and sequencing (what is shipped, in flight, and next) are tracked
+in [`docs/ROADMAP.md`](../../ROADMAP.md), not here.** This spec does not change
+when a phase completes.
+
 ### Phase 0: Platform integrity
 
 - execute P3 project-file migrations;

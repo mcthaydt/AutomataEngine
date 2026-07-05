@@ -6,7 +6,8 @@ evaluation adapters; shared editor packages contain no game-specific code.
 
 New to the codebase? Read the [engine architecture guide](docs/engine-architecture.md)
 for a Godot/Unity/UE5-oriented map of the runtime, project editor, and AI/MCP
-layers.
+layers. For where the project is headed — shipped milestones, what's in flight,
+and what's next — see the [roadmap](docs/ROADMAP.md).
 
 ## Workspace
 
