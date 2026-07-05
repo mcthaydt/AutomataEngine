@@ -547,6 +547,10 @@ The following architecture work is planned or incomplete:
   save/reopen recovery, longer editor sessions, accessibility, and complete
   gameplay flows.
 
+These items are the platform-integrity foundation ("Phase 0" and "Phase 1")
+of the [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md),
+the strategic destination document for the prompt-to-game direction.
+
 These items should not be assumed available merely because their design or
 implementation plan exists.
 

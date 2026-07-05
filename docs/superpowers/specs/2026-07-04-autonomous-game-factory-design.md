@@ -2,6 +2,13 @@
 
 Status: approved in discussion; awaiting written-spec review. Date: 2026-07-04.
 
+Roadmap placement: this document is the strategic parent of the P-series
+roadmap (P2 schema unification through P6 generated agent documentation).
+Phase 0 below absorbs P3 (project-file migrations) and the other
+platform-integrity items (editor hardening, P4 game-kit expansion, deeper
+acceptance coverage); Phase 1 is the expanded form of P5 (persistent MCP
+sessions). The numbering axes are distinct: P3 is not Phase 3.
+
 ## North star
 
 A developer describes a game in natural language. AutomataEngine turns that
