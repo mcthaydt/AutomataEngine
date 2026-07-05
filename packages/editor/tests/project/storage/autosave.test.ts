@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { memoryStorage } from '@automata/engine'
+import { stringifyProjectBundle, toProjectBundle } from '@automata/project'
 import { createProjectEditorStore } from '../../../src/project/store'
 import { installProjectAutosave, loadProjectAutosave, projectAutosaveKey } from '../../../src/project/storage/autosave'
 import { fakeEditorRegistration, fakeSnapshot } from '../../fixtures/fakeProject'
@@ -57,9 +58,27 @@ describe('project autosave', () => {
     expect(setSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('rejects a version mismatch on load', () => {
+  it('returns null for the legacy envelope, garbage, and future versions', () => {
     const storage = memoryStorage()
-    storage.set(projectAutosaveKey('p'), JSON.stringify({ version: 999, snapshot: {} }))
+    storage.set(projectAutosaveKey('p'), JSON.stringify({ version: 1, snapshot: {} }))
     expect(loadProjectAutosave(storage, 'p')).toBeNull()
+
+    storage.set(projectAutosaveKey('p'), 'not json')
+    expect(loadProjectAutosave(storage, 'p')).toBeNull()
+
+    const future = toProjectBundle(fakeSnapshot())
+    storage.set(projectAutosaveKey('p'), JSON.stringify({ ...future, manifest: { ...future.manifest, formatVersion: 99 } }))
+    expect(loadProjectAutosave(storage, 'p')).toBeNull()
+  })
+
+  it('stores canonical bundle text', () => {
+    vi.useFakeTimers()
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const storage = memoryStorage()
+    installProjectAutosave(store, storage, { debounceMs: 100 })
+    store.dispatch(setSpeed(8))
+    vi.advanceTimersByTime(100)
+    const raw = storage.get(projectAutosaveKey('fake-demo'))!
+    expect(raw).toBe(stringifyProjectBundle(toProjectBundle(store.getState().snapshot)))
   })
 })

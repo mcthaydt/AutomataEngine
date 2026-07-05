@@ -609,7 +609,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 The comparison at `tools/level-editor/src/editorApp.ts:281` already canonicalizes via `stringifyProjectBundle(toProjectBundle(...))` and `loadProjectAutosave` still returns a snapshot — no editorApp change needed.
 
-- [ ] **Step 1: Update the autosave tests (failing first)**
+- [x] **Step 1: Update the autosave tests (failing first)**
 
 In `autosave.test.ts`, replace the `rejects a version mismatch on load` test (lines 60–64):
 
@@ -640,12 +640,12 @@ it('stores canonical bundle text', () => {
 ```
 Add `import { stringifyProjectBundle, toProjectBundle } from '@automata/project'` at the top. (If `fakeSnapshot()`'s manifest id is not `fake-demo`, keep whatever id the existing tests use — they already pass `'fake-demo'`.)
 
-- [ ] **Step 2: Run to verify failures**
+- [x] **Step 2: Run to verify failures**
 
 Run: `npx vitest run --project @automata/editor tests/project/storage/autosave.test.ts`
 Expected: FAIL — `stores canonical bundle text` fails (writes still use the `{ version, snapshot }` envelope). The null-cases test passes even under the old code (any non-envelope input already yields null); it is there to pin that contract through the rewrite, and the failing write-format test is the TDD gate for Step 3.
 
-- [ ] **Step 3: Rewrite `autosave.ts`**
+- [x] **Step 3: Rewrite `autosave.ts`**
 
 ```ts
 import type { StoragePort } from '@automata/engine'
@@ -695,7 +695,7 @@ export function loadProjectAutosave(storage: StoragePort, projectId: string): Pr
 }
 ```
 
-- [ ] **Step 4: Run suites; commit**
+- [x] **Step 4: Run suites; commit**
 
 Run: `npx vitest run --project @automata/editor --project level-editor`
 Expected: PASS.
