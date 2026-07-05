@@ -362,7 +362,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: `parseProjectSnapshot`, `RawProjectDocuments`, `ParsedProject`, `GameMigrateHook` from Task 1.
 - Produces: `loadProjectFiles(reader: ProjectFileReader, opts?: { migrate?: GameMigrateHook }): Promise<ParsedProject>`. `projectFileDocuments` and `isSafeProjectPath` unchanged.
 
-- [ ] **Step 1: Update `files.test.ts` to the new contract (failing first)**
+- [x] **Step 1: Update `files.test.ts` to the new contract (failing first)**
 
 In `packages/project/tests/files.test.ts` apply exactly these edits:
 
@@ -397,12 +397,12 @@ it('rejects a manifest whose scene index is not an array', async () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify the updated tests fail**
+- [x] **Step 2: Run to verify the updated tests fail**
 
 Run: `npx vitest run --project @automata/project tests/files.test.ts`
 Expected: FAIL — `loadProjectFiles` still returns a bare snapshot.
 
-- [ ] **Step 3: Replace `loadProjectFiles` in `files.ts`**
+- [x] **Step 3: Replace `loadProjectFiles` in `files.ts`**
 
 Replace the import block and `loadProjectFiles` (keep `PROJECT_MANIFEST_PATH`, `ProjectFileReader`, `ProjectFileDocument`, `isSafeProjectPath`, `canonicalJson`, `projectFileDocuments` as they are):
 
@@ -445,7 +445,7 @@ export async function loadProjectFiles(
 
 Constraint this bakes in (documented in the spec): future migrations must keep `manifest.scenes[].path` / `manifest.resources[].path` readable pre-migration, or this loader grows version awareness.
 
-- [ ] **Step 4: Fix the compiler-enumerated consumers**
+- [x] **Step 4: Fix the compiler-enumerated consumers**
 
 Run: `npm run typecheck`
 Expected failures at exactly these sites; apply these edits:
@@ -484,12 +484,12 @@ Replace every `await loadProjectFiles(reader)` in this file with `await loadSnap
 
 If typecheck names any additional call sites (e.g. monkey-ball tests), apply the same `{ snapshot }` destructure pattern.
 
-- [ ] **Step 5: Run the affected suites**
+- [x] **Step 5: Run the affected suites**
 
 Run: `npx vitest run --project @automata/project --project @automata/editor --project pulsebreak --project monkey-ball --project editor-mcp-server`
 Expected: PASS.
 
-- [ ] **Step 6: Lint, typecheck, commit**
+- [x] **Step 6: Lint, typecheck, commit**
 
 ```bash
 npm run lint && npm run typecheck

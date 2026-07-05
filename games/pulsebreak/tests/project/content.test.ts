@@ -6,10 +6,11 @@ import { pulsebreakProjectDefinition } from '../../src/project/definition'
 
 const root = resolve(import.meta.dirname, '../../public/project')
 const reader = { readText: (path: string) => readFile(resolve(root, path), 'utf8') }
+const loadSnapshot = async () => (await loadProjectFiles(reader)).snapshot
 
 describe('Pulsebreak project content', () => {
   it('loads all six public project files into a valid snapshot', async () => {
-    const snapshot = await loadProjectFiles(reader)
+    const snapshot = await loadSnapshot()
     expect(snapshot.manifest.gameId).toBe('pulsebreak')
     expect(Object.keys(snapshot.scenes)).toEqual(['arena'])
     expect(snapshot.manifest.resources).toHaveLength(4)
@@ -17,7 +18,7 @@ describe('Pulsebreak project content', () => {
   })
 
   it('has one player start, one ordinary spawn zone, and one boss zone', async () => {
-    const snapshot = await loadProjectFiles(reader)
+    const snapshot = await loadSnapshot()
     const entities = snapshot.scenes.arena!.entities
     expect(entities.filter((entity) => entity.components.some((component) => component.typeId === 'pulsebreak.player-start'))).toHaveLength(1)
     const zones = entities.filter((entity) => entity.components.some((component) => component.typeId === 'pulsebreak.spawn-zone'))
@@ -26,10 +27,10 @@ describe('Pulsebreak project content', () => {
 })
 
 describe('Pulsebreak project definition', () => {
-  function snapshotWith(mutate: (snapshot: Awaited<ReturnType<typeof loadProjectFiles>>) => void) {
-    return (async () => { const snapshot = await loadProjectFiles(reader); mutate(snapshot); return snapshot })()
+  function snapshotWith(mutate: (snapshot: Awaited<ReturnType<typeof loadSnapshot>>) => void) {
+    return (async () => { const snapshot = await loadSnapshot(); mutate(snapshot); return snapshot })()
   }
-  const codes = (snapshot: Awaited<ReturnType<typeof loadProjectFiles>>) => validateProject(pulsebreakProjectDefinition, snapshot).map((issue) => issue.code)
+  const codes = (snapshot: Awaited<ReturnType<typeof loadSnapshot>>) => validateProject(pulsebreakProjectDefinition, snapshot).map((issue) => issue.code)
 
   it('flags a missing player start', async () => {
     const snapshot = await snapshotWith((s) => {

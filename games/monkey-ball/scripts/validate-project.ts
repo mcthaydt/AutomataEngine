@@ -5,7 +5,7 @@ import { monkeyBallProjectDefinition } from '../src/project/definition'
 
 /** Build-time gate for the shipped project folder. */
 const root = resolve(import.meta.dirname, '../public/project')
-const snapshot = await loadProjectFiles({ readText: (path) => readFile(resolve(root, path), 'utf8') })
+const { snapshot } = await loadProjectFiles({ readText: (path) => readFile(resolve(root, path), 'utf8') })
 const errors = validateProject(monkeyBallProjectDefinition, snapshot).filter((issue) => issue.severity === 'error')
 
 if (errors.length > 0) {

@@ -41,7 +41,7 @@ export async function createHeadlessHost(options: HeadlessHostOptions = {}): Pro
 
   const snapshot = options.bundleJson !== undefined
     ? parseProjectBundle(options.bundleJson)
-    : await loadProjectFiles(createProjectDirectoryReader(options.projectDir ?? DEFAULT_PROJECT_DIR))
+    : (await loadProjectFiles(createProjectDirectoryReader(options.projectDir ?? DEFAULT_PROJECT_DIR))).snapshot
   const registration = await loadProjectRegistration(snapshot.manifest.gameId, options.repoRoot)
   const errors = registration.validate(snapshot).filter((issue) => issue.severity === 'error')
   if (errors.length > 0) {

@@ -4,7 +4,7 @@ import type { CompiledMonkeyBallProject } from './types'
 
 /** Load, validate, and compile a Monkey Ball project through an injected reader. */
 export async function loadMonkeyBallProject(reader: ProjectFileReader): Promise<CompiledMonkeyBallProject> {
-  const snapshot = await loadProjectFiles(reader)
+  const { snapshot } = await loadProjectFiles(reader)
   if (snapshot.manifest.gameId !== 'monkey-ball') {
     throw new Error(`Expected a Monkey Ball project, got gameId "${snapshot.manifest.gameId}"`)
   }

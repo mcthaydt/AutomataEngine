@@ -1,5 +1,5 @@
-import { projectManifestSchema, sceneDocumentSchema, resourceDocumentSchema, projectSnapshotSchema } from './model'
-import type { ProjectSnapshot, SceneDocument, ResourceDocument } from './model'
+import { parseProjectSnapshot, type GameMigrateHook, type ParsedProject, type RawProjectDocuments } from './migrate'
+import type { ProjectSnapshot } from './model'
 
 /**
  * Folder I/O for a project workspace.
@@ -35,28 +35,33 @@ function canonicalJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`
 }
 
-/** Load a project folder into a validated snapshot, manifest first. */
-export async function loadProjectFiles(reader: ProjectFileReader): Promise<ProjectSnapshot> {
-  const manifest = projectManifestSchema.parse(JSON.parse(await reader.readText(PROJECT_MANIFEST_PATH)))
+/** Read path entries from a raw (unvalidated, possibly old-format) manifest. */
+function manifestPathEntries(rawManifest: unknown, key: 'scenes' | 'resources'): string[] {
+  const entries = (rawManifest as Record<string, unknown> | null | undefined)?.[key]
+  if (!Array.isArray(entries)) throw new Error(`Manifest "${key}" must be an array`)
+  return entries.map((entry) => {
+    const path = (entry as { path?: unknown } | null)?.path
+    if (typeof path !== 'string' || !isSafeProjectPath(path)) {
+      throw new Error(`Unsafe ${key === 'scenes' ? 'scene' : 'resource'} path "${String(path)}"`)
+    }
+    return path
+  })
+}
 
-  const scenes: Record<string, SceneDocument> = {}
-  for (const entry of manifest.scenes) {
-    if (!isSafeProjectPath(entry.path)) throw new Error(`Unsafe scene path "${entry.path}"`)
-    const scene = sceneDocumentSchema.parse(JSON.parse(await reader.readText(entry.path)))
-    if (scene.id !== entry.id) throw new Error(`Scene id mismatch: manifest "${entry.id}" vs document "${scene.id}"`)
-    scenes[scene.id] = scene
+/** Load a project folder through the central migration-aware parse entry. */
+export async function loadProjectFiles(
+  reader: ProjectFileReader,
+  opts: { migrate?: GameMigrateHook } = {}
+): Promise<ParsedProject> {
+  const manifest: unknown = JSON.parse(await reader.readText(PROJECT_MANIFEST_PATH))
+  const raw: RawProjectDocuments = { manifest, scenes: [], resources: [] }
+  for (const path of manifestPathEntries(manifest, 'scenes')) {
+    raw.scenes.push(JSON.parse(await reader.readText(path)))
   }
-
-  const resources: Record<string, ResourceDocument> = {}
-  for (const entry of manifest.resources) {
-    if (!isSafeProjectPath(entry.path)) throw new Error(`Unsafe resource path "${entry.path}"`)
-    const resource = resourceDocumentSchema.parse(JSON.parse(await reader.readText(entry.path)))
-    if (resource.id !== entry.id) throw new Error(`Resource id mismatch: manifest "${entry.id}" vs document "${resource.id}"`)
-    if (resource.typeId !== entry.typeId) throw new Error(`Resource type mismatch for "${entry.id}": manifest "${entry.typeId}" vs document "${resource.typeId}"`)
-    resources[resource.id] = resource
+  for (const path of manifestPathEntries(manifest, 'resources')) {
+    raw.resources.push(JSON.parse(await reader.readText(path)))
   }
-
-  return projectSnapshotSchema.parse({ manifest, scenes, resources })
+  return parseProjectSnapshot(raw, opts)
 }
 
 /** Serialize a snapshot into the documents to write, manifest-first then manifest order. */

@@ -14,6 +14,7 @@ import baseline from '../fixtures/metric-baselines.json'
 
 const projectRoot = resolve(import.meta.dirname, '../../public/project')
 const reader = { readText: (path: string) => readFile(resolve(projectRoot, path), 'utf8') }
+const loadSnapshot = async () => (await loadProjectFiles(reader)).snapshot
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
 
 function legacySnapshot() {
@@ -28,7 +29,7 @@ function legacySnapshot() {
 
 describe('Monkey Ball project content', () => {
   it('loads as a valid project and exactly matches a fresh legacy import', async () => {
-    const shipped = await loadProjectFiles(reader)
+    const shipped = await loadSnapshot()
     expect(validateProject(monkeyBallProjectDefinition, shipped)).toEqual([])
     expect(stringifyProjectBundle(toProjectBundle(shipped))).toBe(
       stringifyProjectBundle(toProjectBundle(legacySnapshot()))
@@ -36,13 +37,13 @@ describe('Monkey Ball project content', () => {
   })
 
   it('rejects a physics max tilt beyond the 45° clamp', async () => {
-    const snapshot = await loadProjectFiles(reader)
+    const snapshot = await loadSnapshot()
     ;(snapshot.resources.physics!.data as { maxTiltRad: number }).maxTiltRad = Math.PI / 2
     expect(validateProject(monkeyBallProjectDefinition, snapshot).map((issue) => issue.code)).toContain('number.max')
   })
 
   it('compiles all six scenes and retains every no-input metric baseline', async () => {
-    const compiled = monkeyBallProjectDefinition.compile(await loadProjectFiles(reader))
+    const compiled = monkeyBallProjectDefinition.compile(await loadSnapshot())
     const ids = compiled.manifest.worlds.flatMap((world) => world.levels)
     expect(ids).toEqual(['w1-l1', 'w1-l2', 'w1-l3', 'w2-l1', 'w2-l2', 'w2-l3'])
 

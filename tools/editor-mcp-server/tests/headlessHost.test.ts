@@ -40,7 +40,7 @@ describe('headless MCP host', () => {
   }, 20_000)
 
   it('loads a canonical bundle JSON source', async () => {
-    const snapshot = await loadProjectFiles(createProjectDirectoryReader(pulsebreakProject))
+    const { snapshot } = await loadProjectFiles(createProjectDirectoryReader(pulsebreakProject))
     const bundleJson = stringifyProjectBundle(toProjectBundle(snapshot))
 
     const loaded = await createHeadlessHost({ bundleJson, baseline: { score: 10 } })
@@ -50,7 +50,7 @@ describe('headless MCP host', () => {
   })
 
   it('reports available registrations for an unknown game ID', async () => {
-    const snapshot = await loadProjectFiles(createProjectDirectoryReader(pulsebreakProject))
+    const { snapshot } = await loadProjectFiles(createProjectDirectoryReader(pulsebreakProject))
     snapshot.manifest.gameId = 'unknown-game'
     const bundleJson = stringifyProjectBundle(toProjectBundle(snapshot))
 

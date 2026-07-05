@@ -20,7 +20,7 @@ import type { PlayObservation, TestPlayResult } from '../../src/level/headlessPl
 import { readDataFile } from '../helpers/data'
 
 const projectRoot = resolve(import.meta.dirname, '../../public/project')
-const snapshot = await loadProjectFiles({ readText: (path) => readFile(resolve(projectRoot, path), 'utf8') })
+const { snapshot } = await loadProjectFiles({ readText: (path) => readFile(resolve(projectRoot, path), 'utf8') })
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
 
 function recordingPhysics(): PhysicsPort & { bodies: RigidBodyDef[] } {

@@ -15,7 +15,7 @@ describe('project files', () => {
   it('loads a project folder back into a snapshot', async () => {
     const snapshot = sampleSnapshot()
     const { reader } = readerFor(snapshot)
-    expect(await loadProjectFiles(reader)).toEqual(snapshot)
+    expect(await loadProjectFiles(reader)).toEqual({ snapshot, fromVersion: 1 })
   })
 
   it('emits documents manifest-first then scenes and resources in manifest order', () => {
@@ -33,7 +33,7 @@ describe('project files', () => {
     const docs = projectFileDocuments(snapshot)
     const map = new Map(docs.map((doc) => [doc.path, doc.text]))
     const loaded = await loadProjectFiles({ readText: async (path) => map.get(path)! })
-    expect(loaded).toEqual(snapshot)
+    expect(loaded.snapshot).toEqual(snapshot)
   })
 
   it('rejects path traversal before touching the reader', async () => {
@@ -51,11 +51,11 @@ describe('project files', () => {
 
     const mismatched = readerFor()
     mismatched.files.set('scenes/main.scene.json', JSON.stringify({ ...sampleSnapshot().scenes.main, id: 'other' }))
-    await expect(loadProjectFiles(mismatched.reader)).rejects.toThrow(/mismatch|id/i)
+    await expect(loadProjectFiles(mismatched.reader)).rejects.toThrow(/missing scene "main"/i)
 
     const resourceId = readerFor()
     resourceId.files.set('resources/tuning.resource.json', JSON.stringify({ ...sampleSnapshot().resources.tuning, id: 'other' }))
-    await expect(loadProjectFiles(resourceId.reader)).rejects.toThrow(/resource id mismatch/i)
+    await expect(loadProjectFiles(resourceId.reader)).rejects.toThrow(/missing resource "tuning"/i)
 
     const resourceType = readerFor()
     resourceType.files.set('resources/tuning.resource.json', JSON.stringify({ ...sampleSnapshot().resources.tuning, typeId: 'other' }))
@@ -67,6 +67,11 @@ describe('project files', () => {
     for (const path of ['', '/absolute', 'a\\b', 'a//b', './a', 'a/../b']) {
       expect(isSafeProjectPath(path)).toBe(false)
     }
+  })
+
+  it('rejects a manifest whose scene index is not an array', async () => {
+    const files = new Map([['automata.project.json', JSON.stringify({ formatVersion: 1, scenes: 'nope' })]])
+    await expect(loadProjectFiles({ readText: async (path) => files.get(path)! })).rejects.toThrow(/must be an array/i)
   })
 
   it('rejects unsafe resource paths and missing serialized documents', async () => {

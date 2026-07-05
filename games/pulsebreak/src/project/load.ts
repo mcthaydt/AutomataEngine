@@ -8,7 +8,7 @@ import type { PulsebreakCompiledProject } from './types'
  * code/path so boot failures are diagnosable.
  */
 export async function loadPulsebreakProject(reader: ProjectFileReader): Promise<PulsebreakCompiledProject> {
-  const snapshot = await loadProjectFiles(reader)
+  const { snapshot } = await loadProjectFiles(reader)
   if (snapshot.manifest.gameId !== 'pulsebreak') {
     throw new Error(`Expected a Pulsebreak project, got gameId "${snapshot.manifest.gameId}"`)
   }
