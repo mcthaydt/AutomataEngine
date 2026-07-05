@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { ObjectSchema, PropertyIssue } from './schema'
 import type { ProjectDataSchema } from './authoring'
 import { deriveObjectSchema, validateDataSchema } from './derive'
+import type { GameMigrateHook } from './migrate'
 import type { ProjectSnapshot } from './model'
 
 /**
@@ -83,6 +84,8 @@ export interface GameProjectDefinition<Compiled> {
   validate: (snapshot: ProjectSnapshot) => ValidationIssue[]
   /** Pure transform from a validated snapshot to the game's runtime config. */
   compile: (snapshot: ProjectSnapshot) => Compiled
+  /** Upgrade game-owned data payloads written at an older formatVersion. */
+  migrate?: GameMigrateHook
 }
 
 /** Authoring-time spec: `schema` is the authored zod object. */

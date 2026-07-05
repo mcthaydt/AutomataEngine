@@ -6,6 +6,7 @@ import {
   type RegisteredEditorProject
 } from '@automata/editor/headless'
 import {
+  applyGameMigration,
   loadProjectFiles,
   parseProjectBundle,
   type ProjectSnapshot
@@ -39,10 +40,11 @@ export async function createHeadlessHost(options: HeadlessHostOptions = {}): Pro
     throw new Error('Provide exactly one project source: projectDir or bundleJson')
   }
 
-  const snapshot = options.bundleJson !== undefined
-    ? parseProjectBundle(options.bundleJson).snapshot
-    : (await loadProjectFiles(createProjectDirectoryReader(options.projectDir ?? DEFAULT_PROJECT_DIR))).snapshot
-  const registration = await loadProjectRegistration(snapshot.manifest.gameId, options.repoRoot)
+  const parsed = options.bundleJson !== undefined
+    ? parseProjectBundle(options.bundleJson)
+    : await loadProjectFiles(createProjectDirectoryReader(options.projectDir ?? DEFAULT_PROJECT_DIR))
+  const registration = await loadProjectRegistration(parsed.snapshot.manifest.gameId, options.repoRoot)
+  const snapshot = applyGameMigration(parsed, registration.project.migrate)
   const errors = registration.validate(snapshot).filter((issue) => issue.severity === 'error')
   if (errors.length > 0) {
     throw new Error(

@@ -722,7 +722,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: `GameMigrateHook`, `applyGameMigration`, `ParsedProject` from Task 1.
 - Produces: `GameProjectDefinition.migrate?: GameMigrateHook`. `defineGameProject` passes it through untouched (the existing `...input` spread carries it — verify with the test, don't add code).
 
-- [ ] **Step 1: Failing test in `registration.test.ts`**
+- [x] **Step 1: Failing test in `registration.test.ts`**
 
 ```ts
 it('preserves an authored migrate hook', () => {
@@ -733,12 +733,12 @@ it('preserves an authored migrate hook', () => {
 ```
 (Match the file's existing imports; `sampleDefinitionInput` comes from `./fixtures/sampleProject`, `ProjectSnapshot` from `../src`.)
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run --project @automata/project tests/registration.test.ts`
 Expected: FAIL — `migrate` is not a known property (typecheck error at test compile).
 
-- [ ] **Step 3: Add the field**
+- [x] **Step 3: Add the field**
 
 In `packages/project/src/registration.ts`, add to the `GameProjectDefinition<Compiled>` interface (after `compile`):
 
@@ -748,7 +748,7 @@ In `packages/project/src/registration.ts`, add to the `GameProjectDefinition<Com
 ```
 with `import type { GameMigrateHook } from './migrate'` (no cycle: `migrate.ts` imports only `model.ts`).
 
-- [ ] **Step 4: Thread the hook through the game loaders and MCP host**
+- [x] **Step 4: Thread the hook through the game loaders and MCP host**
 
 `games/pulsebreak/src/project/load.ts:11`:
 ```ts
@@ -766,7 +766,7 @@ const snapshot = applyGameMigration(parsed, registration.project.migrate)
 ```
 (add `applyGameMigration` to the `@automata/project` import).
 
-- [ ] **Step 5: Run suites; commit**
+- [x] **Step 5: Run suites; commit**
 
 Run: `npx vitest run --project @automata/project --project pulsebreak --project monkey-ball --project editor-mcp-server`
 Expected: PASS.

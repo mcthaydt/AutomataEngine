@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { color, defineGameProject } from '../src'
 import type { ProjectSnapshot } from '../src'
+import { sampleDefinitionInput } from './fixtures/sampleProject'
 
 const stats = z.strictObject({
   speed: z.number().min(0).max(20).meta({ label: 'Speed', step: 0.5 }),
@@ -39,6 +40,12 @@ describe('defineGameProject', () => {
       components: [{ ...goodComponent, cardinality: { min: 2, max: 1 } }],
       resources: [], validate: () => [], compile: () => ({})
     })).toThrow(/cardinality/i)
+  })
+
+  it('preserves an authored migrate hook', () => {
+    const migrate = (snapshot: ProjectSnapshot) => snapshot
+    const definition = defineGameProject({ ...sampleDefinitionInput, migrate })
+    expect(definition.migrate).toBe(migrate)
   })
 
   it('rejects a template whose gameId does not match', () => {
