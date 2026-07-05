@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { projectFileDocuments } from '@automata/project'
 import { createProjectEditorStore, selectActiveScene, selectProjectSnapshot } from '../../src/project/store'
 import { registerEditorProject } from '../../src/project/registration'
 import { fakeEditorRegistration, fakeSnapshot } from '../fixtures/fakeProject'
@@ -17,6 +18,16 @@ describe('project editor store', () => {
     expect(store.getState().dirtyPaths).toEqual([])
     store.dispatch({ type: 'undo' })
     expect(store.getState().dirtyPaths).toEqual(['resources/tuning.resource.json'])
+  })
+
+  it('markAllDirty dirties every document path until saved', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    store.dispatch({ type: 'markAllDirty' })
+    const state = store.getState()
+    expect(new Set(state.dirtyPaths)).toEqual(new Set(projectFileDocuments(state.snapshot).map((doc) => doc.path)))
+
+    store.dispatch({ type: 'markSaved', paths: state.dirtyPaths, snapshot: state.snapshot })
+    expect(store.getState().dirtyPaths).toEqual([])
   })
 
   it('applies command batches atomically', () => {

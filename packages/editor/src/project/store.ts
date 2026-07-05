@@ -162,6 +162,13 @@ export function createProjectEditorStore<Compiled>(
           activeSceneId: reconcileActiveScene(action.snapshot, state.activeSceneId),
           selection: reconcileSelection(action.snapshot, state.selection)
         }
+      case 'markAllDirty': {
+        // "Disk differs from memory for every path": cloning the saved baseline
+        // gives every document a fresh reference, so the store's identity-based
+        // dirt model reports all paths dirty; markSaved re-adopts per path.
+        const savedSnapshot = structuredClone(state.savedSnapshot)
+        return { ...state, savedSnapshot, dirtyPaths: computeDirtyPaths(state.snapshot, savedSnapshot) }
+      }
       case 'select':
         return { ...state, selection: reconcileSelection(state.snapshot, action.selection) }
       case 'setActiveScene':

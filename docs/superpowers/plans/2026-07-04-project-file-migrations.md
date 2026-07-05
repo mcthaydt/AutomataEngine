@@ -791,7 +791,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 **Interfaces:**
 - Produces: store action `{ type: 'markAllDirty' }` — dirties every document path under the store's reference-identity dirt model; `markSaved` then re-adopts per path as saves land.
 
-- [ ] **Step 1: Failing test in `store.test.ts`**
+- [x] **Step 1: Failing test in `store.test.ts`**
 
 ```ts
 it('markAllDirty dirties every document path until saved', () => {
@@ -806,12 +806,12 @@ it('markAllDirty dirties every document path until saved', () => {
 ```
 (match the file's existing fixture imports; add `projectFileDocuments` to the `@automata/project` import).
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run --project @automata/editor tests/project/store.test.ts`
 Expected: FAIL — `markAllDirty` is not a valid action type.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `actions.ts` — add to the `ProjectEditorAction` union (after `'recoverSnapshot'`):
 ```ts
@@ -829,7 +829,7 @@ case 'markAllDirty': {
 }
 ```
 
-- [ ] **Step 4: Run suite; commit**
+- [x] **Step 4: Run suite; commit**
 
 Run: `npx vitest run --project @automata/editor`
 Expected: PASS.

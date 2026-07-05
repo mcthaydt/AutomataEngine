@@ -17,6 +17,7 @@ export type ProjectEditorAction =
   | { type: 'projectCommandBatch'; commands: ProjectCommand[] }
   | { type: 'loadSnapshot'; snapshot: ProjectSnapshot }
   | { type: 'recoverSnapshot'; snapshot: ProjectSnapshot }
+  | { type: 'markAllDirty' }
   | { type: 'select'; selection: ProjectSelection }
   | { type: 'setActiveScene'; sceneId: string }
   | { type: 'undo' }
