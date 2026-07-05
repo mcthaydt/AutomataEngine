@@ -17,13 +17,13 @@ export function createMemoryProjectStorage(initial: ProjectSnapshot, options: Me
   return {
     capabilities: { canSaveFolder: true, canExportBundle: true },
     async open() {
-      return (await loadProjectFiles({
+      return loadProjectFiles({
         readText: async (path) => {
           const text = files.get(path)
           if (text === undefined) throw new Error(`missing ${path}`)
           return text
         }
-      })).snapshot
+      })
     },
     async save(snapshot, dirtyPaths): Promise<ProjectSaveResult> {
       const docs = new Map(projectFileDocuments(snapshot).map((doc) => [doc.path, doc.text]))
@@ -45,6 +45,6 @@ export function createMemoryProjectStorage(initial: ProjectSnapshot, options: Me
       return { saved, failed }
     },
     exportBundle(snapshot) { return exportProjectBundle(snapshot, options) },
-    importBundle(text) { return importProjectBundle(text).snapshot }
+    importBundle(text) { return importProjectBundle(text) }
   }
 }

@@ -1,4 +1,4 @@
-import type { ProjectSnapshot, ValidationIssue } from '@automata/project'
+import type { ParsedProject, ProjectSnapshot, ValidationIssue } from '@automata/project'
 
 /**
  * Storage abstraction for a project workspace.
@@ -28,10 +28,10 @@ export interface ProjectBundleExport {
 
 export interface ProjectStoragePort {
   readonly capabilities: ProjectStorageCapabilities
-  open(): Promise<ProjectSnapshot>
+  open(): Promise<ParsedProject>
   save(snapshot: ProjectSnapshot, dirtyPaths: readonly string[]): Promise<ProjectSaveResult>
   exportBundle(snapshot: ProjectSnapshot): ProjectBundleExport
-  importBundle(text: string): ProjectSnapshot
+  importBundle(text: string): ParsedProject
 }
 
 /** Optional validator so `exportBundle` can attach current issues. */

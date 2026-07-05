@@ -144,6 +144,7 @@ function storage(
 
 const registration = {
   gameId: 'fake',
+  project: {},
   validate: () => [],
   compile: () => ({}),
   prefabs: [],
@@ -242,6 +243,37 @@ describe('project browser session', () => {
     expect(mocks.chromeDispose).toHaveBeenCalledOnce()
     expect(mocks.core!.dispose).toHaveBeenCalledOnce()
     expect(mocks.rendererDispose).toHaveBeenCalledOnce()
+  })
+
+  it('marks every path dirty when mounted for a migrated project', async () => {
+    const session = await mountProjectSession({
+      root: document.createElement('main'),
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: null,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      migrated: true,
+      onSwitchProject: async () => {}
+    })
+
+    expect(mocks.core!.store.dispatch).toHaveBeenCalledWith({ type: 'markAllDirty' })
+    session.dispose()
+  })
+
+  it('does not mark paths dirty when mounted at the current format version', async () => {
+    const session = await mountProjectSession({
+      root: document.createElement('main'),
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: null,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      onSwitchProject: async () => {}
+    })
+
+    expect(mocks.core!.store.dispatch).not.toHaveBeenCalledWith({ type: 'markAllDirty' })
+    session.dispose()
   })
 
   it('restores a differing autosaved snapshot as dirty working state on mount', async () => {

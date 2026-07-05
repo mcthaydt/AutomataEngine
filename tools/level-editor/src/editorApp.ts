@@ -23,7 +23,7 @@ import {
   screenToWorldXZ,
   type ScreenSize
 } from '@automata/editor/viewport'
-import { stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
+import { applyGameMigration, PROJECT_FORMAT_VERSION, stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
 import type { BrowserWorkspace, OpenedBrowserProject } from './browserWorkspace'
 import type { LegacyMonkeyBallRecovery } from './legacyAutosave'
 import type { ProjectCatalog } from './projectCatalog'
@@ -46,6 +46,8 @@ export interface ProjectSessionMountOptions {
   autosaveStorage: StoragePort
   workspace: BrowserWorkspace
   initiallyDirty?: boolean
+  /** True when the project was migrated on load; every path starts dirty. */
+  migrated?: boolean
   onPersisted?: () => void
   onSwitchProject(): Promise<void>
 }
@@ -100,7 +102,8 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     registration: RegisteredEditorProject,
     snapshot: ProjectSnapshot,
     storage: ProjectStoragePort | null,
-    recovery?: LegacyMonkeyBallRecovery
+    recovery?: LegacyMonkeyBallRecovery,
+    fromVersion: number = PROJECT_FORMAT_VERSION
   ): Promise<void> => {
     if (disposed) return
     const errors = registration.validate(snapshot).filter((issue) => issue.severity === 'error')
@@ -116,6 +119,7 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
       autosaveStorage: options.autosaveStorage,
       workspace: options.workspace,
       initiallyDirty: Boolean(recovery),
+      migrated: fromVersion < PROJECT_FORMAT_VERSION,
       onPersisted: recovery?.markPersisted,
       onSwitchProject: requestChooser
     })
@@ -123,7 +127,9 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
 
   const openWorkspace = async (opened: OpenedBrowserProject | null): Promise<void> => {
     if (!opened) return
-    await openSession(resolveRegistration(opened.snapshot), opened.snapshot, opened.storage)
+    const registration = resolveRegistration(opened.snapshot)
+    const snapshot = applyGameMigration(opened, registration.project.migrate)
+    await openSession(registration, snapshot, opened.storage, undefined, opened.fromVersion)
   }
 
   const openWithErrorBoundary = async (operation: () => Promise<void>): Promise<void> => {
@@ -274,6 +280,7 @@ export async function mountProjectSession(
       physics
     })
     cleanup.defer(() => core.dispose())
+    if (options.migrated) core.store.dispatch({ type: 'markAllDirty' })
 
     // Recover newer in-memory work an earlier session autosaved but never persisted. Compare
     // canonically so a clean reopen (autosave == opened project) does not spuriously go dirty.
@@ -330,7 +337,8 @@ export async function mountProjectSession(
       const opened = await options.workspace.importBundle(options.registration)
       if (!opened) return
       backingStorage = null
-      core.store.dispatch({ type: 'loadSnapshot', snapshot: opened.snapshot })
+      core.store.dispatch({ type: 'loadSnapshot', snapshot: applyGameMigration(opened, options.registration.project.migrate) })
+      if (opened.fromVersion < PROJECT_FORMAT_VERSION) core.store.dispatch({ type: 'markAllDirty' })
     }
 
     const chrome = renderProjectChrome(core, options.root, { '2d': canvas2d, '3d': canvas3d }, {

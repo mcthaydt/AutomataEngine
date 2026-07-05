@@ -39,7 +39,7 @@ export function createFileSystemProjectStorage(directory: DirectoryHandleLike, o
   return {
     capabilities: { canSaveFolder: true, canExportBundle: true },
     async open() {
-      return (await loadProjectFiles({ readText: (path) => readFile(directory, path) })).snapshot
+      return loadProjectFiles({ readText: (path) => readFile(directory, path) })
     },
     async save(snapshot, dirtyPaths): Promise<ProjectSaveResult> {
       const docs = new Map(projectFileDocuments(snapshot).map((doc) => [doc.path, doc.text]))
@@ -84,7 +84,7 @@ export function createFileSystemProjectStorage(directory: DirectoryHandleLike, o
       return { saved, failed }
     },
     exportBundle(snapshot) { return exportProjectBundle(snapshot, options) },
-    importBundle(text) { return importProjectBundle(text).snapshot }
+    importBundle(text) { return importProjectBundle(text) }
   }
 }
 

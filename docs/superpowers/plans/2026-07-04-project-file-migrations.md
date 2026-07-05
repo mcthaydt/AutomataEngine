@@ -857,7 +857,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: `ParsedProject`, `applyGameMigration`, `PROJECT_FORMAT_VERSION` from `@automata/project`; `markAllDirty` from Task 6.
 - Produces: `ProjectStoragePort.open(): Promise<ParsedProject>`; `ProjectStoragePort.importBundle(text): ParsedProject`; `OpenedBrowserProject` gains `fromVersion: number`; `ProjectSessionMountOptions` (in `editorApp.ts`) gains `migrated?: boolean`.
 
-- [ ] **Step 1: Failing wiring test**
+- [x] **Step 1: Failing wiring test**
 
 In `tools/level-editor/tests/projectSession.test.ts` (follow the file's existing mount/fixture helpers — it already mounts sessions with fake options), add a test that a session mounted with `migrated: true` reports every document path dirty:
 
@@ -872,12 +872,12 @@ it('marks every path dirty when mounted for a migrated project', async () => {
 ```
 If the mount helper doesn't expose the store, assert via the session's save flow instead (a `save()` after mount must attempt every path) — mirror whichever observation the file already uses for `initiallyDirty`.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run --project level-editor tests/projectSession.test.ts`
 Expected: FAIL — `migrated` is not a known option.
 
-- [ ] **Step 3: Port + adapters**
+- [x] **Step 3: Port + adapters**
 
 `port.ts`:
 ```ts
@@ -891,7 +891,7 @@ import type { ParsedProject, ProjectSnapshot, ValidationIssue } from '@automata/
 
 `memory.ts` / `fileSystem.ts`: remove the Task 2/3 unwraps — `open()` returns `loadProjectFiles(...)` directly; `importBundle(text)` returns `importProjectBundle(text)` directly.
 
-- [ ] **Step 4: browserWorkspace**
+- [x] **Step 4: browserWorkspace**
 
 `OpenedBrowserProject` gains `fromVersion: number`. In `openBundle`:
 ```ts
@@ -905,7 +905,7 @@ const { snapshot, fromVersion } = await storage.open()
 ```
 and add `fromVersion` to its return object.
 
-- [ ] **Step 5: editorApp wiring**
+- [x] **Step 5: editorApp wiring**
 
 In `tools/level-editor/src/editorApp.ts`:
 
@@ -952,11 +952,11 @@ const importBundle = async (): Promise<void> => {
 }
 ```
 
-- [ ] **Step 6: Typecheck-enumerated stragglers**
+- [x] **Step 6: Typecheck-enumerated stragglers**
 
 Run `npm run typecheck`; fix any remaining `open()`/`importBundle` consumers (storage tests in `packages/editor/tests/project/storage/`, level-editor tests) with the `{ snapshot, fromVersion }` destructure pattern.
 
-- [ ] **Step 7: Run suites; commit**
+- [x] **Step 7: Run suites; commit**
 
 Run: `npx vitest run --project @automata/editor --project level-editor`
 Expected: PASS, including the Step 1 test.

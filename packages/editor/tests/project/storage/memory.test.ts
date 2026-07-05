@@ -11,11 +11,11 @@ function withSpeed(speed: number) {
 describe('memory project storage', () => {
   it('opens, saves only dirty paths, and round-trips', async () => {
     const storage = createMemoryProjectStorage(fakeSnapshot())
-    expect(await storage.open()).toEqual(fakeSnapshot())
+    expect(await storage.open()).toEqual({ snapshot: fakeSnapshot(), fromVersion: 1 })
 
     const result = await storage.save(withSpeed(9), ['resources/tuning.resource.json'])
     expect(result).toEqual({ saved: ['resources/tuning.resource.json'], failed: [] })
-    expect((await storage.open()).resources.tuning!.data).toMatchObject({ speed: 9 })
+    expect((await storage.open()).snapshot.resources.tuning!.data).toMatchObject({ speed: 9 })
   })
 
   it('reports failed paths without persisting them', async () => {
@@ -23,6 +23,6 @@ describe('memory project storage', () => {
     const result = await storage.save(withSpeed(9), ['resources/tuning.resource.json'])
     expect(result.saved).toEqual([])
     expect(result.failed).toEqual([{ path: 'resources/tuning.resource.json', message: expect.any(String) }])
-    expect((await storage.open()).resources.tuning!.data).toMatchObject({ speed: 4 })
+    expect((await storage.open()).snapshot.resources.tuning!.data).toMatchObject({ speed: 4 })
   })
 })

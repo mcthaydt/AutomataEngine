@@ -25,6 +25,8 @@ export interface BrowserWorkspaceDependencies {
 
 export interface OpenedBrowserProject {
   snapshot: ProjectSnapshot
+  /** formatVersion the project's documents were read at (≤ PROJECT_FORMAT_VERSION). */
+  fromVersion: number
   storage: ProjectStoragePort | null
   source: 'folder' | 'bundle' | 'recent'
 }
@@ -47,9 +49,9 @@ export function createBrowserWorkspace(dependencies: BrowserWorkspaceDependencie
   const openBundle = async (registration?: RegisteredEditorProject): Promise<OpenedBrowserProject | null> => {
     const text = await dependencies.pickBundleText()
     if (text === null) return null
-    const snapshot = importProjectBundle(text).snapshot
+    const { snapshot, fromVersion } = importProjectBundle(text)
     if (registration) assertGame(registration, snapshot)
-    return { snapshot, storage: null, source: 'bundle' }
+    return { snapshot, fromVersion, storage: null, source: 'bundle' }
   }
 
   const openDirectory = async (
@@ -61,7 +63,7 @@ export function createBrowserWorkspace(dependencies: BrowserWorkspaceDependencie
       directory,
       registration ? { validate: registration.validate } : {}
     )
-    const snapshot = await storage.open()
+    const { snapshot, fromVersion } = await storage.open()
     if (registration) assertGame(registration, snapshot)
     if (source === 'folder') {
       await recent.put({
@@ -71,7 +73,7 @@ export function createBrowserWorkspace(dependencies: BrowserWorkspaceDependencie
         savedAt: dependencies.now()
       })
     }
-    return { snapshot, storage, source }
+    return { snapshot, fromVersion, storage, source }
   }
 
   return {

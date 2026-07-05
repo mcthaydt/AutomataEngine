@@ -157,8 +157,8 @@ describe('generic editor app', () => {
     const project = registration.createTemplate()
     const recentWorkspace: BrowserWorkspace = {
       ...workspace,
-      open: vi.fn(async () => ({ snapshot: project, storage: null, source: 'folder' as const })),
-      openRecent: vi.fn(async () => ({ snapshot: project, storage: null, source: 'recent' as const })),
+      open: vi.fn(async () => ({ snapshot: project, fromVersion: 1, storage: null, source: 'folder' as const })),
+      openRecent: vi.fn(async () => ({ snapshot: project, fromVersion: 1, storage: null, source: 'recent' as const })),
       listRecent: vi.fn(async () => [{
         projectId: project.manifest.id,
         name: project.manifest.name,
@@ -224,7 +224,7 @@ describe('generic editor app', () => {
       catalog,
       workspace: {
         ...workspace,
-        open: async () => ({ snapshot: unknown, storage: null, source: 'bundle' })
+        open: async () => ({ snapshot: unknown, fromVersion: 1, storage: null, source: 'bundle' })
       },
       autosaveStorage: memoryStorage(),
       query: '',
