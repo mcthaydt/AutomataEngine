@@ -155,18 +155,64 @@ definitions derive from the
 
 ## 4. Cross-cutting and standalone
 
-Work that supports the arc but does not sit inside a single phase.
+Work that supports the arc but does not sit inside a single phase. P5's detail
+lives under **Phase 1** in section 3 (it is a phase, not a cross-cutting item).
 
-- **P4 — Richer `@automata/game-kit`** · `Planned`. Also listed under Phase 0;
-  tracked here because it is a reusable-layer investment the later phases lean on.
-- **P6 — Generated agent documentation (llms.txt / API digest)** · `Planned`.
-  Publish an API digest and game-building walkthrough with drift checks, so the
-  MCP-first agent path has authoritative, current docs.
-- **P8 — Hygiene** · `Planned`. Monkey Ball `legacyImporter` retirement; stray
-  iCloud `" 2"` duplicate directories (see the standing note in project memory);
-  level-editor `publicDir` coupling.
-- **P7 — Retrofit Last Lightkeeper** · `Moot`. The game was deleted on
-  2026-07-04; paved-road validation is covered by `verify:new-game` instead.
+### P4 — Richer `@automata/game-kit` · `Planned` (also a Phase 0 task)
+
+- **What today looks like:** each game's browser entry point duplicates the same
+  boot code — `games/monkey-ball/src/main.ts` (~200 lines) and
+  `games/pulsebreak/src/main.ts` (~145 lines) both hand-wire
+  `createThreeRenderer` + `attachCanvasRenderer`, a `GameLoop` + `startLoopDriver`,
+  canvas creation, keyboard/pointer/`beforeunload`/visibility listeners,
+  audio-resume-on-first-input, a cleanup stack, and a `fetch`-based project
+  reader (`fetch(new URL('project/…', document.baseURI))`). `game-kit` today only
+  carries `view`, `dom`, `browserAudio`, and `overlayScene`.
+- **The work:** lift that shared browser shell (boot, loop, input, visibility,
+  project reader) into `@automata/game-kit`, and regenerate the scaffold template
+  so new games inherit it instead of copying it.
+- **Done when:** a game's `main.ts` wires only game-specific pieces; the shared
+  boot/loop/input/project-reader lives in one place; `verify:new-game` still
+  passes with the thinner template.
+
+### P6 — Generated agent documentation (llms.txt / API digest) · `Planned`
+
+- **Why:** the MCP-first agent builds games by reading the project/engine API,
+  but that knowledge is scattered across source, `AGENTS.md`, and specs. The
+  agent needs one authoritative, current place to read.
+- **The work:** generate agent-facing docs — an `llms.txt` (the emerging
+  convention: a curated, LLM-readable index at a stable path), a digest of the
+  public `@automata/project` / `@automata/engine` surface that games and tools
+  may use, and a prompt-to-game walkthrough — plus **drift checks** (tests that
+  fail when the generated docs fall out of sync with the real API).
+- **Done when:** an agent can build a game from the generated doc set alone, and
+  CI fails if the docs drift from the code.
+
+### P8 — Hygiene · `Planned`
+
+Three independent cleanups, each removable on its own:
+
+- **Retire Monkey Ball's `legacyImporter`.** It converts the old bespoke MB
+  format (`levels/*.json`, `physics.toml`, `worlds.json`) into a canonical
+  snapshot and is still wired into `build-project.ts`, `template.ts`, and pinned
+  by tests. Post-P3 the canonical `public/project` is the source of truth, so the
+  importer, `legacyTypes`, and the quarantined legacy fixtures can be deleted.
+  **Done when:** Monkey Ball builds from canonical project data only.
+- **Kill the iCloud `" 2"` duplicates.** The repo lives on an iCloud-synced path
+  that periodically spawns duplicate `"<name> 2"` files/dirs; today they must be
+  swept before every commit. **Done when:** the repo is moved off the synced path
+  (the real fix) so the duplicates stop appearing.
+- **Decouple the level-editor from a single game's `publicDir`.**
+  `tools/level-editor/vite.config.ts` hardcodes
+  `publicDir: '../../games/monkey-ball/public'`, so the *multi-game* editor's dev
+  server serves one specific game's assets. **Done when:** the editor serves
+  project assets without pinning to one game's folder.
+
+### P7 — Retrofit Last Lightkeeper · `Moot`
+
+The game was deleted on 2026-07-04; paved-road validation is covered by
+`verify:new-game` instead. Kept in the table so the P-number isn't silently
+reused.
 
 ---
 
