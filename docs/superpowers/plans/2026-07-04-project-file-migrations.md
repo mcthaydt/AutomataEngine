@@ -1144,22 +1144,22 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Regenerate: `games/monkey-ball/public/project/**` (via its build script)
 - Modify: `docs/superpowers/plans/2026-07-04-project-file-migrations.md` (tick remaining checkboxes)
 
-- [ ] **Step 1: Migrate pulsebreak's shipped project by hand**
+- [x] **Step 1: Migrate pulsebreak's shipped project by hand**
 
 In `games/pulsebreak/public/project/automata.project.json`: `"formatVersion": 1` → `"formatVersion": 2`.
 In `scenes/arena.scene.json` and all four `resources/*.resource.json`: delete the `"formatVersion": 1,` line.
 
-- [ ] **Step 2: Regenerate monkey-ball's shipped project**
+- [x] **Step 2: Regenerate monkey-ball's shipped project**
 
 Run: `node --import tsx games/monkey-ball/scripts/build-project.ts`
 Expected: `wrote N Monkey Ball project files to .../games/monkey-ball/public/project` — the regenerated files have `"formatVersion": 2` in the manifest only. Inspect `git diff games/monkey-ball/public/project` to confirm the only changes are version-related.
 
-- [ ] **Step 3: Validate both shipped projects**
+- [x] **Step 3: Validate both shipped projects**
 
 Run: `npm run validate:project -w pulsebreak && npm run validate:project -w monkey-ball`
 Expected: both print their OK line. (If a workspace lacks the script alias, run the script files directly with `node --import tsx`.)
 
-- [ ] **Step 4: Full gates**
+- [x] **Step 4: Full gates**
 
 ```bash
 npm run ci
@@ -1169,7 +1169,7 @@ npm run verify:new-game
 ```
 Expected: all green. `verify:new-game` is required — Task 8 touched scaffold templates.
 
-- [ ] **Step 5: Sweep iCloud duplicates, tick checkboxes, commit**
+- [x] **Step 5: Sweep iCloud duplicates, tick checkboxes, commit**
 
 ```bash
 find . -name "* 2*" -not -path "*/node_modules/*"   # must be empty; delete any strays
