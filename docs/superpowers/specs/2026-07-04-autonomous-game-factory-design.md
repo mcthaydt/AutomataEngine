@@ -391,6 +391,32 @@ The phases below are the design of record — their goals and exit criteria.
 in [`docs/ROADMAP.md`](../../ROADMAP.md), not here.** This spec does not change
 when a phase completes.
 
+> **Revised 2026-07-05 (pending written-spec review).** The phase decomposition
+> was adjusted to remove two structural risks in the original layering: it
+> deferred *evaluation* and *end-to-end integration* to the final phases, which
+> is where the design's own risks (evaluator blindness, capability
+> combinatorics, content incoherence) actually surface. The numbering and titles
+> are unchanged; the changes are the two cross-cutting spines below, per-phase
+> evaluator slices, and a vertical-slice-first Phase 3.
+
+### Two cross-cutting spines
+
+Two capabilities are load-bearing for every phase and must not be deferred to a
+single late phase:
+
+- **Evaluation grows with generation.** "Generation quality improves only when
+  failure is detectable" (see the evaluator suite). Each phase ships the
+  evaluator slice that makes *its own* output checkable — structural spec
+  validation with Phase 2, headless simulation and composition with Phase 3,
+  asset validation with Phase 4, content/graph and critical-path with Phase 5.
+  Phase 6 then closes the *repair* loop over evaluators that already exist; it
+  does not build evaluation from scratch.
+- **Determinism and runtime composition.** A seeded-generation and replay harness
+  and the runtime that composes capability packs + content + assets into a
+  playable game are established in Phase 1 and extended by each later phase.
+  Every generation step is deterministic from a recorded seed so evaluators and
+  repair can reproduce failures.
+
 ### Phase 0: Platform integrity
 
 - execute P3 project-file migrations;
@@ -405,10 +431,13 @@ Exit: generated projects survive engine evolution and long editing sessions.
 - add project open/swap behavior to workspace MCP mode;
 - persist session state, artifacts, findings, budgets, and resume position;
 - expose changed-file, build, test, browser, and evaluation results;
-- make every operation idempotent or artifact-hash guarded.
+- make every operation idempotent or artifact-hash guarded;
+- stand up the seeded-generation/replay harness and the pack-composition runtime
+  seam that later phases extend (see the cross-cutting spines).
 
 Exit: an agent can create, reopen, modify, evaluate, and repair a game across
-process and context resets.
+process and context resets, and generation steps replay deterministically from a
+recorded seed.
 
 ### Phase 2: Versioned `GameSpec`
 
@@ -416,20 +445,34 @@ process and context resets.
 - implement prompt-to-spec generation and validation;
 - enforce budgets and capability compatibility;
 - produce the design checkpoint artifact.
+- Evaluators (this phase's slice): structural spec validation — schema, budgets,
+  capability compatibility — that gates the design checkpoint.
 
 Exit: ten differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3: Capability packs
+### Phase 3: Capability packs — vertical slice first, then widen
 
-Implement the initial seven capability packs with composition, headless
-evaluation, and generated acceptance coverage.
+- **Vertical slice:** build ONE capability pack end-to-end through the runtime —
+  its config/component/resource schemas, systems, editor prefabs, generated
+  acceptance tests, and headless evaluation — plus the minimal content and asset
+  needed to actually *play* it, and reach the vertical-slice checkpoint. This
+  proves the pack → runtime → content → asset → evaluation seam on something
+  small before it is load-bearing.
+- **Then widen:** implement the remaining packs. Each pack is its own spec→plan
+  cycle; the seven are peers, not one phase of work.
+- Evaluators (this phase's slice): headless simulation plus pairwise/scenario
+  composition suites, added per pack.
 
-Exit: packs compose without game-specific editor or MCP changes.
+Exit: one pack drives a playable vertical slice through the runtime, and further
+packs compose without game-specific editor or MCP changes.
 
 ### Phase 4: Asset pipeline
 
 Add the normalized manifest, provider adapters, provenance, validation,
 optimization, stable replacement, and fallback behavior.
+
+- Evaluators (this phase's slice): asset validation — type, dimensions, budgets,
+  provenance, visual-family consistency — wired into the release gate.
 
 Exit: a failed asset can be regenerated independently and every release asset
 has valid provenance and browser budgets.
@@ -437,14 +480,22 @@ has valid provenance and browser budgets.
 ### Phase 5: Content compiler
 
 Generate complete world, cast, quest, dialogue, encounter, economy, and
-progression content from `GameSpec` within declared budgets.
+progression content from `GameSpec` within declared budgets. The per-domain
+generators (world/quest/dialogue/economy/progression) are separate spec→plan
+cycles sharing the `GameSpec` contract, not one monolith.
+
+- Evaluators (this phase's slice): deterministic graph reachability, economy
+  solvency, and critical-path completion over fixed seeds.
 
 Exit: deterministic automation can complete the generated critical path.
 
 ### Phase 6: Closed-loop repair
 
-Integrate structural, simulation, browser, visual, narrative, and performance
-findings with bounded repair planning.
+Wire the evaluators built incrementally in Phases 2–5 into bounded repair jobs:
+rank structural, simulation, browser, visual, narrative, and performance findings;
+change the smallest owned slice; re-run focused gates; escalate on repeated
+failure. This phase closes the loop — it consumes evaluators that already exist,
+it does not build them.
 
 Exit: seeded platform/content/asset defects are detected and repaired without
 human intervention.
@@ -452,7 +503,9 @@ human intervention.
 ### Phase 7: Golden validation game
 
 Generate the compact social/crime hub game from a fresh prompt using only the
-three product checkpoints.
+three product checkpoints. By this point the Phase 3 vertical slice and each
+subsystem's evaluators already exist, so this widens a proven pipeline rather
+than integrating end-to-end for the first time.
 
 Exit: three consecutive fresh runs deliver complete one-to-two-hour games with
 no manual code edits. Record generation time, intervention count, repair count,
