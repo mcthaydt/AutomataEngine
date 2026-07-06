@@ -546,6 +546,7 @@ git commit -m "feat(game-kit): add bootGame browser boot spine with injectable d
 
 **Files:**
 - Modify: `tools/scaffold/src/templates/srcFiles.ts:133-202` (the `mainTs` function)
+- Modify: `tools/scaffold/src/templates/configFiles.ts:14-18` (add the `@automata/game-kit` dependency to the generated `package.json`)
 
 **Interfaces:**
 - Consumes: `bootGame`, `createProjectReader` from `@automata/game-kit`; the generated `loadProject(reader)` (accepts a `{ readText }`), `createGameplay`, and `SimControl`/`SimState`.
@@ -616,15 +617,38 @@ bootGame(async (ctx) => {
 }
 ```
 
-- [ ] **Step 2: Verify scaffold unit tests and typecheck still pass**
+- [ ] **Step 2: Declare `@automata/game-kit` in the generated `package.json`**
+
+The new template imports from `@automata/game-kit`, so the generated game must depend on it (the current template only used `@automata/engine`). In `tools/scaffold/src/templates/configFiles.ts`, change the `dependencies` block (lines 14–18) from:
+
+```ts
+    dependencies: {
+      '@automata/editor': '*',
+      '@automata/engine': '*',
+      '@automata/project': '*'
+    },
+```
+
+to:
+
+```ts
+    dependencies: {
+      '@automata/editor': '*',
+      '@automata/engine': '*',
+      '@automata/game-kit': '*',
+      '@automata/project': '*'
+    },
+```
+
+- [ ] **Step 3: Verify scaffold unit tests and typecheck still pass**
 
 Run: `npm test -w @automata/scaffold && npm run typecheck -w @automata/scaffold`
-Expected: PASS — no scaffold test pins the generated `main.ts` content (verified: `grep -rn "createThreeRenderer\|bootGame\|main.ts" tools/scaffold/tests` finds only the file-list path in `plan.test.ts`).
+Expected: PASS — no scaffold test pins the generated `main.ts` content or the dependency set (verified: `grep -rn "createThreeRenderer\|bootGame\|main.ts\|dependencies" tools/scaffold/tests` finds only the file-list path in `plan.test.ts`).
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add tools/scaffold/src/templates/srcFiles.ts
+git add tools/scaffold/src/templates/srcFiles.ts tools/scaffold/src/templates/configFiles.ts
 git commit -m "feat(scaffold): generate main.ts on the game-kit bootGame shell"
 ```
 
@@ -638,6 +662,9 @@ Note: the generated game's full boot proof (clean-clone install → CI → build
 - Modify: `games/monkey-ball/src/main.ts` (full rewrite)
 - Modify: `games/monkey-ball/src/scenes/boot.ts:16` (archetype path → base-relative)
 - Modify: `games/monkey-ball/tests/scenes/boot.test.ts:28` (expectation → base-relative)
+- Modify: `games/monkey-ball/tests/helpers/data.ts` (`fsFetchText`: strip an optional leading slash)
+
+Note: the base-relative value `data/archetypes/standard.yaml` already exists as `ARCHETYPE_DATA_PATH` in `src/project/headless.ts` (the editor/headless paths use it — see `tests/project/editor.test.ts:89,97`). The browser `boot.ts` is the last caller still on the absolute path. Keep a local literal in `boot.ts` rather than importing that constant: `headless.ts` pulls in `@automata/editor/headless` + evaluation code, which must not enter the browser game bundle.
 
 **Interfaces:**
 - Consumes: `bootGame`, `createProjectReader`, `mountAudio`, `createOverlayScene`, `type View` from `@automata/game-kit`; `createCleanupStack`, `createLoader`, `createRapierPhysics`, `createSceneManager`, `localStorageAdapter`, `subscribeSelector`, `type CleanupStack`, `type InputSource`, `type Scene` from `@automata/engine`; `createKeyboardInput`, `createVirtualJoystick` from `@automata/engine/browser`. All local game modules keep their current exports.
@@ -674,12 +701,30 @@ to:
     loader.load(archetypeLibraryKind, 'data/archetypes/standard.yaml')
 ```
 
-- [ ] **Step 3: Run the boot-data test to verify it passes**
+- [ ] **Step 3: Teach the test helper to accept the base-relative path**
+
+`fsFetchText` currently strips only a leading `/data/`, so the new relative path would fall through to the legacy-fixtures root and the boot-data test would throw. In `games/monkey-ball/tests/helpers/data.ts`, change:
+
+```ts
+export async function fsFetchText(url: string): Promise<string> {
+  return readDataFile(url.replace(/^\/data\//, ''))
+}
+```
+
+to (make the leading slash optional):
+
+```ts
+export async function fsFetchText(url: string): Promise<string> {
+  return readDataFile(url.replace(/^\/?data\//, ''))
+}
+```
+
+- [ ] **Step 4: Run the boot-data test to verify it passes**
 
 Run: `npm test -w monkey-ball -- scenes/boot`
 Expected: PASS (both tests).
 
-- [ ] **Step 4: Rewrite `games/monkey-ball/src/main.ts`**
+- [ ] **Step 5: Rewrite `games/monkey-ball/src/main.ts`**
 
 Replace the entire file with:
 
@@ -820,20 +865,20 @@ bootGame(async (ctx) => {
 })
 ```
 
-- [ ] **Step 5: Typecheck, lint, and unit-test monkey-ball**
+- [ ] **Step 6: Typecheck, lint, and unit-test monkey-ball**
 
 Run: `npm run ci`
 Expected: PASS. (Confirms the rewritten `main.ts` typechecks and every game/engine unit test still passes.)
 
-- [ ] **Step 6: Drive the browser smoke**
+- [ ] **Step 7: Drive the browser smoke**
 
 Run: `npx playwright test e2e/game.spec.ts`
 Expected: PASS — game boots to the menu, `#overlays` visible, Play → level → `canvas` + `.hud` visible, and a `…/project/automata.project.json` response is observed (now base-relative, still resolves to the dev-server root).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add games/monkey-ball/src/main.ts games/monkey-ball/src/scenes/boot.ts games/monkey-ball/tests/scenes/boot.test.ts
+git add games/monkey-ball/src/main.ts games/monkey-ball/src/scenes/boot.ts games/monkey-ball/tests/scenes/boot.test.ts games/monkey-ball/tests/helpers/data.ts
 git commit -m "refactor(monkey-ball): boot on the game-kit shell; base-relative assets"
 ```
 
@@ -1004,7 +1049,8 @@ git commit -m "docs: mark P4 (game-kit shell) shipped"
 - `bootGame` contract (`BootContext`, `GameHooks`, `BootDeps`, ordered spine, rollback) → Task 3. ✓
 - `createProjectReader` (base-relative `readText` + `fetchText`) → Task 1. ✓
 - `mountAudio` (register + resume-on-input + overlay click; volume left to caller) → Task 2. ✓
-- Unify latent bug: monkey-ball base-relative assets → Task 5 (path + test). ✓
+- Unify latent bug: monkey-ball base-relative assets → Task 5 (path + expectation + `fsFetchText` helper). ✓
+- Generated game declares `@automata/game-kit` (new template dependency) → Task 4. ✓
 - Hooked policy: `onEscape`/`onHidden` pause differences, `onStarted` for `bootCompleted` → Tasks 5, 6. ✓
 - Migrate all three consumers → Tasks 4, 5, 6. ✓
 - Delete duplicated `bootError` from both games → Tasks 5, 6 (full-file rewrites omit it). ✓
