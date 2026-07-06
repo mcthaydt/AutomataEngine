@@ -395,9 +395,12 @@ when a phase completes.
 > was adjusted to remove two structural risks in the original layering: it
 > deferred *evaluation* and *end-to-end integration* to the final phases, which
 > is where the design's own risks (evaluator blindness, capability
-> combinatorics, content incoherence) actually surface. The numbering and titles
-> are unchanged; the changes are the two cross-cutting spines below, per-phase
-> evaluator slices, and a vertical-slice-first Phase 3.
+> combinatorics, content incoherence) actually surface. Changes: the two
+> cross-cutting spines below, per-phase evaluator slices, and — pulled out as its
+> own phase — an early **vertical slice (Phase 3)** that proves the whole
+> pipeline seam on a thin playable before any layer is built at scale. This
+> expands the arc to **Phase 0–8**; the phases after the slice each *widen* what
+> it proved.
 
 ### Two cross-cutting spines
 
@@ -407,9 +410,10 @@ single late phase:
 - **Evaluation grows with generation.** "Generation quality improves only when
   failure is detectable" (see the evaluator suite). Each phase ships the
   evaluator slice that makes *its own* output checkable — structural spec
-  validation with Phase 2, headless simulation and composition with Phase 3,
-  asset validation with Phase 4, content/graph and critical-path with Phase 5.
-  Phase 6 then closes the *repair* loop over evaluators that already exist; it
+  validation with Phase 2, the first browser and critical-path eval with the
+  Phase 3 slice, headless simulation and composition with Phase 4, asset
+  validation with Phase 5, content/graph and critical-path with Phase 6.
+  Phase 7 then closes the *repair* loop over evaluators that already exist; it
   does not build evaluation from scratch.
 - **Determinism and runtime composition.** A seeded-generation and replay harness
   and the runtime that composes capability packs + content + assets into a
@@ -450,23 +454,35 @@ recorded seed.
 
 Exit: ten differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3: Capability packs — vertical slice first, then widen
+### Phase 3: Vertical slice — first playable
 
-- **Vertical slice:** build ONE capability pack end-to-end through the runtime —
-  its config/component/resource schemas, systems, editor prefabs, generated
-  acceptance tests, and headless evaluation — plus the minimal content and asset
-  needed to actually *play* it, and reach the vertical-slice checkpoint. This
-  proves the pack → runtime → content → asset → evaluation seam on something
-  small before it is load-bearing.
-- **Then widen:** implement the remaining packs. Each pack is its own spec→plan
-  cycle; the seven are peers, not one phase of work.
+Drive one minimal `GameSpec` through the entire pipeline on the thinnest viable
+version of every layer: one minimal capability pack, hand-minimal or trivially
+generated content, a single placeholder or generated asset, all composed by the
+runtime into a genuinely playable artifact — then present it at the
+vertical-slice product checkpoint. The point is to prove the
+prompt → spec → compose → play → evaluate seam end-to-end *before* any layer is
+built at scale; every later phase then widens a seam that already works, instead
+of integrating for the first time at the end.
+
+- Evaluators (this phase's slice): the first browser evaluation (boot, console,
+  frame-time) plus a critical-path completion smoke on the slice.
+
+Exit: a thin but genuinely playable artifact runs end-to-end from a minimal
+`GameSpec` and passes the vertical-slice checkpoint.
+
+### Phase 4: Capability packs
+
+Widen from the Phase 3 slice to the full set of capability packs; the slice's
+pack is the template. Each remaining pack is its own spec→plan cycle — the seven
+are peers, not one phase of work.
+
 - Evaluators (this phase's slice): headless simulation plus pairwise/scenario
   composition suites, added per pack.
 
-Exit: one pack drives a playable vertical slice through the runtime, and further
-packs compose without game-specific editor or MCP changes.
+Exit: packs compose without game-specific editor or MCP changes.
 
-### Phase 4: Asset pipeline
+### Phase 5: Asset pipeline
 
 Add the normalized manifest, provider adapters, provenance, validation,
 optimization, stable replacement, and fallback behavior.
@@ -477,7 +493,7 @@ optimization, stable replacement, and fallback behavior.
 Exit: a failed asset can be regenerated independently and every release asset
 has valid provenance and browser budgets.
 
-### Phase 5: Content compiler
+### Phase 6: Content compiler
 
 Generate complete world, cast, quest, dialogue, encounter, economy, and
 progression content from `GameSpec` within declared budgets. The per-domain
@@ -489,9 +505,9 @@ cycles sharing the `GameSpec` contract, not one monolith.
 
 Exit: deterministic automation can complete the generated critical path.
 
-### Phase 6: Closed-loop repair
+### Phase 7: Closed-loop repair
 
-Wire the evaluators built incrementally in Phases 2–5 into bounded repair jobs:
+Wire the evaluators built incrementally in Phases 2–6 into bounded repair jobs:
 rank structural, simulation, browser, visual, narrative, and performance findings;
 change the smallest owned slice; re-run focused gates; escalate on repeated
 failure. This phase closes the loop — it consumes evaluators that already exist,
@@ -500,7 +516,7 @@ it does not build them.
 Exit: seeded platform/content/asset defects are detected and repaired without
 human intervention.
 
-### Phase 7: Golden validation game
+### Phase 8: Golden validation game
 
 Generate the compact social/crime hub game from a fresh prompt using only the
 three product checkpoints. By this point the Phase 3 vertical slice and each
