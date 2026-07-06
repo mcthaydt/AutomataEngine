@@ -57,7 +57,7 @@ Newest first. Each links to the spec/plan that defines it.
 
 Three numbering schemes coexist in the history; this table reconciles them so
 nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
-(capability packs).**
+(the first-playable vertical slice).**
 
 | P-series | Restarted milestone | Factory phase | What it is | Status |
 |---|---|---|---|---|
@@ -72,17 +72,26 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 
 Two axes to keep separate: the **old M0–M16** labels belong to the completed
 engine-build era (section 1) and are *closed*. The **restarted M1/M2/M3** labels
-belong to the AI-first series and equal P1/P2/P3. The **factory Phases 0–7**
+belong to the AI-first series and equal P1/P2/P3. The **factory Phases 0–8**
 (section 3) are the destination-oriented axis that absorbs the P-series.
 
 ---
 
-## 3. Forward roadmap (factory Phases 0–7)
+## 3. Forward roadmap (factory Phases 0–8)
 
 In-progress and next phases carry Goal · Depends-on · Tasks · Exit. Later phases
 are scoped headings — Goal · Exit only — until their own spec exists. Phase
 definitions derive from the
 [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md).
+
+Two capabilities run through every phase rather than a single late one:
+**evaluation grows with generation** (each phase ships the evaluator slice that
+makes its own output checkable; Phase 7 only *closes the repair loop* over
+evaluators that already exist), and **determinism + runtime composition** (a
+seeded-generation/replay harness and the pack-composition runtime are stood up
+in Phase 1 and extended by later phases). An early **vertical slice (Phase 3)**
+proves the whole pipeline seam on a thin playable before any layer is built at
+scale.
 
 ### Phase 0 — Platform integrity · `In progress`
 
@@ -109,43 +118,60 @@ definitions derive from the
     outside model context.
   - Expose changed-file, build, test, browser, and evaluation results.
   - Make every operation idempotent or artifact-hash guarded.
+  - Stand up the seeded-generation/replay harness and the pack-composition
+    runtime seam that later phases extend.
 - **Exit:** an agent creates, reopens, modifies, evaluates, and repairs a game
-  across process and context resets without replaying successful work blindly.
+  across process and context resets without replaying successful work blindly,
+  and generation steps replay deterministically from a recorded seed.
 
 ### Phase 2 — Versioned `GameSpec` · `Planned`
 
 - **Goal:** a prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
-  design checkpoint. **Exit:** ten differently worded prompts produce valid,
-  bounded, reviewable specs.
+  design checkpoint. **Evaluators:** structural spec validation (schema, budgets,
+  capability compatibility) gating the design checkpoint. **Exit:** ten
+  differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3 — Capability packs · `Planned`
+### Phase 3 — Vertical slice · first playable · `Planned`
 
-- **Goal:** the initial seven reusable gameplay packs (interaction/inventory,
-  dialogue/quests, schedules/relationships, combat/AI, economy/shops/progression,
-  hub-navigation + one vehicle, save/load) compose cleanly. **Exit:** packs
-  compose without game-specific editor or MCP changes.
+- **Goal:** drive one minimal `GameSpec` through the thinnest version of every
+  layer — one pack, hand-minimal content, one placeholder/generated asset,
+  composed by the runtime — into a genuinely playable artifact, proving the
+  prompt → spec → compose → play → evaluate seam before any layer is built at
+  scale. **Evaluators:** first browser eval (boot/console/frame-time) plus a
+  critical-path smoke. **Exit:** a thin but genuinely playable artifact runs
+  end-to-end from a minimal `GameSpec` and passes the vertical-slice checkpoint.
 
-### Phase 4 — Asset pipeline · `Planned`
+### Phase 4 — Capability packs · `Planned`
+
+- **Goal:** widen from the Phase 3 slice to the initial seven reusable gameplay
+  packs (interaction/inventory, dialogue/quests, schedules/relationships,
+  combat/AI, economy/shops/progression, hub-navigation + one vehicle, save/load);
+  each pack is its own spec→plan cycle. **Exit:** packs compose without
+  game-specific editor or MCP changes.
+
+### Phase 5 — Asset pipeline · `Planned`
 
 - **Goal:** a normalized, versioned asset manifest with provider adapters,
   provenance, validation, optimization, and stable independent replacement.
   **Exit:** a failed asset regenerates independently and every release asset has
   valid provenance and browser budgets.
 
-### Phase 5 — Content compiler · `Planned`
+### Phase 6 — Content compiler · `Planned`
 
 - **Goal:** generate complete world, cast, quest, dialogue, encounter, economy,
-  and progression content from `GameSpec` within budgets. **Exit:** deterministic
-  automation can complete the generated critical path.
+  and progression content from `GameSpec` within budgets; the per-domain
+  generators are separate spec→plan cycles sharing the `GameSpec` contract.
+  **Exit:** deterministic automation can complete the generated critical path.
 
-### Phase 6 — Closed-loop repair · `Planned`
+### Phase 7 — Closed-loop repair · `Planned`
 
-- **Goal:** integrate structural, simulation, browser, visual, narrative, and
-  performance findings with bounded repair planning. **Exit:** seeded
-  platform/content/asset defects are detected and repaired without human
-  intervention.
+- **Goal:** wire the evaluators built incrementally in Phases 2–6 into bounded
+  repair jobs (rank findings, change the smallest owned slice, re-run focused
+  gates, escalate on repeated failure) — closing the loop over evaluators that
+  already exist. **Exit:** seeded platform/content/asset defects are detected and
+  repaired without human intervention.
 
-### Phase 7 — Golden validation game · `Planned`
+### Phase 8 — Golden validation game · `Planned`
 
 - **Goal:** generate the compact social/crime hub game from a fresh prompt using
   only the three product checkpoints. **Exit:** three consecutive fresh runs
