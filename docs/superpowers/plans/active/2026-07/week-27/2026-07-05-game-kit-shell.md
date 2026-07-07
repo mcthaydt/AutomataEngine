@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Progress: 29% (2/7 tasks complete)** — Tasks 1–2 ✅
+> **Progress: 43% (3/7 tasks complete)** — Tasks 1–3 ✅ (game-kit: 23 tests pass, typecheck clean)
 > **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
 
 **Goal:** Lift the duplicated browser boot spine out of every game's `main.ts` into `@automata/game-kit` as a `bootGame(setup)` orchestrator plus `createProjectReader` and `mountAudio` primitives, then migrate all three consumers (scaffold template, monkey-ball, pulsebreak) onto it.
@@ -279,7 +279,7 @@ git commit -m "feat(game-kit): add mountAudio (register + resume-on-input + over
   - `function bootError(error: unknown): HTMLElement`
   - `function bootGame(setup: GameSetup, deps?: BootDeps): void` — production callers omit `deps`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/game-kit/tests/boot.test.ts`:
 
@@ -381,12 +381,12 @@ describe('bootGame', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
-Run: `npm test -w @automata/game-kit -- boot`
-Expected: FAIL — cannot resolve `../src/boot`.
+Run: `npm test -- --project game-kit tests/boot`
+Expected: FAIL — cannot resolve `../src/boot`. ✅ Confirmed.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 Create `packages/game-kit/src/boot.ts`:
 
@@ -518,7 +518,7 @@ export function bootGame(setup: GameSetup, deps: BootDeps = defaultDeps): void {
 }
 ```
 
-- [ ] **Step 4: Add the barrel export**
+- [x] **Step 4: Add the barrel export**
 
 In `packages/game-kit/src/index.ts`, add:
 
@@ -526,17 +526,17 @@ In `packages/game-kit/src/index.ts`, add:
 export * from './boot'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
-Run: `npm test -w @automata/game-kit -- boot`
-Expected: PASS (5 tests).
+Run: `npm test -- --project game-kit tests/boot`
+Expected: PASS (5 tests). ✅ 5 passed.
 
-- [ ] **Step 6: Run the whole game-kit suite + typecheck**
+- [x] **Step 6: Run the whole game-kit suite + typecheck**
 
-Run: `npm test -w @automata/game-kit && npm run typecheck -w @automata/game-kit`
-Expected: PASS.
+Run: `npm test -- --project game-kit && npm run typecheck -w @automata/game-kit`
+Expected: PASS. ✅ 23 tests pass, typecheck clean.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/game-kit/src/boot.ts packages/game-kit/tests/boot.test.ts packages/game-kit/src/index.ts
