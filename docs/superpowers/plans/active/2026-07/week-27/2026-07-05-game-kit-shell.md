@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Progress: 86% (6/7 tasks complete)** — Tasks 1–6 ✅ (full CI: 1004 tests; monkey-ball + pulsebreak e2e green)
+> **Progress: 100% (7/7 tasks complete)** ✅ — full CI (1004 tests), coverage (thresholds met), `verify:new-game OK`, and both real-game e2e smokes all green; ROADMAP marked Shipped.
 > **Deviation note (Task 2 test):** the plan's `vi.fn((_audio: AudioPort) => {})` fails the repo's `@typescript-eslint/no-unused-vars` (no `argsIgnorePattern` configured); changed to `vi.fn((audio: AudioPort) => audio)` (return value is assignable to the `void`-returning `register` param). Behavior identical.
 > **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
 
@@ -1010,34 +1010,34 @@ git commit -m "refactor(pulsebreak): boot on the game-kit shell"
 **Files:**
 - Modify: `docs/ROADMAP.md` (P4 rows + Phase 0 task → `Shipped`)
 
-- [ ] **Step 1: Run the full CI gate**
+- [x] **Step 1: Run the full CI gate**
 
 Run: `npm run ci`
 Expected: PASS across all workspaces.
 
-- [ ] **Step 2: Run coverage (engine-adjacent code moved)**
+- [x] **Step 2: Run coverage (engine-adjacent code moved)**
 
 Run: `npm run coverage`
 Expected: PASS; game-kit coverage includes `boot.ts`, `projectReader.ts`, and `mountAudio`.
 
-- [ ] **Step 3: Run the paved-road acceptance proof**
+- [x] **Step 3: Run the paved-road acceptance proof**
 
 Run: `npm run verify:new-game`
 Expected: `verify:new-game OK` — a freshly scaffolded game installs, passes CI, builds, the MCP server loads it, and its generated Playwright smoke boots the game on the new `bootGame` template.
 
-- [ ] **Step 4: Run both real-game browser smokes together**
+- [x] **Step 4: Run both real-game browser smokes together**
 
 Run: `npx playwright test e2e/game.spec.ts e2e/pulsebreak.spec.ts`
 Expected: PASS (both).
 
-- [ ] **Step 5: Update `docs/ROADMAP.md`**
+- [x] **Step 5: Update `docs/ROADMAP.md`**
 
 Make these edits:
 - In the section 2 table, change the P4 row status from `Planned` to `Shipped` and add the merge date/commit inline (match the P3 row's format).
 - In "Phase 0 — Platform integrity", change the P4 task bullet from `Planned` to `Shipped` with the date.
 - In the cross-cutting "P4 — Richer `@automata/game-kit`" section, update the status to `Shipped` and revise "What today looks like" to reflect that the shared shell now lives in `game-kit` (past tense), linking the spec and this plan.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/ROADMAP.md

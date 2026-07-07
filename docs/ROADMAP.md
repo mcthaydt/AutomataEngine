@@ -27,6 +27,14 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **P4 — Richer `@automata/game-kit` browser shell** (2026-07-06). The duplicated
+  browser boot spine now lives in `game-kit` as `bootGame(setup)` plus
+  `createProjectReader` (base-relative asset fetch) and `mountAudio` primitives;
+  monkey-ball, pulsebreak, and the scaffold template all boot through it, so each
+  game's `main.ts` wires only game-specific pieces. Monkey-ball's asset fetches
+  moved to base-relative. Spec:
+  [`specs/2026-07-05-game-kit-shell-design.md`](superpowers/specs/archive/2026-07/week-27/2026-07-05-game-kit-shell-design.md);
+  plan: [`plans/2026-07-05-game-kit-shell.md`](superpowers/plans/active/2026-07/week-27/2026-07-05-game-kit-shell.md).
 - **P3 — Project-file migrations** (2026-07-05, main @ `39439b9`). One central
   parse entry (`parseProjectSnapshot`) behind every load path; an ordered core
   migration chain; an optional per-game `migrate` hook; **formatVersion 2** with
@@ -64,7 +72,7 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 | (P1) | M1 | Phase 0 precursor | Paved road: scaffold + convention registry | Shipped |
 | P2 | M2 | Phase 0 precursor | Schema unification (zod) + agent prompt layer | Shipped |
 | P3 | M3 | Phase 0 (part) | Project-file migrations, formatVersion 2 | Shipped |
-| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Planned |
+| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Shipped |
 | P5 | — | Phase 1 | Persistent MCP build sessions | Next |
 | P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
 | P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
@@ -102,7 +110,8 @@ scale.
   - **P3 project-file migrations** — `Shipped` (2026-07-05).
   - Editor entity-ID and render-timing hardening — `Planned`.
   - **P4** — expand `@automata/game-kit` around the literal game duplication
-    (shared browser boot, loop, visibility, HUD, project-reader) — `Planned`.
+    (shared browser boot, loop, visibility, project-reader, audio) —
+    `Shipped` (2026-07-06).
   - Save/reopen recovery and longer browser acceptance coverage — `Planned`.
 - **Exit:** generated projects survive engine evolution and long editing
   sessions; the remaining hardening/game-kit/acceptance tasks are all done.
@@ -184,22 +193,29 @@ scale.
 Work that supports the arc but does not sit inside a single phase. P5's detail
 lives under **Phase 1** in section 3 (it is a phase, not a cross-cutting item).
 
-### P4 — Richer `@automata/game-kit` · `Planned` (also a Phase 0 task)
+### P4 — Richer `@automata/game-kit` · `Shipped` (also a Phase 0 task)
 
-- **What today looks like:** each game's browser entry point duplicates the same
-  boot code — `games/monkey-ball/src/main.ts` (~200 lines) and
-  `games/pulsebreak/src/main.ts` (~145 lines) both hand-wire
-  `createThreeRenderer` + `attachCanvasRenderer`, a `GameLoop` + `startLoopDriver`,
-  canvas creation, keyboard/pointer/`beforeunload`/visibility listeners,
-  audio-resume-on-first-input, a cleanup stack, and a `fetch`-based project
-  reader (`fetch(new URL('project/…', document.baseURI))`). `game-kit` today only
-  carries `view`, `dom`, `browserAudio`, and `overlayScene`.
-- **The work:** lift that shared browser shell (boot, loop, input, visibility,
-  project reader) into `@automata/game-kit`, and regenerate the scaffold template
-  so new games inherit it instead of copying it.
-- **Done when:** a game's `main.ts` wires only game-specific pieces; the shared
-  boot/loop/input/project-reader lives in one place; `verify:new-game` still
-  passes with the thinner template.
+- **What shipped:** the shared browser boot spine now lives in `@automata/game-kit`
+  as `bootGame(setup)` — it owns `#app` lookup, the cleanup stack, `beforeunload`,
+  canvas + `#overlays`, `createThreeRenderer` + `attachCanvasRenderer`, the
+  `GameLoop` + `startLoopDriver` visibility wiring, the Escape listener, and the
+  roll-back-on-failure boot error. Two primitives ride alongside it:
+  `createProjectReader` (base-relative `readText`/`fetchText`) and `mountAudio`
+  (register + resume-on-first-input + overlay-click `uiClick`). Each game passes
+  one `setup(ctx)` callback that returns loop steps plus pause policy
+  (`onEscape`/`onHidden`/`onStarted`); `game-kit` still also carries `view`,
+  `dom`, `browserAudio`, and `overlayScene`.
+- **What it replaced:** `games/monkey-ball/src/main.ts` (~200 lines) and
+  `games/pulsebreak/src/main.ts` (~145 lines) each hand-wired that spine plus a
+  `fetch`-based project reader; both now wire only game-specific pieces.
+  Monkey-ball's asset fetches moved from origin-absolute to base-relative, and the
+  scaffold template was regenerated so new games inherit the shell instead of
+  copying it.
+- **Done:** a game's `main.ts` wires only game-specific pieces; the shared
+  boot/loop/input/project-reader/audio lives in one place; `verify:new-game`
+  passes with the thinner template. Spec:
+  [`specs/2026-07-05-game-kit-shell-design.md`](superpowers/specs/archive/2026-07/week-27/2026-07-05-game-kit-shell-design.md);
+  plan: [`plans/2026-07-05-game-kit-shell.md`](superpowers/plans/active/2026-07/week-27/2026-07-05-game-kit-shell.md).
 
 ### P6 — Generated agent documentation (llms.txt / API digest) · `Planned`
 
