@@ -95,9 +95,11 @@ definitions derive from the
 Two capabilities run through every phase rather than a single late one:
 **evaluation grows with generation** (each phase ships the evaluator slice that
 makes its own output checkable; Phase 7 only *closes the repair loop* over
-evaluators that already exist), and **determinism + runtime composition** (a
-seeded-generation/replay harness and the pack-composition runtime are stood up
-in Phase 1 and extended by later phases). An early **vertical slice (Phase 3)**
+evaluators that already exist), and **determinism + runtime composition** (the
+seeded-generation/replay harness stands up in Phase 2 with GameSpec generation as
+its first consumer, and the pack-composition runtime seam in Phase 3 with the
+vertical slice's single pack; both are extended by later phases). An early
+**vertical slice (Phase 3)**
 proves the whole pipeline seam on a thin playable before any layer is built at
 scale.
 
@@ -127,18 +129,24 @@ scale.
     outside model context.
   - Expose changed-file, build, test, browser, and evaluation results.
   - Make every operation idempotent or artifact-hash guarded.
-  - Stand up the seeded-generation/replay harness and the pack-composition
-    runtime seam that later phases extend.
+  - *Deferred to later phases (2026-07-06):* the seeded-generation/replay harness
+    moves to **Phase 2** (first consumer: GameSpec generation); the
+    pack-composition runtime seam moves to **Phase 3** (first consumer: the
+    vertical slice's single pack). P5 is scoped to durable build sessions only —
+    both spine halves were speculative here, ahead of the artifacts they attach to.
 - **Exit:** an agent creates, reopens, modifies, evaluates, and repairs a game
-  across process and context resets without replaying successful work blindly,
-  and generation steps replay deterministically from a recorded seed.
+  across process and context resets without replaying successful work blindly.
+  (Deterministic seed replay moved to Phase 2, where the harness first has a
+  consumer.)
 
 ### Phase 2 — Versioned `GameSpec` · `Planned`
 
 - **Goal:** a prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
   design checkpoint. **Evaluators:** structural spec validation (schema, budgets,
-  capability compatibility) gating the design checkpoint. **Exit:** ten
-  differently worded prompts produce valid, bounded, reviewable specs.
+  capability compatibility) gating the design checkpoint. **Also stands up** the
+  seeded-generation/replay harness deferred from Phase 1, with GameSpec generation
+  as its first consumer. **Exit:** ten differently worded prompts produce valid,
+  bounded, reviewable specs.
 
 ### Phase 3 — Vertical slice · first playable · `Planned`
 
@@ -146,7 +154,9 @@ scale.
   layer — one pack, hand-minimal content, one placeholder/generated asset,
   composed by the runtime — into a genuinely playable artifact, proving the
   prompt → spec → compose → play → evaluate seam before any layer is built at
-  scale. **Evaluators:** first browser eval (boot/console/frame-time) plus a
+  scale. **Also stands up** the pack-composition runtime seam deferred from
+  Phase 1 (its single pack is the first consumer; Phase 4 widens it to seven).
+  **Evaluators:** first browser eval (boot/console/frame-time) plus a
   critical-path smoke. **Exit:** a thin but genuinely playable artifact runs
   end-to-end from a minimal `GameSpec` and passes the vertical-slice checkpoint.
 

@@ -2,6 +2,12 @@
 
 This folder holds AutomataEngine specs. Active work is under `active/`; completed or reference documents are under `archive/`. Within each, files are grouped by month (`YYYY-MM`) and ISO week (`week-NN`).
 
+## Active
+
+### 2026-07
+
+- [Persistent MCP Build Sessions (P5) — Design](active/2026-07/week-28/2026-07-06-persistent-mcp-build-sessions-design.md)
+
 ## Archive
 
 ### 2026-06
