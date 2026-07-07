@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 6, Vitest 4, npm workspaces, Three.js adapter, engine ECS/render systems.
 
-**Design:** `docs/superpowers/specs/2026-06-29-editor-host-render-boundary-hardening-design.md`
+**Design:** `../../../../specs/archive/2026-06/week-27/2026-06-29-editor-host-render-boundary-hardening-design.md`
 
 ---
 
@@ -43,7 +43,7 @@
 - Modify: `packages/engine/src/render/three.ts`
 - Modify: `packages/editor/src/project/worldSync.ts`
 - Modify: `packages/editor/src/project/host.ts`
-- Modify: `docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md`
+- Modify: `2026-06-29-editor-host-render-boundary-hardening.md`
 
 - [ ] **Step 1: Write failing type-boundary tests**
 
@@ -159,7 +159,7 @@ Expected: both typechecks pass and all focused render/world-sync tests pass.
 Update this task's checkboxes, then run:
 
 ```bash
-git add packages/engine/src/render/port.ts packages/engine/src/render/null.ts packages/engine/src/render/three.ts packages/engine/tests/render/port.test.ts packages/editor/src/project/worldSync.ts packages/editor/src/project/host.ts packages/editor/tests/project/worldSync.test.ts docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md
+git add packages/engine/src/render/port.ts packages/engine/src/render/null.ts packages/engine/src/render/three.ts packages/engine/tests/render/port.test.ts packages/editor/src/project/worldSync.ts packages/editor/src/project/host.ts packages/editor/tests/project/worldSync.test.ts 2026-06-29-editor-host-render-boundary-hardening.md
 git commit -m "refactor(render): isolate editor highlighting"
 ```
 
@@ -168,7 +168,7 @@ git commit -m "refactor(render): isolate editor highlighting"
 **Files:**
 - Modify: `packages/engine/tests/loop/gameLoop.test.ts`
 - Modify: `packages/engine/src/loop/gameLoop.ts`
-- Modify: `docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md`
+- Modify: `2026-06-29-editor-host-render-boundary-hardening.md`
 
 - [ ] **Step 1: Replace the bounded-render-delta test with the intended timing contract**
 
@@ -244,7 +244,7 @@ Expected: all focused timing tests pass.
 - [ ] **Step 5: Mark Task 2 complete and commit**
 
 ```bash
-git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md
+git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts 2026-06-29-editor-host-render-boundary-hardening.md
 git commit -m "fix(loop): preserve render wall time"
 ```
 
@@ -255,7 +255,7 @@ git commit -m "fix(loop): preserve render wall time"
 - Create: `packages/editor/tests/project/entityId.test.ts`
 - Modify: `packages/editor/src/project/host.ts`
 - Modify: `packages/editor/tests/project/host.test.ts`
-- Modify: `docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md`
+- Modify: `2026-06-29-editor-host-render-boundary-hardening.md`
 
 - [ ] **Step 1: Write allocator and host regressions**
 
@@ -351,7 +351,7 @@ Expected: allocator and host tests pass; editor typecheck passes.
 - [ ] **Step 5: Mark Task 3 complete and commit**
 
 ```bash
-git add packages/editor/src/project/entityId.ts packages/editor/src/project/host.ts packages/editor/tests/project/entityId.test.ts packages/editor/tests/project/host.test.ts docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md
+git add packages/editor/src/project/entityId.ts packages/editor/src/project/host.ts packages/editor/tests/project/entityId.test.ts packages/editor/tests/project/host.test.ts 2026-06-29-editor-host-render-boundary-hardening.md
 git commit -m "fix(editor): allocate persisted entity ids"
 ```
 
@@ -361,7 +361,7 @@ git commit -m "fix(editor): allocate persisted entity ids"
 - Create: `packages/editor/src/project/viewportController.ts`
 - Create: `packages/editor/tests/project/viewportController.test.ts`
 - Modify: `packages/editor/src/project/host.ts`
-- Modify: `docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md`
+- Modify: `2026-06-29-editor-host-render-boundary-hardening.md`
 
 - [ ] **Step 1: Write the controller contract test**
 
@@ -503,7 +503,7 @@ Expected: all focused tests and editor typecheck pass.
 - [ ] **Step 5: Mark Task 4 complete and commit**
 
 ```bash
-git add packages/editor/src/project/viewportController.ts packages/editor/src/project/host.ts packages/editor/tests/project/viewportController.test.ts docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md
+git add packages/editor/src/project/viewportController.ts packages/editor/src/project/host.ts packages/editor/tests/project/viewportController.test.ts 2026-06-29-editor-host-render-boundary-hardening.md
 git commit -m "refactor(editor): extract viewport controller"
 ```
 
@@ -514,7 +514,7 @@ git commit -m "refactor(editor): extract viewport controller"
 - Create: `packages/editor/tests/project/playModeController.test.ts`
 - Modify: `packages/editor/src/project/host.ts`
 - Modify: `packages/editor/tests/project/host.test.ts`
-- Modify: `docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md`
+- Modify: `2026-06-29-editor-host-render-boundary-hardening.md`
 
 - [ ] **Step 1: Write play-controller lifecycle tests**
 
@@ -727,7 +727,7 @@ Expected: all focused tests and both typechecks pass.
 - [ ] **Step 6: Mark Task 5 complete and commit**
 
 ```bash
-git add packages/editor/src/project/playModeController.ts packages/editor/src/project/host.ts packages/editor/tests/project/playModeController.test.ts packages/editor/tests/project/host.test.ts docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md
+git add packages/editor/src/project/playModeController.ts packages/editor/src/project/host.ts packages/editor/tests/project/playModeController.test.ts packages/editor/tests/project/host.test.ts 2026-06-29-editor-host-render-boundary-hardening.md
 git commit -m "refactor(editor): extract play mode controller"
 ```
 
@@ -739,7 +739,7 @@ git commit -m "refactor(editor): extract play mode controller"
   - `packages/editor-agent/tests 2`
   - `tools/editor-mcp-server/src 2`
   - `tools/editor-mcp-server/bin 2`
-- Modify: `docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md`
+- Modify: `2026-06-29-editor-host-render-boundary-hardening.md`
 
 - [ ] **Step 1: Verify the duplicate directories are still empty**
 
@@ -814,6 +814,6 @@ Confirm only the intended hardening commits and plan status changes are present.
 - [ ] **Step 7: Commit final plan completion**
 
 ```bash
-git add docs/superpowers/plans/2026-06-29-editor-host-render-boundary-hardening.md
+git add 2026-06-29-editor-host-render-boundary-hardening.md
 git commit -m "docs: complete editor host hardening plan"
 ```

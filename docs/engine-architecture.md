@@ -537,7 +537,7 @@ Architecture work beyond what is on `main` — project-file migrations, richer
 `@automata/game-kit`, persistent MCP project sessions, generated agent
 documentation, and deeper product acceptance — is tracked authoritatively in
 [`docs/ROADMAP.md`](ROADMAP.md), the living, status-tracked roadmap. It maps the
-near-term P-series onto the [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md),
+near-term P-series onto the [Autonomous Game Factory design](superpowers/specs/archive/2026-07/week-27/2026-07-04-autonomous-game-factory-design.md),
 the strategic destination for the prompt-to-game direction.
 
 Nothing on that roadmap should be assumed available merely because its design or

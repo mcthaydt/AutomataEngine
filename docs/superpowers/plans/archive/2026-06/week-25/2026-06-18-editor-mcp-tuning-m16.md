@@ -1,11 +1,11 @@
 # Editor MCP + Tuning Agent + Chat Overlay (M16) - Plan 4 (STUB)
 
 > **STATUS: Planned (2026-06-21).** Superseded by the design spec
-> [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
+> [`2026-06-21-editor-mcp-tuning-design.md`](../../../../specs/archive/2026-06/week-25/2026-06-21-editor-mcp-tuning-design.md).
 > The work is now broken into six executable plans, to be implemented in order:
 >
 > 1. **M16a-1 — shared contracts** ✅ *implemented* —
->    [`2026-06-21-m16a-shared-contracts.md`](2026-06-21-m16a-shared-contracts.md) (`@automata/contracts`).
+>    `2026-06-21-m16a-shared-contracts.md` (`@automata/contracts`).
 > 2. **M16a-2 — agent-core** (provider adapters + agent loop) —
 >    [`2026-06-21-m16a-2-agent-core.md`](2026-06-21-m16a-2-agent-core.md).
 > 3. **M16a-3 — editor ToolHost + chat overlay shell + settings** —

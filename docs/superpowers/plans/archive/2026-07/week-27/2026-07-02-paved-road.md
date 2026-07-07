@@ -4,7 +4,7 @@
 
 **Goal:** `npm run new-game <name>` (or MCP `createGame`) emits a registered, playable, MCP-visible, CI-green game; one convention-driven registry replaces both hardcoded catalogs; the scaffold never edits root files.
 
-**Spec:** `docs/superpowers/specs/2026-07-02-paved-road-scaffold-registry-design.md`
+**Spec:** `../../../../specs/archive/2026-07/week-27/2026-07-02-paved-road-scaffold-registry-design.md`
 
 **Architecture:** Convention entry files (`src/project/editor.ts` → `loadEditorRegistration`, `src/project/index.ts` → `loadHeadlessRegistration`, both async taking `RegistrationDeps { readText }` with public-relative paths) discovered by `import.meta.glob` in the browser and a package-exports scan + dynamic import in Node, with shared catalog policy in `@automata/editor`. Ports live in each workspace's `package.json` under `automata.devPort`; Playwright derives webServers by scanning. The scaffold generates a complete pulsebreak-shaped game and is exposed over MCP via a `--workspace` server mode.
 

@@ -50,7 +50,7 @@
 ### Task 4: Documentation and full verification
 
 **Files:**
-- Modify: `docs/superpowers/plans/2026-06-27-game-kit.md`
+- Modify: `2026-06-27-game-kit.md`
 
 - [x] **Step 1: Record the post-review hardening tasks** in the original implementation plan and mark each completed only after its focused gate passes.
 - [x] **Step 2: Run `npm run ci`** and confirm lint, typecheck, and all tests pass.

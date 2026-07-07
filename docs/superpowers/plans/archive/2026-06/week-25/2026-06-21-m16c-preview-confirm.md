@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (ES2022, ESM, strict), `@automata/contracts`, vanilla DOM (happy-dom in tests), Vitest ^4.1.8.
 
-Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-2 ([agent-core](2026-06-21-m16a-2-agent-core.md)), and M16a-3 ([editor host + chat shell](2026-06-21-m16a-3-editor-host-chat-shell.md)). Follow-on: M16b ([tuning loop](2026-06-21-m16b-tuning-loop.md)) reuses `commandBatch` + `diffDocs` to present its net tuning diff with a score delta. Full design: [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
+Builds on M16a-1 ([contracts](2026-06-18-editor-mcp-tuning-m16.md)), M16a-2 ([agent-core](2026-06-21-m16a-2-agent-core.md)), and M16a-3 ([editor host + chat shell](2026-06-21-m16a-3-editor-host-chat-shell.md)). Follow-on: M16b ([tuning loop](2026-06-21-m16b-tuning-loop.md)) reuses `commandBatch` + `diffDocs` to present its net tuning diff with a score delta. Full design: [`2026-06-21-editor-mcp-tuning-design.md`](../../../../specs/archive/2026-06/week-25/2026-06-21-editor-mcp-tuning-design.md).
 
 ## Global Constraints
 

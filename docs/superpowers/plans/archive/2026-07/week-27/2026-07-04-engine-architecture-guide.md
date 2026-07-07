@@ -14,7 +14,7 @@
 
 **Files:**
 - Create: `docs/engine-architecture.md`
-- Reference: `docs/superpowers/specs/2026-07-04-engine-architecture-guide-design.md`
+- Reference: `../../../../specs/archive/2026-07/week-27/2026-07-04-engine-architecture-guide-design.md`
 - Reference: `README.md`
 - Reference: `eslint.config.js`
 - Reference: `packages/*/package.json`
@@ -315,14 +315,14 @@ against GitHub-compatible syntax rather than a local visual render.
 
 **Files:**
 - Modify: `README.md`
-- Modify: `docs/superpowers/plans/2026-07-04-engine-architecture-guide.md`
+- Modify: `2026-07-04-engine-architecture-guide.md`
 
 - [x] **Step 1: Link the guide from the root README**
 
 Immediately after the opening paragraph in `README.md`, add:
 
 ```markdown
-New to the codebase? Read the [engine architecture guide](docs/engine-architecture.md)
+New to the codebase? Read the [engine architecture guide](/docs/engine-architecture.md)
 for a Godot/Unity/UE5-oriented map of the runtime, project editor, and AI/MCP
 layers.
 ```
@@ -357,7 +357,7 @@ do not appear; the final diff contains only the new guide and README link.
 Mark every completed checkbox in this plan, then run:
 
 ```bash
-git add docs/engine-architecture.md README.md docs/superpowers/plans/2026-07-04-engine-architecture-guide.md
+git add docs/engine-architecture.md README.md 2026-07-04-engine-architecture-guide.md
 git commit -m "docs: add engine architecture guide"
 ```
 

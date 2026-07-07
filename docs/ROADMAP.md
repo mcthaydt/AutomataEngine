@@ -3,7 +3,7 @@
 **North star:** an agent (Claude Code/Codex/OpenCode via MCP) turns a natural-language
 description into a complete, coherent browser game. MCP-first is the blessed AI
 path; the in-editor chat agent is a thin client, not the product. The full
-destination is the [Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md);
+destination is the [Autonomous Game Factory design](superpowers/specs/archive/2026-07/week-27/2026-07-04-autonomous-game-factory-design.md);
 this document is the living map of how we get there.
 
 ## How to read this
@@ -31,25 +31,25 @@ Newest first. Each links to the spec/plan that defines it.
   parse entry (`parseProjectSnapshot`) behind every load path; an ordered core
   migration chain; an optional per-game `migrate` hook; **formatVersion 2** with
   the manifest as the single version authority. Checked-in games normalized to
-  v2. Spec: [`specs/2026-07-04-project-file-migrations-design.md`](superpowers/specs/2026-07-04-project-file-migrations-design.md);
-  plan: [`plans/2026-07-04-project-file-migrations.md`](superpowers/plans/2026-07-04-project-file-migrations.md).
+  v2. Spec: [`specs/2026-07-04-project-file-migrations-design.md`](superpowers/specs/archive/2026-07/week-27/2026-07-04-project-file-migrations-design.md);
+  plan: [`plans/2026-07-04-project-file-migrations.md`](superpowers/plans/archive/2026-07/week-27/2026-07-04-project-file-migrations.md).
 - **M2 / P2 — Schema unification + agent prompt layer** (2026-07-04, main @
   `82dcf9e`). zod is the single authored-schema language (the `ObjectSchema` DSL
   is gone); per-type JSON schemas ride in MCP tool descriptions; the `build-game`
   prompt and workflow-grade `createGame` nextSteps land. Spec:
-  [`specs/2026-07-03-schema-unification-design.md`](superpowers/specs/2026-07-03-schema-unification-design.md);
-  plan: [`plans/2026-07-03-schema-unification.md`](superpowers/plans/2026-07-03-schema-unification.md).
+  [`specs/2026-07-03-schema-unification-design.md`](superpowers/specs/archive/2026-07/week-27/2026-07-03-schema-unification-design.md);
+  plan: [`plans/2026-07-03-schema-unification.md`](superpowers/plans/archive/2026-07/week-27/2026-07-03-schema-unification.md).
 - **M1 — Paved road: scaffold + convention registry** (2026-07-02).
   `npm run new-game` / MCP `createGame` emit a registered, playable, MCP-visible
   game; a convention registry replaced both hardcoded catalogs;
   `npm run verify:new-game` is the clean-clone acceptance proof. Spec:
-  [`specs/2026-07-02-paved-road-scaffold-registry-design.md`](superpowers/specs/2026-07-02-paved-road-scaffold-registry-design.md);
-  plan: [`plans/2026-07-02-paved-road.md`](superpowers/plans/2026-07-02-paved-road.md).
+  [`specs/2026-07-02-paved-road-scaffold-registry-design.md`](superpowers/specs/archive/2026-07/week-27/2026-07-02-paved-road-scaffold-registry-design.md);
+  plan: [`plans/2026-07-02-paved-road.md`](superpowers/plans/archive/2026-07/week-27/2026-07-02-paved-road.md).
 - **M0–M16 — Engine build era** (2026-06). The original arc: engine foundation
   (M0–M6) → the Monkey Ball game (M7–M10) → generic project/scene editor,
   content, and polish (M11–M15) → editor MCP server + tuning agent + chat overlay
   (M16). Founding spec:
-  [`specs/2026-06-09-automata-engine-monkey-ball-design.md`](superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md).
+  [`specs/2026-06-09-automata-engine-monkey-ball-design.md`](superpowers/specs/archive/2026-06/week-24/2026-06-09-automata-engine-monkey-ball-design.md).
 
 ---
 
@@ -82,7 +82,7 @@ belong to the AI-first series and equal P1/P2/P3. The **factory Phases 0–8**
 In-progress and next phases carry Goal · Depends-on · Tasks · Exit. Later phases
 are scoped headings — Goal · Exit only — until their own spec exists. Phase
 definitions derive from the
-[Autonomous Game Factory design](superpowers/specs/2026-07-04-autonomous-game-factory-design.md).
+[Autonomous Game Factory design](superpowers/specs/archive/2026-07/week-27/2026-07-04-autonomous-game-factory-design.md).
 
 Two capabilities run through every phase rather than a single late one:
 **evaluation grows with generation** (each phase ships the evaluator slice that

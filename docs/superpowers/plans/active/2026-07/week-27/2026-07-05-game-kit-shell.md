@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (ESM), Vitest + happy-dom (unit), Playwright (browser smokes), npm workspaces. Engine APIs come from `@automata/engine` and `@automata/engine/browser`.
 
-**Spec:** `docs/superpowers/specs/2026-07-05-game-kit-shell-design.md`
+**Spec:** `../../../../specs/archive/2026-07/week-27/2026-07-05-game-kit-shell-design.md`
 
 ## Global Constraints
 

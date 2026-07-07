@@ -1,7 +1,7 @@
 # Editor MCP + Tuning Agent + Chat Overlay (M16) — Design
 
 > **Status: Designed (approved 2026-06-21).** Supersedes the stub at
-> `docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md`. First implementation slice:
+> `../../../../plans/archive/2026-06/week-25/2026-06-18-editor-mcp-tuning-m16.md`. First implementation slice:
 > `docs/superpowers/plans/2026-06-21-m16a-shared-contracts.md`; follow-on plans remain unwritten.
 
 ## Context

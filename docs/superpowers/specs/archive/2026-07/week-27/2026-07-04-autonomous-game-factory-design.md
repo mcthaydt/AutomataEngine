@@ -388,7 +388,7 @@ spec/plan/verification cycles rather than one monolithic implementation plan.
 
 The phases below are the design of record — their goals and exit criteria.
 **Live status and sequencing (what is shipped, in flight, and next) are tracked
-in [`docs/ROADMAP.md`](../../ROADMAP.md), not here.** This spec does not change
+in [`docs/ROADMAP.md`](/docs/ROADMAP.md), not here.** This spec does not change
 when a phase completes.
 
 > **Revised 2026-07-05 (pending written-spec review).** The phase decomposition

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, zod ^4.4.3, vitest 4 (workspace projects named by package, e.g. `npx vitest run --project project`), @modelcontextprotocol/sdk.
 
-Spec: `docs/superpowers/specs/2026-07-03-schema-unification-design.md` (approved).
+Spec: `../../../../specs/archive/2026-07/week-27/2026-07-03-schema-unification-design.md` (approved).
 
 ## Global Constraints
 
@@ -2036,7 +2036,7 @@ git commit -m "feat(mcp): build-game prompt and workflow-grade createGame nextSt
 
 **Files:**
 - Modify: `AGENTS.md` (schema authoring convention)
-- Modify: `docs/superpowers/plans/2026-07-03-schema-unification.md` (check off tasks)
+- Modify: `2026-07-03-schema-unification.md` (check off tasks)
 
 - [x] **Step 1: Document the authoring convention in AGENTS.md**
 
@@ -2085,7 +2085,7 @@ Expected: all green. `verify:new-game` is the proof that the zod-native scaffold
 
 ```bash
 find . -name "* 2*" -not -path "*/node_modules/*"   # must be empty
-git add AGENTS.md docs/superpowers/plans/2026-07-03-schema-unification.md
+git add AGENTS.md 2026-07-03-schema-unification.md
 git commit -m "docs: zod schema authoring convention; mark M2 complete"
 ```
 

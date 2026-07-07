@@ -20,9 +20,9 @@ root unless a task explicitly says otherwise.
 - Run `npm run ci` before claiming a change is ready. Run `npm run coverage`
   when touching engine code or coverage-sensitive tests.
 - The approved v1 spec is
-  `docs/superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md`.
+  `docs/superpowers/specs/archive/2026-06/week-24/2026-06-09-automata-engine-monkey-ball-design.md`.
 - The completed foundation plan is
-  `docs/superpowers/plans/2026-06-09-engine-foundation.md`.
+  `docs/superpowers/plans/archive/2026-06/week-24/2026-06-09-engine-foundation.md`.
 
 ## Registry Convention
 

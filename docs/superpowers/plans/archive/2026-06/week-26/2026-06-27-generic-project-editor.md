@@ -14,7 +14,7 @@
 
 ## Source of truth and execution rules
 
-- Approved design: `docs/superpowers/specs/2026-06-27-generic-project-editor-design.md`.
+- Approved design: `../../../../specs/archive/2026-06/week-26/2026-06-27-generic-project-editor-design.md`.
 - This plan was originally drafted against commit `936a902`. Re-baseline onto current `PULSEBREAK` HEAD before starting: the `@automata/game-kit` work has since landed. Both games consume the game-kit shell, UI helpers (`dom.ts`/`view.ts`) moved into `packages/game-kit`, gameplay tests use `@automata/game-kit/testing` primitives, the `new-game` scaffold (`tools/scaffold`) exists, and root coverage/project config is glob-derived. Reconcile every file the plan touches against real HEAD, not `936a902`.
 - Consequences of the landed `@automata/game-kit` work to honor throughout:
   - New and rewritten gameplay tests use `@automata/game-kit/testing` primitives (`stick` for input, `nullRuntime()` for render + audio doubles) instead of hand-built nulls, matching the established convention. (Non-game packages such as `@automata/editor` may keep using the engine's `createNullRenderer` directly.)
@@ -228,7 +228,7 @@ Expected: all three commands exit 0.
 
 ```bash
 git add packages/project eslint.config.js package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(project): add persisted project model"
 ```
 
@@ -348,7 +348,7 @@ Expected: all project tests PASS; typecheck exits 0.
 
 ```bash
 git add packages/project/src packages/project/tests
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(project): add declarative schemas and registrations"
 ```
 
@@ -431,7 +431,7 @@ Expected: all tests PASS; typecheck exits 0.
 
 ```bash
 git add packages/project/src packages/project/tests
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(project): add immutable project commands"
 ```
 
@@ -501,7 +501,7 @@ Expected: all commands exit 0.
 
 ```bash
 git add packages/project/src packages/project/tests
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(project): validate and serialize project workspaces"
 ```
 
@@ -625,7 +625,7 @@ Expected: focused tests PASS; typecheck exits 0; legacy editor tests still compi
 
 ```bash
 git add packages/editor/package.json packages/editor/src/project packages/editor/src/index.ts packages/editor/src/headless.ts packages/editor/tests/fixtures/fakeProject.ts packages/editor/tests/project package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): add generic project session"
 ```
 
@@ -719,7 +719,7 @@ Expected: all editor tests PASS, including legacy tests.
 
 ```bash
 git add packages/editor/src/project packages/editor/src/viewport2d packages/editor/src/index.ts packages/editor/src/viewport.ts packages/editor/tests/project packages/editor/tests/viewport2d
-git add packages/editor/src/viewport3d/aabb.ts packages/editor/tests/viewport3d/aabb.test.ts docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add packages/editor/src/viewport3d/aabb.ts packages/editor/tests/viewport3d/aabb.test.ts 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): add generic project viewport host"
 ```
 
@@ -775,7 +775,7 @@ Expected: focused tests PASS; typecheck exits 0.
 
 ```bash
 git add packages/editor/src/ui/project packages/editor/src/ui/index.ts packages/editor/tests/ui/project
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): generate project property controls"
 ```
 
@@ -839,7 +839,7 @@ Expected: all editor tests PASS; typecheck exits 0.
 
 ```bash
 git add packages/editor/src/ui packages/editor/tests/ui
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): add generic project chrome"
 ```
 
@@ -904,7 +904,7 @@ Expected: all editor tests PASS; typecheck exits 0.
 
 ```bash
 git add packages/editor/src/project packages/editor/src/index.ts packages/editor/tests/project
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): add project workspace storage"
 ```
 
@@ -1034,7 +1034,7 @@ Expected: project/content/parity tests PASS; typecheck exits 0.
 
 ```bash
 git add games/pulsebreak/package.json games/pulsebreak/tsconfig.json games/pulsebreak/src/project games/pulsebreak/scripts games/pulsebreak/tests/project games/pulsebreak/public/project package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(pulsebreak): define authored project format"
 ```
 
@@ -1128,7 +1128,7 @@ Expected: all new project/import/parity tests PASS; typecheck exits 0.
 
 ```bash
 git add games/monkey-ball/package.json games/monkey-ball/src/project games/monkey-ball/scripts games/monkey-ball/tests/project games/monkey-ball/public/project package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(monkey-ball): migrate content to generic project"
 ```
 
@@ -1227,7 +1227,7 @@ Expected: all Pulsebreak tests and root CI PASS.
 
 ```bash
 git add games/pulsebreak e2e/pulsebreak.spec.ts package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(pulsebreak): boot gameplay from authored project"
 ```
 
@@ -1304,7 +1304,7 @@ Expected: all Monkey Ball tests and root CI PASS.
 
 ```bash
 git add games/monkey-ball e2e/game.spec.ts package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(monkey-ball): boot gameplay from authored project"
 ```
 
@@ -1401,7 +1401,7 @@ Expected: all commands PASS and coverage remains at least 90% lines/branches.
 
 ```bash
 git add tools/level-editor packages/editor e2e/editor.spec.ts package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor): launch one multi-game project editor"
 ```
 
@@ -1499,7 +1499,7 @@ Expected: all tests PASS; package and root typechecks exit 0; legacy editor-agen
 
 ```bash
 git add packages/contracts packages/editor/src/project/toolHost.ts packages/editor/src/project/registration.ts packages/editor/src/headless.ts packages/editor/tests/project/toolHost.test.ts eslint.config.js package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(contracts): expose generic project tools"
 ```
 
@@ -1567,7 +1567,7 @@ Expected: all commands PASS.
 
 ```bash
 git add packages/editor-agent packages/agent-core games/monkey-ball/src/project/evaluation.ts games/monkey-ball/tests/project/editor.test.ts
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor-agent): operate on generic projects"
 ```
 
@@ -1640,7 +1640,7 @@ Expected: tests/typechecks/CI PASS; launcher prints usage to stderr and exits 0 
 
 ```bash
 git add tools/editor-mcp-server package-lock.json
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add 2026-06-27-generic-project-editor.md
 git commit -m "feat(editor-mcp): host generic game projects"
 ```
 
@@ -1753,14 +1753,14 @@ Expected: `rg` reports no forbidden shared-editor/project dependencies or legacy
 - [x] **Step 9: Commit**
 
 ```bash
-git add packages/editor packages/contracts packages/project games/monkey-ball games/pulsebreak tools/level-editor README.md AGENTS.md eslint.config.js vitest.config.ts docs/superpowers/plans/2026-06-27-generic-project-editor.md
+git add packages/editor packages/contracts packages/project games/monkey-ball games/pulsebreak tools/level-editor README.md AGENTS.md eslint.config.js vitest.config.ts 2026-06-27-generic-project-editor.md
 git commit -m "refactor(editor): remove legacy game-shaped editor path"
 ```
 
 ### Task 19: Run complete release verification and close the plan
 
 **Files:**
-- Modify: `docs/superpowers/plans/2026-06-27-generic-project-editor.md` (final checkboxes)
+- Modify: `2026-06-27-generic-project-editor.md` (final checkboxes)
 - Modify: `AGENTS.md` only if final gate results require status correction
 
 - [x] **Step 1: Run fresh static and unit gates**
@@ -1819,7 +1819,7 @@ Stop here. Continue only after the user confirms the production checkpoint passe
 Mark every completed checkbox in this plan. Confirm the generic editor milestone remains checked in `AGENTS.md`. Run `git diff --check` once more.
 
 ```bash
-git add docs/superpowers/plans/2026-06-27-generic-project-editor.md AGENTS.md
+git add 2026-06-27-generic-project-editor.md AGENTS.md
 git commit -m "docs(editor): complete generic project editor plan"
 ```
 

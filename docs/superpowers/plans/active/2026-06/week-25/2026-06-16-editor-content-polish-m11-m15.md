@@ -10,7 +10,7 @@
 
 **Tech Stack:** Existing workspace toolchain (TypeScript strict, Vitest, ESLint flat config, Vite). The engine wraps three/rapier/miniplex/zod; the editor and game import only `@automata/engine`. **No new third-party dependencies** until M15 (Playwright, dev-only).
 
-**Spec:** `docs/superpowers/specs/2026-06-18-generic-editor-design.md` (supersedes the editor section of the v1 spec `docs/superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md`). This plan covers M11–M15. The follow-on AI work (editor MCP server + tuning-agent loop + chat overlay) is **Plan 4 / M16**, written after M13 stabilizes.
+**Spec:** `docs/superpowers/specs/2026-06-18-generic-editor-design.md` (supersedes the editor section of the v1 spec `../../../../specs/archive/2026-06/week-24/2026-06-09-automata-engine-monkey-ball-design.md`). This plan covers M11–M15. The follow-on AI work (editor MCP server + tuning-agent loop + chat overlay) is **Plan 4 / M16**, written after M13 stabilizes.
 
 ## Global Constraints
 
@@ -4486,7 +4486,7 @@ git commit -m "test(content): headless metric baseline + tuning pass"
 ### Task 31: Plan 4 / M16 forward-pointer stub
 
 **Files:**
-- Create: `docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md`
+- Create: `../../../archive/2026-06/week-25/2026-06-18-editor-mcp-tuning-m16.md`
 - Modify: `AGENTS.md` (board: mark M11–M15 in progress/done; add M16 row pointing to the stub)
 
 **Interfaces:**
@@ -4494,7 +4494,7 @@ git commit -m "test(content): headless metric baseline + tuning pass"
 
 - [x] **Step 1: Write the stub**
 
-`docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md`:
+`../../../archive/2026-06/week-25/2026-06-18-editor-mcp-tuning-m16.md`:
 ```markdown
 # Editor MCP + Tuning Agent + Chat Overlay (M16) — Plan 4 (STUB)
 
@@ -4537,7 +4537,7 @@ Agent SDK and the latest Claude models when the spec is written.
 In `AGENTS.md`, under the Task Board, mark the M11–M15 items complete as they land and append:
 ```markdown
 - [ ] Plan 4 / M16: editor MCP server + tuning-agent loop + chat overlay
-  (stub: docs/superpowers/plans/2026-06-18-editor-mcp-tuning-m16.md;
+  (stub: ../../../archive/2026-06/week-25/2026-06-18-editor-mcp-tuning-m16.md;
   spec pending after M13).
 ```
 

@@ -103,7 +103,7 @@ Expected: all selected tests PASS.
 - [x] **Step 8: Commit Task 1**
 
 ```bash
-git add games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/tests/editor/sceneModel.test.ts packages/editor/src/state/document.ts packages/editor/src/agent/editorToolHost.ts packages/editor/tests/state/document.test.ts packages/editor/tests/agent/editorToolHost.test.ts packages/editor/tests/fixtures/fakeDefinition.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/tests/editor/sceneModel.test.ts packages/editor/src/state/document.ts packages/editor/src/agent/editorToolHost.ts packages/editor/tests/state/document.test.ts packages/editor/tests/agent/editorToolHost.test.ts packages/editor/tests/fixtures/fakeDefinition.ts 2026-06-26-refactor-hardening.md
 git commit -m "fix(editor): reject ineffective scene commands"
 ```
 
@@ -234,7 +234,7 @@ Expected: all selected tests PASS.
 - [x] **Step 13: Commit Task 2**
 
 ```bash
-git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts games/monkey-ball/src/game/context.ts games/monkey-ball/src/game/gameplay.ts games/monkey-ball/src/systems/cameraFollow.ts games/monkey-ball/src/main.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/systems/cameraFollow.test.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/src/viewport3d/flyControls.ts packages/editor/src/viewport3d/browser.ts packages/editor/src/index.ts packages/editor/tests/viewport3d/flyControls.test.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/loop/gameLoop.ts packages/engine/tests/loop/gameLoop.test.ts games/monkey-ball/src/game/context.ts games/monkey-ball/src/game/gameplay.ts games/monkey-ball/src/systems/cameraFollow.ts games/monkey-ball/src/main.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/systems/cameraFollow.test.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/src/viewport3d/flyControls.ts packages/editor/src/viewport3d/browser.ts packages/editor/src/index.ts packages/editor/tests/viewport3d/flyControls.test.ts tools/level-editor/src/main.ts 2026-06-26-refactor-hardening.md
 git commit -m "refactor(loop): make visual updates time based"
 ```
 
@@ -403,7 +403,7 @@ Expected: all selected tests and workspace typecheck PASS.
 - [x] **Step 13: Commit Task 3**
 
 ```bash
-git add packages/engine/src/lifecycle/cleanup.ts packages/engine/tests/lifecycle/cleanup.test.ts packages/engine/src/scene/manager.ts packages/engine/tests/scene/manager.test.ts packages/engine/src/index.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/tests/audio/browserAudio.test.ts games/monkey-ball/src/scenes/levelLifecycle.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/src/main.ts tools/level-editor/src/main.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/lifecycle/cleanup.ts packages/engine/tests/lifecycle/cleanup.test.ts packages/engine/src/scene/manager.ts packages/engine/tests/scene/manager.test.ts packages/engine/src/index.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/tests/audio/browserAudio.test.ts games/monkey-ball/src/scenes/levelLifecycle.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/src/main.ts tools/level-editor/src/main.ts 2026-06-26-refactor-hardening.md
 git commit -m "refactor(runtime): centralize resource cleanup"
 ```
 
@@ -447,7 +447,7 @@ Expected: all renderer tests PASS.
 - [x] **Step 6: Commit Task 4**
 
 ```bash
-git add packages/engine/src/render/three.ts packages/engine/tests/render/three-meshes.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/render/three.ts packages/engine/tests/render/three-meshes.test.ts 2026-06-26-refactor-hardening.md
 git commit -m "refactor(render): reuse geometry and mesh resources"
 ```
 
@@ -524,7 +524,7 @@ Expected: all selected tests PASS.
 - [x] **Step 9: Commit Task 5**
 
 ```bash
-git add packages/editor/src/model/gameDefinition.ts packages/editor/src/viewport3d/worldSync.ts packages/editor/tests/viewport3d/worldSync.test.ts packages/editor/tests/fixtures/fakeDefinition.ts games/monkey-ball/src/level/buildWorld.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/editor/worldSync.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/editor/src/model/gameDefinition.ts packages/editor/src/viewport3d/worldSync.ts packages/editor/tests/viewport3d/worldSync.test.ts packages/editor/tests/fixtures/fakeDefinition.ts games/monkey-ball/src/level/buildWorld.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/tests/editor/worldSync.test.ts 2026-06-26-refactor-hardening.md
 git commit -m "refactor(editor): sync changed world entities by id"
 ```
 
@@ -606,7 +606,7 @@ engine-owned `World` surface; no module outside `ecs/world.ts` imports Miniplex.
 - [x] **Step 7: Commit Task 6**
 
 ```bash
-git add packages/engine/src/ecs/world.ts packages/engine/tests/ecs/world.test.ts packages/engine/src/physics/systems.ts packages/engine/src/render/systems.ts eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/ecs/world.ts packages/engine/tests/ecs/world.test.ts packages/engine/src/physics/systems.ts packages/engine/src/render/systems.ts eslint.config.js 2026-06-26-refactor-hardening.md
 git commit -m "refactor(ecs): hide miniplex behind engine facade"
 ```
 
@@ -714,7 +714,7 @@ Expected: lint, typecheck, and selected tests PASS.
 - [x] **Step 8: Commit Task 7**
 
 ```bash
-git add packages/engine/src/browser.ts packages/engine/src/data.ts packages/engine/src/index.ts packages/engine/package.json packages/editor/src/headless.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/tests/host.test.ts packages/editor/package.json games/monkey-ball/src/headless.ts games/monkey-ball/src/editor/headlessRegistration.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/src/main.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/package.json games/monkey-ball/src/level/headlessPlay.ts tools/level-editor/src/main.ts tools/editor-mcp-server/src/headlessHost.ts tools/editor-mcp-server/package.json tools/editor-mcp-server/tests/headlessHost.test.ts eslint.config.js docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/engine/src/browser.ts packages/engine/src/data.ts packages/engine/src/index.ts packages/engine/package.json packages/editor/src/headless.ts packages/editor/src/model/gameDefinition.ts packages/editor/src/host.ts packages/editor/tests/host.test.ts packages/editor/package.json games/monkey-ball/src/headless.ts games/monkey-ball/src/editor/headlessRegistration.ts games/monkey-ball/src/editor/registration.ts games/monkey-ball/src/editor/sceneModel.ts games/monkey-ball/src/main.ts games/monkey-ball/src/audio/browserAudio.ts games/monkey-ball/package.json games/monkey-ball/src/level/headlessPlay.ts tools/level-editor/src/main.ts tools/editor-mcp-server/src/headlessHost.ts tools/editor-mcp-server/package.json tools/editor-mcp-server/tests/headlessHost.test.ts eslint.config.js 2026-06-26-refactor-hardening.md
 git commit -m "refactor(packages): expose narrow headless entry points"
 ```
 
@@ -1083,7 +1083,7 @@ Expected: lint clean (no `@automata/agent-core` import under `packages/editor/`)
 - [x] **Step 12: Commit Task 8**
 
 ```bash
-git add packages/editor-agent packages/editor/src packages/editor/package.json packages/editor/tests eslint.config.js vitest.config.ts tools/level-editor/src/main.ts tools/level-editor/package.json package-lock.json docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add packages/editor-agent packages/editor/src packages/editor/package.json packages/editor/tests eslint.config.js vitest.config.ts tools/level-editor/src/main.ts tools/level-editor/package.json package-lock.json 2026-06-26-refactor-hardening.md
 git commit -m "refactor(editor): extract optional @automata/editor-agent layer"
 ```
 
@@ -1164,15 +1164,15 @@ green).
 - [x] **Step 6: Commit Task 9**
 
 ```bash
-git add vitest.config.ts games/monkey-ball/tests/editor/registrationPlay.test.ts games/monkey-ball/tests/editor/registrationBrowser.test.ts games/monkey-ball/tests/editor/sceneModel.test.ts games/monkey-ball/tests/level/buildWorld.test.ts games/monkey-ball/tests/level/headlessPlay.test.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/tests/state/persist.test.ts games/monkey-ball/tests/state/unlocks.test.ts games/monkey-ball/tests/systems/goal.test.ts games/monkey-ball/tests/systems/path.test.ts games/monkey-ball/tests/ui/overlays.test.ts tools/editor-mcp-server/tests/mcpAdapter.test.ts tools/editor-mcp-server/tests/server.test.ts docs/superpowers/plans/2026-06-26-refactor-hardening.md
+git add vitest.config.ts games/monkey-ball/tests/editor/registrationPlay.test.ts games/monkey-ball/tests/editor/registrationBrowser.test.ts games/monkey-ball/tests/editor/sceneModel.test.ts games/monkey-ball/tests/level/buildWorld.test.ts games/monkey-ball/tests/level/headlessPlay.test.ts games/monkey-ball/tests/scenes/levelLifecycle.test.ts games/monkey-ball/tests/state/persist.test.ts games/monkey-ball/tests/state/unlocks.test.ts games/monkey-ball/tests/systems/goal.test.ts games/monkey-ball/tests/systems/path.test.ts games/monkey-ball/tests/ui/overlays.test.ts tools/editor-mcp-server/tests/mcpAdapter.test.ts tools/editor-mcp-server/tests/server.test.ts 2026-06-26-refactor-hardening.md
 git commit -m "test: cover game and MCP production code"
 ```
 
 ### Task 10: Final consistency and release verification
 
 **Files:**
-- Modify: `docs/superpowers/plans/2026-06-26-refactor-hardening.md`
-- Verify: `docs/superpowers/specs/2026-06-26-refactor-hardening-design.md`
+- Modify: `2026-06-26-refactor-hardening.md`
+- Verify: `../../../../specs/archive/2026-06/week-26/2026-06-26-refactor-hardening-design.md`
 - Verify: root worktree and all changed package boundaries
 
 - [x] **Step 1: Run the complete repository gate**
@@ -1227,13 +1227,13 @@ marking the plan complete.
 
 - [x] **Step 7: Mark every plan checkbox complete and inspect the tree**
 
-Run: `rg -n "^- \[ \]" docs/superpowers/plans/2026-06-26-refactor-hardening.md` and `git status --short`.
+Run: `rg -n "^- \[ \]" 2026-06-26-refactor-hardening.md` and `git status --short`.
 
 Expected: no unchecked tasks and only intentional final documentation changes.
 
 - [x] **Step 8: Commit final plan completion**
 
 ```bash
-git add docs/superpowers/plans/2026-06-26-refactor-hardening.md docs/superpowers/specs/2026-06-26-refactor-hardening-design.md
+git add 2026-06-26-refactor-hardening.md ../../../../specs/archive/2026-06/week-26/2026-06-26-refactor-hardening-design.md
 git commit -m "docs: complete refactor hardening plan"
 ```

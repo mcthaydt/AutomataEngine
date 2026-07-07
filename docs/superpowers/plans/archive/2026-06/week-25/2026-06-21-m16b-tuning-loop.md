@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (ES2022, ESM, strict), `@automata/contracts`, `@automata/agent-core`, `@automata/engine` (rapier headless), Vitest ^4.1.8.
 
-Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-2 ([agent-core](2026-06-21-m16a-2-agent-core.md)), M16a-3 ([editor host + chat shell](2026-06-21-m16a-3-editor-host-chat-shell.md)), and M16c ([preview/confirm](2026-06-21-m16c-preview-confirm.md) — reuses `commandBatch` + `diffDocs`). Follow-on: M16d ([MCP server](2026-06-21-m16d-mcp-server.md)). Full design: [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
+Builds on M16a-1 ([contracts](2026-06-18-editor-mcp-tuning-m16.md)), M16a-2 ([agent-core](2026-06-21-m16a-2-agent-core.md)), M16a-3 ([editor host + chat shell](2026-06-21-m16a-3-editor-host-chat-shell.md)), and M16c ([preview/confirm](2026-06-21-m16c-preview-confirm.md) — reuses `commandBatch` + `diffDocs`). Follow-on: M16d ([MCP server](2026-06-21-m16d-mcp-server.md)). Full design: [`2026-06-21-editor-mcp-tuning-design.md`](../../../../specs/archive/2026-06/week-25/2026-06-21-editor-mcp-tuning-design.md).
 
 ## Global Constraints
 

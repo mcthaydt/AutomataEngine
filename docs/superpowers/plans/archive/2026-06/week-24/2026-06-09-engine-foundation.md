@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (strict), Vite, Vitest (+ happy-dom, @vitest/coverage-v8), ESLint 9 flat config + typescript-eslint, miniplex, zod, smol-toml, yaml, @dimforge/rapier3d-compat, three.
 
-**Spec:** `docs/superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md`. This plan covers milestones M0–M6 only. Plans 2 (game, M7–M10) and 3 (editor/content/polish, M11–M15) are written after this plan ships.
+**Spec:** `../../../../specs/archive/2026-06/week-24/2026-06-09-automata-engine-monkey-ball-design.md`. This plan covers milestones M0–M6 only. Plans 2 (game, M7–M10) and 3 (editor/content/polish, M11–M15) are written after this plan ships.
 
 **Conventions used throughout:**
 - All commands run from the repo root: `/Users/mcthaydt/Desktop/AutomataEngine`.
@@ -83,7 +83,7 @@ coverage/
 Web-first game engine (`packages/engine`) with its first game, a Monkey Ball
 clone (`games/monkey-ball`), and a level editor (`tools/level-editor`).
 
-- Spec: `docs/superpowers/specs/2026-06-09-automata-engine-monkey-ball-design.md`
+- Spec: `../../../../specs/archive/2026-06/week-24/2026-06-09-automata-engine-monkey-ball-design.md`
 - Dev: `npm install`, then `npm run ci` (lint + typecheck + tests)
 ```
 

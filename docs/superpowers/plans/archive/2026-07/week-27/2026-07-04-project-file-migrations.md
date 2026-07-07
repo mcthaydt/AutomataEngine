@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, zod v4 (via `@automata/project` — never import `zod` directly in games/tools), vitest workspace projects, npm workspaces monorepo.
 
-**Spec:** `docs/superpowers/specs/2026-07-04-project-file-migrations-design.md`
+**Spec:** `../../../../specs/archive/2026-07/week-27/2026-07-04-project-file-migrations-design.md`
 
 ## Global Constraints
 
@@ -1142,7 +1142,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 **Files:**
 - Modify: `games/pulsebreak/public/project/automata.project.json` + `scenes/arena.scene.json` + `resources/{tuning,enemies,waves,upgrades}.resource.json` (hand-edit)
 - Regenerate: `games/monkey-ball/public/project/**` (via its build script)
-- Modify: `docs/superpowers/plans/2026-07-04-project-file-migrations.md` (tick remaining checkboxes)
+- Modify: `2026-07-04-project-file-migrations.md` (tick remaining checkboxes)
 
 - [x] **Step 1: Migrate pulsebreak's shipped project by hand**
 

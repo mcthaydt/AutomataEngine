@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (ES2022, ESM, strict), `@automata/contracts`, `@automata/agent-core`, vanilla DOM (happy-dom in tests), Vitest ^4.1.8.
 
-This is the third slice of M16a, building on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)) and M16a-2 ([agent-core](2026-06-21-m16a-2-agent-core.md)). Follow-on: M16c preview/confirm ([`2026-06-21-m16c-preview-confirm.md`](2026-06-21-m16c-preview-confirm.md)) adds the batch-diff + apply to this overlay; M16b adds the tuning loop. Full design: [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
+This is the third slice of M16a, building on M16a-1 ([contracts](2026-06-18-editor-mcp-tuning-m16.md)) and M16a-2 ([agent-core](2026-06-21-m16a-2-agent-core.md)). Follow-on: M16c preview/confirm ([`2026-06-21-m16c-preview-confirm.md`](2026-06-21-m16c-preview-confirm.md)) adds the batch-diff + apply to this overlay; M16b adds the tuning loop. Full design: [`2026-06-21-editor-mcp-tuning-design.md`](../../../../specs/archive/2026-06/week-25/2026-06-21-editor-mcp-tuning-design.md).
 
 ## Global Constraints
 

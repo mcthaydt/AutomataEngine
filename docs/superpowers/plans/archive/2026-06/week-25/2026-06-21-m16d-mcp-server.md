@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (ES2022, ESM, strict), `@modelcontextprotocol/sdk`, `@automata/contracts`, `@automata/editor`, `@automata/engine`, `monkey-ball`, `tsx` (run the `.ts` entry under Node), Vitest ^4.1.8.
 
-Builds on M16a-1 ([contracts](2026-06-21-m16a-shared-contracts.md)), M16a-3 ([editor host](2026-06-21-m16a-3-editor-host-chat-shell.md) — `createEditorToolHost`), and M16b ([tuning](2026-06-21-m16b-tuning-loop.md) — the widened headless seam that makes `testPlay` deterministic). Full design: [`docs/superpowers/specs/2026-06-21-editor-mcp-tuning-design.md`](../specs/2026-06-21-editor-mcp-tuning-design.md).
+Builds on M16a-1 ([contracts](2026-06-18-editor-mcp-tuning-m16.md)), M16a-3 ([editor host](2026-06-21-m16a-3-editor-host-chat-shell.md) — `createEditorToolHost`), and M16b ([tuning](2026-06-21-m16b-tuning-loop.md) — the widened headless seam that makes `testPlay` deterministic). Full design: [`2026-06-21-editor-mcp-tuning-design.md`](../../../../specs/archive/2026-06/week-25/2026-06-21-editor-mcp-tuning-design.md).
 
 ## Global Constraints
 
