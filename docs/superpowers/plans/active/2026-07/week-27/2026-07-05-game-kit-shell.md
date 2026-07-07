@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Progress: 43% (3/7 tasks complete)** — Tasks 1–3 ✅ (game-kit: 23 tests pass, typecheck clean)
+> **Progress: 57% (4/7 tasks complete)** — Tasks 1–4 ✅ (game-kit + scaffold green)
 > **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
 
 **Goal:** Lift the duplicated browser boot spine out of every game's `main.ts` into `@automata/game-kit` as a `bootGame(setup)` orchestrator plus `createProjectReader` and `mountAudio` primitives, then migrate all three consumers (scaffold template, monkey-ball, pulsebreak) onto it.
@@ -555,7 +555,7 @@ git commit -m "feat(game-kit): add bootGame browser boot spine with injectable d
 - Consumes: `bootGame`, `createProjectReader` from `@automata/game-kit`; the generated `loadProject(reader)` (accepts a `{ readText }`), `createGameplay`, and `SimControl`/`SimState`.
 - Produces: a generated `src/main.ts` whose only boot code is a `bootGame(async (ctx) => …)` call. The `mainTs(name)` signature is unchanged (still called at `tools/scaffold/src/plan.ts:54`).
 
-- [ ] **Step 1: Replace the `mainTs` function body**
+- [x] **Step 1: Replace the `mainTs` function body**
 
 Replace `tools/scaffold/src/templates/srcFiles.ts` lines 133–202 (the entire `mainTs` function) with:
 
@@ -620,7 +620,7 @@ bootGame(async (ctx) => {
 }
 ```
 
-- [ ] **Step 2: Declare `@automata/game-kit` in the generated `package.json`**
+- [x] **Step 2: Declare `@automata/game-kit` in the generated `package.json`**
 
 The new template imports from `@automata/game-kit`, so the generated game must depend on it (the current template only used `@automata/engine`). In `tools/scaffold/src/templates/configFiles.ts`, change the `dependencies` block (lines 14–18) from:
 
@@ -643,12 +643,12 @@ to:
     },
 ```
 
-- [ ] **Step 3: Verify scaffold unit tests and typecheck still pass**
+- [x] **Step 3: Verify scaffold unit tests and typecheck still pass**
 
-Run: `npm test -w @automata/scaffold && npm run typecheck -w @automata/scaffold`
-Expected: PASS — no scaffold test pins the generated `main.ts` content or the dependency set (verified: `grep -rn "createThreeRenderer\|bootGame\|main.ts\|dependencies" tools/scaffold/tests` finds only the file-list path in `plan.test.ts`).
+Run: `npm test -- --project scaffold && npm run typecheck -w @automata/scaffold`
+Expected: PASS — no scaffold test pins the generated `main.ts` content or the dependency set. ✅ 23 tests pass, typecheck clean.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tools/scaffold/src/templates/srcFiles.ts tools/scaffold/src/templates/configFiles.ts
