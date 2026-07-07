@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Progress: 71% (5/7 tasks complete)** — Tasks 1–5 ✅ (full CI: 1004 tests; monkey-ball e2e green)
+> **Progress: 86% (6/7 tasks complete)** — Tasks 1–6 ✅ (full CI: 1004 tests; monkey-ball + pulsebreak e2e green)
 > **Deviation note (Task 2 test):** the plan's `vi.fn((_audio: AudioPort) => {})` fails the repo's `@typescript-eslint/no-unused-vars` (no `argsIgnorePattern` configured); changed to `vi.fn((audio: AudioPort) => audio)` (return value is assignable to the `void`-returning `register` param). Behavior identical.
 > **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
 
@@ -897,7 +897,7 @@ git commit -m "refactor(monkey-ball): boot on the game-kit shell; base-relative 
 - Consumes: `bootGame`, `createOverlayScene`, `createProjectReader`, `mountAudio`, `type View` from `@automata/game-kit`; `createSceneManager`, `localStorageAdapter`, `subscribeSelector`, `type InputSource`, `type Scene` from `@automata/engine`; `createKeyboardInput`, `createVirtualJoystick` from `@automata/engine/browser`. Local modules keep current exports.
 - Produces: no new exports; `main.ts` is a leaf entry point.
 
-- [ ] **Step 1: Rewrite `games/pulsebreak/src/main.ts`**
+- [x] **Step 1: Rewrite `games/pulsebreak/src/main.ts`**
 
 Replace the entire file with:
 
@@ -986,17 +986,17 @@ bootGame(async (ctx) => {
 })
 ```
 
-- [ ] **Step 2: Typecheck, lint, and unit-test the workspace**
+- [x] **Step 2: Typecheck, lint, and unit-test the workspace**
 
 Run: `npm run ci`
 Expected: PASS.
 
-- [ ] **Step 3: Drive the browser smoke**
+- [x] **Step 3: Drive the browser smoke**
 
 Run: `npx playwright test e2e/pulsebreak.spec.ts`
 Expected: PASS — pulsebreak boots, starts a run, shows the HUD, and pauses/resumes; `#overlays` visible; `/project/` responses observed.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add games/pulsebreak/src/main.ts
