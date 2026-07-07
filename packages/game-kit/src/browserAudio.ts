@@ -1,4 +1,4 @@
-import { createNullAudio, type AudioPort } from '@automata/engine'
+import { createNullAudio, type AudioPort, type CleanupStack } from '@automata/engine'
 import { createWebAudio } from '@automata/engine/browser'
 
 export interface BrowserAudio {
@@ -30,4 +30,31 @@ export function createBrowserAudio(
       dispose() {}
     }
   }
+}
+
+/**
+ * The audio cluster every game repeats: create the runtime, register its sounds,
+ * resume it on the first pointer interaction, and play `uiClick` on overlay
+ * button clicks. Teardown is deferred onto `ctx.cleanup`. The caller sets volume
+ * on the returned runtime (reactively or with a literal).
+ */
+export function mountAudio(
+  ctx: { overlays: HTMLElement; cleanup: CleanupStack },
+  register: (audio: AudioPort) => void
+): BrowserAudio {
+  const runtime = createBrowserAudio()
+  ctx.cleanup.defer(() => runtime.dispose())
+  register(runtime.audio)
+
+  const resume = (): void => runtime.resume()
+  window.addEventListener('pointerdown', resume, { once: true })
+  ctx.cleanup.defer(() => window.removeEventListener('pointerdown', resume))
+
+  const onOverlayClick = (event: MouseEvent): void => {
+    if ((event.target as HTMLElement).closest('button')) runtime.audio.play('uiClick')
+  }
+  ctx.overlays.addEventListener('click', onOverlayClick)
+  ctx.cleanup.defer(() => ctx.overlays.removeEventListener('click', onOverlayClick))
+
+  return runtime
 }

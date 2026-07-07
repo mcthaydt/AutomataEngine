@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
-import { createBrowserAudio } from '../src/browserAudio'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createCleanupStack, type AudioPort } from '@automata/engine'
+import { createBrowserAudio, mountAudio } from '../src/browserAudio'
 
 describe('createBrowserAudio', () => {
   it('falls back to silent audio when AudioContext creation fails', () => {
@@ -33,5 +34,48 @@ describe('createBrowserAudio', () => {
     const runtime = createBrowserAudio()
     expect(() => runtime.audio.play('x')).not.toThrow()
     expect(() => runtime.dispose()).not.toThrow()
+  })
+})
+
+describe('mountAudio', () => {
+  let overlays: HTMLElement
+  beforeEach(() => {
+    document.body.replaceChildren()
+    overlays = document.createElement('div')
+    document.body.append(overlays)
+  })
+
+  it('registers sounds against the mounted audio port', () => {
+    const cleanup = createCleanupStack()
+    const register = vi.fn((_audio: AudioPort) => {})
+    const mounted = mountAudio({ overlays, cleanup }, register)
+    expect(register).toHaveBeenCalledWith(mounted.audio)
+  })
+
+  it('plays uiClick when a button inside overlays is clicked, and stops after cleanup', () => {
+    const cleanup = createCleanupStack()
+    const mounted = mountAudio({ overlays, cleanup }, () => {})
+    const play = vi.spyOn(mounted.audio, 'play')
+
+    const button = document.createElement('button')
+    overlays.append(button)
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(play).toHaveBeenCalledWith('uiClick')
+
+    play.mockClear()
+    overlays.dispatchEvent(new MouseEvent('click', { bubbles: true })) // not a button
+    expect(play).not.toHaveBeenCalled()
+
+    cleanup.dispose()
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(play).not.toHaveBeenCalled()
+  })
+
+  it('resumes audio on the first pointerdown', () => {
+    const cleanup = createCleanupStack()
+    const mounted = mountAudio({ overlays, cleanup }, () => {})
+    const resume = vi.spyOn(mounted, 'resume')
+    window.dispatchEvent(new Event('pointerdown'))
+    expect(resume).toHaveBeenCalledTimes(1)
   })
 })

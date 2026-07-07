@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Progress: 14% (1/7 tasks complete)** — Task 1 ✅
+> **Progress: 29% (2/7 tasks complete)** — Tasks 1–2 ✅
 > **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
 
 **Goal:** Lift the duplicated browser boot spine out of every game's `main.ts` into `@automata/game-kit` as a `bootGame(setup)` orchestrator plus `createProjectReader` and `mountAudio` primitives, then migrate all three consumers (scaffold template, monkey-ball, pulsebreak) onto it.
@@ -149,7 +149,7 @@ git commit -m "feat(game-kit): add createProjectReader (base-relative asset fetc
 - Consumes: `createBrowserAudio(): BrowserAudio` (existing, same file); `type AudioPort`, `type CleanupStack` from `@automata/engine`. `BrowserAudio` is `{ audio: AudioPort; resume(): void; dispose(): void }`.
 - Produces: `function mountAudio(ctx: { overlays: HTMLElement; cleanup: CleanupStack }, register: (audio: AudioPort) => void): BrowserAudio`. It creates a `BrowserAudio`, defers its `dispose`, calls `register(audio)`, wires resume-on-first-`pointerdown` and overlay-click → `play('uiClick')` (both deferred), and returns the `BrowserAudio`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/game-kit/tests/browserAudio.test.ts` (add imports `beforeEach`, `mountAudio`, `createCleanupStack`, and `AudioPort` type):
 
@@ -204,12 +204,12 @@ describe('mountAudio', () => {
 
 Note: keep the existing `describe('createBrowserAudio', …)` block; merge the `import` lines so `createBrowserAudio` and `mountAudio` come from one import.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
-Run: `npm test -w @automata/game-kit -- browserAudio`
-Expected: FAIL — `mountAudio` is not exported.
+Run: `npm test -- --project game-kit browserAudio`
+Expected: FAIL — `mountAudio` is not exported. ✅ 3 new tests failed.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 In `packages/game-kit/src/browserAudio.ts`, change the first import line to also bring in `CleanupStack`:
 
@@ -248,12 +248,12 @@ export function mountAudio(
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
-Run: `npm test -w @automata/game-kit -- browserAudio`
-Expected: PASS (existing `createBrowserAudio` tests + 3 new `mountAudio` tests).
+Run: `npm test -- --project game-kit browserAudio`
+Expected: PASS (existing `createBrowserAudio` tests + 3 new `mountAudio` tests). ✅ 6 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-kit/src/browserAudio.ts packages/game-kit/tests/browserAudio.test.ts
