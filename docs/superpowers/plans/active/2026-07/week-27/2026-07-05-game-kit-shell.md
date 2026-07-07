@@ -2,6 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Progress: 14% (1/7 tasks complete)** — Task 1 ✅
+> **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
+
 **Goal:** Lift the duplicated browser boot spine out of every game's `main.ts` into `@automata/game-kit` as a `bootGame(setup)` orchestrator plus `createProjectReader` and `mountAudio` primitives, then migrate all three consumers (scaffold template, monkey-ball, pulsebreak) onto it.
 
 **Architecture:** A hybrid shell. `bootGame` owns the universal spine (`#app` lookup, cleanup stack, `beforeunload`, canvas + `#overlays`, renderer + canvasRenderer, the `GameLoop` incl. the `canvasRenderer.renderFrame()` call, `startLoopDriver` visibility wiring, the Escape listener, and the `try/catch → dispose → bootError` rollback). Each game passes one `setup(ctx)` callback that receives the assembled pieces and returns loop steps plus pause policy. Small primitives (`createProjectReader`, `mountAudio`) are exported for use inside `setup`. The shell never names a scene, input, or level.
@@ -37,7 +40,7 @@
   - `function createProjectReader(options?: ProjectReaderOptions): ProjectReader`
   - `readText(path)` fetches `project/${path}` resolved against `baseURI`; `fetchText(url)` fetches `url` resolved against `baseURI`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/game-kit/tests/projectReader.test.ts`:
 
@@ -72,12 +75,12 @@ describe('createProjectReader', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
-Run: `npm test -w @automata/game-kit -- projectReader`
-Expected: FAIL — cannot resolve `../src/projectReader`.
+Run: `npm test -- --project game-kit projectReader`
+Expected: FAIL — cannot resolve `../src/projectReader`. ✅ Confirmed failed.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 Create `packages/game-kit/src/projectReader.ts`:
 
@@ -114,7 +117,7 @@ export function createProjectReader(options: ProjectReaderOptions = {}): Project
 }
 ```
 
-- [ ] **Step 4: Add the barrel export**
+- [x] **Step 4: Add the barrel export**
 
 In `packages/game-kit/src/index.ts`, add after the existing exports:
 
@@ -122,12 +125,12 @@ In `packages/game-kit/src/index.ts`, add after the existing exports:
 export * from './projectReader'
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
-Run: `npm test -w @automata/game-kit -- projectReader`
-Expected: PASS (3 tests).
+Run: `npm test -- --project game-kit projectReader`
+Expected: PASS (3 tests). ✅ 3 passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-kit/src/projectReader.ts packages/game-kit/tests/projectReader.test.ts packages/game-kit/src/index.ts
