@@ -47,7 +47,7 @@ describe('mountAudio', () => {
 
   it('registers sounds against the mounted audio port', () => {
     const cleanup = createCleanupStack()
-    const register = vi.fn((_audio: AudioPort) => {})
+    const register = vi.fn((audio: AudioPort) => audio)
     const mounted = mountAudio({ overlays, cleanup }, register)
     expect(register).toHaveBeenCalledWith(mounted.audio)
   })

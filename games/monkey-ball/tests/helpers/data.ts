@@ -14,5 +14,5 @@ export function readDataFile(rel: string): string {
 
 /** fetchText double for engine loaders, backed by the real shipped files. */
 export async function fsFetchText(url: string): Promise<string> {
-  return readDataFile(url.replace(/^\/data\//, ''))
+  return readDataFile(url.replace(/^\/?data\//, ''))
 }

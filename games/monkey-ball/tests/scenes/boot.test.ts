@@ -25,7 +25,7 @@ describe('loadBootData', () => {
     expect(data.project.tuning.maxTiltRad).toBeGreaterThan(0)
     expect(Object.keys(data.lib)).toContain('ball')
     expect(data.project.manifest.worlds[0]!.id).toBe('w1')
-    expect(dataReads).toEqual(['/data/archetypes/standard.yaml'])
+    expect(dataReads).toEqual(['data/archetypes/standard.yaml'])
     expect(projectReads).toEqual([
       'automata.project.json',
       'scenes/w1-l1.scene.json', 'scenes/w1-l2.scene.json', 'scenes/w1-l3.scene.json',

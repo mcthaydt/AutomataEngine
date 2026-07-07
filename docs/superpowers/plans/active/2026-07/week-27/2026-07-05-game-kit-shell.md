@@ -2,7 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Progress: 57% (4/7 tasks complete)** — Tasks 1–4 ✅ (game-kit + scaffold green)
+> **Progress: 71% (5/7 tasks complete)** — Tasks 1–5 ✅ (full CI: 1004 tests; monkey-ball e2e green)
+> **Deviation note (Task 2 test):** the plan's `vi.fn((_audio: AudioPort) => {})` fails the repo's `@typescript-eslint/no-unused-vars` (no `argsIgnorePattern` configured); changed to `vi.fn((audio: AudioPort) => audio)` (return value is assignable to the `void`-returning `register` param). Behavior identical.
 > **Note:** In this repo, run scoped tests via `npm test -- --project game-kit <filter>` (the plan's `npm test -w @automata/game-kit -- <filter>` does not work; game-kit has no per-package `test` script — the root `vitest run` drives all workspace projects).
 
 **Goal:** Lift the duplicated browser boot spine out of every game's `main.ts` into `@automata/game-kit` as a `bootGame(setup)` orchestrator plus `createProjectReader` and `mountAudio` primitives, then migrate all three consumers (scaffold template, monkey-ball, pulsebreak) onto it.
@@ -673,7 +674,7 @@ Note: the base-relative value `data/archetypes/standard.yaml` already exists as 
 - Consumes: `bootGame`, `createProjectReader`, `mountAudio`, `createOverlayScene`, `type View` from `@automata/game-kit`; `createCleanupStack`, `createLoader`, `createRapierPhysics`, `createSceneManager`, `localStorageAdapter`, `subscribeSelector`, `type CleanupStack`, `type InputSource`, `type Scene` from `@automata/engine`; `createKeyboardInput`, `createVirtualJoystick` from `@automata/engine/browser`. All local game modules keep their current exports.
 - Produces: no new exports; `main.ts` is a leaf entry point.
 
-- [ ] **Step 1: Update the boot-data test expectation (fails first)**
+- [x] **Step 1: Update the boot-data test expectation (fails first)** — ✅ ran, failed as expected.
 
 In `games/monkey-ball/tests/scenes/boot.test.ts`, change line 28 from:
 
@@ -687,10 +688,10 @@ to:
     expect(dataReads).toEqual(['data/archetypes/standard.yaml'])
 ```
 
-Run: `npm test -w monkey-ball -- scenes/boot`
+Run: `npm test -- --project monkey-ball scenes/boot`
 Expected: FAIL — code still requests `/data/archetypes/standard.yaml`.
 
-- [ ] **Step 2: Change the archetype path to base-relative**
+- [x] **Step 2: Change the archetype path to base-relative**
 
 In `games/monkey-ball/src/scenes/boot.ts`, line 16, change:
 
@@ -704,7 +705,7 @@ to:
     loader.load(archetypeLibraryKind, 'data/archetypes/standard.yaml')
 ```
 
-- [ ] **Step 3: Teach the test helper to accept the base-relative path**
+- [x] **Step 3: Teach the test helper to accept the base-relative path**
 
 `fsFetchText` currently strips only a leading `/data/`, so the new relative path would fall through to the legacy-fixtures root and the boot-data test would throw. In `games/monkey-ball/tests/helpers/data.ts`, change:
 
@@ -722,12 +723,12 @@ export async function fsFetchText(url: string): Promise<string> {
 }
 ```
 
-- [ ] **Step 4: Run the boot-data test to verify it passes**
+- [x] **Step 4: Run the boot-data test to verify it passes**
 
-Run: `npm test -w monkey-ball -- scenes/boot`
+Run: `npm test -- --project monkey-ball scenes/boot`
 Expected: PASS (both tests).
 
-- [ ] **Step 5: Rewrite `games/monkey-ball/src/main.ts`**
+- [x] **Step 5: Rewrite `games/monkey-ball/src/main.ts`**
 
 Replace the entire file with:
 
@@ -868,17 +869,17 @@ bootGame(async (ctx) => {
 })
 ```
 
-- [ ] **Step 6: Typecheck, lint, and unit-test monkey-ball**
+- [x] **Step 6: Typecheck, lint, and unit-test monkey-ball**
 
 Run: `npm run ci`
 Expected: PASS. (Confirms the rewritten `main.ts` typechecks and every game/engine unit test still passes.)
 
-- [ ] **Step 7: Drive the browser smoke**
+- [x] **Step 7: Drive the browser smoke**
 
 Run: `npx playwright test e2e/game.spec.ts`
 Expected: PASS — game boots to the menu, `#overlays` visible, Play → level → `canvas` + `.hud` visible, and a `…/project/automata.project.json` response is observed (now base-relative, still resolves to the dev-server root).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add games/monkey-ball/src/main.ts games/monkey-ball/src/scenes/boot.ts games/monkey-ball/tests/scenes/boot.test.ts games/monkey-ball/tests/helpers/data.ts

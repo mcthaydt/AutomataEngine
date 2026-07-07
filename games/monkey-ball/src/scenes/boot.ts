@@ -12,7 +12,7 @@ export interface BootData {
 export async function loadBootData(loader: DataLoader, projectReader: ProjectFileReader): Promise<BootData> {
   const [project, lib] = await Promise.all([
     loadMonkeyBallProject(projectReader),
-    loader.load(archetypeLibraryKind, '/data/archetypes/standard.yaml')
+    loader.load(archetypeLibraryKind, 'data/archetypes/standard.yaml')
   ])
 
   return { project, lib }
