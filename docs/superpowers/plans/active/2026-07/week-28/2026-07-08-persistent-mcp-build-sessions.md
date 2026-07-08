@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Progress: 56% — 5/9 tasks complete.**
+**Progress: 67% — 6/9 tasks complete.**
 
 > Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
 
@@ -889,7 +889,7 @@ Wrap the existing in-memory project host so every successful edit is flushed to 
 - Consumes: `EditorProjectToolHost` (`@automata/editor/headless`), `ProjectFileWriter` + `writeProjectFiles` (Task 1).
 - Produces: `function createWriteThroughHost(inner: EditorProjectToolHost, writer: ProjectFileWriter): EditorProjectToolHost`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tools/editor-mcp-server/tests/session/writeThroughHost.test.ts`:
 
@@ -936,12 +936,12 @@ describe('createWriteThroughHost', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/editor-mcp-server -- writeThroughHost`
 Expected: FAIL — module missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `tools/editor-mcp-server/src/session/writeThroughHost.ts`:
 
@@ -973,12 +973,12 @@ export function createWriteThroughHost(
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w @automata/editor-mcp-server -- writeThroughHost`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/session/writeThroughHost.ts tools/editor-mcp-server/tests/session/writeThroughHost.test.ts
