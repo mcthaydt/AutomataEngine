@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Progress: 11% — 1/9 tasks complete.**
+**Progress: 22% — 2/9 tasks complete.**
 
 > Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
 
@@ -208,7 +208,7 @@ New tool schemas in `@automata/contracts`, matching the pattern in `tools.ts` / 
   - `function sessionToolDefs(): ToolDef[]`
   - `function parseSessionToolArgs(name: string, args: unknown): unknown`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/contracts/tests/sessionTools.test.ts`:
 
@@ -237,12 +237,12 @@ describe('session tools', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/contracts -- sessionTools`
 Expected: FAIL — module/exports missing.
 
-- [ ] **Step 3: Implement the contracts**
+- [x] **Step 3: Implement the contracts**
 
 Create `packages/contracts/src/sessionTools.ts`:
 
@@ -304,12 +304,12 @@ Add to `packages/contracts/src/index.ts` after the `workspaceTools` export:
 export * from './sessionTools'
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w @automata/contracts -- sessionTools`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts/src/sessionTools.ts packages/contracts/src/index.ts packages/contracts/tests/sessionTools.test.ts
