@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Progress: 33% — 3/9 tasks complete.**
+**Progress: 44% — 4/9 tasks complete.**
 
 > Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
 
@@ -457,7 +457,7 @@ Owns `.automata/session/` under the repo root. This is the only new persistent s
   - `async function openSessionStore(repoRoot: string, opts?: { now?: () => number; stateDir?: string }): Promise<SessionStore>` — `stateDir` overrides where metadata lives (defaults to `<repoRoot>/.automata/session`); lets tests keep session state off the real repo while pointing `repoRoot` at importable games.
 - Consumes: nothing from prior tasks.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tools/editor-mcp-server/tests/session/store.test.ts`:
 
@@ -518,12 +518,12 @@ describe('SessionStore', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/editor-mcp-server -- store`
 Expected: FAIL — module missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `tools/editor-mcp-server/src/session/store.ts`:
 
@@ -628,12 +628,12 @@ export async function openSessionStore(
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w @automata/editor-mcp-server -- store`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/session/store.ts tools/editor-mcp-server/tests/session/store.test.ts
