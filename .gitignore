@@ -6,5 +6,8 @@ playwright-report/
 *.local
 .DS_Store
 
+# Durable MCP build-session metadata (per-repo, not source of truth)
+.automata/
+
 # Brainstorm visual companion
 .superpowers/

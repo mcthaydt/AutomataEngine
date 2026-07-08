@@ -15,8 +15,9 @@ export interface WorkspaceHostOptions {
 
 /**
  * Workspace-level MCP host: list the games discovered by convention and
- * scaffold new ones. It never opens a project — after `createGame`, clients
- * `npm install` and reconnect with `--project games/<name>/public/project`.
+ * scaffold new ones. It never opens a project itself — after `createGame`,
+ * clients `npm install` and call `openProject { gameId }` on the durable
+ * session to author content.
  */
 export function createWorkspaceHost(options: WorkspaceHostOptions): McpToolHost {
   const writeGame = createNewGameWriter(options.fs ?? nodeScaffoldFs)
@@ -44,7 +45,7 @@ export function createWorkspaceHost(options: WorkspaceHostOptions): McpToolHost 
             'npm install  (required before Node can import the new workspace package)',
             `npm run dev -w ${plan.name}  (serves the game on port ${plan.port})`,
             `The scaffold is a generic beacon-runner skeleton: rewrite games/${plan.name}/src/sim/sim.ts and src/game/gameplay.ts to implement the intended mechanics, keeping the game's tests green`,
-            `Reconnect this MCP server with --project games/${plan.name}/public/project to author content; in project mode the authoring tools carry per-type JSON schemas in their descriptions`,
+            `Call openProject { gameId: "${plan.name}" } on this session to author content; project authoring and run tools appear once it is open, and the authoring tools carry per-type JSON schemas in their descriptions`,
             'Author entities and resources, keep the validate tool clean, then run evaluate and iterate on tuning until the metrics match the intent',
             'Finish with npm run ci at the repo root'
           ]

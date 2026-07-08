@@ -30,6 +30,8 @@ export interface McpServerOptions {
     list(): PromptDef[]
     get(name: string, args: unknown): PromptResult
   }
+  /** When true, advertise dynamic tool lists so the client re-fetches on change. */
+  toolsListChanged?: boolean
 }
 
 /** Bind one isolated host (project or workspace) to the MCP tools/resources protocol. */
@@ -38,7 +40,7 @@ export function createMcpServer(host: McpToolHost, options: McpServerOptions = {
   const resourceUris = options.resourceUris ?? Object.values(RESOURCE_URIS)
   const server = new Server(
     { name: 'automata-editor', version: '0.1.0' },
-    { capabilities: { tools: {}, resources: {}, ...(options.prompts ? { prompts: {} } : {}) } }
+    { capabilities: { tools: options.toolsListChanged ? { listChanged: true } : {}, resources: {}, ...(options.prompts ? { prompts: {} } : {}) } }
   )
 
   server.setRequestHandler(ListToolsRequestSchema, async () => listToolsResult(host))

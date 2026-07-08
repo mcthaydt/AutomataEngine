@@ -37,7 +37,7 @@ describe('workspace MCP host', () => {
       devPort: 5178,
       nextSteps: expect.arrayContaining([
         expect.stringContaining('npm install'),
-        expect.stringContaining('--project games/beacon-run/public/project'),
+        expect.stringContaining('openProject'),
         expect.stringContaining('evaluate'),
         expect.stringContaining('npm run ci')
       ])

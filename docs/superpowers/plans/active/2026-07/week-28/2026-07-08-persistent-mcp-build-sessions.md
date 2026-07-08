@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Progress: 78% — 7/9 tasks complete.**
+**Progress: 89% — 8/9 tasks complete.**
 
 > Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
 
@@ -1274,7 +1274,7 @@ Make `--workspace` launch the durable host with `tools/list_changed` support and
 - Consumes: `createSessionHost`, `SessionHost` (Task 7); `createMcpServer` (existing); `nodeExec`, `playwrightBrowserSmoke` (this task).
 - Produces: `const nodeExec: ExecFn`, `const playwrightBrowserSmoke: BrowserSmokeFn`.
 
-- [ ] **Step 1: Update the workspace next-steps test (failing)**
+- [x] **Step 1: Update the workspace next-steps test (failing)**
 
 In `tools/editor-mcp-server/tests/workspaceHost.test.ts`, replace the `--project` assertion with the openProject one:
 
@@ -1287,12 +1287,12 @@ In `tools/editor-mcp-server/tests/workspaceHost.test.ts`, replace the `--project
       ])
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/editor-mcp-server -- workspaceHost`
 Expected: FAIL — next-steps still says `--project`.
 
-- [ ] **Step 3: Update the next-steps text**
+- [x] **Step 3: Update the next-steps text**
 
 In `tools/editor-mcp-server/src/workspaceHost.ts`, change the reconnect line:
 
@@ -1300,12 +1300,12 @@ In `tools/editor-mcp-server/src/workspaceHost.ts`, change the reconnect line:
             `Call openProject { gameId: "${plan.name}" } on this session to author content; project authoring and run tools appear once it is open, and the authoring tools carry per-type JSON schemas in their descriptions`,
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w @automata/editor-mcp-server -- workspaceHost`
 Expected: PASS.
 
-- [ ] **Step 5: Add the default adapters**
+- [x] **Step 5: Add the default adapters**
 
 Create `tools/editor-mcp-server/src/session/adapters.ts`:
 
@@ -1388,7 +1388,7 @@ Then declare the dependency the adapter dynamically imports — it resolves only
 Run: `npm install`
 Expected: the lockfile updates and `@automata/editor-mcp-server` gains a direct `@playwright/test` dependency.
 
-- [ ] **Step 6: Wire the server to emit `tools/list_changed`**
+- [x] **Step 6: Wire the server to emit `tools/list_changed`**
 
 In `tools/editor-mcp-server/src/server.ts`, add an option and capability. Extend `McpServerOptions`:
 
@@ -1403,7 +1403,7 @@ Change the capabilities line:
     { capabilities: { tools: options.toolsListChanged ? { listChanged: true } : {}, resources: {}, ...(options.prompts ? { prompts: {} } : {}) } }
 ```
 
-- [ ] **Step 7: Wire `--workspace` to the durable host in `main.ts`**
+- [x] **Step 7: Wire `--workspace` to the durable host in `main.ts`**
 
 In `tools/editor-mcp-server/src/main.ts`, replace the workspace branch body:
 
@@ -1442,7 +1442,7 @@ function parseSessionAndWorkspaceArgs(name: string, args: unknown): unknown {
 
 Update the top import to include what the branch already used (`getWorkspacePrompt`, `workspacePromptDefs`) and drop `parseWorkspaceToolArgs`-only usage if now unused elsewhere.
 
-- [ ] **Step 8: Ignore `.automata/`**
+- [x] **Step 8: Ignore `.automata/`**
 
 Add to `.gitignore`:
 
@@ -1450,12 +1450,12 @@ Add to `.gitignore`:
 .automata/
 ```
 
-- [ ] **Step 9: Run the full server test suite + typecheck**
+- [x] **Step 9: Run the full server test suite + typecheck**
 
 Run: `npm test -w @automata/editor-mcp-server && npm run typecheck -w @automata/editor-mcp-server`
 Expected: PASS. (The `adapters.ts` browser path is not unit-tested; that is intentional — it is the injected boundary.)
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/session/adapters.ts tools/editor-mcp-server/src/server.ts \

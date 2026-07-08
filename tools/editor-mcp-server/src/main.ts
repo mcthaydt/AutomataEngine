@@ -1,10 +1,25 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { getWorkspacePrompt, parseWorkspaceToolArgs, workspacePromptDefs } from '@automata/contracts'
+import {
+  getWorkspacePrompt,
+  parseSessionToolArgs,
+  parseToolArgs,
+  parseWorkspaceToolArgs,
+  sessionToolDefs,
+  workspacePromptDefs
+} from '@automata/contracts'
 import { createHeadlessHost } from './headlessHost'
 import { createMcpServer } from './server'
-import { createWorkspaceHost } from './workspaceHost'
+
+const SESSION_TOOL_NAMES = new Set(sessionToolDefs().map((def) => def.name))
+
+/** Validate arguments for every tool family the durable session serves. */
+function parseSessionAndWorkspaceArgs(name: string, args: unknown): unknown {
+  if (name === 'createGame' || name === 'listGames') return parseWorkspaceToolArgs(name, args)
+  if (SESSION_TOOL_NAMES.has(name)) return parseSessionToolArgs(name, args)
+  return parseToolArgs(name, args) // project authoring tools
+}
 
 interface CliOptions {
   help: boolean
@@ -18,7 +33,7 @@ const USAGE = `Usage: automata-editor-mcp [--project <directory> | --bundle <fil
 Options:
   --project <directory>   Open a project workspace directory
   --bundle <file>         Open a portable project bundle JSON file
-  --workspace <repoRoot>  Workspace mode: list and scaffold games (createGame/listGames)
+  --workspace <repoRoot>  Durable build session: scaffold games, then openProject to author and run
   --help                  Show this help
 `
 
@@ -57,13 +72,18 @@ async function main(args = process.argv.slice(2)): Promise<void> {
   // Stdout is exclusively the MCP channel; status is deliberately stderr-only.
   if (options.workspaceDir !== undefined) {
     const repoRoot = resolve(options.workspaceDir)
-    const server = createMcpServer(createWorkspaceHost({ repoRoot }), {
-      parseArgs: parseWorkspaceToolArgs,
+    const { nodeExec, playwrightBrowserSmoke } = await import('./session/adapters')
+    const { createSessionHost } = await import('./session/sessionHost')
+    const host = await createSessionHost({ repoRoot, exec: nodeExec, browserSmoke: playwrightBrowserSmoke })
+    const server = createMcpServer(host, {
+      parseArgs: parseSessionAndWorkspaceArgs,
       resourceUris: [],
-      prompts: { list: workspacePromptDefs, get: getWorkspacePrompt }
+      prompts: { list: workspacePromptDefs, get: getWorkspacePrompt },
+      toolsListChanged: true
     })
+    host.bindNotifications(() => { void server.sendToolListChanged() })
     await server.connect(new StdioServerTransport())
-    process.stderr.write(`automata-editor MCP ready: workspace mode (${repoRoot})\n`)
+    process.stderr.write(`automata-editor MCP ready: durable session (${repoRoot})\n`)
     return
   }
 
