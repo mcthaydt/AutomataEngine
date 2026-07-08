@@ -74,4 +74,43 @@ describe('SessionHost (real monorepo, fake exec/browser)', () => {
     expect((await host.executeTool('sessionStatus', {})).content).toMatchObject({ activeProjectId: 'pulsebreak' })
     await host.close()
   })
+
+  it('routes evaluate through the runner and errors when no project is open', async () => {
+    const host = await createSessionHost(opts({ stateDir: await stateDir() }))
+    expect(await host.executeTool('evaluate', {})).toMatchObject({ ok: false, isError: true })
+    await host.executeTool('openProject', { gameId: 'monkey-ball' })
+    expect(await host.executeTool('evaluate', { maxSteps: 5 })).toHaveProperty('ok')
+    await host.close()
+  })
+
+  it('closeProject hides the project + run tools and clears the active project', async () => {
+    const host = await createSessionHost(opts({ stateDir: await stateDir() }))
+    await host.executeTool('openProject', { gameId: 'monkey-ball' })
+    const changed = vi.fn()
+    host.bindNotifications(changed)
+    expect(await host.executeTool('closeProject', {})).toMatchObject({ ok: true, content: { closed: true } })
+    expect(changed).toHaveBeenCalled()
+    expect(host.listTools().map((t) => t.name)).not.toContain('runBuild')
+    expect((await host.executeTool('sessionStatus', {})).content).toMatchObject({ activeProjectId: null })
+    await host.close()
+  })
+
+  it('serves resources only while a project is open', async () => {
+    const host = await createSessionHost(opts({ stateDir: await stateDir() }))
+    await expect(host.readResource('editor://project')).rejects.toThrow(/no project open/i)
+    await host.executeTool('openProject', { gameId: 'monkey-ball' })
+    expect(await host.readResource('editor://project')).toBeTruthy()
+    await host.close()
+  })
+
+  it('runs tests and browser smoke through the runner and surfaces findings', async () => {
+    const failingExec: ExecFn = async () => ({ code: 1, stdout: '', stderr: 'boom' })
+    const host = await createSessionHost(opts({ stateDir: await stateDir(), exec: failingExec }))
+    await host.executeTool('openProject', { gameId: 'monkey-ball' })
+    expect(await host.executeTool('runTests', {})).toMatchObject({ ok: false })
+    expect(await host.executeTool('browserSmoke', {})).toMatchObject({ ok: true })
+    const status = await host.executeTool('sessionStatus', {})
+    expect((status.content as { findings: unknown[] }).findings.length).toBeGreaterThan(0)
+    await host.close()
+  })
 })
