@@ -13,6 +13,7 @@ This folder holds AutomataEngine plans. Active work is under `active/`; complete
 ### 2026-07
 
 - [Richer `@automata/game-kit` Browser Shell (P4) — Implementation Plan](active/2026-07/week-27/2026-07-05-game-kit-shell.md)
+- [Persistent MCP Build Sessions (P5) Implementation Plan](active/2026-07/week-28/2026-07-08-persistent-mcp-build-sessions.md)
 
 ## Archive
 
