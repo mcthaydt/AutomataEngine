@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Progress: 67% — 6/9 tasks complete.**
+**Progress: 78% — 7/9 tasks complete.**
 
 > Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
 
@@ -1002,7 +1002,7 @@ The durable `McpToolHost`: workspace tools + session-control tools always; proje
   - `interface SessionHostOptions { repoRoot: string; exec: ExecFn; browserSmoke: BrowserSmokeFn; now?: () => number; stateDir?: string }`
   - `async function createSessionHost(options: SessionHostOptions): Promise<SessionHost>`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tools/editor-mcp-server/tests/session/sessionHost.test.ts`. `openProject` loads a game through `createHeadlessHost`, which dynamically imports the game's `./project` export — that only resolves for an **installed** workspace package, so the test points `repoRoot` at the **real monorepo** (where `monkey-ball` and `pulsebreak` are importable) and keeps session state in a tmp `stateDir`. Build/test/browser are injected fakes, and the test performs no authoring edits, so it never write-throughs to the real game files.
 
@@ -1086,12 +1086,12 @@ describe('SessionHost (real monorepo, fake exec/browser)', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/editor-mcp-server -- sessionHost`
 Expected: FAIL — module missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `tools/editor-mcp-server/src/session/sessionHost.ts`:
 
@@ -1243,12 +1243,12 @@ export async function createSessionHost(options: SessionHostOptions): Promise<Se
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w @automata/editor-mcp-server -- sessionHost`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server/src/session/sessionHost.ts tools/editor-mcp-server/tests/session/sessionHost.test.ts
