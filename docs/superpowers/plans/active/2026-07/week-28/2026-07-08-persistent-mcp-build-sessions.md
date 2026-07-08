@@ -101,12 +101,24 @@ Create `tools/editor-mcp-server/tests/projectWriter.test.ts`:
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { loadProjectFiles } from '@automata/project'
+import { PROJECT_FORMAT_VERSION, loadProjectFiles, writeProjectFiles, type ProjectSnapshot } from '@automata/project'
 import { afterEach, describe, expect, it } from 'vitest'
-import { sampleSnapshot } from '../../../packages/project/tests/fixtures/sampleProject'
 import { createProjectDirectoryReader } from '../src/projectReader'
 import { createProjectDirectoryWriter } from '../src/projectWriter'
-import { writeProjectFiles } from '@automata/project'
+
+// Built inline so the tool test owns no cross-package test fixture.
+function minimalSnapshot(): ProjectSnapshot {
+  return {
+    manifest: {
+      formatVersion: PROJECT_FORMAT_VERSION,
+      id: 'p', name: 'p', gameId: 'p', entrySceneId: 'main',
+      scenes: [{ id: 'main', path: 'scenes/main.scene.json' }],
+      resources: []
+    },
+    scenes: { main: { id: 'main', name: 'main', entities: [] } },
+    resources: {}
+  }
+}
 
 const dirs: string[] = []
 afterEach(async () => { await Promise.all(dirs.splice(0).map((d) => rm(d, { recursive: true, force: true }))) })
@@ -115,7 +127,7 @@ describe('createProjectDirectoryWriter', () => {
   it('writes a snapshot to disk that loads back identically', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'automata-writer-'))
     dirs.push(dir)
-    const snapshot = sampleSnapshot()
+    const snapshot = minimalSnapshot()
     await writeProjectFiles(createProjectDirectoryWriter(dir), snapshot)
     const loaded = await loadProjectFiles(createProjectDirectoryReader(dir))
     expect(loaded.snapshot).toEqual(snapshot)
@@ -185,7 +197,7 @@ New tool schemas in `@automata/contracts`, matching the pattern in `tools.ts` / 
 - Test: `packages/contracts/tests/sessionTools.test.ts`
 
 **Interfaces:**
-- Consumes: `gameSlugSchema` (from `./workspaceTools`), `projectEvaluationOptionsSchema` (from `./eval`), `ToolDef` (from `./tools`).
+- Consumes: `gameSlugSchema` (from `./workspaceTools`), `ToolDef` (from `./tools`).
 - Produces:
   - `type SessionToolName = 'openProject' | 'closeProject' | 'sessionStatus' | 'runBuild' | 'runTests' | 'browserSmoke'`
   - `const sessionToolArgSchemas` (record of zod schemas)
@@ -232,7 +244,6 @@ Create `packages/contracts/src/sessionTools.ts`:
 
 ```ts
 import { z } from 'zod'
-import { projectEvaluationOptionsSchema } from './eval'
 import type { ToolDef } from './tools'
 import { gameSlugSchema } from './workspaceTools'
 
@@ -267,8 +278,6 @@ const SESSION_TOOL_DESCRIPTIONS: Record<SessionToolName, string> = {
   runTests: 'Run the active game\'s tests, caching by an input fingerprint; force reruns.',
   browserSmoke: 'Boot the built game in a headless browser and capture boot/console/frame-time plus a screenshot, caching by the build artifact fingerprint; force reruns.'
 }
-
-export { projectEvaluationOptionsSchema }
 
 export function sessionToolDefs(): ToolDef[] {
   return SESSION_TOOL_NAMES.map((name) => ({
@@ -436,7 +445,7 @@ Owns `.automata/session/` under the repo root. This is the only new persistent s
 
 **Interfaces:**
 - Produces:
-  - `interface StepResult { step: string; ok: boolean; inputHash: string; ts: number; durationMs: number; summary: string; detail: unknown }`
+  - `interface StepResult { step: string; ok: boolean; inputHash: string; ts: number; durationMs: number; summary: string; detail: unknown; options?: unknown }` — `options` records the evaluate request so freshness can recompute its hash consistently.
   - `interface Finding { severity: 'error' | 'warn' | 'info'; code: string; message: string; step: string; evidence?: unknown; ts: number }`
   - `interface SessionState { id: string; createdAt: number; activeProjectId: string | null; schemaVersion: number; results: Record<string, StepResult>; findings: Finding[]; budgets: Record<string, { runs: number; totalMs: number }> }`
   - `interface SessionStore { readonly state: SessionState; readonly dir: string; setActiveProject(gameId: string | null): Promise<void>; recordResult(gameId: string, result: StepResult, findings: Finding[]): Promise<void>; getResult(gameId: string, step: string): StepResult | undefined; appendLog(entry: unknown): Promise<void>; release(): Promise<void> }`
@@ -520,6 +529,8 @@ import { join } from 'node:path'
 
 export interface StepResult {
   step: string; ok: boolean; inputHash: string; ts: number; durationMs: number; summary: string; detail: unknown
+  /** Evaluate request options, recorded so freshness recomputes the same hash. */
+  options?: unknown
 }
 export interface Finding {
   severity: 'error' | 'warn' | 'info'; code: string; message: string; step: string; evidence?: unknown; ts: number
@@ -643,9 +654,9 @@ The single owner of step execution, input-fingerprint caching, freshness, and fi
   - `interface BrowserSmokeResult { booted: boolean; consoleErrors: string[]; frameMs: number[]; screenshotPath: string | null }`
   - `type BrowserSmokeFn = (ctx: { gameDir: string; screenshotPath: string }) => Promise<BrowserSmokeResult>`
   - `type Step = 'build' | 'test' | 'browser' | 'evaluate'`
-  - `interface Runner { run(step: Step, force: boolean): Promise<ToolResult>; freshness(step: Step): Promise<'fresh' | 'stale' | 'absent'> }`
+  - `interface Runner { run(step: Step, force: boolean, evaluateOptions?: unknown): Promise<ToolResult>; freshness(step: Step): Promise<'fresh' | 'stale' | 'absent'> }`
   - `function createRunner(deps: RunnerDeps): Runner` where
-    `interface RunnerDeps { repoRoot: string; gameId: string; store: SessionStore; snapshot: () => ProjectSnapshot; exec: ExecFn; browserSmoke: BrowserSmokeFn; evaluate: () => Promise<ToolResult>; now?: () => number }`
+    `interface RunnerDeps { repoRoot: string; gameId: string; store: SessionStore; snapshot: () => ProjectSnapshot; exec: ExecFn; browserSmoke: BrowserSmokeFn; evaluate: (options: unknown) => Promise<ToolResult>; now?: () => number }`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -760,12 +771,12 @@ export interface RunnerDeps {
   snapshot: () => ProjectSnapshot
   exec: ExecFn
   browserSmoke: BrowserSmokeFn
-  evaluate: () => Promise<ToolResult>
+  evaluate: (options: unknown) => Promise<ToolResult>
   now?: () => number
 }
 
 export interface Runner {
-  run(step: Step, force: boolean): Promise<ToolResult>
+  run(step: Step, force: boolean, evaluateOptions?: unknown): Promise<ToolResult>
   freshness(step: Step): Promise<'fresh' | 'stale' | 'absent'>
 }
 
@@ -776,7 +787,7 @@ export function createRunner(deps: RunnerDeps): Runner {
   const gameDir = join(deps.repoRoot, 'games', deps.gameId)
   const codeRoots = [join(gameDir, 'src'), join(gameDir, 'public', 'project')]
 
-  const inputHash = async (step: Step): Promise<string> => {
+  const inputHash = async (step: Step, evaluateOptions?: unknown): Promise<string> => {
     switch (step) {
       case 'build':
       case 'test':
@@ -784,13 +795,13 @@ export function createRunner(deps: RunnerDeps): Runner {
       case 'browser':
         return hashFiles([join(gameDir, 'dist')])
       case 'evaluate':
-        return hashStrings([JSON.stringify(deps.snapshot())])
+        return hashStrings([JSON.stringify(deps.snapshot()), JSON.stringify(evaluateOptions ?? null)])
     }
   }
 
-  const execute = async (step: Step): Promise<StepOutcome> => {
+  const execute = async (step: Step, evaluateOptions?: unknown): Promise<StepOutcome> => {
     if (step === 'evaluate') {
-      const result = await deps.evaluate()
+      const result = await deps.evaluate(evaluateOptions)
       return {
         ok: result.ok,
         summary: result.ok ? 'evaluation complete' : 'evaluation failed',
@@ -821,17 +832,18 @@ export function createRunner(deps: RunnerDeps): Runner {
   }
 
   return {
-    async run(step, force) {
-      const hash = await inputHash(step)
+    async run(step, force, evaluateOptions) {
+      const hash = await inputHash(step, evaluateOptions)
       const cached = deps.store.getResult(deps.gameId, step)
       if (!force && cached && cached.inputHash === hash && cached.ok) {
         return { ok: true, content: { skipped: 'cached', result: cached } }
       }
       const started = now()
-      const outcome = await execute(step)
+      const outcome = await execute(step, evaluateOptions)
       const result: StepResult = {
         step, ok: outcome.ok, inputHash: hash, ts: started, durationMs: now() - started,
-        summary: outcome.summary, detail: outcome.detail
+        summary: outcome.summary, detail: outcome.detail,
+        ...(step === 'evaluate' ? { options: evaluateOptions } : {})
       }
       const findings: Finding[] = outcome.findings.map((f) => ({ ...f, step, ts: started }))
       await deps.store.recordResult(deps.gameId, result, findings)
@@ -840,7 +852,8 @@ export function createRunner(deps: RunnerDeps): Runner {
     async freshness(step) {
       const cached = deps.store.getResult(deps.gameId, step)
       if (!cached) return 'absent'
-      return (await inputHash(step)) === cached.inputHash ? 'fresh' : 'stale'
+      const current = step === 'evaluate' ? await inputHash(step, cached.options) : await inputHash(step)
+      return current === cached.inputHash ? 'fresh' : 'stale'
     }
   }
 }
@@ -1139,7 +1152,7 @@ export async function createSessionHost(options: SessionHostOptions): Promise<Se
       snapshot: () => host.snapshot,
       exec: options.exec,
       browserSmoke: options.browserSmoke,
-      evaluate: () => host.executeTool('evaluate', { maxSteps: 1000 }),
+      evaluate: (evalOptions) => host.executeTool('evaluate', evalOptions),
       ...(options.now ? { now: options.now } : {})
     })
     active = { gameId, host, runner }
@@ -1147,9 +1160,13 @@ export async function createSessionHost(options: SessionHostOptions): Promise<Se
     return { ok: true, content: { openedProject: gameId } }
   }
 
-  // Rehydrate the last active project from disk, if any.
+  // Rehydrate the last active project from disk, if any; clear the pointer on failure
+  // so sessionStatus never reports an active project whose tools are absent.
   if (store.state.activeProjectId) {
-    await openProject(store.state.activeProjectId).catch(() => { active = null })
+    await openProject(store.state.activeProjectId).catch(async () => {
+      active = null
+      await store.setActiveProject(null)
+    })
   }
 
   const sessionStatus = async (): Promise<ToolResult> => {
@@ -1207,7 +1224,9 @@ export async function createSessionHost(options: SessionHostOptions): Promise<Se
         }
         if (name === 'evaluate') {
           if (!active) return fail(new Error('Cannot evaluate: no project open.'))
-          return await active.runner.run('evaluate', false)
+          // Honor caller options (e.g. maxSteps); default the required bound if omitted.
+          const evalOptions = { maxSteps: 1000, ...((args as Record<string, unknown> | null) ?? {}) }
+          return await active.runner.run('evaluate', false, evalOptions)
         }
         if (!active) return fail(new Error(`Cannot ${name}: no project open. Call openProject first.`))
         return await active.host.executeTool(name, args)
@@ -1240,6 +1259,7 @@ Make `--workspace` launch the durable host with `tools/list_changed` support and
 
 **Files:**
 - Create: `tools/editor-mcp-server/src/session/adapters.ts` (thin Node exec + Playwright browser shims — the process/browser boundary)
+- Modify: `tools/editor-mcp-server/package.json` (declare the `@playwright/test` dependency the adapter imports)
 - Modify: `tools/editor-mcp-server/src/server.ts` (accept a session host + declare `tools.listChanged`)
 - Modify: `tools/editor-mcp-server/src/main.ts` (`--workspace` → `createSessionHost` + bind notifications)
 - Modify: `tools/editor-mcp-server/src/workspaceHost.ts` (next-steps text)
@@ -1287,8 +1307,8 @@ Create `tools/editor-mcp-server/src/session/adapters.ts`:
 
 ```ts
 import { spawn } from 'node:child_process'
-import { mkdir } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { mkdir, readFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 import type { BrowserSmokeFn, ExecFn } from './runner'
 
 /** Run a command, capturing stdout/stderr and the exit code. The process boundary. */
@@ -1303,46 +1323,66 @@ export const nodeExec: ExecFn = (cmd, args, cwd) =>
     child.on('close', (code) => resolve({ code: code ?? 1, stdout, stderr }))
   })
 
+/** Poll an HTTP endpoint until it answers or the deadline passes. */
+async function waitForServer(url: string, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    try { if ((await fetch(url)).ok) return } catch { /* not up yet */ }
+    if (Date.now() > deadline) throw new Error(`server at ${url} did not become ready`)
+    await new Promise((r) => setTimeout(r, 250))
+  }
+}
+
 /**
  * Boot the built game under Playwright and capture boot/console/frame-time.
- * The browser boundary; exercised end-to-end via `verify:new-game`, not unit tests.
- * Serves `<gameDir>/dist` on an ephemeral port via `vite preview`.
+ * The browser boundary: it drives a real dev server + Chromium, so it has NO
+ * unit coverage and is exercised only by the Task 9 manual smoke. Serves
+ * `<gameDir>/dist` via `vite preview` on the game's declared automata.devPort
+ * and polls readiness (no stdout scraping).
  */
 export const playwrightBrowserSmoke: BrowserSmokeFn = async ({ gameDir, screenshotPath }) => {
   const { chromium } = await import('@playwright/test')
-  const preview = spawn('npx', ['vite', 'preview', '--port', '0', '--strictPort=false'], { cwd: gameDir })
-  const url = await new Promise<string>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('vite preview did not start')), 15_000)
-    preview.stdout.on('data', (d: Buffer) => {
-      const match = /(http:\/\/localhost:\d+)/.exec(d.toString())
-      if (match) { clearTimeout(timer); resolve(match[1]!) }
-    })
-    preview.on('error', reject)
-  })
-  const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
+  const manifest = JSON.parse(await readFile(join(gameDir, 'package.json'), 'utf8')) as { automata?: { devPort?: number } }
+  const port = manifest.automata?.devPort ?? 4173
+  const url = `http://localhost:${port}`
+  const preview = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { cwd: gameDir })
   const consoleErrors: string[] = []
   try {
-    const page = await browser.newPage()
-    page.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push(msg.text()) })
-    page.on('pageerror', (err) => consoleErrors.push(err.message))
-    await page.goto(url, { waitUntil: 'load', timeout: 15_000 })
-    const frameMs = await page.evaluate(() => new Promise<number[]>((resolve) => {
-      const times: number[] = []
-      let last = performance.now()
-      const tick = (t: number) => { times.push(t - last); last = t; if (times.length < 10) requestAnimationFrame(tick); else resolve(times) }
-      requestAnimationFrame(tick)
-    }))
-    await mkdir(dirname(screenshotPath), { recursive: true })
-    await page.screenshot({ path: screenshotPath })
-    return { booted: true, consoleErrors, frameMs, screenshotPath }
+    await waitForServer(url, 15_000)
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
+    try {
+      const page = await browser.newPage()
+      page.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push(msg.text()) })
+      page.on('pageerror', (err) => consoleErrors.push(err.message))
+      await page.goto(url, { waitUntil: 'load', timeout: 15_000 })
+      const frameMs = await page.evaluate(() => new Promise<number[]>((resolve) => {
+        const times: number[] = []
+        let last = performance.now()
+        const tick = (t: number) => { times.push(t - last); last = t; if (times.length < 10) requestAnimationFrame(tick); else resolve(times) }
+        requestAnimationFrame(tick)
+      }))
+      await mkdir(dirname(screenshotPath), { recursive: true })
+      await page.screenshot({ path: screenshotPath })
+      return { booted: true, consoleErrors, frameMs, screenshotPath }
+    } finally {
+      await browser.close()
+    }
   } catch (error) {
     return { booted: false, consoleErrors: [...consoleErrors, error instanceof Error ? error.message : String(error)], frameMs: [], screenshotPath: null }
   } finally {
-    await browser.close()
     preview.kill()
   }
 }
 ```
+
+Then declare the dependency the adapter dynamically imports — it resolves only by workspace hoisting otherwise. In `tools/editor-mcp-server/package.json`, add to `dependencies`:
+
+```json
+    "@playwright/test": "^1.0.0"
+```
+
+Run: `npm install`
+Expected: the lockfile updates and `@automata/editor-mcp-server` gains a direct `@playwright/test` dependency.
 
 - [ ] **Step 6: Wire the server to emit `tools/list_changed`**
 
@@ -1385,13 +1425,13 @@ In `tools/editor-mcp-server/src/main.ts`, replace the workspace branch body:
 Add a protocol-level arg parser near the top of `main.ts` that accepts workspace, session, and project tool names (the durable host serves all three families):
 
 ```ts
-import { parseToolArgs, parseSessionToolArgs, parseWorkspaceToolArgs } from '@automata/contracts'
+import { parseToolArgs, parseSessionToolArgs, parseWorkspaceToolArgs, sessionToolDefs } from '@automata/contracts'
+
+const SESSION_TOOL_NAMES = new Set(sessionToolDefs().map((def) => def.name))
 
 function parseSessionAndWorkspaceArgs(name: string, args: unknown): unknown {
   if (name === 'createGame' || name === 'listGames') return parseWorkspaceToolArgs(name, args)
-  if (['openProject', 'closeProject', 'sessionStatus', 'runBuild', 'runTests', 'browserSmoke'].includes(name)) {
-    return parseSessionToolArgs(name, args)
-  }
+  if (SESSION_TOOL_NAMES.has(name)) return parseSessionToolArgs(name, args)
   return parseToolArgs(name, args) // project authoring tools
 }
 ```
@@ -1416,7 +1456,8 @@ Expected: PASS. (The `adapters.ts` browser path is not unit-tested; that is inte
 ```bash
 git add tools/editor-mcp-server/src/session/adapters.ts tools/editor-mcp-server/src/server.ts \
   tools/editor-mcp-server/src/main.ts tools/editor-mcp-server/src/workspaceHost.ts \
-  tools/editor-mcp-server/tests/workspaceHost.test.ts .gitignore
+  tools/editor-mcp-server/tests/workspaceHost.test.ts tools/editor-mcp-server/package.json \
+  package-lock.json .gitignore
 git commit -m "feat(mcp): launch durable session on --workspace with list_changed + adapters"
 ```
 
@@ -1481,4 +1522,4 @@ git commit -m "docs: mark P5 (persistent MCP build sessions) shipped"
 
 **Type consistency:** `StepResult`/`Finding`/`SessionStore` defined in Task 4 and consumed unchanged in Tasks 5/7. `Step` union (`build|test|browser|evaluate`) defined in Task 5 and mapped from tool names via `RUN_STEPS` (+ explicit `evaluate` route) in Task 7. `ExecFn`/`BrowserSmokeFn` defined in Task 5, implemented in Task 8 (`nodeExec`/`playwrightBrowserSmoke`), injected in Task 7 tests as fakes. `ProjectFileWriter`/`writeProjectFiles` defined in Task 1, consumed in Task 6. `SessionHost.bindNotifications` defined in Task 7, called in Task 8.
 
-**Placeholder scan:** every code step shows real code; commands have expected outcomes; no "TBD"/"similar to Task N". The one deliberately un-unit-tested unit — `adapters.ts` — is called out as the injected process/browser boundary, covered by the Task 9 manual smoke and `verify:new-game`.
+**Placeholder scan:** every code step shows real code; commands have expected outcomes; no "TBD"/"similar to Task N". The one deliberately un-unit-tested unit — `adapters.ts` — is called out as the injected process/browser boundary, exercised only by the Task 9 manual smoke (the browser path has no automated coverage by design).

@@ -95,12 +95,16 @@ closes `a` first. `createGame`'s `nextSteps` changes from *"reconnect with
 
 ```
 .automata/session/           # metadata only; gitignored; pid lockfile guards single-server
-  session.json   # id, createdAt, activeProjectId, schemaVersion
-  results.json   # per-step cache: stepKey -> { inputHash, result, ts, ok }
-  findings.json  # typed findings: { severity, code, message, step, evidence, ts }
-  budgets.json   # wall-time per step, run counts, session age (recorded, not enforced)
+  session.json   # id, createdAt, activeProjectId, schemaVersion, and the state maps:
+                 #   results  -> per-step cache: stepKey -> { step, ok, inputHash, ts, durationMs, ... }
+                 #   findings -> typed: { severity, code, message, step, evidence, ts }
+                 #   budgets  -> per step: { runs, totalMs } (recorded, not enforced)
   log.jsonl      # append-only audit of every tool call and outcome
+  artifacts/     # browser-smoke screenshots
 ```
+
+The result cache, findings, and budgets live inside the single `session.json`
+document (one atomic write per change) rather than in separate files.
 
 `stepKey` is `${gameId}:${step}` where `step ∈ {build, test, browser, evaluate}`.
 Project content is **not** stored here — it lives in
