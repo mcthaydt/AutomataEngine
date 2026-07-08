@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSafeProjectPath, loadProjectFiles, projectFileDocuments } from '../src'
+import { isSafeProjectPath, loadProjectFiles, projectFileDocuments, writeProjectFiles } from '../src'
 import { sampleSnapshot } from './fixtures/sampleProject'
 
 function readerFor(snapshot = sampleSnapshot()) {
@@ -86,5 +86,24 @@ describe('project files', () => {
     const missingResource = sampleSnapshot()
     delete missingResource.resources.tuning
     expect(() => projectFileDocuments(missingResource)).toThrow(/missing resource/i)
+  })
+
+  it('write-then-load round-trips a snapshot through an injected writer', async () => {
+    const snapshot = sampleSnapshot()
+    const map = new Map<string, string>()
+    await writeProjectFiles({ writeText: async (path, text) => { map.set(path, text) } }, snapshot)
+    const loaded = await loadProjectFiles({ readText: async (path) => map.get(path)! })
+    expect(loaded.snapshot).toEqual(snapshot)
+  })
+
+  it('writes canonical documents (manifest-first, trailing newline)', async () => {
+    const map = new Map<string, string>()
+    await writeProjectFiles({ writeText: async (path, text) => { map.set(path, text) } }, sampleSnapshot())
+    expect([...map.keys()]).toEqual([
+      'automata.project.json',
+      'scenes/main.scene.json',
+      'resources/tuning.resource.json'
+    ])
+    expect(map.get('automata.project.json')!.endsWith('\n')).toBe(true)
   })
 })

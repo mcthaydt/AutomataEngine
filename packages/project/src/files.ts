@@ -64,6 +64,18 @@ export async function loadProjectFiles(
   return parseProjectSnapshot(raw, opts)
 }
 
+/** Minimal text writer so callers can back it with fs or a fake. Mirrors ProjectFileReader. */
+export interface ProjectFileWriter {
+  writeText(path: string, text: string): Promise<void>
+}
+
+/** Serialize a snapshot to canonical documents and write each through the injected writer. */
+export async function writeProjectFiles(writer: ProjectFileWriter, snapshot: ProjectSnapshot): Promise<void> {
+  for (const doc of projectFileDocuments(snapshot)) {
+    await writer.writeText(doc.path, doc.text)
+  }
+}
+
 /** Serialize a snapshot into the documents to write, manifest-first then manifest order. */
 export function projectFileDocuments(snapshot: ProjectSnapshot): ProjectFileDocument[] {
   const docs: ProjectFileDocument[] = [{ path: PROJECT_MANIFEST_PATH, text: canonicalJson(snapshot.manifest), kind: 'manifest' }]

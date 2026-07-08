@@ -2,6 +2,10 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Progress: 11% — 1/9 tasks complete.**
+
+> Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
+
 **Goal:** Turn the editor MCP server's `--workspace` mode into a durable build-session host: one long-lived server, one session per repo, that can open/swap a project, persist edits to disk, run and cache build/test/browser/evaluate, and resume across process resets without replaying successful work.
 
 **Architecture:** `public/project` stays the live source of truth (write-through on every edit); a new `.automata/session/` directory holds only metadata (per-step result cache, findings, budgets, audit log). A `SessionHost` composes the existing workspace host (createGame/listGames), an open project host wrapped for write-through, and a `Runner` that owns build/test/browser/evaluate with input-fingerprint caching. Project and run tools appear only while a project is open (`tools/list_changed`); the server rehydrates the active project from disk on restart.
@@ -38,7 +42,7 @@ The inverse of `loadProjectFiles`. Pure serialization lives in `@automata/projec
   - `async function writeProjectFiles(writer: ProjectFileWriter, snapshot: ProjectSnapshot): Promise<void>`
   - `function createProjectDirectoryWriter(projectDir: string): ProjectFileWriter`
 
-- [ ] **Step 1: Write the failing test (pure primitive round-trip)**
+- [x] **Step 1: Write the failing test (pure primitive round-trip)**
 
 Add to `packages/project/tests/files.test.ts`:
 
@@ -65,12 +69,12 @@ it('writes canonical documents (manifest-first, trailing newline)', async () => 
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -w @automata/project -- files`
 Expected: FAIL — `writeProjectFiles` is not exported.
 
-- [ ] **Step 3: Implement the primitive**
+- [x] **Step 3: Implement the primitive**
 
 Append to `packages/project/src/files.ts`:
 
@@ -88,12 +92,12 @@ export async function writeProjectFiles(writer: ProjectFileWriter, snapshot: Pro
 }
 ```
 
-- [ ] **Step 4: Run the pure test to verify it passes**
+- [x] **Step 4: Run the pure test to verify it passes**
 
 Run: `npm test -w @automata/project -- files`
 Expected: PASS.
 
-- [ ] **Step 5: Write the failing test for the Node fs adapter**
+- [x] **Step 5: Write the failing test for the Node fs adapter**
 
 Create `tools/editor-mcp-server/tests/projectWriter.test.ts`:
 
@@ -141,12 +145,12 @@ describe('createProjectDirectoryWriter', () => {
 })
 ```
 
-- [ ] **Step 6: Run it to verify it fails**
+- [x] **Step 6: Run it to verify it fails**
 
 Run: `npm test -w @automata/editor-mcp-server -- projectWriter`
 Expected: FAIL — `createProjectDirectoryWriter` not found.
 
-- [ ] **Step 7: Implement the Node writer**
+- [x] **Step 7: Implement the Node writer**
 
 Create `tools/editor-mcp-server/src/projectWriter.ts`:
 
@@ -172,12 +176,12 @@ export function createProjectDirectoryWriter(projectDir: string): ProjectFileWri
 }
 ```
 
-- [ ] **Step 8: Run both suites to verify pass**
+- [x] **Step 8: Run both suites to verify pass**
 
 Run: `npm test -w @automata/project -- files && npm test -w @automata/editor-mcp-server -- projectWriter`
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/project/src/files.ts packages/project/tests/files.test.ts \
