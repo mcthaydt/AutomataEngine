@@ -27,6 +27,17 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **P5 — Persistent MCP build sessions** (2026-07-08). `automata-editor-mcp
+  --workspace` is now a durable build-session host: one long-lived server, one
+  session per repo. `openProject`/`closeProject` swap the active project and
+  reveal the project authoring + run tools via `tools/list_changed`; every edit
+  writes through to `games/<id>/public/project` (disk stays the source of truth);
+  `runBuild`/`runTests`/`browserSmoke`/`evaluate` cache by input fingerprint; and
+  `.automata/session/` persists results, findings, and budgets so a restarted
+  server rehydrates the active project and its caches without replaying
+  successful work. Spec:
+  [`specs/2026-07-06-persistent-mcp-build-sessions-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-06-persistent-mcp-build-sessions-design.md);
+  plan: [`plans/2026-07-08-persistent-mcp-build-sessions.md`](superpowers/plans/active/2026-07/week-28/2026-07-08-persistent-mcp-build-sessions.md).
 - **P4 — Richer `@automata/game-kit` browser shell** (2026-07-06). The duplicated
   browser boot spine now lives in `game-kit` as `bootGame(setup)` plus
   `createProjectReader` (base-relative asset fetch) and `mountAudio` primitives;
@@ -73,7 +84,7 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 | P2 | M2 | Phase 0 precursor | Schema unification (zod) + agent prompt layer | Shipped |
 | P3 | M3 | Phase 0 (part) | Project-file migrations, formatVersion 2 | Shipped |
 | P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Shipped |
-| P5 | — | Phase 1 | Persistent MCP build sessions | Next |
+| P5 | — | Phase 1 | Persistent MCP build sessions | Shipped |
 | P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
 | P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
 | P8 | — | Standalone | Hygiene | Planned |
@@ -118,7 +129,7 @@ scale.
 - **Exit:** generated projects survive engine evolution and long editing
   sessions; the remaining hardening/game-kit/acceptance tasks are all done.
 
-### Phase 1 — Persistent MCP build sessions (P5) · `Next`
+### Phase 1 — Persistent MCP build sessions (P5) · `Shipped` (2026-07-08)
 
 - **Goal:** an agent can create, reopen, modify, evaluate, and repair a game
   across process and context resets.

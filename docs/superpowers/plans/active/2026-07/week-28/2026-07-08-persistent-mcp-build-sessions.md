@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Progress: 89% — 8/9 tasks complete.**
+**Progress: 100% — 9/9 tasks complete.**
 
 > Execution note (this repo): individual packages have no `test` script and the tool package is named `editor-mcp-server`, so the plan's `npm test -w @automata/…` commands are run instead as `npx vitest run <pattern>` from the repo root, and typecheck as `npm run typecheck -w tools/editor-mcp-server`.
 
@@ -1472,22 +1472,22 @@ git commit -m "feat(mcp): launch durable session on --workspace with list_change
 **Files:**
 - Modify: `docs/ROADMAP.md` (mark P5 shipped once green)
 
-- [ ] **Step 1: Sweep iCloud duplicates**
+- [x] **Step 1: Sweep iCloud duplicates**
 
 Run: `find . -path ./node_modules -prune -o -name "* 2.*" -print -o -name "* 2" -print`
 Expected: no output. Delete any matches.
 
-- [ ] **Step 2: Full CI + coverage**
+- [x] **Step 2: Full CI + coverage**
 
 Run: `npm run ci && npm run coverage`
 Expected: PASS, coverage thresholds met.
 
-- [ ] **Step 3: Clean-clone scaffold acceptance**
+- [x] **Step 3: Clean-clone scaffold acceptance**
 
 Run: `npm run verify:new-game`
 Expected: PASS (validates the changed `createGame` next-steps flow).
 
-- [ ] **Step 4: Manual durable-session smoke (documented, not automated)**
+- [x] **Step 4: Manual durable-session smoke (documented, not automated)**
 
 Run the server against the repo and exercise the lifecycle by hand or from an MCP client:
 
@@ -1497,11 +1497,11 @@ node --import tsx tools/editor-mcp-server/src/main.ts --workspace .
 
 Confirm: `createGame` → `openProject` reveals `addEntity`/`runBuild`; an edit persists to `games/<name>/public/project`; `runBuild` twice returns `skipped:'cached'` the second time; killing and restarting the server rehydrates the active project and `sessionStatus` shows `build: fresh` without rebuilding.
 
-- [ ] **Step 5: Mark P5 shipped in the roadmap**
+- [x] **Step 5: Mark P5 shipped in the roadmap**
 
 In `docs/ROADMAP.md`, move Phase 1 / P5 to the Shipped section (newest first) with the merge commit, and flip its status marker to `Shipped`, following the format of the existing P4 entry.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/ROADMAP.md
