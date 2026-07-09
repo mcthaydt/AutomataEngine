@@ -110,7 +110,8 @@ export async function createSessionHost(options: SessionHostOptions): Promise<Se
     },
     async executeTool(name, args) {
       try {
-        await store.appendLog({ tool: name })
+        // Audit logging is best-effort: a failed log write must never fail the tool call.
+        await store.appendLog({ tool: name }).catch(() => {})
         if (name === 'createGame' || name === 'listGames') return await workspace.executeTool(name, args)
         if (SESSION_CONTROL.has(name)) {
           const input = parseSessionToolArgs(name, args)
@@ -134,9 +135,8 @@ export async function createSessionHost(options: SessionHostOptions): Promise<Se
         }
         if (name === 'evaluate') {
           if (!active) return fail(new Error('Cannot evaluate: no project open.'))
-          // Honor caller options (e.g. maxSteps); default the required bound if omitted.
-          const evalOptions = { maxSteps: 1000, ...((args as Record<string, unknown> | null) ?? {}) }
-          return await active.runner.run('evaluate', false, evalOptions)
+          // The evaluate schema validates args and defaults maxSteps downstream.
+          return await active.runner.run('evaluate', false, args ?? {})
         }
         if (!active) return fail(new Error(`Cannot ${name}: no project open. Call openProject first.`))
         return await active.host.executeTool(name, args)

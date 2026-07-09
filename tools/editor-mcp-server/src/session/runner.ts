@@ -99,6 +99,9 @@ export function createRunner(deps: RunnerDeps): Runner {
     async freshness(step) {
       const cached = deps.store.getResult(deps.gameId, step)
       if (!cached) return 'absent'
+      // A failed run is never fresh: run() refuses to serve a non-ok cache, so
+      // report 'stale' rather than letting sessionStatus mask the failure.
+      if (!cached.ok) return 'stale'
       const current = step === 'evaluate' ? await inputHash(step, cached.options) : await inputHash(step)
       return current === cached.inputHash ? 'fresh' : 'stale'
     }

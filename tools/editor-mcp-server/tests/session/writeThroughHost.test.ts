@@ -39,4 +39,20 @@ describe('createWriteThroughHost', () => {
     await host.executeTool('getProject', {})
     expect(writer.writeText).not.toHaveBeenCalled()
   })
+
+  it('prunes files for removed scenes/resources after a changing write', async () => {
+    const writer = { writeText: vi.fn(async () => {}), removeStale: vi.fn(async () => {}) }
+    const host = createWriteThroughHost(fakeInner(), writer)
+    await host.executeTool('removeResource', { resourceId: 'gone' })
+    // Empty manifest → the only surviving document is the manifest itself.
+    expect(writer.removeStale).toHaveBeenCalledWith(['automata.project.json'])
+  })
+
+  it('does not prune when nothing changed', async () => {
+    const writer = { writeText: vi.fn(async () => {}), removeStale: vi.fn(async () => {}) }
+    const inner = fakeInner({ executeTool: vi.fn(async () => ({ ok: true, content: { applied: 'x', changed: false } })) })
+    const host = createWriteThroughHost(inner, writer)
+    await host.executeTool('removeResource', {})
+    expect(writer.removeStale).not.toHaveBeenCalled()
+  })
 })

@@ -12,6 +12,10 @@ describe('project evaluation contract', () => {
     expect(projectEvaluationOptionsSchema.parse({ maxSteps: 180 })).toEqual({ maxSteps: 180 })
   })
 
+  it('defaults maxSteps when omitted so evaluate is callable without an explicit bound', () => {
+    expect(projectEvaluationOptionsSchema.parse({})).toEqual({ maxSteps: 1000 })
+  })
+
   it('rejects invalid outcomes, metrics, steps, and max-step options', () => {
     expect(projectEvaluationResultSchema.safeParse({ outcome: 'won', score: 1, metrics: {}, steps: 1 }).success).toBe(false)
     expect(projectEvaluationResultSchema.safeParse({ outcome: 'passed', score: 1, metrics: { nested: {} }, steps: 1 }).success).toBe(false)

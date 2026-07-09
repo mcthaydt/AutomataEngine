@@ -74,6 +74,15 @@ describe('Runner', () => {
     await store.release()
   })
 
+  it('reports a failed step as stale (not fresh) so status never masks a failure', async () => {
+    const root = await gameRepo()
+    const failing: ExecFn = async () => ({ code: 1, stdout: '', stderr: 'boom' })
+    const { store, runner } = await deps(root, failing)()
+    await runner.run('build', false) // fails; cached with ok:false, inputs unchanged
+    expect(await runner.freshness('build')).toBe('stale')
+    await store.release()
+  })
+
   it('runs the browser smoke once then serves it from the dist-fingerprint cache', async () => {
     const root = await gameRepo()
     const smoke = vi.fn(browser)

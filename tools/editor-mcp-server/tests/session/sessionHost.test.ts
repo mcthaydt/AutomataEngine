@@ -1,13 +1,30 @@
-import { mkdtemp, rm } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { createSessionHost } from '../../src/session/sessionHost'
 import type { ExecFn } from '../../src/session/runner'
 
 // session -> tests -> editor-mcp-server -> tools -> repo root.
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
+const GAMES = ['monkey-ball', 'pulsebreak']
+
+// The session points repoRoot at a throwaway COPY of the games, never the real
+// monorepo: openProject wires a live write-through writer at
+// <repoRoot>/games/<id>/public/project, so any authoring edit here must land in
+// the copy, never the checked-in game files. Game registrations still resolve
+// because loadProjectRegistration imports the installed package by name.
+let sessionRepo: string
+beforeAll(async () => {
+  sessionRepo = await mkdtemp(join(tmpdir(), 'automata-session-repo-'))
+  for (const id of GAMES) {
+    await mkdir(join(sessionRepo, 'games', id), { recursive: true })
+    await cp(join(REPO_ROOT, 'games', id, 'package.json'), join(sessionRepo, 'games', id, 'package.json'))
+    await cp(join(REPO_ROOT, 'games', id, 'public'), join(sessionRepo, 'games', id, 'public'), { recursive: true })
+  }
+})
+afterAll(async () => { await rm(sessionRepo, { recursive: true, force: true }) })
 
 const stateDirs: string[] = []
 async function stateDir(): Promise<string> {
@@ -20,7 +37,7 @@ afterEach(async () => { await Promise.all(stateDirs.splice(0).map((d) => rm(d, {
 const exec: ExecFn = async () => ({ code: 0, stdout: 'ok', stderr: '' })
 const browserSmoke = async () => ({ booted: true, consoleErrors: [], frameMs: [16], screenshotPath: null })
 const opts = (over: Partial<Parameters<typeof createSessionHost>[0]> = {}) =>
-  ({ repoRoot: REPO_ROOT, exec, browserSmoke, ...over })
+  ({ repoRoot: sessionRepo, exec, browserSmoke, ...over })
 
 describe('SessionHost (real monorepo, fake exec/browser)', () => {
   it('hides project + run tools until a project is open, then reveals them', async () => {
@@ -100,6 +117,32 @@ describe('SessionHost (real monorepo, fake exec/browser)', () => {
     await expect(host.readResource('editor://project')).rejects.toThrow(/no project open/i)
     await host.executeTool('openProject', { gameId: 'monkey-ball' })
     expect(await host.readResource('editor://project')).toBeTruthy()
+    await host.close()
+  })
+
+  it('persists authoring edits to the session repo copy, never the checked-in game files', async () => {
+    const realScene = join(REPO_ROOT, 'games/monkey-ball/public/project/scenes/w1-l1.scene.json')
+    const copyScene = join(sessionRepo, 'games/monkey-ball/public/project/scenes/w1-l1.scene.json')
+    const realBefore = await readFile(realScene, 'utf8')
+    const copyBefore = await readFile(copyScene, 'utf8')
+
+    const host = await createSessionHost(opts({ stateDir: await stateDir() }))
+    await host.executeTool('openProject', { gameId: 'monkey-ball' })
+    const edit = await host.executeTool('addEntity', {
+      sceneId: 'w1-l1',
+      entity: { id: 'review-probe', name: 'review-probe', enabled: true, components: [] }
+    })
+    expect(edit.ok).toBe(true)
+    expect(await readFile(copyScene, 'utf8')).not.toBe(copyBefore) // the edit landed in the copy
+    expect(await readFile(realScene, 'utf8')).toBe(realBefore) // the real game files are untouched
+    await host.close()
+  })
+
+  it('keeps serving tools when the audit log cannot be written', async () => {
+    const dir = await stateDir()
+    await mkdir(join(dir, 'log.jsonl')) // make the log path a directory so appendFile fails
+    const host = await createSessionHost(opts({ stateDir: dir }))
+    expect(await host.executeTool('listGames', {})).toMatchObject({ ok: true })
     await host.close()
   })
 

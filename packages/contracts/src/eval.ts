@@ -11,8 +11,10 @@ export const projectEvaluationResultSchema = z.object({
 })
 export type ProjectEvaluationResult = z.infer<typeof projectEvaluationResultSchema>
 
-/** Bounded evaluation request accepted by the generic evaluate tool. */
+/** Bounded evaluation request accepted by the generic evaluate tool. Omitting
+ * maxSteps applies a generous default so callers can evaluate without a bound;
+ * the advertised tool schema reflects this (the field is optional, default 1000). */
 export const projectEvaluationOptionsSchema = z.object({
-  maxSteps: z.number().int().positive()
+  maxSteps: z.number().int().positive().default(1000)
 })
 export type ProjectEvaluationOptions = z.infer<typeof projectEvaluationOptionsSchema>
