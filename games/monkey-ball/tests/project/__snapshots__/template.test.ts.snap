@@ -1,0 +1,193 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createMonkeyBallTemplate > produces a stable canonical snapshot 1`] = `
+{
+  "manifest": {
+    "entrySceneId": "w1-l1",
+    "formatVersion": 2,
+    "gameId": "monkey-ball",
+    "id": "monkey-ball",
+    "name": "Monkey Ball",
+    "resources": [
+      {
+        "id": "physics",
+        "path": "resources/physics.resource.json",
+        "typeId": "monkey-ball.physics",
+      },
+      {
+        "id": "worlds",
+        "path": "resources/worlds.resource.json",
+        "typeId": "monkey-ball.worlds",
+      },
+    ],
+    "scenes": [
+      {
+        "id": "w1-l1",
+        "path": "scenes/w1-l1.scene.json",
+      },
+    ],
+  },
+  "resources": {
+    "physics": {
+      "data": {
+        "ball": {
+          "friction": 0.6,
+          "radius": 0.5,
+        },
+        "gravity": 9.81,
+        "maxTiltRad": 0.20943951023931953,
+        "tiltSmooth": 0.15,
+      },
+      "id": "physics",
+      "typeId": "monkey-ball.physics",
+    },
+    "worlds": {
+      "data": {
+        "worlds": [
+          {
+            "id": "w1",
+            "levels": [
+              "w1-l1",
+            ],
+            "name": "Grassland",
+          },
+        ],
+      },
+      "id": "worlds",
+      "typeId": "monkey-ball.worlds",
+    },
+  },
+  "scenes": {
+    "w1-l1": {
+      "entities": [
+        {
+          "components": [
+            {
+              "data": {
+                "position": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 6,
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1,
+                },
+              },
+              "id": "transform",
+              "typeId": "core.transform",
+            },
+            {
+              "data": {
+                "fallY": -10,
+                "timeLimitS": 60,
+              },
+              "id": "spawn",
+              "typeId": "monkey-ball.spawn",
+            },
+          ],
+          "enabled": true,
+          "id": "marker:spawn",
+          "name": "Spawn",
+        },
+        {
+          "components": [
+            {
+              "data": {
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "z": -6,
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1,
+                },
+              },
+              "id": "transform",
+              "typeId": "core.transform",
+            },
+            {
+              "data": {},
+              "id": "goal",
+              "typeId": "monkey-ball.goal",
+            },
+          ],
+          "enabled": true,
+          "id": "marker:goal",
+          "name": "Goal",
+        },
+        {
+          "components": [
+            {
+              "data": {
+                "position": {
+                  "x": 0,
+                  "y": -0.25,
+                  "z": 0,
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1,
+                },
+              },
+              "id": "transform",
+              "typeId": "core.transform",
+            },
+            {
+              "data": {
+                "shape": "box",
+                "size": {
+                  "x": 8,
+                  "y": 0.5,
+                  "z": 16,
+                },
+              },
+              "id": "primitive",
+              "typeId": "core.primitive",
+            },
+            {
+              "data": {
+                "color": "#7ec850",
+              },
+              "id": "surface",
+              "typeId": "core.surface",
+            },
+            {
+              "data": {
+                "friction": 0.6,
+                "shape": "box",
+              },
+              "id": "collider",
+              "typeId": "core.collider",
+            },
+          ],
+          "enabled": true,
+          "id": "geometry:0",
+          "name": "Box 1",
+        },
+      ],
+      "id": "w1-l1",
+      "name": "First Roll",
+    },
+  },
+}
+`;
