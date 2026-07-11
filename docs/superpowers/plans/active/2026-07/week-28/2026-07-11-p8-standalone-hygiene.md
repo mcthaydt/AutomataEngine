@@ -13,7 +13,7 @@
 - Keep the engine boundary intact: `games/*` and `tools/*` import engine APIs only from `@automata/engine`; do not reach into engine internals. (AGENTS.md)
 - Games, tools, and editor code must not import `zod` directly — use `z` re-exported from `@automata/project`. (AGENTS.md; lint-enforced)
 - Use TDD: add or update focused tests before implementation when behavior changes.
-- Run `npm run ci` (`lint` + `typecheck` + `test`) before claiming a task is ready; run `npm run coverage` for the engine-adjacent test changes in Tasks A1/A3.
+- Run `npm run ci` (`lint` + `typecheck` + `test`) before claiming a task is ready. Run `npm run coverage` only in **Task A4** — after the legacy source is deleted; running it earlier (while `legacyImporter.ts`/`legacyTypes.ts` exist with their tests removed) fails the 90/90 thresholds on now-uncovered legacy code.
 - Mark each step off in this document as it completes; make the documented commit at the end of each task.
 - Sweep for iCloud `" 2"` duplicate files before each commit (`find . -name "* 2.*" -o -name "* 2" | grep -v node_modules`).
 - The level editor's dev-server wiring is a thin shim (per AGENTS.md's shim policy); the pure path-resolution logic it calls IS unit-tested.
@@ -66,7 +66,7 @@ describe('createMonkeyBallTemplate', () => {
 
 - [ ] **Step 2: Run the test to capture the baseline snapshot**
 
-Run: `npx vitest run -w monkey-ball template.test`
+Run: `npx vitest run games/monkey-ball/tests/project/template.test.ts`
 Expected: PASS (2 tests). Vitest writes `tests/project/__snapshots__/template.test.ts.snap` from the *current* importer-based implementation — this is the frozen golden.
 
 - [ ] **Step 3: Commit the baseline (test + snapshot) before refactoring**
@@ -157,7 +157,7 @@ export function createMonkeyBallTemplate(): ProjectSnapshot {
 
 - [ ] **Step 5: Verify the refactor preserves the snapshot and the suite**
 
-Run: `npx vitest run -w monkey-ball template.test`
+Run: `npx vitest run games/monkey-ball/tests/project/template.test.ts`
 Expected: PASS with no snapshot update (the new literal reproduces the frozen golden byte-for-byte).
 
 Run: `npm run ci`
@@ -224,7 +224,37 @@ In `tools/level-editor/src/editorApp.ts`:
 - Delete `import type { LegacyMonkeyBallRecovery } from './legacyAutosave'`.
 - Delete the `legacyRecovery?: LegacyMonkeyBallRecovery | null` field from the options interface (around line 65).
 - Delete the entire `if (options.legacyRecovery) { ... }` block that builds the "Recover Monkey Ball Autosave" button (around lines 184–196).
-- If `openSession` had a 4th `recovery` parameter used only by this branch, leave `openSession` as-is (its other callers pass 3 args); do not change unrelated call sites.
+- Remove `openSession`'s now-orphaned `recovery` parameter and its uses. This is required, not optional: the parameter is typed `recovery?: LegacyMonkeyBallRecovery`, which references the type import just deleted — leaving it fails `npm run typecheck`. The recovery branch was its only caller that passed a value, so drop the parameter and inline its dead effects. Change the `openSession` definition from:
+
+    ```ts
+    const openSession = async (
+      registration: RegisteredEditorProject,
+      snapshot: ProjectSnapshot,
+      storage: ProjectStoragePort | null,
+      recovery?: LegacyMonkeyBallRecovery,
+      fromVersion: number = PROJECT_FORMAT_VERSION
+    ): Promise<void> => {
+    ```
+    to:
+    ```ts
+    const openSession = async (
+      registration: RegisteredEditorProject,
+      snapshot: ProjectSnapshot,
+      storage: ProjectStoragePort | null,
+      fromVersion: number = PROJECT_FORMAT_VERSION
+    ): Promise<void> => {
+    ```
+    Inside its `createSession({ ... })` call, change `initiallyDirty: Boolean(recovery)` to `initiallyDirty: false` and delete the `onPersisted: recovery?.markPersisted,` line (both previously always resolved to `false`/`undefined` for every non-recovery caller, so behavior is unchanged).
+- Update the one affected call site in `openWorkspace`, which passed `undefined` for the removed 4th parameter: change
+
+    ```ts
+    await openSession(registration, snapshot, opened.storage, undefined, opened.fromVersion)
+    ```
+    to
+    ```ts
+    await openSession(registration, snapshot, opened.storage, opened.fromVersion)
+    ```
+    The create-project call site (`openSession(registration, snapshot, null)`) already passes three arguments and is unaffected.
 
 - [ ] **Step 5: Verify no dangling references**
 
@@ -253,7 +283,8 @@ Point the behavioral tests at the shipped canonical `public/project` (via a new 
 - Modify: `games/monkey-ball/tests/helpers/data.ts` (drop the legacy-fixture branch)
 - Modify (re-source): `tests/game/gameplay.test.ts`, `tests/game/gameplay-m8.test.ts`, `tests/game/gameplay-m10.test.ts`, `tests/level/buildWorld.test.ts`, `tests/level/headlessPlay.test.ts`, `tests/level/seekGoalPlay.test.ts`
 - Modify (type-only repoint): `tests/ui/levelSelect.test.ts`, `tests/content/levels.test.ts`, `tests/state/progress.test.ts`, `tests/state/unlocks.test.ts`, `tests/systems/tiltControl.test.ts`, `tests/systems/timer.test.ts`, `tests/systems/fallOff.test.ts`
-- Delete: `tests/data/config.test.ts`, `tests/data/level.test.ts`, `tests/project/legacyImporter.test.ts`, `tests/project/compiler.test.ts`, `tests/project/content.test.ts`
+- Delete: `tests/data/config.test.ts`, `tests/data/level.test.ts`, `tests/project/legacyImporter.test.ts`, `tests/project/content.test.ts`
+- Rewrite (drop the legacy round-trip, keep compiler branch coverage): `tests/project/compiler.test.ts`
 
 (All test paths are under `games/monkey-ball/`.)
 
@@ -325,17 +356,96 @@ The uniform transform per file:
     - `tests/level/headlessPlay.test.ts`: replace the `const tuning = toPhysicsTuning(...)` line (line 10) with `const tuning = canonical.tuning`.
     - `tests/level/seekGoalPlay.test.ts`: replace the `const tuning = toPhysicsTuning(...)` line (line 11) with `const tuning = canonical.tuning`, and repoint its `type Level` import (line 6) to `../../src/project/types`.
 
-  `canonical.levels['w1-l1']` is the compiled shipped level (equivalent to the old fixture for these physics/geometry/timer assertions); `canonical.tuning` is the compiled shipped physics tuning.
+  `canonical.tuning` equals the old `toPhysicsTuning(physics.toml)` value exactly (the shipped physics resource was generated from it). `canonical.levels['w1-l1']` is the **compiled** level, which differs from the raw `parseData(levelKind, ...)` fixture in two ways: it carries compiler-assigned `uid`s (e.g. `geometry:0`, `entity:0`) and it omits zero rotations rather than storing `rot: [0,0,0]`. For physics/geometry/timer *behavior* these are equivalent, but any assertion that deep-equals a whole level object, counts keyed entities, or reads a specific `uid`/`rot` must be adjusted to the compiled shape. Do not assume equivalence — confirm each file in Step 6.
 
-- [ ] **Step 4: Delete the five legacy-only test files**
+- [ ] **Step 4: Delete the four legacy-only test files**
 
 These test only the legacy parsers/importer (whose replacements are covered by `runtimeParity.test.ts`, `levelLifecycle.test.ts`, and the canonical load path):
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine/games/monkey-ball
 git rm tests/data/config.test.ts tests/data/level.test.ts \
-       tests/project/legacyImporter.test.ts tests/project/compiler.test.ts tests/project/content.test.ts
+       tests/project/legacyImporter.test.ts tests/project/content.test.ts
 ```
+
+- [ ] **Step 4b: Rewrite `compiler.test.ts` to keep compiler coverage without the importer**
+
+Do **not** delete `compiler.test.ts` outright. It currently round-trips through the deleted importer, but the shipped `public/project` contains **no cylinder geometry**, so deleting it would leave `compileMonkeyBallProject`'s cylinder branch (`compiler.ts` ~line 76) and non-zero-rotation branch (~line 70) uncovered — failing the `branches: 90` threshold. Replace the entire contents of `games/monkey-ball/tests/project/compiler.test.ts` with a canonical assertion plus a synthetic rotated-cylinder case:
+
+```ts
+import { CORE_TYPE_IDS, type ProjectSnapshot } from '@automata/project'
+import { describe, expect, it } from 'vitest'
+import { compileMonkeyBallProject } from '../../src/project/compiler'
+import { MONKEY_BALL_TYPE_IDS } from '../../src/project/types'
+import { loadCanonicalProject } from '../helpers/project'
+
+/** A minimal snapshot with a rotated cylinder — the one shape the shipped project omits. */
+function cylinderSnapshot(): ProjectSnapshot {
+  const transform = (
+    position: { x: number; y: number; z: number },
+    rotation = { x: 0, y: 0, z: 0 }
+  ) => ({
+    id: 'transform',
+    typeId: CORE_TYPE_IDS.transform,
+    data: { position, rotation, scale: { x: 1, y: 1, z: 1 } }
+  })
+  return {
+    manifest: {
+      formatVersion: 2, id: 'mb', name: 'MB', gameId: 'monkey-ball', entrySceneId: 's1',
+      scenes: [{ id: 's1', path: 'scenes/s1.scene.json' }],
+      resources: [
+        { id: 'physics', typeId: MONKEY_BALL_TYPE_IDS.physics, path: 'resources/physics.resource.json' },
+        { id: 'worlds', typeId: MONKEY_BALL_TYPE_IDS.worlds, path: 'resources/worlds.resource.json' }
+      ]
+    },
+    scenes: {
+      s1: {
+        id: 's1', name: 'S1',
+        entities: [
+          { id: 'marker:spawn', name: 'Spawn', enabled: true, components: [
+            transform({ x: 0, y: 1, z: 0 }),
+            { id: 'spawn', typeId: MONKEY_BALL_TYPE_IDS.spawn, data: { timeLimitS: 60, fallY: -10 } }
+          ] },
+          { id: 'marker:goal', name: 'Goal', enabled: true, components: [
+            transform({ x: 0, y: 0, z: -6 }),
+            { id: 'goal', typeId: MONKEY_BALL_TYPE_IDS.goal, data: {} }
+          ] },
+          { id: 'geometry:0', name: 'Cyl', enabled: true, components: [
+            transform({ x: 0, y: 0, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 }),
+            { id: 'primitive', typeId: CORE_TYPE_IDS.primitive, data: { shape: 'cylinder', size: { x: 4, y: 2, z: 4 } } },
+            { id: 'surface', typeId: CORE_TYPE_IDS.surface, data: { color: '#abcdef' } },
+            { id: 'collider', typeId: CORE_TYPE_IDS.collider, data: { shape: 'cylinder', friction: 0.5 } }
+          ] }
+        ]
+      }
+    },
+    resources: {
+      physics: { id: 'physics', typeId: MONKEY_BALL_TYPE_IDS.physics, data: { maxTiltRad: 0.2, tiltSmooth: 0.15, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 } } },
+      worlds: { id: 'worlds', typeId: MONKEY_BALL_TYPE_IDS.worlds, data: { worlds: [{ id: 'w', name: 'W', levels: ['s1'] }] } }
+    }
+  }
+}
+
+describe('compileMonkeyBallProject', () => {
+  it('compiles every shipped level in world order', async () => {
+    const project = await loadCanonicalProject()
+    expect(Object.keys(project.levels)).toEqual(['w1-l1', 'w1-l2', 'w1-l3', 'w2-l1', 'w2-l2', 'w2-l3'])
+    expect(project.levels['w1-l1']!.geometry.length).toBeGreaterThan(0)
+  })
+
+  it('reconstructs cylinder geometry with radius/height and non-zero rotation', () => {
+    const geometry = compileMonkeyBallProject(cylinderSnapshot()).levels.s1!.geometry[0]!
+    expect(geometry.shape).toBe('cylinder')
+    if (geometry.shape === 'cylinder') {
+      expect(geometry.radius).toBe(2) // size.x / 2
+      expect(geometry.height).toBe(2) // size.y
+    }
+    expect(geometry.rot).toBeDefined()
+  })
+})
+```
+
+(If `npm run coverage` in A4 still flags an uncovered `compiler.ts` branch, extend `cylinderSnapshot` to exercise it rather than lowering the threshold.)
 
 - [ ] **Step 5: Slim `tests/helpers/data.ts` to runtime data only**
 
@@ -367,8 +477,10 @@ export async function fsFetchText(url: string): Promise<string> {
 Run: `grep -rn "legacyTypes\|legacyImporter\|fixtures/legacy" games/monkey-ball/tests`
 Expected: no matches.
 
-Run: `npm run ci && npm run coverage`
+Run: `npm run ci`
 Expected: PASS. (The re-sourced behavioral tests assert identical outcomes; deleted tests only covered removed parsers.)
+
+Do **not** run `npm run coverage` in this task. `legacyImporter.ts` and `legacyTypes.ts` still exist here but their tests were just deleted, so the thresholds in `vitest.config.ts` (`lines: 90, branches: 90`) would fail on the now-uncovered legacy source. Coverage is validated in Task A4 Step 6, after that source is removed.
 
 - [ ] **Step 7: Commit**
 
@@ -415,7 +527,7 @@ describe('legacy surface is retired', () => {
 
 - [ ] **Step 2: Run it to confirm it fails**
 
-Run: `npx vitest run -w monkey-ball noLegacySurface`
+Run: `npx vitest run games/monkey-ball/tests/project/noLegacySurface.test.ts`
 Expected: FAIL (both symbols currently re-exported from `index.ts`).
 
 - [ ] **Step 3: Remove the legacy re-exports from the barrel**
@@ -447,7 +559,7 @@ In `games/monkey-ball/src/project/types.ts`, delete the `LegacyMonkeyBallProject
 Run: `grep -rn "legacyImporter\|legacyTypes\|LegacyMonkeyBallProjectInput\|build-project\|fixtures/legacy" games/monkey-ball tools`
 Expected: no matches.
 
-Run: `npx vitest run -w monkey-ball noLegacySurface`
+Run: `npx vitest run games/monkey-ball/tests/project/noLegacySurface.test.ts`
 Expected: PASS.
 
 Run: `npm run ci && npm run coverage`
@@ -468,15 +580,17 @@ git commit -m "chore(monkey-ball): delete the legacy importer, types, generator,
 Replace the hardcoded `publicDir: '../../games/monkey-ball/public'` with a game-scoped Vite dev-server middleware that serves `/games/<id>/public/<path>` for any registered game, and scope each registration's `readText` to its own game so no game is privileged.
 
 **Files:**
-- Create: `tools/level-editor/dev-assets.ts`
+- Create: `tools/level-editor/src/dev-assets.ts`
 - Create: `tools/level-editor/tests/devAssets.test.ts`
 - Create: `tools/level-editor/tests/projectCatalog.test.ts`
 - Modify: `tools/level-editor/vite.config.ts`
 - Modify: `tools/level-editor/src/projectCatalog.ts`
 
+(`dev-assets.ts` lives under `src/` so it is inside the level-editor's tsconfig/lint `include`; it is game-agnostic, so `boundaries.test.ts` still passes.)
+
 **Interfaces:**
 - Consumes: `createProjectCatalog({ readText })` and its per-registration `readText`.
-- Produces: `resolveGameAssetPath(repoRoot: string, urlPath: string): string | null` (from `dev-assets.ts`) and `gameIdFromEntryModule(modulePath: string): string` (from `projectCatalog.ts`).
+- Produces: `resolveGameAssetPath(repoRoot: string, urlPath: string): string | null` (from `src/dev-assets.ts`); `gameIdFromEntryModule(modulePath: string): string` and `publicReadPath(gameId: string, path: string): string` (from `src/projectCatalog.ts`).
 
 - [ ] **Step 1: Write the failing unit tests**
 
@@ -484,7 +598,7 @@ Create `tools/level-editor/tests/devAssets.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { resolveGameAssetPath } from '../dev-assets'
+import { resolveGameAssetPath } from '../src/dev-assets'
 
 const root = '/repo'
 
@@ -519,7 +633,7 @@ Create `tools/level-editor/tests/projectCatalog.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { gameIdFromEntryModule } from '../src/projectCatalog'
+import { gameIdFromEntryModule, publicReadPath } from '../src/projectCatalog'
 
 describe('gameIdFromEntryModule', () => {
   it('extracts the game id from a discovered editor entry path', () => {
@@ -531,16 +645,26 @@ describe('gameIdFromEntryModule', () => {
     expect(() => gameIdFromEntryModule('../nope/editor.ts')).toThrow()
   })
 })
+
+describe('publicReadPath', () => {
+  it('scopes a public-relative read to the game and matches the dev middleware contract', () => {
+    expect(publicReadPath('pulsebreak', 'data/archetypes/standard.yaml'))
+      .toBe('/games/pulsebreak/public/data/archetypes/standard.yaml')
+    // Must satisfy resolveGameAssetPath's `/games/<id>/public/<rest>` shape.
+    expect(publicReadPath('monkey-ball', 'project/automata.project.json'))
+      .toMatch(/^\/games\/monkey-ball\/public\//)
+  })
+})
 ```
 
 - [ ] **Step 2: Run the tests to confirm they fail**
 
-Run: `npx vitest run -w level-editor devAssets projectCatalog`
-Expected: FAIL — `../dev-assets` does not exist and `gameIdFromEntryModule` is not exported.
+Run: `npx vitest run tools/level-editor/tests/devAssets.test.ts tools/level-editor/tests/projectCatalog.test.ts`
+Expected: FAIL — `../src/dev-assets` does not exist and `gameIdFromEntryModule`/`publicReadPath` are not exported.
 
 - [ ] **Step 3: Create the asset-path resolver**
 
-Create `tools/level-editor/dev-assets.ts`:
+Create `tools/level-editor/src/dev-assets.ts`:
 
 ```ts
 import { resolve, sep } from 'node:path'
@@ -573,6 +697,14 @@ export function gameIdFromEntryModule(modulePath: string): string {
   return match[1]!
 }
 
+/**
+ * Build the dev-server URL for a game's public-relative asset. This is the exact
+ * contract `src/dev-assets.ts#resolveGameAssetPath` serves; keep them in sync.
+ */
+export function publicReadPath(gameId: string, path: string): string {
+  return `/games/${gameId}/public/${path}`
+}
+
 /** Register every discovered game once and expose stable, game-ID based lookup. */
 export async function createProjectCatalog(
   dependencies: ProjectCatalogDependencies
@@ -581,7 +713,7 @@ export async function createProjectCatalog(
   for (const [modulePath, module] of Object.entries(editorEntryModules)) {
     // Registry loaders take public-relative paths; serve each game's own public tree.
     const gameId = gameIdFromEntryModule(modulePath)
-    const deps = { readText: (path: string) => dependencies.readText(`/games/${gameId}/public/${path}`) }
+    const deps = { readText: (path: string) => dependencies.readText(publicReadPath(gameId, path)) }
     const loader = resolveRegistrationLoader(module, 'loadEditorRegistration', modulePath)
     registrations.push(registerEditorProject(await loader(deps)))
   }
@@ -599,7 +731,7 @@ Replace the contents of `tools/level-editor/vite.config.ts` with:
 import { readFile, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import { resolveGameAssetPath } from './dev-assets'
+import { resolveGameAssetPath } from './src/dev-assets'
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
   automata: { devPort: number }
@@ -636,7 +768,7 @@ export default defineConfig({
 
 - [ ] **Step 6: Run tests and confirm the boundary check still passes**
 
-Run: `npx vitest run -w level-editor devAssets projectCatalog`
+Run: `npx vitest run tools/level-editor/tests/devAssets.test.ts tools/level-editor/tests/projectCatalog.test.ts`
 Expected: PASS.
 
 Run: `npm run ci`
@@ -729,4 +861,6 @@ git commit -m "docs: mark P8 (standalone hygiene) shipped"
 
 **Placeholder scan:** No TBD/TODO/"handle edge cases"; every code step shows complete code; every file list uses exact paths. ✅
 
-**Type consistency:** `loadCanonicalProject(): Promise<CompiledMonkeyBallProject>` returns `{ tuning, manifest, levels }` used consistently in A3. `resolveGameAssetPath(repoRoot, urlPath)` and `gameIdFromEntryModule(modulePath)` signatures match between B1 tests and implementations. `createMonkeyBallTemplate(): ProjectSnapshot` signature unchanged across A1. ✅
+**Type consistency:** `loadCanonicalProject(): Promise<CompiledMonkeyBallProject>` returns `{ tuning, manifest, levels }` used consistently in A3 and the rewritten `compiler.test.ts`. `resolveGameAssetPath(repoRoot, urlPath)`, `gameIdFromEntryModule(modulePath)`, and `publicReadPath(gameId, path)` signatures match between B1 tests and implementations; `publicReadPath` composes exactly the `/games/<id>/public/<rest>` shape `resolveGameAssetPath` parses. `createMonkeyBallTemplate(): ProjectSnapshot` signature unchanged across A1. `openSession` loses its `recovery` parameter in A2, with the `openWorkspace` call site updated to match. ✅
+
+**Post-review fixes (applied):** A2 removes `openSession`'s `recovery` param (was a typecheck break); coverage moved from A3 to A4 (legacy source uncovered otherwise); `compiler.test.ts` is rewritten, not deleted, to keep the cylinder/rotation branches (shipped project has no cylinders); A3's level-equivalence claim is qualified (compiled uids/rot differ from the raw fixture); B1 adds a `publicReadPath` unit test for the readText contract; `dev-assets.ts` moved under `src/`; `vitest -w <pkg>` commands replaced with explicit file paths. ✅
