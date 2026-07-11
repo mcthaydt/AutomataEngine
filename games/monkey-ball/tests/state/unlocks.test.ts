@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { WorldsManifest } from '../../src/project/legacyTypes'
+import type { WorldsManifest } from '../../src/project/types'
 import { isLevelUnlocked, isWorldUnlocked } from '../../src/state/unlocks'
 
 const manifest: WorldsManifest = {

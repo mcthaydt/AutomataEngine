@@ -5,19 +5,18 @@ import {
 } from '@automata/engine'
 import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
-import { levelKind } from '../../src/project/legacyTypes'
 import { createGameStore } from '../../src/state/root'
 import { readDataFile } from '../helpers/data'
-import { physicsTuningKind, toPhysicsTuning, type PhysicsTuning } from '../../src/project/legacyTypes'
+import type { PhysicsTuning } from '../../src/project/types'
+import { loadCanonicalProject } from '../helpers/project'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
-const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const canonical = await loadCanonicalProject()
+const level = canonical.levels['w1-l1']!
 const tuning: PhysicsTuning = {
   maxTiltRad: (12 * Math.PI) / 180, tiltSmooth: 1, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 }
 }
-const shippedTuning = toPhysicsTuning(
-  parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml')
-)
+const shippedTuning = canonical.tuning
 async function startGame(input: InputSource) {
   const physics = await createRapierPhysics()
   const render = createNullRenderer()

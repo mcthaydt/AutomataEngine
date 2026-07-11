@@ -2,13 +2,13 @@
 import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData } from '@automata/engine'
 import { runHeadlessPlay } from '../../src/level/headlessPlay'
-import { levelKind } from '../../src/project/legacyTypes'
-import { physicsTuningKind, toPhysicsTuning } from '../../src/project/legacyTypes'
 import { readDataFile } from '../helpers/data'
+import { loadCanonicalProject } from '../helpers/project'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
-const tuning = toPhysicsTuning(parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml'))
-const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const canonical = await loadCanonicalProject()
+const tuning = canonical.tuning
+const level = canonical.levels['w1-l1']!
 
 describe('runHeadlessPlay', () => {
   it('with no input the ball rests and the run is incomplete', async () => {

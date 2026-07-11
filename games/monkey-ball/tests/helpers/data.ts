@@ -4,12 +4,10 @@ import { fileURLToPath } from 'node:url'
 
 const gameRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const runtimeDataRoot = resolve(gameRoot, 'public/data')
-const legacyDataRoot = resolve(gameRoot, 'tests/fixtures/legacy')
 
-/** Read the retained runtime archetypes or quarantined pre-project fixtures. */
+/** Read a shipped runtime data file (e.g. `archetypes/standard.yaml`). */
 export function readDataFile(rel: string): string {
-  const root = rel.startsWith('archetypes/') ? runtimeDataRoot : legacyDataRoot
-  return readFileSync(resolve(root, rel), 'utf8')
+  return readFileSync(resolve(runtimeDataRoot, rel), 'utf8')
 }
 
 /** fetchText double for engine loaders, backed by the real shipped files. */

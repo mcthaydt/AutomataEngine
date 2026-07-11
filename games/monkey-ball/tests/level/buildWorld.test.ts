@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData, quat } from '@automata/engine'
 import { buildLevelWorld } from '../../src/level/buildWorld'
-import { levelKind } from '../../src/project/legacyTypes'
 import { readDataFile } from '../helpers/data'
+import { loadCanonicalProject } from '../helpers/project'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
-const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const level = (await loadCanonicalProject()).levels['w1-l1']!
 
 describe('buildLevelWorld', () => {
   it('places the ball at the level spawn as a dynamic body', () => {

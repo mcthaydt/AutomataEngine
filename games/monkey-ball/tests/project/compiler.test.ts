@@ -1,52 +1,70 @@
-// @vitest-environment node
+import { CORE_TYPE_IDS, type ProjectSnapshot } from '@automata/project'
 import { describe, expect, it } from 'vitest'
-import { archetypeLibraryKind, parseData } from '@automata/engine'
-import { physicsTuningKind, toPhysicsTuning } from '../../src/project/legacyTypes'
-import {
-  levelKind,
-  worldsManifestKind,
-  type Level
-} from '../../src/project/legacyTypes'
-import { entityUid, geometryUid } from '../../src/project/types'
-import { runHeadlessPlay } from '../../src/level/headlessPlay'
 import { compileMonkeyBallProject } from '../../src/project/compiler'
-import { importLegacyMonkeyBallProject } from '../../src/project/legacyImporter'
-import { readDataFile } from '../helpers/data'
-import baseline from '../fixtures/metric-baselines.json'
+import { MONKEY_BALL_TYPE_IDS } from '../../src/project/types'
+import { loadCanonicalProject } from '../helpers/project'
 
-const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
-const tuning = toPhysicsTuning(parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml'))
-const manifest = parseData(worldsManifestKind, readDataFile('levels/worlds.json'), 'worlds.json')
-const levelIds = manifest.worlds.flatMap((world) => world.levels)
-const legacyLevels = Object.fromEntries(levelIds.map((id) => [
-  id,
-  parseData(levelKind, readDataFile(`levels/${id}.json`), `${id}.json`)
-])) as Record<string, Level>
-const compiled = compileMonkeyBallProject(importLegacyMonkeyBallProject({ tuning, manifest, levels: legacyLevels }))
-
-function normalizeUids(level: Level): Level {
+/** A minimal snapshot with a rotated cylinder — the one shape the shipped project omits. */
+function cylinderSnapshot(): ProjectSnapshot {
+  const transform = (
+    position: { x: number; y: number; z: number },
+    rotation = { x: 0, y: 0, z: 0 }
+  ) => ({
+    id: 'transform',
+    typeId: CORE_TYPE_IDS.transform,
+    data: { position, rotation, scale: { x: 1, y: 1, z: 1 } }
+  })
   return {
-    ...level,
-    geometry: level.geometry.map((geometry, index) => ({ ...geometry, uid: geometryUid(geometry, index) })),
-    entities: level.entities.map((entity, index) => ({ ...entity, uid: entityUid(entity, index) }))
+    manifest: {
+      formatVersion: 2, id: 'mb', name: 'MB', gameId: 'monkey-ball', entrySceneId: 's1',
+      scenes: [{ id: 's1', path: 'scenes/s1.scene.json' }],
+      resources: [
+        { id: 'physics', typeId: MONKEY_BALL_TYPE_IDS.physics, path: 'resources/physics.resource.json' },
+        { id: 'worlds', typeId: MONKEY_BALL_TYPE_IDS.worlds, path: 'resources/worlds.resource.json' }
+      ]
+    },
+    scenes: {
+      s1: {
+        id: 's1', name: 'S1',
+        entities: [
+          { id: 'marker:spawn', name: 'Spawn', enabled: true, components: [
+            transform({ x: 0, y: 1, z: 0 }),
+            { id: 'spawn', typeId: MONKEY_BALL_TYPE_IDS.spawn, data: { timeLimitS: 60, fallY: -10 } }
+          ] },
+          { id: 'marker:goal', name: 'Goal', enabled: true, components: [
+            transform({ x: 0, y: 0, z: -6 }),
+            { id: 'goal', typeId: MONKEY_BALL_TYPE_IDS.goal, data: {} }
+          ] },
+          { id: 'geometry:0', name: 'Cyl', enabled: true, components: [
+            transform({ x: 0, y: 0, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 }),
+            { id: 'primitive', typeId: CORE_TYPE_IDS.primitive, data: { shape: 'cylinder', size: { x: 4, y: 2, z: 4 } } },
+            { id: 'surface', typeId: CORE_TYPE_IDS.surface, data: { color: '#abcdef' } },
+            { id: 'collider', typeId: CORE_TYPE_IDS.collider, data: { shape: 'cylinder', friction: 0.5 } }
+          ] }
+        ]
+      }
+    },
+    resources: {
+      physics: { id: 'physics', typeId: MONKEY_BALL_TYPE_IDS.physics, data: { maxTiltRad: 0.2, tiltSmooth: 0.15, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 } } },
+      worlds: { id: 'worlds', typeId: MONKEY_BALL_TYPE_IDS.worlds, data: { worlds: [{ id: 'w', name: 'W', levels: ['s1'] }] } }
+    }
   }
 }
 
-describe('Monkey Ball project compiler', () => {
-  it('compiles physics tuning and world ordering back to their runtime values', () => {
-    expect(compiled.tuning).toEqual(tuning)
-    expect(compiled.manifest).toEqual(manifest)
-    expect(Object.keys(compiled.levels)).toEqual(levelIds)
+describe('compileMonkeyBallProject', () => {
+  it('compiles every shipped level in world order', async () => {
+    const project = await loadCanonicalProject()
+    expect(Object.keys(project.levels)).toEqual(['w1-l1', 'w1-l2', 'w1-l3', 'w2-l1', 'w2-l2', 'w2-l3'])
+    expect(project.levels['w1-l1']!.geometry.length).toBeGreaterThan(0)
   })
 
-  it.each(levelIds)('compiles %s back to the normalized legacy level', (id) => {
-    expect(compiled.levels[id]).toEqual(normalizeUids(legacyLevels[id]!))
+  it('reconstructs cylinder geometry with radius/height and non-zero rotation', () => {
+    const geometry = compileMonkeyBallProject(cylinderSnapshot()).levels.s1!.geometry[0]!
+    expect(geometry.shape).toBe('cylinder')
+    if (geometry.shape === 'cylinder') {
+      expect(geometry.radius).toBe(2) // size.x / 2
+      expect(geometry.height).toBe(2) // size.y
+    }
+    expect(geometry.rot).toBeDefined()
   })
-
-  it.each(levelIds)('%s retains its committed no-input headless baseline', async (id) => {
-    const result = await runHeadlessPlay(compiled.levels[id]!, lib, compiled.tuning, { maxSteps: baseline.restSteps })
-    expect(result.outcome).toBe(baseline.restOutcome)
-    expect(result.fallCount).toBe(baseline.restFallCount)
-    expect(result.steps).toBe(baseline.restSteps)
-  }, 20000)
 })

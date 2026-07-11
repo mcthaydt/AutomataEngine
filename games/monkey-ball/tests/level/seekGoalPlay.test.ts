@@ -3,13 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { archetypeLibraryKind, parseData } from '@automata/engine'
 import { createSeekGoalPlayer } from '../../src/project/evaluation'
 import { runHeadlessPlay } from '../../src/level/headlessPlay'
-import { levelKind, type Level } from '../../src/project/legacyTypes'
-import { physicsTuningKind, toPhysicsTuning } from '../../src/project/legacyTypes'
+import type { Level } from '../../src/project/types'
 import { readDataFile } from '../helpers/data'
+import { loadCanonicalProject } from '../helpers/project'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
-const tuning = toPhysicsTuning(parseData(physicsTuningKind, readDataFile('config/physics.toml'), 'physics.toml'))
-const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const canonical = await loadCanonicalProject()
+const tuning = canonical.tuning
+const level = canonical.levels['w1-l1']!
 
 describe('seek-goal player drives headless play', () => {
   it('completes a solvable level', async () => {

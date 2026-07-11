@@ -7,7 +7,7 @@ import { buildLevelWorld } from '../../src/level/buildWorld'
 import { runHeadlessPlay } from '../../src/level/headlessPlay'
 import { loadMonkeyBallProject } from '../../src/project/load'
 import { readDataFile } from '../helpers/data'
-import type { Level } from '../../src/project/legacyTypes'
+import type { Level } from '../../src/project/types'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
 const root = resolve(import.meta.dirname, '../../public/project')

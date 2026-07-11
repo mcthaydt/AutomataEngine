@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { WorldsManifest } from '../../src/project/legacyTypes'
+import type { WorldsManifest } from '../../src/project/types'
 import { createGameStore } from '../../src/state/root'
 import { createLevelSelect } from '../../src/ui/levelSelect'
 

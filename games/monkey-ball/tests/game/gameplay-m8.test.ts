@@ -6,14 +6,14 @@ import {
 } from '@automata/engine'
 import { stick } from '@automata/game-kit/testing'
 import { createGameplay } from '../../src/game/gameplay'
-import { levelKind, type Level } from '../../src/project/legacyTypes'
 import { createGameStore } from '../../src/state/root'
 import { readDataFile } from '../helpers/data'
 import type { Entity } from '../../src/entity'
-import type { PhysicsTuning } from '../../src/project/legacyTypes'
+import type { Level, PhysicsTuning } from '../../src/project/types'
+import { loadCanonicalProject } from '../helpers/project'
 
 const lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')
-const level = parseData(levelKind, readDataFile('levels/w1-l1.json'), 'w1-l1.json')
+const level = (await loadCanonicalProject()).levels['w1-l1']!
 const tuning: PhysicsTuning = {
   maxTiltRad: (12 * Math.PI) / 180, tiltSmooth: 1, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 }
 }

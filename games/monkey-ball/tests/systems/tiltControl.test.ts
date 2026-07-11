@@ -4,7 +4,7 @@ import { createTiltControl } from '../../src/systems/tiltControl'
 import { createGameStore } from '../../src/state/root'
 import type { Entity } from '../../src/entity'
 import type { GameCtx } from '../../src/game/context'
-import type { PhysicsTuning } from '../../src/project/legacyTypes'
+import type { PhysicsTuning } from '../../src/project/types'
 
 const tuning: PhysicsTuning = {
   maxTiltRad: (12 * Math.PI) / 180, tiltSmooth: 0.5, gravity: 9.81, ball: { radius: 0.5, friction: 0.6 }
