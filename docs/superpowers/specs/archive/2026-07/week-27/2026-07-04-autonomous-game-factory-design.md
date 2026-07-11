@@ -391,6 +391,11 @@ The phases below are the design of record — their goals and exit criteria.
 in [`docs/ROADMAP.md`](/docs/ROADMAP.md), not here.** This spec does not change
 when a phase completes.
 
+**The per-phase decomposition of record** — scope, dependencies, cross-cutting
+slices, the spec→plan sub-cycles each phase spawns, and contracts — lives in
+[`docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`](/docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md).
+The goals and exit criteria below remain here as design rationale.
+
 > **Revised 2026-07-05 (pending written-spec review).** The phase decomposition
 > was adjusted to remove two structural risks in the original layering: it
 > deferred *evaluation* and *end-to-end integration* to the final phases, which
