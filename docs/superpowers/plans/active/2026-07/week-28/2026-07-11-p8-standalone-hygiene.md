@@ -4,6 +4,8 @@
 
 **Goal:** Retire Monkey Ball's dead legacy ingestion path and de-privilege the level editor's dev server, leaving the codebase reading canonical project data everywhere.
 
+**Progress:** 39/39 steps complete (100%).
+
 **Architecture:** Two independent workstreams. **A** removes `importLegacyMonkeyBallProject` and its `legacyTypes` parsers by rebuilding `createMonkeyBallTemplate()` as a direct canonical literal (mirroring `createPulsebreakTemplate`), dropping the level editor's pre-P3 autosave recovery, re-sourcing behavioral tests onto the shipped canonical project via a new `loadCanonicalProject()` helper, then deleting the legacy code and fixtures. **B** replaces the editor's hardcoded single-game `publicDir` with a game-scoped dev-server middleware plus per-registration `readText` scoping. **C** records the results in `docs/ROADMAP.md`.
 
 **Tech Stack:** TypeScript, Vitest 4, Vite 5, npm workspaces, `@automata/project` (zod v4), `@automata/engine`.
@@ -33,7 +35,7 @@ Rewrite the template factory so it constructs the canonical `ProjectSnapshot` as
 - Consumes: `createMonkeyBallTemplate(): ProjectSnapshot`, `MONKEY_BALL_TYPE_IDS`, `CORE_TYPE_IDS`, `ProjectSnapshot`/`ComponentInstance`/`EntityDocument` from `@automata/project`.
 - Produces: unchanged `createMonkeyBallTemplate(): ProjectSnapshot` (same output; no importer dependency).
 
-- [ ] **Step 1: Write the characterization test**
+- [x] **Step 1: Write the characterization test**
 
 Create `games/monkey-ball/tests/project/template.test.ts`:
 
@@ -64,12 +66,12 @@ describe('createMonkeyBallTemplate', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to capture the baseline snapshot**
+- [x] **Step 2: Run the test to capture the baseline snapshot**
 
 Run: `npx vitest run games/monkey-ball/tests/project/template.test.ts`
 Expected: PASS (2 tests). Vitest writes `tests/project/__snapshots__/template.test.ts.snap` from the *current* importer-based implementation — this is the frozen golden.
 
-- [ ] **Step 3: Commit the baseline (test + snapshot) before refactoring**
+- [x] **Step 3: Commit the baseline (test + snapshot) before refactoring**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -77,7 +79,7 @@ git add games/monkey-ball/tests/project/template.test.ts games/monkey-ball/tests
 git commit -m "test(monkey-ball): characterize createMonkeyBallTemplate output"
 ```
 
-- [ ] **Step 4: Rewrite `template.ts` as a direct literal**
+- [x] **Step 4: Rewrite `template.ts` as a direct literal**
 
 Replace the entire contents of `games/monkey-ball/src/project/template.ts` with:
 
@@ -155,7 +157,7 @@ export function createMonkeyBallTemplate(): ProjectSnapshot {
 }
 ```
 
-- [ ] **Step 5: Verify the refactor preserves the snapshot and the suite**
+- [x] **Step 5: Verify the refactor preserves the snapshot and the suite**
 
 Run: `npx vitest run games/monkey-ball/tests/project/template.test.ts`
 Expected: PASS with no snapshot update (the new literal reproduces the frozen golden byte-for-byte).
@@ -163,7 +165,7 @@ Expected: PASS with no snapshot update (the new literal reproduces the frozen go
 Run: `npm run ci`
 Expected: PASS. (`definition.ts` still imports `createMonkeyBallTemplate`; its physics/worlds `defaultData` and the editor "New Project" template are unchanged.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -188,18 +190,18 @@ The `monkey-ball-editor` localStorage recovery is the only remaining runtime con
 - Consumes: nothing new.
 - Produces: `mountEditorApp(options)` no longer accepts a `legacyRecovery` field; no other signature change.
 
-- [ ] **Step 1: Remove the recovery-UI test**
+- [x] **Step 1: Remove the recovery-UI test**
 
 In `tools/level-editor/tests/editorApp.test.ts`, delete the entire `it('opens legacy recovery and clears it only through the persisted callback', ...)` test (around line 240) — including its `legacyRecovery`/`markPersisted` setup and the `[data-recover-legacy]` click assertions.
 
-- [ ] **Step 2: Delete the legacy autosave module and its test**
+- [x] **Step 2: Delete the legacy autosave module and its test**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
 git rm tools/level-editor/src/legacyAutosave.ts tools/level-editor/tests/legacyAutosave.test.ts
 ```
 
-- [ ] **Step 3: Remove the recovery wiring from `main.ts`**
+- [x] **Step 3: Remove the recovery wiring from `main.ts`**
 
 In `tools/level-editor/src/main.ts`:
 - Delete the import line `import { loadLegacyMonkeyBallAutosave } from './legacyAutosave'`.
@@ -218,7 +220,7 @@ After edits, the `mountEditorApp` call reads:
     })
 ```
 
-- [ ] **Step 4: Remove the `legacyRecovery` option and UI branch from `editorApp.ts`**
+- [x] **Step 4: Remove the `legacyRecovery` option and UI branch from `editorApp.ts`**
 
 In `tools/level-editor/src/editorApp.ts`:
 - Delete `import type { LegacyMonkeyBallRecovery } from './legacyAutosave'`.
@@ -256,7 +258,7 @@ In `tools/level-editor/src/editorApp.ts`:
     ```
     The create-project call site (`openSession(registration, snapshot, null)`) already passes three arguments and is unaffected.
 
-- [ ] **Step 5: Verify no dangling references**
+- [x] **Step 5: Verify no dangling references**
 
 Run: `grep -rn "legacyRecovery\|loadLegacyMonkeyBallAutosave\|LegacyMonkeyBallRecovery\|recoverLegacy" tools/level-editor`
 Expected: no matches.
@@ -264,7 +266,7 @@ Expected: no matches.
 Run: `npm run ci`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -292,7 +294,7 @@ Point the behavioral tests at the shipped canonical `public/project` (via a new 
 - Consumes: `loadMonkeyBallProject` from `src/project/load`, `CompiledMonkeyBallProject` from `src/project/types`.
 - Produces: `loadCanonicalProject(): Promise<CompiledMonkeyBallProject>` from `tests/helpers/project.ts`, returning `{ projectId, tuning, manifest, levels, snapshot }` for the shipped project.
 
-- [ ] **Step 1: Add the canonical-project test helper**
+- [x] **Step 1: Add the canonical-project test helper**
 
 Create `games/monkey-ball/tests/helpers/project.ts`:
 
@@ -314,7 +316,7 @@ export function loadCanonicalProject(): Promise<CompiledMonkeyBallProject> {
 }
 ```
 
-- [ ] **Step 2: Repoint the seven type-only test imports**
+- [x] **Step 2: Repoint the seven type-only test imports**
 
 In each file below, change the import module from `../../src/project/legacyTypes` to `../../src/project/types` (the type names are unchanged; `legacyTypes` only re-exported them):
 
@@ -326,7 +328,7 @@ In each file below, change the import module from `../../src/project/legacyTypes
 - `tests/systems/timer.test.ts` — `import type { Level } from '../../src/project/types'`
 - `tests/systems/fallOff.test.ts` — `import type { Level } from '../../src/project/types'`
 
-- [ ] **Step 3: Re-source the six behavioral tests onto canonical data**
+- [x] **Step 3: Re-source the six behavioral tests onto canonical data**
 
 In each file below, (a) remove the `legacyTypes` parser imports, (b) repoint any `type` imports (`Level`, `PhysicsTuning`) to `../../src/project/types`, (c) add `import { loadCanonicalProject } from '../helpers/project'`, and (d) replace the top-level legacy `parseData(...)` data lines with canonical lookups. Keep the `lib = parseData(archetypeLibraryKind, readDataFile('archetypes/standard.yaml'), 'standard.yaml')` line unchanged — archetypes are shipped runtime data, not legacy. All assertions stay exactly as they are. Top-level `await` is already used in this suite (e.g. `tests/scenes/levelLifecycle.test.ts`).
 
@@ -358,7 +360,7 @@ The uniform transform per file:
 
   `canonical.tuning` equals the old `toPhysicsTuning(physics.toml)` value exactly (the shipped physics resource was generated from it). `canonical.levels['w1-l1']` is the **compiled** level, which differs from the raw `parseData(levelKind, ...)` fixture in two ways: it carries compiler-assigned `uid`s (e.g. `geometry:0`, `entity:0`) and it omits zero rotations rather than storing `rot: [0,0,0]`. For physics/geometry/timer *behavior* these are equivalent, but any assertion that deep-equals a whole level object, counts keyed entities, or reads a specific `uid`/`rot` must be adjusted to the compiled shape. Do not assume equivalence — confirm each file in Step 6.
 
-- [ ] **Step 4: Delete the four legacy-only test files**
+- [x] **Step 4: Delete the four legacy-only test files**
 
 These test only the legacy parsers/importer (whose replacements are covered by `runtimeParity.test.ts`, `levelLifecycle.test.ts`, and the canonical load path):
 
@@ -368,7 +370,7 @@ git rm tests/data/config.test.ts tests/data/level.test.ts \
        tests/project/legacyImporter.test.ts tests/project/content.test.ts
 ```
 
-- [ ] **Step 4b: Rewrite `compiler.test.ts` to keep compiler coverage without the importer**
+- [x] **Step 4b: Rewrite `compiler.test.ts` to keep compiler coverage without the importer**
 
 Do **not** delete `compiler.test.ts` outright. It currently round-trips through the deleted importer, but the shipped `public/project` contains **no cylinder geometry**, so deleting it would leave `compileMonkeyBallProject`'s cylinder branch (`compiler.ts` ~line 76) and non-zero-rotation branch (~line 70) uncovered — failing the `branches: 90` threshold. Replace the entire contents of `games/monkey-ball/tests/project/compiler.test.ts` with a canonical assertion plus a synthetic rotated-cylinder case:
 
@@ -447,7 +449,7 @@ describe('compileMonkeyBallProject', () => {
 
 (If `npm run coverage` in A4 still flags an uncovered `compiler.ts` branch, extend `cylinderSnapshot` to exercise it rather than lowering the threshold.)
 
-- [ ] **Step 5: Slim `tests/helpers/data.ts` to runtime data only**
+- [x] **Step 5: Slim `tests/helpers/data.ts` to runtime data only**
 
 Replace the contents of `games/monkey-ball/tests/helpers/data.ts` with:
 
@@ -472,7 +474,7 @@ export async function fsFetchText(url: string): Promise<string> {
 
 (`boot.test.ts` only ever requests `/data/archetypes/standard.yaml` through `fsFetchText`, so dropping the legacy branch is safe.)
 
-- [ ] **Step 6: Verify no test references the legacy surface**
+- [x] **Step 6: Verify no test references the legacy surface**
 
 Run: `grep -rn "legacyTypes\|legacyImporter\|fixtures/legacy" games/monkey-ball/tests`
 Expected: no matches.
@@ -482,7 +484,7 @@ Expected: PASS. (The re-sourced behavioral tests assert identical outcomes; dele
 
 Do **not** run `npm run coverage` in this task. `legacyImporter.ts` and `legacyTypes.ts` still exist here but their tests were just deleted, so the thresholds in `vitest.config.ts` (`lines: 90, branches: 90`) would fail on the now-uncovered legacy source. Coverage is validated in Task A4 Step 6, after that source is removed.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -509,7 +511,7 @@ With no runtime or test consumers left, delete the legacy code and guard against
 - Consumes: the project barrel `../../src/project` (index.ts).
 - Produces: the `monkey-ball/project` barrel no longer exports `importLegacyMonkeyBallProject` or `parseLegacyMonkeyBallLevel`.
 
-- [ ] **Step 1: Write the guard test (fails while the barrel still re-exports legacy symbols)**
+- [x] **Step 1: Write the guard test (fails while the barrel still re-exports legacy symbols)**
 
 Create `games/monkey-ball/tests/project/noLegacySurface.test.ts`:
 
@@ -525,12 +527,12 @@ describe('legacy surface is retired', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `npx vitest run games/monkey-ball/tests/project/noLegacySurface.test.ts`
 Expected: FAIL (both symbols currently re-exported from `index.ts`).
 
-- [ ] **Step 3: Remove the legacy re-exports from the barrel**
+- [x] **Step 3: Remove the legacy re-exports from the barrel**
 
 In `games/monkey-ball/src/project/index.ts`, delete the line:
 
@@ -540,7 +542,7 @@ export { importLegacyMonkeyBallProject, parseLegacyMonkeyBallLevel } from './leg
 
 Leave the other exports (`./types`, `compiler`, `template`, `definition`, `load`, `evaluation`, `headless`) intact.
 
-- [ ] **Step 4: Delete the legacy source, generator, and fixtures**
+- [x] **Step 4: Delete the legacy source, generator, and fixtures**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -550,11 +552,11 @@ git rm games/monkey-ball/src/project/legacyImporter.ts \
 git rm -r games/monkey-ball/tests/fixtures/legacy
 ```
 
-- [ ] **Step 5: Remove the now-orphaned legacy input type**
+- [x] **Step 5: Remove the now-orphaned legacy input type**
 
 In `games/monkey-ball/src/project/types.ts`, delete the `LegacyMonkeyBallProjectInput` interface (the block commented "Parsed legacy inputs accepted only by the deterministic migration seam"). Leave every other type (`Level`, `PhysicsTuning`, `WorldsManifest`, `MONKEY_BALL_TYPE_IDS`, `CompiledMonkeyBallProject`, `geometryUid`, `entityUid`, etc.) intact.
 
-- [ ] **Step 6: Verify deletion is clean**
+- [x] **Step 6: Verify deletion is clean**
 
 Run: `grep -rn "legacyImporter\|legacyTypes\|LegacyMonkeyBallProjectInput\|build-project\|fixtures/legacy" games/monkey-ball tools`
 Expected: no matches.
@@ -565,7 +567,7 @@ Expected: PASS.
 Run: `npm run ci && npm run coverage`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -592,7 +594,7 @@ Replace the hardcoded `publicDir: '../../games/monkey-ball/public'` with a game-
 - Consumes: `createProjectCatalog({ readText })` and its per-registration `readText`.
 - Produces: `resolveGameAssetPath(repoRoot: string, urlPath: string): string | null` (from `src/dev-assets.ts`); `gameIdFromEntryModule(modulePath: string): string` and `publicReadPath(gameId: string, path: string): string` (from `src/projectCatalog.ts`).
 
-- [ ] **Step 1: Write the failing unit tests**
+- [x] **Step 1: Write the failing unit tests**
 
 Create `tools/level-editor/tests/devAssets.test.ts`:
 
@@ -657,12 +659,12 @@ describe('publicReadPath', () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests to confirm they fail**
+- [x] **Step 2: Run the tests to confirm they fail**
 
 Run: `npx vitest run tools/level-editor/tests/devAssets.test.ts tools/level-editor/tests/projectCatalog.test.ts`
 Expected: FAIL — `../src/dev-assets` does not exist and `gameIdFromEntryModule`/`publicReadPath` are not exported.
 
-- [ ] **Step 3: Create the asset-path resolver**
+- [x] **Step 3: Create the asset-path resolver**
 
 Create `tools/level-editor/src/dev-assets.ts`:
 
@@ -685,7 +687,7 @@ export function resolveGameAssetPath(repoRoot: string, urlPath: string): string 
 }
 ```
 
-- [ ] **Step 4: Export `gameIdFromEntryModule` and scope `readText` per game**
+- [x] **Step 4: Export `gameIdFromEntryModule` and scope `readText` per game**
 
 In `tools/level-editor/src/projectCatalog.ts`, add the exported helper and rewrite the registration loop so each game reads only its own public tree. Replace the body of `createProjectCatalog` (the `const deps = ...` line through the `for` loop) with:
 
@@ -723,7 +725,7 @@ export async function createProjectCatalog(
 
 (Keep the existing imports, the `editorEntryModules` glob, and the `ProjectCatalogDependencies` interface above it unchanged.)
 
-- [ ] **Step 5: Replace the hardcoded `publicDir` with the middleware**
+- [x] **Step 5: Replace the hardcoded `publicDir` with the middleware**
 
 Replace the contents of `tools/level-editor/vite.config.ts` with:
 
@@ -766,7 +768,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 6: Run tests and confirm the boundary check still passes**
+- [x] **Step 6: Run tests and confirm the boundary check still passes**
 
 Run: `npx vitest run tools/level-editor/tests/devAssets.test.ts tools/level-editor/tests/projectCatalog.test.ts`
 Expected: PASS.
@@ -774,7 +776,7 @@ Expected: PASS.
 Run: `npm run ci`
 Expected: PASS — including `tools/level-editor/tests/boundaries.test.ts` (the middleware and `gameIdFromEntryModule` are game-agnostic, no game name in source).
 
-- [ ] **Step 7: Manual dev-server smoke (both games)**
+- [x] **Step 7: Manual dev-server smoke (both games)**
 
 Run: `npm run dev:editor`
 Then, in a browser at the dev URL:
@@ -783,7 +785,7 @@ Then, in a browser at the dev URL:
 
 Stop the server (Ctrl-C) when both load cleanly.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd /Users/mcthaydt/dev/AutomataEngine
@@ -800,7 +802,7 @@ Reflect the resolved iCloud item and the two completed cleanups in `docs/ROADMAP
 **Files:**
 - Modify: `docs/ROADMAP.md`
 
-- [ ] **Step 1: Mark the iCloud item resolved and reframe the P8 section**
+- [x] **Step 1: Mark the iCloud item resolved and reframe the P8 section**
 
 In `docs/ROADMAP.md` §4, under `### P8 — Hygiene`, change the intro line from "Three independent cleanups, each removable on its own:" to "Two code cleanups plus one already-resolved environment item:" and replace the iCloud bullet with a resolved note:
 
@@ -812,7 +814,7 @@ In `docs/ROADMAP.md` §4, under `### P8 — Hygiene`, change the intro line from
 
 Update the `legacyImporter` and `level-editor publicDir` bullets to past tense ("Retired…", "Decoupled…") with **Done:** lines.
 
-- [ ] **Step 2: Flip the P8 status in the numbering table**
+- [x] **Step 2: Flip the P8 status in the numbering table**
 
 In §2, change the P8 row status from `Planned` to `Shipped`:
 
@@ -820,7 +822,7 @@ In §2, change the P8 row status from `Planned` to `Shipped`:
 | P8 | — | Standalone | Hygiene | Shipped |
 ```
 
-- [ ] **Step 3: Add a Shipped entry**
+- [x] **Step 3: Add a Shipped entry**
 
 At the top of §1 (newest first), add:
 
@@ -836,7 +838,7 @@ At the top of §1 (newest first), add:
   plan: [`plans/2026-07-11-p8-standalone-hygiene.md`](superpowers/plans/active/2026-07/week-28/2026-07-11-p8-standalone-hygiene.md).
 ```
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `grep -n "P8" docs/ROADMAP.md`
 Expected: the §2 table shows `Shipped`, and §1 has the new P8 entry.

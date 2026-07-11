@@ -27,6 +27,15 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **P8 — Standalone hygiene** (2026-07-11). Retired Monkey Ball's legacy
+  ingestion seam (`importLegacyMonkeyBallProject`, `legacyTypes`,
+  `scripts/build-project.ts`, quarantined legacy fixtures; dropped the pre-P3
+  editor autosave recovery; re-sourced tests onto the canonical project) and
+  decoupled the level editor from a single game's `publicDir` via a game-scoped
+  dev-server middleware. The iCloud `" 2"` duplicates item was already resolved
+  by moving the repo off the synced path. Spec:
+  [`specs/2026-07-11-p8-standalone-hygiene-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-11-p8-standalone-hygiene-design.md);
+  plan: [`plans/2026-07-11-p8-standalone-hygiene.md`](superpowers/plans/active/2026-07/week-28/2026-07-11-p8-standalone-hygiene.md).
 - **P3 — Project-file migrations** (2026-07-05, main @ `39439b9`). One central
   parse entry (`parseProjectSnapshot`) behind every load path; an ordered core
   migration chain; an optional per-game `migrate` hook; **formatVersion 2** with
@@ -68,7 +77,7 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 | P5 | — | Phase 1 | Persistent MCP build sessions | Next |
 | P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
 | P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
-| P8 | — | Standalone | Hygiene | Planned |
+| P8 | — | Standalone | Hygiene | Shipped |
 
 Two axes to keep separate: the **old M0–M16** labels belong to the completed
 engine-build era (section 1) and are *closed*. The **restarted M1/M2/M3** labels
@@ -214,25 +223,21 @@ lives under **Phase 1** in section 3 (it is a phase, not a cross-cutting item).
 - **Done when:** an agent can build a game from the generated doc set alone, and
   CI fails if the docs drift from the code.
 
-### P8 — Hygiene · `Planned`
+### P8 — Hygiene · `Shipped`
 
-Three independent cleanups, each removable on its own:
+Two code cleanups plus one already-resolved environment item:
 
-- **Retire Monkey Ball's `legacyImporter`.** It converts the old bespoke MB
-  format (`levels/*.json`, `physics.toml`, `worlds.json`) into a canonical
-  snapshot and is still wired into `build-project.ts`, `template.ts`, and pinned
-  by tests. Post-P3 the canonical `public/project` is the source of truth, so the
-  importer, `legacyTypes`, and the quarantined legacy fixtures can be deleted.
-  **Done when:** Monkey Ball builds from canonical project data only.
-- **Kill the iCloud `" 2"` duplicates.** The repo lives on an iCloud-synced path
-  that periodically spawns duplicate `"<name> 2"` files/dirs; today they must be
-  swept before every commit. **Done when:** the repo is moved off the synced path
-  (the real fix) so the duplicates stop appearing.
-- **Decouple the level-editor from a single game's `publicDir`.**
-  `tools/level-editor/vite.config.ts` hardcodes
-  `publicDir: '../../games/monkey-ball/public'`, so the *multi-game* editor's dev
-  server serves one specific game's assets. **Done when:** the editor serves
-  project assets without pinning to one game's folder.
+- **Retired Monkey Ball's `legacyImporter`.** The old bespoke MB format
+  (`levels/*.json`, `physics.toml`, `worlds.json`) was replaced by canonical
+  `public/project` data; the importer, `legacyTypes`, generator, recovery seam,
+  and quarantined legacy fixtures are gone. **Done:** Monkey Ball now reads
+  canonical project data only.
+- **iCloud `" 2"` duplicates — resolved.** The repo now lives off the synced
+  path (`/Users/mcthaydt/dev/AutomataEngine`, not under iCloud Desktop) with no
+  duplicate artifacts present, which is the intended fix. No code change.
+- **Decoupled the level editor from a single game's `publicDir`.** The dev
+  server now serves game-scoped public assets for every registered game.
+  **Done:** project asset reads are no longer pinned to one game's folder.
 
 ### P7 — Retrofit Last Lightkeeper · `Moot`
 
