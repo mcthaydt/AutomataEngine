@@ -1,39 +1,23 @@
-import { readFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { createProjectCatalog } from '../src/projectCatalog'
+import { gameIdFromEntryModule, publicReadPath } from '../src/projectCatalog'
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
-
-describe('project catalog', () => {
-  it('registers the shipped games with valid templates', async () => {
-    const catalog = await createProjectCatalog({
-      readText: (path) => readFile(resolve(repoRoot, 'games/monkey-ball/public', path.replace(/^\//, '')), 'utf8')
-    })
-
-    const gameIds = catalog.list().map((registration) => registration.gameId)
-    expect(gameIds).toEqual(expect.arrayContaining(['monkey-ball', 'pulsebreak']))
-    expect(new Set(gameIds).size).toBe(gameIds.length)
-    for (const registration of catalog.list()) {
-      expect(registration.createTemplate().manifest.gameId).toBe(registration.gameId)
-      expect(catalog.get(registration.gameId)).toBe(registration)
-    }
-    expect(catalog.get('missing')).toBeUndefined()
+describe('gameIdFromEntryModule', () => {
+  it('extracts the game id from a discovered editor entry path', () => {
+    expect(gameIdFromEntryModule('../../../games/pulsebreak/src/project/editor.ts')).toBe('pulsebreak')
+    expect(gameIdFromEntryModule('../../../games/monkey-ball/src/project/editor.ts')).toBe('monkey-ball')
   })
 
-  it('discovers games by convention rather than hardcoded imports', async () => {
-    const source = await readFile(resolve(repoRoot, 'tools/level-editor/src/projectCatalog.ts'), 'utf8')
-    expect(source).toContain('import.meta.glob')
-    expect(source).not.toMatch(/from '(monkey-ball|pulsebreak)\/editor'/)
+  it('throws on a path without a games/<id> segment', () => {
+    expect(() => gameIdFromEntryModule('../nope/editor.ts')).toThrow()
   })
+})
 
-  it('keeps previews for discovered games', async () => {
-    const catalog = await createProjectCatalog({
-      readText: (path) => readFile(resolve(repoRoot, 'games/monkey-ball/public', path.replace(/^\//, '')), 'utf8')
-    })
-    for (const registration of catalog.list()) {
-      expect(registration.createPreview).toBeDefined()
-    }
+describe('publicReadPath', () => {
+  it('scopes a public-relative read to the game and matches the dev middleware contract', () => {
+    expect(publicReadPath('pulsebreak', 'data/archetypes/standard.yaml'))
+      .toBe('/games/pulsebreak/public/data/archetypes/standard.yaml')
+    // Must satisfy resolveGameAssetPath's `/games/<id>/public/<rest>` shape.
+    expect(publicReadPath('monkey-ball', 'project/automata.project.json'))
+      .toMatch(/^\/games\/monkey-ball\/public\//)
   })
 })

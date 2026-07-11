@@ -20,14 +20,30 @@ export interface ProjectCatalogDependencies {
  */
 const editorEntryModules = import.meta.glob('../../../games/*/src/project/editor.ts', { eager: true })
 
+/** Extract the game id from a discovered `games/<id>/src/project/editor.ts` path. */
+export function gameIdFromEntryModule(modulePath: string): string {
+  const match = /\/games\/([^/]+)\//.exec(modulePath)
+  if (!match) throw new Error(`Cannot derive game id from editor module path "${modulePath}"`)
+  return match[1]!
+}
+
+/**
+ * Build the dev-server URL for a game's public-relative asset. This is the exact
+ * contract `src/dev-assets.ts#resolveGameAssetPath` serves; keep them in sync.
+ */
+export function publicReadPath(gameId: string, path: string): string {
+  return `/games/${gameId}/public/${path}`
+}
+
 /** Register every discovered game once and expose stable, game-ID based lookup. */
 export async function createProjectCatalog(
   dependencies: ProjectCatalogDependencies
 ): Promise<ProjectCatalog> {
-  // Registry loaders take public-relative paths; this host serves them at /.
-  const deps = { readText: (path: string) => dependencies.readText(`/${path}`) }
   const registrations: RegisteredEditorProject[] = []
   for (const [modulePath, module] of Object.entries(editorEntryModules)) {
+    // Registry loaders take public-relative paths; serve each game's own public tree.
+    const gameId = gameIdFromEntryModule(modulePath)
+    const deps = { readText: (path: string) => dependencies.readText(publicReadPath(gameId, path)) }
     const loader = resolveRegistrationLoader(module, 'loadEditorRegistration', modulePath)
     registrations.push(registerEditorProject(await loader(deps)))
   }
