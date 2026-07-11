@@ -237,31 +237,6 @@ describe('generic editor app', () => {
     unknownApp.dispose()
   })
 
-  it('opens legacy recovery and clears it only through the persisted callback', async () => {
-    const root = document.createElement('main')
-    const markPersisted = vi.fn()
-    const mounted = sessionFactory({
-      canSave: false, hasUnsavedChanges: () => true, save: async () => true,
-      exportBundle: () => {}, dispose: () => {}
-    })
-    const app = await mountEditorApp({
-      root,
-      catalog,
-      workspace,
-      autosaveStorage: memoryStorage(),
-      query: '',
-      legacyRecovery: { snapshot: registration.createTemplate(), markPersisted },
-      createSession: mounted.factory
-    })
-
-    root.querySelector<HTMLButtonElement>('[data-recover-legacy]')!.click()
-    await vi.waitFor(() => expect(mounted.mounts).toHaveLength(1))
-    expect(mounted.mounts[0]).toMatchObject({ initiallyDirty: true })
-    mounted.mounts[0]!.onPersisted?.()
-    expect(markPersisted).toHaveBeenCalledOnce()
-    app.dispose()
-  })
-
   it.each([
     ['save', true],
     ['export', false],

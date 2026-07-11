@@ -2,7 +2,6 @@ import { fetchTextViaFetch, localStorageAdapter } from '@automata/engine'
 import type { DirectoryHandleLike, PermissionState } from '@automata/editor'
 import { createBrowserWorkspace } from './browserWorkspace'
 import { mountEditorApp } from './editorApp'
-import { loadLegacyMonkeyBallAutosave } from './legacyAutosave'
 import { createProjectCatalog } from './projectCatalog'
 
 type BrowserDirectoryHandle = DirectoryHandleLike & {
@@ -74,19 +73,12 @@ async function main(): Promise<void> {
       },
       now: () => Date.now()
     })
-    let legacyRecovery = null
-    try {
-      legacyRecovery = loadLegacyMonkeyBallAutosave(window.localStorage)
-    } catch {
-      // Storage may be unavailable in private/locked-down browser contexts.
-    }
     const app = await mountEditorApp({
       root,
       catalog,
       workspace,
       autosaveStorage: localStorageAdapter(),
-      query: window.location.search,
-      legacyRecovery
+      query: window.location.search
     })
 
     const onBeforeUnload = (event: BeforeUnloadEvent): void => {

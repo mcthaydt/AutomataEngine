@@ -25,7 +25,6 @@ import {
 } from '@automata/editor/viewport'
 import { applyGameMigration, PROJECT_FORMAT_VERSION, stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
 import type { BrowserWorkspace, OpenedBrowserProject } from './browserWorkspace'
-import type { LegacyMonkeyBallRecovery } from './legacyAutosave'
 import type { ProjectCatalog } from './projectCatalog'
 
 export type DirtyAction = 'save' | 'export' | 'discard' | 'cancel'
@@ -62,7 +61,6 @@ export interface EditorAppOptions {
   workspace: BrowserWorkspace
   autosaveStorage: StoragePort
   query: string
-  legacyRecovery?: LegacyMonkeyBallRecovery | null
   createSession?: ProjectSessionFactory
   chooseDirtyAction?: (canSave: boolean) => Promise<DirtyAction>
 }
@@ -102,7 +100,6 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     registration: RegisteredEditorProject,
     snapshot: ProjectSnapshot,
     storage: ProjectStoragePort | null,
-    recovery?: LegacyMonkeyBallRecovery,
     fromVersion: number = PROJECT_FORMAT_VERSION
   ): Promise<void> => {
     if (disposed) return
@@ -118,9 +115,8 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
       storage,
       autosaveStorage: options.autosaveStorage,
       workspace: options.workspace,
-      initiallyDirty: Boolean(recovery),
+      initiallyDirty: false,
       migrated: fromVersion < PROJECT_FORMAT_VERSION,
-      onPersisted: recovery?.markPersisted,
       onSwitchProject: requestChooser
     })
   }
@@ -129,7 +125,7 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     if (!opened) return
     const registration = resolveRegistration(opened.snapshot)
     const snapshot = applyGameMigration(opened, registration.project.migrate)
-    await openSession(registration, snapshot, opened.storage, undefined, opened.fromVersion)
+    await openSession(registration, snapshot, opened.storage, opened.fromVersion)
   }
 
   const openWithErrorBoundary = async (operation: () => Promise<void>): Promise<void> => {
@@ -180,20 +176,6 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     })
     open.dataset.openProject = ''
     content.append(createGroup, open)
-
-    if (options.legacyRecovery) {
-      const recover = actionButton('Recover Monkey Ball Autosave', () => {
-        const recovery = options.legacyRecovery!
-        void openWithErrorBoundary(() => openSession(
-          resolveRegistration(recovery.snapshot),
-          recovery.snapshot,
-          null,
-          recovery
-        ))
-      })
-      recover.dataset.recoverLegacy = ''
-      content.append(recover)
-    }
 
     const recentHost = document.createElement('div')
     recentHost.dataset.recentProjects = ''
