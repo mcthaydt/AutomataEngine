@@ -92,6 +92,10 @@ In-progress and next phases carry Goal · Depends-on · Tasks · Exit. Later pha
 are scoped headings — Goal · Exit only — until their own spec exists. Phase
 definitions derive from the
 [Autonomous Game Factory design](superpowers/specs/archive/2026-07/week-27/2026-07-04-autonomous-game-factory-design.md).
+The full per-phase decomposition (scope, dependencies, cross-cutting slices, the
+spec→plan sub-cycles each phase spawns, and contracts) lives in the
+[Phase 0→8 decomposition design](superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md);
+this section remains the source of truth for **status and sequencing**.
 
 Two capabilities run through every phase rather than a single late one:
 **evaluation grows with generation** (each phase ships the evaluator slice that
