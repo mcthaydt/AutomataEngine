@@ -60,15 +60,6 @@ export const MONKEY_BALL_TYPE_IDS = {
   worlds: 'monkey-ball.worlds'
 } as const
 
-/** Parsed legacy inputs accepted only by the deterministic migration seam. */
-export interface LegacyMonkeyBallProjectInput {
-  tuning: PhysicsTuning
-  manifest: WorldsManifest
-  levels: Readonly<Record<string, Level>>
-  projectId?: string
-  projectName?: string
-}
-
 /** Runtime-ready data compiled from one complete authored project. */
 export interface CompiledMonkeyBallProject {
   projectId: string
