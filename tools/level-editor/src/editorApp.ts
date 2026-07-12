@@ -226,6 +226,10 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     })
   }
 
+  // A pending autosave is flushed by the session disposer; unload has no time for debounce.
+  const onBeforeUnload = (): void => session?.dispose()
+  window.addEventListener('beforeunload', onBeforeUnload)
+
   return {
     hasUnsavedChanges: () => session?.hasUnsavedChanges() ?? false,
     dispose() {
@@ -234,6 +238,7 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
       chooserGeneration++
       session?.dispose()
       session = null
+      window.removeEventListener('beforeunload', onBeforeUnload)
       options.root.replaceChildren()
       removeTheme()
     }

@@ -281,4 +281,29 @@ describe('generic editor app', () => {
     expect(root.querySelector('[data-project-chooser]')).not.toBeNull()
     app.dispose()
   })
+
+  it('disposes the open session on beforeunload so autosave flushes', async () => {
+    const root = document.createElement('main')
+    document.body.append(root)
+    const dispose = vi.fn()
+    const handle: ProjectSessionHandle = {
+      canSave: false,
+      hasUnsavedChanges: () => false,
+      save: async () => true,
+      exportBundle: () => {},
+      dispose
+    }
+    const mounted = sessionFactory(handle)
+    const app = await mountEditorApp({
+      root, catalog, workspace, autosaveStorage: memoryStorage(),
+      query: '?game=pulsebreak', createSession: mounted.factory
+    })
+    root.querySelector<HTMLButtonElement>('[data-create-game="pulsebreak"]')!.click()
+    await vi.waitFor(() => expect(mounted.mounts).toHaveLength(1))
+
+    window.dispatchEvent(new Event('beforeunload'))
+    expect(dispose).toHaveBeenCalled()
+
+    app.dispose()
+  })
 })
