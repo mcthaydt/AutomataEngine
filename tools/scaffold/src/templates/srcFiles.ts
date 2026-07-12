@@ -130,9 +130,10 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
 `
 }
 
-export function mainTs(name: string): string {
-  return `import { GameLoop, createThreeRenderer } from '@automata/engine'
-import { attachCanvasRenderer, startLoopDriver } from '@automata/engine/browser'
+export function mainTs(): string {
+  return `import { createThreeRenderer } from '@automata/engine'
+import { attachCanvasRenderer } from '@automata/engine/browser'
+import { createGameHost, createProjectReader, startGameLoop } from '@automata/game-kit'
 import { createGameplay } from './game/gameplay'
 import { loadProject } from './project/load'
 import type { SimControl, SimState } from './sim/sim'
@@ -160,44 +161,37 @@ function keyboardControl(target: Window): () => SimControl {
 async function main(): Promise<void> {
   const app = document.getElementById('app')
   if (!app) throw new Error('Missing #app')
+  const host = createGameHost(app)
+  try {
+    const compiled = await loadProject(createProjectReader())
+    const hud = document.createElement('div')
+    hud.className = 'hud'
+    app.append(hud)
+    host.cleanup.defer(() => hud.remove())
 
-  const compiled = await loadProject({
-    async readText(path) {
-      const response = await fetch(new URL(\`project/\${path}\`, document.baseURI))
-      if (!response.ok) throw new Error(\`Project request failed (\${response.status}): \${path}\`)
-      return response.text()
-    }
-  })
+    const renderer = createThreeRenderer()
+    host.cleanup.defer(() => renderer.port.dispose())
+    const canvasRenderer = await attachCanvasRenderer(renderer, host.canvas)
+    host.cleanup.defer(() => canvasRenderer.dispose())
+    const control = keyboardControl(window)
+    const game = createGameplay({ compiled, render: renderer.port, control: () => control() })
 
-  const canvas = document.createElement('canvas')
-  app.append(canvas)
-  const hud = document.createElement('div')
-  hud.className = 'hud'
-  app.append(hud)
-
-  const renderer = createThreeRenderer()
-  const canvasRenderer = await attachCanvasRenderer(renderer, canvas)
-  const control = keyboardControl(window)
-  const game = createGameplay({ compiled, render: renderer.port, control: () => control() })
-
-  const loop = new GameLoop({
-    fixedUpdate: (dt) => {
-      game.fixedUpdate(dt)
-      hud.textContent = STATUS_TEXT[game.state.status]
-    },
-    render: (alpha, frameDt) => {
-      game.render(alpha, frameDt)
-      canvasRenderer.renderFrame()
-    }
-  })
-  hud.textContent = STATUS_TEXT.running
-  startLoopDriver(loop, () => {})
+    hud.textContent = STATUS_TEXT.running
+    startGameLoop({
+      fixedUpdate: (dt) => {
+        game.fixedUpdate(dt)
+        hud.textContent = STATUS_TEXT[game.state.status]
+      },
+      render: (alpha, frameDt) => game.render(alpha, frameDt),
+      renderFrame: () => canvasRenderer.renderFrame()
+    }, host.cleanup)
+  } catch (error) {
+    host.dispose()
+    host.renderBootError(error)
+  }
 }
 
-void main().catch((error: unknown) => {
-  const app = document.getElementById('app')
-  if (app) app.textContent = \`Failed to start ${name}: \${error instanceof Error ? error.message : String(error)}\`
-})
+void main()
 `
 }
 

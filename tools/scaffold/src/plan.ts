@@ -51,7 +51,7 @@ export function planNewGame(name: string, options: PlanOptions = {}): ScaffoldPl
     at('README.md', config.readmeMd(name, label, port)),
     at('src/index.ts', src.indexTs()),
     at('src/vite-env.d.ts', src.viteEnvDts()),
-    at('src/main.ts', src.mainTs(name)),
+    at('src/main.ts', src.mainTs()),
     at('src/sim/sim.ts', src.simTs()),
     at('src/game/gameplay.ts', src.gameplayTs()),
     at('src/project/types.ts', project.typesTs(name)),

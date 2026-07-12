@@ -14,6 +14,7 @@ export function packageJson(name: string, port: number): string {
     dependencies: {
       '@automata/editor': '*',
       '@automata/engine': '*',
+      '@automata/game-kit': '*',
       '@automata/project': '*'
     },
     devDependencies: { tsx: '^4.20.0' },

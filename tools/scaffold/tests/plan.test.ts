@@ -44,6 +44,12 @@ describe('planNewGame', () => {
     expect(pkg.exports['./project']).toBe('./src/project/index.ts')
     expect(pkg.exports['./editor']).toBe('./src/project/editor.ts')
     expect(pkg.automata.devPort).toBe(5188)
+    expect(content('package.json')).toContain('"@automata/game-kit": "*"')
+
+    const main = content('src/main.ts')
+    expect(main).toContain('createGameHost')
+    expect(main).toContain('startGameLoop')
+    expect(main).not.toContain('new GameLoop')
 
     expect(content('src/project/definition.ts')).toContain("gameId: 'beacon-run'")
     expect(content('src/project/definition.ts')).toContain("label: 'Beacon Run'")
