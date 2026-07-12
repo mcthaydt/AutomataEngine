@@ -1,21 +1,13 @@
 import {
-  GameLoop,
-  createCleanupStack,
-  createLoader,
-  createRapierPhysics,
-  createSceneManager,
-  createThreeRenderer,
-  fetchTextViaFetch,
-  localStorageAdapter,
-  subscribeSelector,
-  type CleanupStack,
-  type InputSource,
-  type Scene
+  createCleanupStack, createLoader, createRapierPhysics, createSceneManager,
+  createThreeRenderer, fetchTextViaFetch, localStorageAdapter, subscribeSelector,
+  type CleanupStack, type Scene
 } from '@automata/engine'
+import { attachCanvasRenderer } from '@automata/engine/browser'
 import {
-  attachCanvasRenderer, createKeyboardInput, createVirtualJoystick, startLoopDriver
-} from '@automata/engine/browser'
-import { createBrowserAudio, createOverlayScene, type View } from '@automata/game-kit'
+  createGameHost, createOverlayScene, createProjectReader, createStandardInputs,
+  mountBrowserAudio, startGameLoop, type View
+} from '@automata/game-kit'
 import './style.css'
 import { registerSounds } from './audio/sounds'
 import { createGameplay, type Gameplay } from './game/gameplay'
@@ -28,102 +20,49 @@ import { createLevelSelect } from './ui/levelSelect'
 import { createMenu } from './ui/menu'
 import { createGameOver, createLevelComplete, createPauseOverlay } from './ui/overlays'
 
-function bootError(error: unknown): HTMLElement {
-  const panel = document.createElement('div')
-  panel.className = 'overlay boot-error'
-  panel.textContent = `Failed to start: ${error instanceof Error ? error.message : String(error)}`
-  return panel
-}
-
 async function main(): Promise<void> {
   const app = document.getElementById('app')
   if (!app) throw new Error('Missing #app')
-
-  const cleanup = createCleanupStack()
-  const dispose = (): void => {
-    try {
-      cleanup.dispose()
-    } catch (error) {
-      console.error('Cleanup failed', error)
-    }
-  }
-  const onBeforeUnload = (): void => dispose()
-  window.addEventListener('beforeunload', onBeforeUnload)
-  cleanup.defer(() => window.removeEventListener('beforeunload', onBeforeUnload))
-
+  const host = createGameHost(app)
   try {
-    const canvas = document.createElement('canvas')
-    app.append(canvas)
-    cleanup.defer(() => canvas.remove())
-    const overlays = document.createElement('div')
-    overlays.id = 'overlays'
-    app.append(overlays)
-    cleanup.defer(() => overlays.remove())
-
-    const fetchText = fetchTextViaFetch()
-    const loader = createLoader(fetchText)
-    const projectReader = { readText: (path: string): Promise<string> => fetchText(`/project/${path}`) }
+    const loader = createLoader(fetchTextViaFetch())
     const renderer = createThreeRenderer()
-    cleanup.defer(() => renderer.port.dispose())
-    const canvasRenderer = await attachCanvasRenderer(renderer, canvas)
-    cleanup.defer(() => canvasRenderer.dispose())
+    host.cleanup.defer(() => renderer.port.dispose())
+    const canvasRenderer = await attachCanvasRenderer(renderer, host.canvas)
+    host.cleanup.defer(() => canvasRenderer.dispose())
     const store = createGameStore({ storage: localStorageAdapter() })
-    const audioRuntime = createBrowserAudio()
-    cleanup.defer(() => audioRuntime.dispose())
+    const audioRuntime = mountBrowserAudio(host)
     registerSounds(audioRuntime.audio)
     audioRuntime.audio.setMasterVolume(store.getState().settings.volume)
-    cleanup.defer(subscribeSelector(
-      store,
-      (state) => state.settings.volume,
-      (volume) => audioRuntime.audio.setMasterVolume(volume)
+    host.cleanup.defer(subscribeSelector(
+      store, (state) => state.settings.volume, (volume) => audioRuntime.audio.setMasterVolume(volume)
     ))
-    const onOverlayClick = (event: MouseEvent): void => {
-      if ((event.target as HTMLElement).closest('button')) audioRuntime.audio.play('uiClick')
-    }
-    overlays.addEventListener('click', onOverlayClick)
-    cleanup.defer(() => overlays.removeEventListener('click', onOverlayClick))
-    window.addEventListener('pointerdown', audioRuntime.resume, { once: true })
-    cleanup.defer(() => window.removeEventListener('pointerdown', audioRuntime.resume))
     const physics = await createRapierPhysics()
-    cleanup.defer(() => physics.dispose())
-    const boot: BootData = await loadBootData(loader, projectReader)
+    host.cleanup.defer(() => physics.dispose())
+    const boot: BootData = await loadBootData(loader, createProjectReader())
     const { project, lib } = boot
     const { tuning, manifest } = project
 
     let active: { game: Gameplay; cleanup: CleanupStack } | null = null
-
     const leaveLevel = (): void => {
       const current = active
       active = null
       current?.cleanup.dispose()
     }
-    cleanup.defer(leaveLevel)
+    host.cleanup.defer(leaveLevel)
 
     const enterLevel = (levelId: string): void => {
-      if (active || cleanup.disposed) return
+      if (active || host.cleanup.disposed) return
       const level = loadRequestedLevel(project, store, levelId, false)
       if (!level || active) return
 
       const session = createCleanupStack()
       try {
-        const joystickBase = document.createElement('div')
-        joystickBase.className = `joystick ${store.getState().settings.joystickSide}`
-        app.append(joystickBase)
-        session.defer(() => joystickBase.remove())
-        const inputs: InputSource[] = [
-          createKeyboardInput(window),
-          createVirtualJoystick(joystickBase)
-        ]
-        for (const input of inputs) session.defer(() => input.dispose())
+        const { inputs } = createStandardInputs(app, session, {
+          joystickClass: `joystick ${store.getState().settings.joystickSide}`
+        })
         const game = createGameplay({
-          store,
-          physics,
-          render: renderer.port,
-          audio: audioRuntime.audio,
-          lib,
-          level,
-          tuning,
-          inputSources: inputs
+          store, physics, render: renderer.port, audio: audioRuntime.audio, lib, level, tuning, inputSources: inputs
         })
         session.defer(() => game.dispose())
         const hud = createHud(store, level.timeLimitS)
@@ -145,8 +84,7 @@ async function main(): Promise<void> {
       }
     }
 
-    const overlayScene = (make: () => View): Scene<SceneId> => createOverlayScene(overlays, make)
-
+    const overlayScene = (make: () => View): Scene<SceneId> => createOverlayScene(host.overlays, make)
     const scenes: Record<SceneId, Scene<SceneId>> = {
       boot: {},
       playing: {},
@@ -166,7 +104,7 @@ async function main(): Promise<void> {
         }
       }
     })
-    cleanup.defer(sceneManager.start())
+    host.cleanup.defer(sceneManager.start())
 
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return
@@ -175,24 +113,19 @@ async function main(): Promise<void> {
       else if (scene === 'paused') store.dispatch({ type: 'resumed' })
     }
     window.addEventListener('keydown', onKeyDown)
-    cleanup.defer(() => window.removeEventListener('keydown', onKeyDown))
+    host.cleanup.defer(() => window.removeEventListener('keydown', onKeyDown))
 
-    const loop = new GameLoop({
+    startGameLoop({
       fixedUpdate: (dt) => active?.game.fixedUpdate(dt),
-      render: (alpha, frameDt) => {
-        active?.game.render(alpha, frameDt)
-        canvasRenderer.renderFrame()
-      }
-    })
-    const loopDriver = startLoopDriver(loop, () => store.dispatch({ type: 'paused' }))
-    cleanup.defer(() => loopDriver.stop())
+      render: (alpha, frameDt) => active?.game.render(alpha, frameDt),
+      renderFrame: () => canvasRenderer.renderFrame(),
+      onBlurPause: () => store.dispatch({ type: 'paused' })
+    }, host.cleanup)
 
     store.dispatch({ type: 'bootCompleted' })
   } catch (error) {
-    // Roll back every resource acquired before the failure, but keep the boot
-    // error as the user-facing cause even if a cleanup callback also fails.
-    dispose()
-    app.replaceChildren(bootError(error))
+    host.dispose()
+    host.renderBootError(error)
   }
 }
 
