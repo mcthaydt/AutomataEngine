@@ -12,7 +12,7 @@
 
 ## Implementation Progress
 
-**Overall:** 1/14 tasks complete (7%)
+**Overall:** 14/14 tasks complete (100%)
 
 ## Global Constraints
 
@@ -152,7 +152,7 @@ git commit -m "feat(editor): derive entity/component IDs from scene state, not a
 - Consumes: `SpatialItem` (`packages/editor/src/project/spatial.ts`) with `position: Vec3`, `rotation: Quat`, `renderable: RenderableDef` whose `primitive` is `'box' | 'sphere' | 'cylinder'`.
 - Produces: no signature change to `ProjectWorldSync`.
 
-- [ ] **Step 1: Add behavior-locking tests**
+- [x] **Step 1: Add behavior-locking tests**
 
 Append to `packages/editor/tests/project/worldSync.test.ts` (the `item()` helper already exists there):
 
@@ -188,12 +188,12 @@ it('stays bounded under add/remove churn', () => {
 })
 ```
 
-- [ ] **Step 2: Run to confirm they pass on the current implementation**
+- [x] **Step 2: Run to confirm they pass on the current implementation**
 
 Run: `npx vitest run packages/editor/tests/project/worldSync.test.ts`
 Expected: PASS (they lock existing behavior before the refactor).
 
-- [ ] **Step 3: Refactor `worldSync.ts` to a typed field comparison**
+- [x] **Step 3: Refactor `worldSync.ts` to a typed field comparison**
 
 In `packages/editor/src/project/worldSync.ts`: extend the engine import to `import { …, type Quat, type RenderableDef, type Vec3 } from '@automata/engine'`. Replace the `seedKey` function with:
 
@@ -251,24 +251,24 @@ syncNow(items, selected) {
 },
 ```
 
-- [ ] **Step 4: Run the worldSync suite (still green)**
+- [x] **Step 4: Run the worldSync suite (still green)**
 
 Run: `npx vitest run packages/editor/tests/project/worldSync.test.ts`
 Expected: PASS — the existing color-change test and the three new tests all pass; no `JSON.stringify` remains.
 
-- [ ] **Step 5: Run the editor project suite + coverage**
+- [x] **Step 5: Run the editor project suite + coverage**
 
 Run: `npx vitest run --project editor`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/editor/src/project/worldSync.ts packages/editor/tests/project/worldSync.test.ts
 git commit -m "perf(editor): compare projected items by field instead of per-sync JSON.stringify"
 ```
 
-- [ ] **Step 7: Workstream 1 gate**
+- [x] **Step 7: Workstream 1 gate**
 
 Run: `npm run ci && npm run coverage`
 Expected: PASS. Then proceed to Workstream 2.
@@ -290,7 +290,7 @@ Five composable primitives (à la carte), then refactor both games and the scaff
 - Consumes: `createCleanupStack`, `type CleanupStack` from `@automata/engine`.
 - Produces: `createGameHost(app: HTMLElement): GameHost` where `GameHost = { app, canvas: HTMLCanvasElement, overlays: HTMLElement, cleanup: CleanupStack, dispose(): void, renderBootError(error: unknown): void }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/host.test.ts
@@ -327,12 +327,12 @@ describe('createGameHost', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/host.test.ts`
 Expected: FAIL — cannot resolve `../src/host`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/host.ts
@@ -380,12 +380,12 @@ export function createGameHost(app: HTMLElement): GameHost {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/host.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Export + commit**
+- [x] **Step 5: Export + commit**
 
 Add `export * from './host'` to `packages/game-kit/src/index.ts`, then:
 
@@ -404,7 +404,7 @@ git commit -m "feat(game-kit): add createGameHost browser boot surface"
 **Interfaces:**
 - Produces: `createProjectReader(baseURI?: string): ProjectReader` where `ProjectReader = { readText(path: string): Promise<string> }`; default `baseURI = document.baseURI`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/projectReader.test.ts
@@ -429,12 +429,12 @@ describe('createProjectReader', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/projectReader.test.ts`
 Expected: FAIL — cannot resolve `../src/projectReader`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/projectReader.ts
@@ -454,12 +454,12 @@ export function createProjectReader(baseURI: string = document.baseURI): Project
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/projectReader.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Export + commit**
+- [x] **Step 5: Export + commit**
 
 Add `export * from './projectReader'` to `packages/game-kit/src/index.ts`, then:
 
@@ -479,7 +479,7 @@ git commit -m "feat(game-kit): add createProjectReader"
 - Consumes: `createBrowserAudio`, `type BrowserAudio` from `./browserAudio`; `type CleanupStack` from `@automata/engine`.
 - Produces: `mountBrowserAudio(host: AudioHost, opts?: { create?: () => BrowserAudio }): BrowserAudio` where `AudioHost = { overlays: HTMLElement; cleanup: CleanupStack }` (a `GameHost` satisfies it). Wires resume-on-first-pointerdown, overlay-button-click → `audio.play('uiClick')`, and defers `dispose`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/mountBrowserAudio.test.ts
@@ -521,12 +521,12 @@ describe('mountBrowserAudio', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/mountBrowserAudio.test.ts`
 Expected: FAIL — cannot resolve `../src/mountBrowserAudio`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/mountBrowserAudio.ts
@@ -557,12 +557,12 @@ export function mountBrowserAudio(host: AudioHost, opts: { create?: () => Browse
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/mountBrowserAudio.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Export + commit**
+- [x] **Step 5: Export + commit**
 
 Add `export * from './mountBrowserAudio'` to `packages/game-kit/src/index.ts`, then:
 
@@ -582,7 +582,7 @@ git commit -m "feat(game-kit): add mountBrowserAudio"
 - Consumes: `createKeyboardInput`, `createVirtualJoystick` from `@automata/engine/browser`; `type CleanupStack`, `type InputSource` from `@automata/engine`.
 - Produces: `createStandardInputs(app: HTMLElement, cleanup: CleanupStack, opts?: { joystickClass?: string }): StandardInputs` where `StandardInputs = { inputs: InputSource[]; element: HTMLElement }`. Mounts the joystick into `app`, defers the element removal and each input's `dispose()` into the **caller-supplied** `cleanup` (so a game can pass a per-level session stack).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/standardInputs.test.ts
@@ -608,12 +608,12 @@ describe('createStandardInputs', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/standardInputs.test.ts`
 Expected: FAIL — cannot resolve `../src/standardInputs`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/standardInputs.ts
@@ -642,12 +642,12 @@ export function createStandardInputs(
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/standardInputs.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Export + commit**
+- [x] **Step 5: Export + commit**
 
 Add `export * from './standardInputs'` to `packages/game-kit/src/index.ts`, then:
 
@@ -667,7 +667,7 @@ git commit -m "feat(game-kit): add createStandardInputs with caller-supplied cle
 - Consumes: `GameLoop`, `type CleanupStack` from `@automata/engine`; `startLoopDriver` from `@automata/engine/browser`.
 - Produces: `startGameLoop(hooks: GameLoopHooks, cleanup: CleanupStack, deps?: LoopDeps): void`. `GameLoopHooks = { fixedUpdate(dt): void; render(alpha, frameDt): void; renderFrame(): void; onBlurPause?(): void }`. The `deps` seam (`createLoop`, `drive`) exists for testing; production omits it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/gameLoop.test.ts
@@ -703,12 +703,12 @@ describe('startGameLoop', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/gameLoop.test.ts`
 Expected: FAIL — cannot resolve `../src/gameLoop`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/gameLoop.ts
@@ -744,12 +744,12 @@ export function startGameLoop(hooks: GameLoopHooks, cleanup: CleanupStack, deps:
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/gameLoop.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Export, run whole kit suite, commit**
+- [x] **Step 5: Export, run whole kit suite, commit**
 
 Add `export * from './gameLoop'` to `packages/game-kit/src/index.ts`. Run `npx vitest run --project game-kit` (Expected: PASS), then:
 
@@ -765,7 +765,7 @@ git commit -m "feat(game-kit): add startGameLoop"
 **Files:**
 - Modify: `games/pulsebreak/src/main.ts`
 
-- [ ] **Step 1: Replace the file body**
+- [x] **Step 1: Replace the file body**
 
 Rewrite `games/pulsebreak/src/main.ts` to:
 
@@ -863,17 +863,17 @@ async function main(): Promise<void> {
 void main()
 ```
 
-- [ ] **Step 2: Typecheck + build**
+- [x] **Step 2: Typecheck + build**
 
 Run: `npm run build -w games/pulsebreak` (or `npm run ci`)
 Expected: PASS (no unused imports; `GameLoop`/`startLoopDriver`/`createBrowserAudio`/`createKeyboardInput`/`createVirtualJoystick`/`createCleanupStack` no longer imported directly here).
 
-- [ ] **Step 3: Run the Pulsebreak e2e**
+- [x] **Step 3: Run the Pulsebreak e2e**
 
 Run: `npx playwright test e2e/pulsebreak.spec.ts`
 Expected: PASS (Playwright auto-starts the dev server; behavior unchanged).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add games/pulsebreak/src/main.ts
@@ -887,7 +887,7 @@ Same primitives, but Monkey Ball keeps its per-level lifecycle: `createStandardI
 **Files:**
 - Modify: `games/monkey-ball/src/main.ts`
 
-- [ ] **Step 1: Replace the file body**
+- [x] **Step 1: Replace the file body**
 
 Rewrite `games/monkey-ball/src/main.ts` to:
 
@@ -1029,17 +1029,17 @@ async function main(): Promise<void> {
 void main()
 ```
 
-- [ ] **Step 2: Typecheck + build**
+- [x] **Step 2: Typecheck + build**
 
 Run: `npm run build -w games/monkey-ball` (or `npm run ci`)
 Expected: PASS.
 
-- [ ] **Step 3: Run the Monkey Ball e2e**
+- [x] **Step 3: Run the Monkey Ball e2e**
 
 Run: `npx playwright test e2e/game.spec.ts`
 Expected: PASS (behavior unchanged).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add games/monkey-ball/src/main.ts
@@ -1055,7 +1055,7 @@ Make new games inherit the primitives, add the `@automata/game-kit` dependency t
 - Modify: the scaffold template that emits the generated `package.json` dependencies (find in step 2)
 - Modify: any scaffold test asserting `mainTs` content (find in step 4)
 
-- [ ] **Step 1: Rewrite `mainTs`**
+- [x] **Step 1: Rewrite `mainTs`**
 
 Replace the `mainTs` function in `tools/scaffold/src/templates/srcFiles.ts` with:
 
@@ -1128,33 +1128,33 @@ void main()
 
 (The `name` parameter is now unused by `mainTs`; if the function signature must keep it for callers, leave it — otherwise drop the parameter and update the call site the compiler points to.)
 
-- [ ] **Step 2: Add the game-kit dependency to the generated package.json**
+- [x] **Step 2: Add the game-kit dependency to the generated package.json**
 
 Run: `grep -rn '@automata/engine' tools/scaffold/src/templates/*.ts`
 In whichever template emits the generated `package.json` `dependencies`, add `"@automata/game-kit"` alongside `"@automata/engine"`, using the identical version specifier the template uses for `@automata/engine` (e.g. `"*"` or `"workspace:*"`).
 
-- [ ] **Step 3: Run the scaffold unit suite**
+- [x] **Step 3: Run the scaffold unit suite**
 
 Run: `npx vitest run --project scaffold`
 Expected: FAIL on any assertion that pins the old `mainTs` text or the old dependency list.
 
-- [ ] **Step 4: Update scaffold test expectations**
+- [x] **Step 4: Update scaffold test expectations**
 
 In the failing scaffold test(s), update the expected `mainTs` substring/snapshot to match the new template (e.g. assert it contains `createGameHost` and `startGameLoop` and no longer references `new GameLoop`), and update the expected dependency list to include `@automata/game-kit`. Re-run `npx vitest run --project scaffold` → PASS.
 
-- [ ] **Step 5: Clean-clone acceptance**
+- [x] **Step 5: Clean-clone acceptance**
 
 Run: `npm run verify:new-game`
 Expected: PASS — a freshly scaffolded game (depending on `@automata/game-kit`) builds, tests, and boots.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tools/scaffold/
 git commit -m "feat(scaffold): generate main.ts from @automata/game-kit primitives"
 ```
 
-- [ ] **Step 7: Workstream 2 gate**
+- [x] **Step 7: Workstream 2 gate**
 
 Run: `npm run ci`
 Expected: PASS. Then proceed to Workstream 3.
@@ -1175,7 +1175,7 @@ Autosave recovery currently replaces the opened project silently. Surface a dism
 **Interfaces:**
 - Produces: `showRecoveryNotice(root: HTMLElement, opts: { onDiscard: () => void }): () => void` — appends a `[data-recovery-notice]` banner with a `[data-recovery-discard]` and a `[data-recovery-dismiss]` button; returns a remover.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tools/level-editor/tests/recoveryNotice.test.ts
@@ -1203,12 +1203,12 @@ describe('showRecoveryNotice', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run tools/level-editor/tests/recoveryNotice.test.ts`
 Expected: FAIL — cannot resolve `../src/recoveryNotice`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // tools/level-editor/src/recoveryNotice.ts
@@ -1237,12 +1237,12 @@ export function showRecoveryNotice(root: HTMLElement, opts: { onDiscard: () => v
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run tools/level-editor/tests/recoveryNotice.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Wire it into `mountProjectSession`**
+- [x] **Step 5: Wire it into `mountProjectSession`**
 
 In `tools/level-editor/src/editorApp.ts`: add `import { showRecoveryNotice } from './recoveryNotice'`. Replace the recovery block (`:269-272`) with:
 
@@ -1257,12 +1257,12 @@ if (autosaved && stringifyProjectBundle(toProjectBundle(autosaved)) !== stringif
 }
 ```
 
-- [ ] **Step 6: Run the level-editor suite**
+- [x] **Step 6: Run the level-editor suite**
 
 Run: `npx vitest run --project level-editor`
 Expected: PASS (if `editorApp.test.ts` or `projectSession.test.ts` asserts on `options.root` children after a recovering mount, update it to tolerate the banner).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add tools/level-editor/src/recoveryNotice.ts tools/level-editor/tests/recoveryNotice.test.ts tools/level-editor/src/editorApp.ts
@@ -1277,12 +1277,12 @@ Guarantee the pending autosave debounce is flushed when the tab unloads (the `in
 - Modify: `tools/level-editor/src/editorApp.ts` (`mountEditorApp`, returned `dispose` at `:228-239`)
 - Modify test: `tools/level-editor/tests/editorApp.test.ts`
 
-- [ ] **Step 1: Check current wiring**
+- [x] **Step 1: Check current wiring**
 
 Run: `grep -rn "beforeunload" tools/level-editor/src`
 If a `beforeunload → dispose` (or `→ session.dispose`) is already wired, skip steps 2-4 and note it in the commit; otherwise continue.
 
-- [ ] **Step 2: Add a behavior test**
+- [x] **Step 2: Add a behavior test**
 
 In `tools/level-editor/tests/editorApp.test.ts`, model the test on the file's existing session-open pattern (`sessionFactory(handle)` → `mounted.factory`, opened via the `[data-create-game="pulsebreak"]` button — see the "keeps a dirty session mounted" test at `:74-105`, which already asserts on a `dispose` mock). Add:
 
@@ -1312,7 +1312,7 @@ it('disposes the open session on beforeunload so autosave flushes', async () => 
 
 Run: `npx vitest run tools/level-editor/tests/editorApp.test.ts` → FAIL (no `beforeunload` wiring yet).
 
-- [ ] **Step 3: Wire `beforeunload` in `mountEditorApp`**
+- [x] **Step 3: Wire `beforeunload` in `mountEditorApp`**
 
 In `mountEditorApp`, immediately before the `return { … }`, add:
 
@@ -1327,12 +1327,12 @@ and in the returned `dispose()`, before `removeTheme()`, add:
 window.removeEventListener('beforeunload', onBeforeUnload)
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run tools/level-editor/tests/editorApp.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/level-editor/src/editorApp.ts tools/level-editor/tests/editorApp.test.ts
@@ -1347,7 +1347,7 @@ Two tests. First, a unit round-trip proving edited content survives the editor's
 - Modify: `packages/editor/tests/project/storage/autosave.test.ts`
 - Modify: `e2e/editor.spec.ts`
 
-- [ ] **Step 1: Add the save→reopen content round-trip test**
+- [x] **Step 1: Add the save→reopen content round-trip test**
 
 Append to `packages/editor/tests/project/storage/autosave.test.ts`, reusing that file's existing harness (`createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())`, `memoryStorage()`, the `setSpeed` edit helper, project id `'fake-demo'`):
 
@@ -1367,12 +1367,12 @@ it('preserves an edit across a persist → reload round-trip', () => {
 
 If the bundle round-trip is not field-for-field identity (making the whole-snapshot `toEqual` brittle), fall back to asserting the edited value, mirroring the file's existing flush test: `expect((reopened!.resources.tuning!.data as { speed: number }).speed).toBe(12)`.
 
-- [ ] **Step 2: Run the round-trip test**
+- [x] **Step 2: Run the round-trip test**
 
 Run: `npx vitest run packages/editor/tests/project/storage/autosave.test.ts`
 Expected: PASS.
 
-- [ ] **Step 3: Add the long-session e2e**
+- [x] **Step 3: Add the long-session e2e**
 
 Append to `e2e/editor.spec.ts`. The console/page-error listeners filter known-benign headless-Chromium noise (WebGL/resource warnings) and assert no app-level errors remain:
 
@@ -1403,24 +1403,24 @@ test('survives a long editing session without console errors', async ({ page }) 
 })
 ```
 
-- [ ] **Step 4: Run the editor e2e**
+- [x] **Step 4: Run the editor e2e**
 
 Run: `npx playwright test e2e/editor.spec.ts`
 Expected: PASS, `errors` empty. If the undo/redo shortcut differs from `Control+z` / `Control+Shift+z`, confirm the binding in `editorApp.ts` (`:392-397`) and match it.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/editor/tests/project/storage/autosave.test.ts e2e/editor.spec.ts
 git commit -m "test: cover save→reopen content round-trip and a long editing session"
 ```
 
-- [ ] **Step 6: Workstream 3 gate**
+- [x] **Step 6: Workstream 3 gate**
 
 Run: `npm run ci && npm run coverage`
 Expected: PASS.
 
-- [ ] **Step 7: Full acceptance sweep**
+- [x] **Step 7: Full acceptance sweep**
 
 Run: `npx playwright test` and `npm run verify:new-game`
 Expected: all PASS.
@@ -1434,7 +1434,7 @@ After all three workstreams are merged, record Phase 0 as complete.
 **Files:**
 - Modify: `docs/ROADMAP.md`
 
-- [ ] **Step 1: Update the roadmap**
+- [x] **Step 1: Update the roadmap**
 
 In `docs/ROADMAP.md`:
 - Move **Phase 0 — Platform integrity** from `In progress` to `Shipped` in §1 (newest first), citing the merge commit, and note the three sub-cycles + P4 done.
@@ -1442,7 +1442,7 @@ In `docs/ROADMAP.md`:
 - In §2, set the `P4` row status to `Shipped`.
 - Promote **Phase 1 — Persistent MCP build sessions (P5)** from `Next`/`In progress` per the sequencing rules.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/ROADMAP.md

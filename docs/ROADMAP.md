@@ -27,6 +27,12 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **Phase 0 — Platform integrity** (2026-07-12, `phase-0-completion` @
+  `f62910d`). Completed editor entity-ID/render-sync hardening, P4's shared
+  `@automata/game-kit` browser shell and scaffold adoption, and
+  visible/reversible save-reopen recovery with long-session acceptance coverage.
+  Spec: [`specs/2026-07-11-phase-0-completion-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-11-phase-0-completion-design.md);
+  plan: [`plans/2026-07-11-phase-0-completion.md`](superpowers/plans/active/2026-07/week-28/2026-07-11-phase-0-completion.md).
 - **P8 — Standalone hygiene** (2026-07-11). Retired Monkey Ball's legacy
   ingestion seam (`importLegacyMonkeyBallProject`, `legacyTypes`,
   `scripts/build-project.ts`, quarantined legacy fixtures; dropped the pre-P3
@@ -73,8 +79,8 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 | (P1) | M1 | Phase 0 precursor | Paved road: scaffold + convention registry | Shipped |
 | P2 | M2 | Phase 0 precursor | Schema unification (zod) + agent prompt layer | Shipped |
 | P3 | M3 | Phase 0 (part) | Project-file migrations, formatVersion 2 | Shipped |
-| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Planned |
-| P5 | — | Phase 1 | Persistent MCP build sessions | Next |
+| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Shipped |
+| P5 | — | Phase 1 | Persistent MCP build sessions | In progress |
 | P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
 | P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
 | P8 | — | Standalone | Hygiene | Shipped |
@@ -106,21 +112,21 @@ in Phase 1 and extended by later phases). An early **vertical slice (Phase 3)**
 proves the whole pipeline seam on a thin playable before any layer is built at
 scale.
 
-### Phase 0 — Platform integrity · `In progress`
+### Phase 0 — Platform integrity · `Shipped`
 
 - **Goal:** generated projects survive engine evolution and long editing
   sessions.
 - **Depends on:** M1, M2/P2 (shipped).
 - **Tasks:**
   - **P3 project-file migrations** — `Shipped` (2026-07-05).
-  - Editor entity-ID and render-timing hardening — `Planned`.
+  - Editor entity-ID and render-timing hardening — `Shipped` (2026-07-12).
   - **P4** — expand `@automata/game-kit` around the literal game duplication
-    (shared browser boot, loop, visibility, HUD, project-reader) — `Planned`.
-  - Save/reopen recovery and longer browser acceptance coverage — `Planned`.
+    (shared browser boot, loop, visibility, HUD, project-reader) — `Shipped` (2026-07-12).
+  - Save/reopen recovery and longer browser acceptance coverage — `Shipped` (2026-07-12).
 - **Exit:** generated projects survive engine evolution and long editing
   sessions; the remaining hardening/game-kit/acceptance tasks are all done.
 
-### Phase 1 — Persistent MCP build sessions (P5) · `Next`
+### Phase 1 — Persistent MCP build sessions (P5) · `In progress`
 
 - **Goal:** an agent can create, reopen, modify, evaluate, and repair a game
   across process and context resets.
@@ -197,7 +203,7 @@ scale.
 Work that supports the arc but does not sit inside a single phase. P5's detail
 lives under **Phase 1** in section 3 (it is a phase, not a cross-cutting item).
 
-### P4 — Richer `@automata/game-kit` · `Planned` (also a Phase 0 task)
+### P4 — Richer `@automata/game-kit` · `Shipped` (also a Phase 0 task)
 
 - **What today looks like:** each game's browser entry point duplicates the same
   boot code — `games/monkey-ball/src/main.ts` (~200 lines) and
