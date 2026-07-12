@@ -5,7 +5,10 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('createProjectReader', () => {
   it('fetches project-relative paths and returns text', async () => {
-    const fetchMock = vi.fn(async () => new Response('hello', { status: 200 }))
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      void input
+      return new Response('hello', { status: 200 })
+    })
     vi.stubGlobal('fetch', fetchMock)
     const reader = createProjectReader('http://host/game/')
     await expect(reader.readText('scenes/a.json')).resolves.toBe('hello')
