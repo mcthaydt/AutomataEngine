@@ -26,6 +26,7 @@ import {
 import { applyGameMigration, PROJECT_FORMAT_VERSION, stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
 import type { BrowserWorkspace, OpenedBrowserProject } from './browserWorkspace'
 import type { ProjectCatalog } from './projectCatalog'
+import { showRecoveryNotice } from './recoveryNotice'
 
 export type DirtyAction = 'save' | 'export' | 'discard' | 'cancel'
 
@@ -269,6 +270,10 @@ export async function mountProjectSession(
     const autosaved = loadProjectAutosave(options.autosaveStorage, options.snapshot.manifest.id)
     if (autosaved && stringifyProjectBundle(toProjectBundle(autosaved)) !== stringifyProjectBundle(toProjectBundle(options.snapshot))) {
       core.store.dispatch({ type: 'recoverSnapshot', snapshot: autosaved })
+      const removeNotice = showRecoveryNotice(options.root, {
+        onDiscard: () => core.store.dispatch({ type: 'loadSnapshot', snapshot: options.snapshot })
+      })
+      cleanup.defer(removeNotice)
     }
     cleanup.defer(installProjectAutosave(core.store, options.autosaveStorage, { debounceMs: 400 }))
 
