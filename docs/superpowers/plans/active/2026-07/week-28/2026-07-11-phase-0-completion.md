@@ -1280,20 +1280,33 @@ If a `beforeunload → dispose` (or `→ session.dispose`) is already wired, ski
 
 - [ ] **Step 2: Add a behavior test**
 
-In `tools/level-editor/tests/editorApp.test.ts`, using the file's existing `mountEditorApp` setup helper (catalog with the fake registration, memory `autosaveStorage`, fake `workspace`, and a `createSession` spy that returns a handle with a `dispose` mock), add:
+In `tools/level-editor/tests/editorApp.test.ts`, model the test on the file's existing session-open pattern (`sessionFactory(handle)` → `mounted.factory`, opened via the `[data-create-game="pulsebreak"]` button — see the "keeps a dirty session mounted" test at `:74-105`, which already asserts on a `dispose` mock). Add:
 
 ```ts
 it('disposes the open session on beforeunload so autosave flushes', async () => {
+  const root = document.createElement('main')
+  document.body.append(root)
   const dispose = vi.fn()
-  // Build options with a createSession that opens a session whose dispose is `dispose`,
-  // then open one (click the fake "Create" button / call the harness's open helper).
-  // (Reuse the file's existing helper for constructing options + opening a session.)
+  const handle: ProjectSessionHandle = {
+    canSave: false, hasUnsavedChanges: () => false,
+    save: async () => true, exportBundle: () => {}, dispose
+  }
+  const mounted = sessionFactory(handle)
+  const app = await mountEditorApp({
+    root, catalog, workspace, autosaveStorage: memoryStorage(),
+    query: '?game=pulsebreak', createSession: mounted.factory
+  })
+  root.querySelector<HTMLButtonElement>('[data-create-game="pulsebreak"]')!.click()
+  await vi.waitFor(() => expect(mounted.mounts).toHaveLength(1))
+
   window.dispatchEvent(new Event('beforeunload'))
   expect(dispose).toHaveBeenCalled()
+
+  app.dispose()
 })
 ```
 
-Adapt the setup to the harness already present in the file (it constructs `EditorAppOptions` and opens a session in other tests). Run: `npx vitest run tools/level-editor/tests/editorApp.test.ts` → FAIL (no `beforeunload` wiring yet).
+Run: `npx vitest run tools/level-editor/tests/editorApp.test.ts` → FAIL (no `beforeunload` wiring yet).
 
 - [ ] **Step 3: Wire `beforeunload` in `mountEditorApp`**
 
@@ -1322,22 +1335,51 @@ git add tools/level-editor/src/editorApp.ts tools/level-editor/tests/editorApp.t
 git commit -m "fix(level-editor): flush autosave by disposing the session on beforeunload"
 ```
 
-### Task 13: Long-session acceptance coverage
+### Task 13: Acceptance coverage — save→reopen round-trip + long editing session
 
-Add a Playwright test that drives a long editing session (WS1's guarantee: IDs and render sync survive churn) and asserts no console/page errors. Save→folder and reopen are not exercised in headless Playwright (they need the File System Access API); recovery is covered by Task 11's unit tests, and scaffold-boot by `verify:new-game` (Task 10).
+Two tests. First, a unit round-trip proving edited content survives the editor's canonical persist→reload path (spec §5.1) — the folder-level File System Access save/open can't run headless, so this exercises the real serialize→reload code shared by durable save and autosave. Second, a Playwright long-session test (WS1's guarantee: IDs and render sync survive churn) asserting no app-level console/page errors. Recovery (§5.2) is covered by Task 11's unit tests, and scaffold-boot (§5.4) by `verify:new-game` (Task 10).
 
 **Files:**
+- Modify: `packages/editor/tests/project/storage/autosave.test.ts`
 - Modify: `e2e/editor.spec.ts`
 
-- [ ] **Step 1: Add the test**
+- [ ] **Step 1: Add the save→reopen content round-trip test**
 
-Append to `e2e/editor.spec.ts`:
+Append to `packages/editor/tests/project/storage/autosave.test.ts`, reusing that file's existing harness (`createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())`, `memoryStorage()`, the `setSpeed` edit helper, project id `'fake-demo'`):
+
+```ts
+it('preserves an edit across a persist → reload round-trip', () => {
+  const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+  const storage = memoryStorage()
+  const stop = installProjectAutosave(store, storage, { debounceMs: 100 })
+
+  store.dispatch(setSpeed(12))
+  stop() // disposer flushes the pending write immediately
+
+  const reopened = loadProjectAutosave(storage, 'fake-demo')
+  expect(reopened).toEqual(store.getState().snapshot)
+})
+```
+
+If the bundle round-trip is not field-for-field identity (making the whole-snapshot `toEqual` brittle), fall back to asserting the edited value, mirroring the file's existing flush test: `expect((reopened!.resources.tuning!.data as { speed: number }).speed).toBe(12)`.
+
+- [ ] **Step 2: Run the round-trip test**
+
+Run: `npx vitest run packages/editor/tests/project/storage/autosave.test.ts`
+Expected: PASS.
+
+- [ ] **Step 3: Add the long-session e2e**
+
+Append to `e2e/editor.spec.ts`. The console/page-error listeners filter known-benign headless-Chromium noise (WebGL/resource warnings) and assert no app-level errors remain:
 
 ```ts
 test('survives a long editing session without console errors', async ({ page }) => {
+  const IGNORE = [/WebGL/i, /favicon/i, /Failed to load resource/i]
   const errors: string[] = []
-  page.on('console', (msg) => { if (msg.type() === 'error') errors.push(msg.text()) })
-  page.on('pageerror', (err) => errors.push(err.message))
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' && !IGNORE.some((r) => r.test(msg.text()))) errors.push(msg.text())
+  })
+  page.on('pageerror', (err) => { if (!IGNORE.some((r) => r.test(err.message))) errors.push(err.message) })
 
   await page.goto('http://127.0.0.1:5175/?game=pulsebreak')
   await page.getByRole('button', { name: 'Create Pulsebreak Project' }).click()
@@ -1357,24 +1399,24 @@ test('survives a long editing session without console errors', async ({ page }) 
 })
 ```
 
-- [ ] **Step 2: Run the editor e2e**
+- [ ] **Step 4: Run the editor e2e**
 
 Run: `npx playwright test e2e/editor.spec.ts`
 Expected: PASS, `errors` empty. If the undo/redo shortcut differs from `Control+z` / `Control+Shift+z`, confirm the binding in `editorApp.ts` (`:392-397`) and match it.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add e2e/editor.spec.ts
-git commit -m "test(e2e): cover a long editing session for console errors and ID/render stability"
+git add packages/editor/tests/project/storage/autosave.test.ts e2e/editor.spec.ts
+git commit -m "test: cover save→reopen content round-trip and a long editing session"
 ```
 
-- [ ] **Step 4: Workstream 3 gate**
+- [ ] **Step 6: Workstream 3 gate**
 
 Run: `npm run ci && npm run coverage`
 Expected: PASS.
 
-- [ ] **Step 5: Full acceptance sweep**
+- [ ] **Step 7: Full acceptance sweep**
 
 Run: `npx playwright test` and `npm run verify:new-game`
 Expected: all PASS.
@@ -1407,8 +1449,8 @@ git commit -m "docs: mark Phase 0 (platform integrity) shipped; promote Phase 1"
 
 ## Self-Review
 
-**Spec coverage:** WS1 IDs → Task 1; WS1 render sync → Task 2; WS2 five primitives → Tasks 3-7; WS2 game refactors → Tasks 8-9; WS2 scaffold regen + `verify:new-game` → Task 10; WS3 visible/reversible recovery → Task 11; WS3 flush-on-close → Task 12; WS3 acceptance coverage → Task 13; roadmap impact (spec §7) → Task 14. The spec's "migration-on-recover" edge is already covered by the existing `autosave.test.ts` ("returns null for the legacy envelope, garbage, and future versions") and the shared `parseProjectBundle` path, so no new task is required.
+**Spec coverage:** WS1 IDs → Task 1; WS1 render sync → Task 2; WS2 five primitives → Tasks 3-7; WS2 game refactors → Tasks 8-9; WS2 scaffold regen + `verify:new-game` → Task 10; WS3 visible/reversible recovery → Task 11; WS3 flush-on-close → Task 12; WS3 acceptance coverage → Task 13 (spec §5.1 save→reopen via an autosave-storage content round-trip; §5.3 long-session e2e), with §5.2 recovery → Task 11 and §5.4 scaffold-boot → `verify:new-game` (Task 10); roadmap impact (spec §7) → Task 14. The spec's "migration-on-recover" edge is already covered by the existing `autosave.test.ts` ("returns null for the legacy envelope, garbage, and future versions") and the shared `parseProjectBundle` path, so no new task is required.
 
 **Type consistency:** `GameHost`/`AudioHost`/`StandardInputs`/`GameLoopHooks`/`LoopDeps`/`ProjectReader` are defined once (Tasks 3-7) and consumed unchanged by Tasks 8-10. `uniqueEntityId`/`uniqueComponentId` signatures (Task 1) match every call site. `showRecoveryNotice` signature (Task 11) matches its `editorApp.ts` call.
 
-**Placeholder scan:** Two tasks reference "the file's existing harness/binding" (Task 12 test setup, Task 13 undo shortcut) rather than inlining it — deliberate, because those details live in files the engineer will open and are noted with exact locations (`editorApp.test.ts`, `editorApp.ts:392-397`). All production code and all new-file tests are complete.
+**Placeholder scan:** One task references "the file's existing binding" (Task 13's undo shortcut) rather than inlining it — deliberate, noted with an exact location (`editorApp.ts:392-397`). Task 12's `beforeunload` test and Task 13's save→reopen round-trip test are now inlined in full against the real harness identifiers. Task 10 Step 2 keeps a single grep to locate the generated `package.json` template — a genuine discovery step, not a placeholder. All production code and all new tests are complete.
