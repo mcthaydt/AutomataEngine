@@ -10,6 +10,10 @@
 
 **Spec:** [`docs/superpowers/specs/active/2026-07/week-28/2026-07-11-phase-0-completion-design.md`](../../../specs/active/2026-07/week-28/2026-07-11-phase-0-completion-design.md)
 
+## Implementation Progress
+
+**Overall:** 1/14 tasks complete (7%)
+
 ## Global Constraints
 
 - **Engine boundary:** `games/*` and `tools/*` import engine APIs only from `@automata/engine` (or `@automata/engine/browser`); third-party engine deps stay wrapped in `packages/engine`.
@@ -38,7 +42,7 @@ Replace the session-relative `placeCounter` in the editor host with pure allocat
 **Interfaces:**
 - Produces: `uniqueEntityId(scene: SceneDocument, base: string): string` — lowest `base-1`, `base-2`, … not present in `scene`. `uniqueComponentId(existing: readonly string[], base: string): string` — bare `base`, else `base-2`, `base-3`, ….
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/editor/tests/project/ids.test.ts
@@ -75,12 +79,12 @@ describe('uniqueComponentId', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/editor/tests/project/ids.test.ts`
 Expected: FAIL — cannot resolve `../../src/project/ids`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/editor/src/project/ids.ts
@@ -105,16 +109,16 @@ export function uniqueComponentId(existing: readonly string[], base: string): st
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/editor/tests/project/ids.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Wire `host.ts` to the shared allocator**
+- [x] **Step 5: Wire `host.ts` to the shared allocator**
 
 In `packages/editor/src/project/host.ts`: add `import { uniqueEntityId } from './ids'` to the local-imports block. Delete `let placeCounter = 0` (`:60`) and the entire `uniqueEntityId` closure (`:82-86`). The existing call site `const entityId = uniqueEntityId(scene, prefabId)` (`:150`) now resolves to the import — no call-site change.
 
-- [ ] **Step 6: Wire `palette.ts` to the shared allocator**
+- [x] **Step 6: Wire `palette.ts` to the shared allocator**
 
 In `packages/editor/src/ui/project/palette.ts`: add `import { uniqueComponentId } from '../../project/ids'`. Delete the local `uniqueComponentId` function (`:90-97`). Change the call site (`:82`) to compute the base explicitly:
 
@@ -123,12 +127,12 @@ const base = type.typeId.split('.').pop() ?? 'component'
 const componentId = uniqueComponentId(entity.components.map((component) => component.id), base)
 ```
 
-- [ ] **Step 7: Run the editor suite**
+- [x] **Step 7: Run the editor suite**
 
 Run: `npx vitest run --project editor`
 Expected: PASS (host/palette behavior unchanged; placed-entity IDs are now gap-filling and session-stable — no editor test asserts placed-entity ID numbering).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/editor/src/project/ids.ts packages/editor/tests/project/ids.test.ts \
