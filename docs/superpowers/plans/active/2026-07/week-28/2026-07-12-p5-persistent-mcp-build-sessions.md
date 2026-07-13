@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 10/62 steps complete (16%)
+**Overall progress:** 15/62 steps complete (24%)
 
 ## Global Constraints
 
@@ -455,7 +455,7 @@ git commit -m "feat(contracts): session/check tool defs, unified parser, openPro
 **Interfaces:**
 - Produces (used by Tasks 6, 12; later by game-kit runtime work): `SeededRng { next(): number; nextInt(maxExclusive: number): number }`, `createSeededRng(seed: number): SeededRng`, `hashStringToSeed(text: string): number`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -494,12 +494,12 @@ describe('seeded rng', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project engine -t 'seeded rng'`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/engine/src/math/random.ts
@@ -541,12 +541,12 @@ export function createSeededRng(seed: number): SeededRng {
 }
 ```
 
-- [ ] **Step 4: Run engine tests + coverage-sensitive check**
+- [x] **Step 4: Run engine tests + coverage-sensitive check**
 
 Run: `npx vitest run --project engine`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/engine
