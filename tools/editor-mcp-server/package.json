@@ -11,8 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@automata/build-session": "*",
     "@automata/contracts": "*",
     "@automata/editor": "*",
+    "@automata/engine": "*",
     "@automata/project": "*",
     "@automata/scaffold": "*",
     "@modelcontextprotocol/sdk": "^1.0.0",

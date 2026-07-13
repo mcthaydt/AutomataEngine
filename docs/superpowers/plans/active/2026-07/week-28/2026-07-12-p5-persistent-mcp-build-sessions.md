@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 40/62 steps complete (65%)
+**Overall progress:** 45/62 steps complete (73%)
 
 ## Global Constraints
 
@@ -1945,7 +1945,7 @@ Behavior locked here:
 - `readResource` — delegate to the open project host; throw when closed.
 - `dispose()` — dispose every cached engine (saves + releases locks).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tools/editor-mcp-server/tests/sessionHost.test.ts
@@ -2101,12 +2101,12 @@ describe('sessionHost', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project editor-mcp-server -t 'sessionHost'`
 Expected: FAIL — `../src/sessionHost` does not exist.
 
-- [ ] **Step 3: Implement `projectWriter.ts`**
+- [x] **Step 3: Implement `projectWriter.ts`**
 
 ```ts
 // tools/editor-mcp-server/src/projectWriter.ts
@@ -2128,7 +2128,7 @@ export async function writeProjectFiles(projectDir: string, snapshot: ProjectSna
 }
 ```
 
-- [ ] **Step 4: Implement `sessionHost.ts`**
+- [x] **Step 4: Implement `sessionHost.ts`**
 
 ```ts
 // tools/editor-mcp-server/src/sessionHost.ts
@@ -2352,7 +2352,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
 
 Until Task 10 lands, stub `executeCheckTool` on the returned object as `async executeCheckTool() { return fail('checks land in the next task') }` so this task compiles and its tests pass; Task 10 replaces the stub. (Type the returned object as `SessionMcpHost & { executeCheckTool(name: string, args: unknown): Promise<ToolResult> }` internally.) The `formatVersion` read must match the real manifest field name from `@automata/project` — verify it while implementing and adjust if the model calls it something else.
 
-- [ ] **Step 5: Run tests, verify pass; commit**
+- [x] **Step 5: Run tests, verify pass; commit**
 
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS (existing workspaceHost tests untouched for now — removal happens in Task 11).
