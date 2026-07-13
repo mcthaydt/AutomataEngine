@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 55/62 steps complete (89%)
+**Overall progress:** 58/62 steps complete (94%)
 
 ## Global Constraints
 
@@ -2842,7 +2842,7 @@ git commit -m "feat(editor-mcp-server)!: single workspace mode; retire --project
 
 This test walks the roadmap exit criterion literally, with process resets modeled as full host disposal + reconstruction (all state must round-trip through disk — that is what makes a real process kill equivalent). The project host stub here is **file-backed**: it loads its snapshot from the files write-through produced, so reopen genuinely proves durability of authored content, not just of session metadata.
 
-- [ ] **Step 1: Write the acceptance test**
+- [x] **Step 1: Write the acceptance test**
 
 ```ts
 // tools/editor-mcp-server/tests/acceptance.test.ts
@@ -2999,12 +2999,12 @@ describe('Phase 1 exit criterion (scripted, no LLM)', () => {
 })
 ```
 
-- [ ] **Step 2: Run the acceptance test**
+- [x] **Step 2: Run the acceptance test**
 
 Run: `npx vitest run --project editor-mcp-server -t 'exit criterion'`
 Expected: PASS with **no production-code changes**. If it fails, the defect is in an earlier task — fix it there (with a unit test in that task's suite), never by special-casing here.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tools/editor-mcp-server/tests/acceptance.test.ts
