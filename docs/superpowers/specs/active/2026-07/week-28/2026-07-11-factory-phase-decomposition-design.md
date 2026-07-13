@@ -1,6 +1,6 @@
 # Factory Roadmap Completion — Phase 0→8 Decomposition (Design)
 
-Status: approved decomposition. Phase 0 completed 2026-07-12. Date: 2026-07-11.
+Status: approved decomposition. Phases 0–1 completed 2026-07-12 and 2026-07-13. Date: 2026-07-11.
 
 ## 1. Purpose & how to read
 
@@ -15,8 +15,9 @@ brainstorming starts from a firm scope instead of re-deriving it.
 It deliberately does **not** carry:
 
 - **Live status / sequencing** — owned by [`/docs/ROADMAP.md`](/docs/ROADMAP.md).
-  When a phase or sub-cycle starts, ships, or slips, update the roadmap, not this
-  file.
+  This design records completed phase boundaries and must be synchronized with
+  the roadmap whenever a phase ships; the roadmap remains the source of truth
+  for work in flight and what comes next.
 - **Strategy & architecture** — the north star, product contract, full `GameSpec`
   interface, the six subsystems, the complete evaluator taxonomy, the repair
   table, risks, and success metrics live in the
@@ -82,7 +83,7 @@ design.
 | Phase | Goal (one line) | Advances checkpoint | Depends on | Sub-cycles |
 |---|---|---|---|---|
 | 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 completed (2026-07-12) |
-| 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 |
+| 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 completed (2026-07-13) |
 | 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 |
 | 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 (integration) |
 | 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack) |
@@ -143,12 +144,17 @@ simple and expand where it is not.
 
 ### Phase 1 — Persistent MCP build sessions (P5)
 
+**Completed 2026-07-13.** Implementation spec:
+[`2026-07-12-p5-persistent-mcp-build-sessions-design.md`](2026-07-12-p5-persistent-mcp-build-sessions-design.md);
+implementation plan:
+[`2026-07-12-p5-persistent-mcp-build-sessions.md`](/docs/superpowers/plans/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions.md).
+
 - **Goal.** An agent can create, reopen, modify, evaluate, and repair a game
   across process and context resets.
 - **Advances checkpoint.** None — internal enabler; the durable substrate every
   autonomous phase runs on.
 - **Depends on.** Phase 0 complete.
-- **In scope.**
+- **In scope — shipped.**
   - Project open/swap behavior in workspace MCP mode.
   - Persist session state, artifacts, findings, budgets, and resume position
     *outside model context*.
@@ -164,19 +170,20 @@ simple and expand where it is not.
     results as typed findings) — the pipe every later evaluator reports through.
   - *Determinism/runtime:* **the** phase that establishes the seeded harness and
     composition runtime; foundational for both spines.
-- **Sub-cycles it spawns.** (1) durable build-session substrate — open/swap,
-  persistence, idempotency, results surface (the orchestrator state machine's
-  durability); (2) seeded-generation/replay harness + pack-composition runtime
-  seam.
-- **Contracts introduced.** The durable build-session schema (spec versions,
-  artifact hashes, findings, budgets, resumable next action); the typed-findings
-  result surface; the seed/replay contract; the runtime pack-composition seam
-  interface.
+- **Sub-cycles completed.** (1) durable build-session substrate — open/swap,
+  atomic persistence, idempotency, results surface, and write-through authoring;
+  (2) seeded-generation/replay harness + pack-composition runtime seam.
+- **Contracts introduced.** The durable build-session schema (versioned session
+  documents, artifact hashes, findings, budgets, resumable next action); the
+  typed-findings result surface; the seed/replay contract; and the runtime
+  `GamePack`/`composePacks` seam interface.
 - **Exit.** An agent creates, reopens, modifies, evaluates, and repairs a game
   across resets without blindly replaying successful work, and generation steps
   replay deterministically from a recorded seed.
 - **Risks retired / carried.** Retires "provider continuation state as source of
-  truth" (durable artifacts). Carries seam correctness forward.
+  truth" through durable, hash-guarded artifacts and write-through project
+  edits. Carries real-pack and generated-content seam correctness forward to
+  Phases 3–6.
 
 ### Phase 2 — Versioned `GameSpec`
 
@@ -420,9 +427,9 @@ the current best decomposition, revised each cycle.
 2. P4 — game-kit browser-shell extraction + scaffold template regen — completed
 3. Save/reopen recovery + longer browser acceptance coverage — completed
 
-**Phase 1:**
+**Phase 1 (completed 2026-07-13):**
 
-1. Durable build-session substrate (open/swap, persistence, idempotency, results surface)
+1. Durable build-session substrate (open/swap, atomic persistence, idempotency, typed results)
 2. Seeded-generation/replay harness + pack-composition runtime seam
 
 **Phase 2:**
