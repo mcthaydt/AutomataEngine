@@ -8,3 +8,6 @@ playwright-report/
 
 # Brainstorm visual companion
 .superpowers/
+
+# MCP build sessions (durable, machine-local)
+.automata/

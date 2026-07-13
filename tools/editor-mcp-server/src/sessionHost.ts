@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises'
 import { join } from 'node:path'
-import { ENGINE_VERSION } from '@automata/engine'
+import { ENGINE_VERSION } from '@automata/engine/data'
 import { createSessionEngine, diffFiles, hashJson, nodeSpawner, runCheck, snapshotFiles, type CommandSpawner, type SessionEngine } from '@automata/build-session'
 import { sessionToolDefs, splitClientStepId, workspaceToolDefs, writeToolNames, type McpToolHost, type ToolResult } from '@automata/contracts'
 import { createNewGameWriter, nodeScaffoldFs, type ScaffoldFs } from '@automata/scaffold'
@@ -30,7 +30,6 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     engines.set(gameId, engine); return engine
   }
   const contentSnapshot = async (gameId: string, projectDir: string) => { const files = await snapshotFiles([{ label: 'src', dir: join(repoRoot, 'games', gameId, 'src') }, { label: 'project', dir: projectDir }]); return { files, hash: hashJson(files) } }
-  const requireOpen = (): OpenState | null => open
   const handleOpen = async (gameId: string): Promise<ToolResult> => {
     const available = await discoverGames(repoRoot); if (!available.includes(gameId)) return fail(`Unknown game "${gameId}". Available: ${available.join(', ')}`)
     const projectDir = projectDirFor(gameId); const engine = await ensureEngine(gameId); const headless = await openHeadless(projectDir); open = { gameId, projectDir, headless, engine }

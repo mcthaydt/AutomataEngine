@@ -160,12 +160,17 @@ describe('MCP server', () => {
       bin: Record<string, string>
     }
     const command = resolve(packageDir, manifest.bin['automata-editor-mcp']!)
-    const transport = new StdioClientTransport({ command, cwd: packageDir, stderr: 'pipe' })
+    const transport = new StdioClientTransport({
+      command,
+      args: ['--workspace', resolve(packageDir, '../..')],
+      cwd: packageDir,
+      stderr: 'pipe'
+    })
     const client = new Client({ name: 'editor-mcp-bin-test', version: '0.0.0' })
 
     await client.connect(transport)
     try {
-      expect((await client.listTools()).tools).toHaveLength(16)
+      expect((await client.listTools()).tools).toHaveLength(9)
     } finally {
       await client.close()
     }

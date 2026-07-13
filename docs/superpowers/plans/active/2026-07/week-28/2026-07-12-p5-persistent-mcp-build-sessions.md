@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 49/62 steps complete (79%)
+**Overall progress:** 55/62 steps complete (89%)
 
 ## Global Constraints
 
@@ -2681,7 +2681,7 @@ git commit -m "feat(editor-mcp-server): server-executed check tools, changedFile
 - Consumes: `createSessionHost` (Task 9), `parseUnifiedToolArgs` (Task 2), `createMcpServer` (existing), `RESOURCE_URIS`, workspace prompts (existing).
 - Produces: the one blessed invocation `automata-editor-mcp --workspace <repoRoot>`.
 
-- [ ] **Step 1: Rewrite `main.ts`**
+- [x] **Step 1: Rewrite `main.ts`**
 
 ```ts
 // tools/editor-mcp-server/src/main.ts
@@ -2748,11 +2748,11 @@ void main().catch((error: unknown) => {
 })
 ```
 
-- [ ] **Step 2: Delete `workspaceHost.ts` + its test**
+- [x] **Step 2: Delete `workspaceHost.ts` + its test**
 
 `workspaceHost.test.ts` assertions worth carrying into `sessionHost.test.ts` (if not already present from Task 9): tool advertisement (createGame/listGames present), and readResource throwing when no project is open. The other existing test files (`server.test.ts`, `mcpAdapter.test.ts`, `smoke.test.ts`, `headlessHost.test.ts`) need no rewrite — run them to confirm.
 
-- [ ] **Step 3: Update the scaffold README template**
+- [x] **Step 3: Update the scaffold README template**
 
 In `tools/scaffold/src/templates/configFiles.ts`, replace the MCP line (~127):
 
@@ -2760,7 +2760,7 @@ In `tools/scaffold/src/templates/configFiles.ts`, replace the MCP line (~127):
 `node_modules/.bin/automata-editor-mcp --workspace .` then call the openProject tool with gameId "${name}"
 ```
 
-- [ ] **Step 4: Rewrite `assertMcpServerLoads` in `verify-new-game.ts`**
+- [x] **Step 4: Rewrite `assertMcpServerLoads` in `verify-new-game.ts`**
 
 Replace the function with a workspace-mode probe that speaks minimal MCP over stdio (newline-delimited JSON-RPC) and proves `openProject` works against the scaffolded game:
 
@@ -2813,14 +2813,14 @@ function assertMcpServerOpensProject(cwd: string): Promise<void> {
 
 Swap the call site (`await assertMcpServerLoads(clone)` → `await assertMcpServerOpensProject(clone)`). If the SDK's stdio transport rejects the `initialize` params shape, adjust to the protocol version the installed `@modelcontextprotocol/sdk` expects — the assertion under test is only that `openProject` succeeds against a clean clone.
 
-- [ ] **Step 5: Add `.automata/` to `.gitignore`**
+- [x] **Step 5: Add `.automata/` to `.gitignore`**
 
 ```text
 # MCP build sessions (durable, machine-local)
 .automata/
 ```
 
-- [ ] **Step 6: Run gates, commit**
+- [x] **Step 6: Run gates, commit**
 
 Run: `npx vitest run --project editor-mcp-server && npm run lint && npm run typecheck`
 Expected: PASS — no references to `createWorkspaceHost`, `--project`, or `--bundle` remain in `tools/editor-mcp-server/src` (grep to confirm: `grep -rn -- "--project\|--bundle\|createWorkspaceHost" tools/editor-mcp-server/src` → only the removal error message in `main.ts`).

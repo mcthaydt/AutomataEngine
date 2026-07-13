@@ -17,7 +17,7 @@ async function makeRepo() {
 }
 function stubHeadless(): HeadlessHost {
   const snapshot = { manifest: { id: 'probe', name: 'Probe', gameId: 'probe', formatVersion: 2, scenes: [{ id: 'main', path: 'scenes/main.json' }], resources: [] }, scenes: { main: { id: 'main', name: 'Main', entities: [{ id: 'e1', name: 'Player', enabled: true, components: [] }] } }, resources: {} }
-  const host = { get snapshot() { return snapshot }, get commands() { return [] }, listTools: () => [{ name: 'setProperty', description: 'stub', schema: {} }], async executeTool(name: string, args: unknown): Promise<ToolResult> { if (name === 'setProperty') { snapshot.scenes.main.entities[0].name = (args as { value: string }).value; return { ok: true, content: { applied: name, changed: true } } } if (name === 'validate') return { ok: true, content: [] }; return { ok: false, isError: true, content: `stub has no ${name}` } }, async readResource() { return snapshot } }
+  const host = { get snapshot() { return snapshot }, get commands() { return [] }, listTools: () => [{ name: 'setProperty', description: 'stub', schema: {} }], async executeTool(name: string, args: unknown): Promise<ToolResult> { if (name === 'setProperty') { snapshot.scenes.main.entities[0]!.name = (args as { value: string }).value; return { ok: true, content: { applied: name, changed: true } } } if (name === 'validate') return { ok: true, content: [] }; return { ok: false, isError: true, content: `stub has no ${name}` } }, async readResource() { return snapshot } }
   return { host, registration: {}, snapshot } as unknown as HeadlessHost
 }
 describe('sessionHost', () => {
