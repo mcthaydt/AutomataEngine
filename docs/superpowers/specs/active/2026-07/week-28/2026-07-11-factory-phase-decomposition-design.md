@@ -1,6 +1,6 @@
 # Factory Roadmap Completion — Phase 0→8 Decomposition (Design)
 
-Status: draft for review. Date: 2026-07-11.
+Status: approved decomposition. Phase 0 completed 2026-07-12. Date: 2026-07-11.
 
 ## 1. Purpose & how to read
 
@@ -81,7 +81,7 @@ design.
 
 | Phase | Goal (one line) | Advances checkpoint | Depends on | Sub-cycles |
 |---|---|---|---|---|
-| 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 remaining |
+| 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 completed (2026-07-12) |
 | 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 |
 | 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 |
 | 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 (integration) |
@@ -111,15 +111,15 @@ simple and expand where it is not.
 - **Depends on.** M1 (paved road) and M2/P2 (schema unification) — both shipped.
 - **In scope.**
   - **P3 project-file migrations** — *shipped 2026-07-05.*
-  - **P8 standalone hygiene** — *shipping 2026-07-11* (legacy Monkey Ball importer
+  - **P8 standalone hygiene** — *shipped 2026-07-11* (legacy Monkey Ball importer
     retired; level editor decoupled from one game's `publicDir`). P8 is a
     standalone cleanup off the phase critical path; noted here for a complete
     platform-integrity picture, tracked as its own item in the roadmap.
-  - Editor entity-ID and render-timing hardening — *remaining.*
+  - Editor entity-ID and render-timing hardening — *shipped 2026-07-12.*
   - **P4 — richer `@automata/game-kit`:** lift the duplicated browser shell (boot,
     loop, input, visibility, project-reader) out of each game's `main.ts` into the
-    kit and regenerate the scaffold template to inherit it — *remaining.*
-  - Save/reopen recovery and longer browser acceptance coverage — *remaining.*
+    kit and regenerate the scaffold template to inherit it — *shipped 2026-07-12.*
+  - Save/reopen recovery and longer browser acceptance coverage — *shipped 2026-07-12.*
 - **Explicitly out / deferred.** No `GameSpec`, no generation, no evaluators
   beyond acceptance coverage. Pure durability and hygiene of the existing
   hand-authored pipeline.
@@ -129,16 +129,17 @@ simple and expand where it is not.
     generated-output evaluator yet.
   - *Determinism/runtime:* none new; stabilizes the project-format and game-kit
     surface the Phase 1 seeded harness will drive.
-- **Sub-cycles it spawns.** (1) editor entity-ID + render-timing hardening; (2) P4
+- **Sub-cycles completed.** (1) editor entity-ID + render-timing hardening; (2) P4
   game-kit shell extraction + scaffold regeneration; (3) save/reopen recovery +
-  acceptance-coverage expansion. (P3 and P8 already have their own cycles.)
+  acceptance-coverage expansion. (P3 and P8 already had their own cycles.)
 - **Contracts introduced.** A stabilized `@automata/game-kit` browser-shell
   surface (boot/loop/input/visibility/project-reader) and a hardened
   project-format load path.
 - **Exit.** Generated projects survive engine evolution and long editing sessions;
   the hardening, game-kit, and acceptance tasks are all done.
-- **Risks retired / carried.** Retires per-game boot-code duplication. Carries no
-  generation risks yet.
+- **Risks retired / carried.** Retires per-game boot-code duplication, silent or
+  non-reversible autosave recovery, session-relative editor IDs, and per-item
+  render-sync serialization. Carries no generation risks yet.
 
 ### Phase 1 — Persistent MCP build sessions (P5)
 
@@ -405,19 +406,19 @@ simple and expand where it is not.
   passes mechanical tests yet is dull) — mitigated by keeping the human
   slice/release checkpoints until evaluation correlates with player judgment.
 
-## 5. Sub-cycle index (ordered backlog)
+## 5. Sub-cycle index (ordered program)
 
 Every independent spec→plan cycle the arc spawns — 27 in total — roughly ordered. Order within a
 phase is flexible; cross-phase order follows the dependency graph. **Phase 4 and
-Phase 5 cycles can interleave.** This backlog is the part most likely to churn as
-earlier phases teach the later ones what they actually need — treat it as the
-current best decomposition, revised each cycle.
+Phase 5 cycles can interleave.** The remaining program is the part most likely to
+churn as earlier phases teach the later ones what they actually need — treat it as
+the current best decomposition, revised each cycle.
 
-**Phase 0 (remaining):**
+**Phase 0 (completed 2026-07-12):**
 
-1. Editor entity-ID + render-timing hardening
-2. P4 — game-kit browser-shell extraction + scaffold template regen
-3. Save/reopen recovery + longer browser acceptance coverage
+1. Editor entity-ID + render-timing hardening — completed
+2. P4 — game-kit browser-shell extraction + scaffold template regen — completed
+3. Save/reopen recovery + longer browser acceptance coverage — completed
 
 **Phase 1:**
 
