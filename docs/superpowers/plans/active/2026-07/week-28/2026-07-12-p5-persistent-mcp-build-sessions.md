@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 45/62 steps complete (73%)
+**Overall progress:** 49/62 steps complete (79%)
 
 ## Global Constraints
 
@@ -2381,7 +2381,7 @@ Behavior locked here:
 - `changedFiles`: requires open project and a baseline; returns `diffFiles(baseline.files, current.files)`.
 - `evaluate` (intercepted before generic project-tool delegation): requires open project; cache-first via `findCompleted('check:evaluate', hashJson({ args, contentHash }))`; on miss spend `evaluate` budget (exhausted → `budget-exhausted` refusal result, `isError: true`); run through the project host inside `runGuarded`; result outcome `passed` → `autoResolve('eval')`, otherwise add `eval`-source `error` finding `evaluation-failed` (message: JSON of metrics/outcome, truncated to 4000); response content gains `{ cached }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tools/editor-mcp-server/tests/sessionChecks.test.ts
@@ -2556,12 +2556,12 @@ describe('session check tools', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project editor-mcp-server -t 'session check tools'`
 Expected: FAIL — checks stubbed (`checks land in the next task`).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `sessionHost.ts`, add imports:
 
@@ -2655,7 +2655,7 @@ Intercept `evaluate` in `executeTool` (before the generic project-tool delegatio
 
 Wire `executeCheckTool` into the `runBuild|runTests|runBrowserEval|changedFiles` branch from Task 9 (drop the `this.` indirection — call the closure directly).
 
-- [ ] **Step 4: Run tests, verify pass; commit**
+- [x] **Step 4: Run tests, verify pass; commit**
 
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS.
