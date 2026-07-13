@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 25/62 steps complete (40%)
+**Overall progress:** 30/62 steps complete (48%)
 
 ## Global Constraints
 
@@ -1013,7 +1013,7 @@ export async function createSessionEngine(options: SessionEngineOptions):
 
 Semantics locked here: step ids are `step-0001`-style sequential; cache hits require same `kind` + `inputHash` + status `completed` (stale/failed never hit); artifacts are written to `<dir>/artifacts/<stepId>-<name>` and stored as relative paths; every mutation bumps `updatedAt` and saves atomically; a quarantine on load records a `session`-source `warning` finding with code `session-quarantined`; `detectOutOfBand` marks completed `check:*` steps stale, adds a `session`/`warning`/`out-of-band-changes` finding, updates `lastKnownContentHash`, and returns `true` only on mismatch; `dispose` saves then releases the lock.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/build-session/tests/engine.test.ts
@@ -1123,12 +1123,12 @@ describe('session engine', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project build-session -t 'session engine'`
 Expected: FAIL — `../src/engine` does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/build-session/src/engine.ts
@@ -1370,12 +1370,12 @@ export async function createSessionEngine(
 
 Note the budget-spend nuance: `spendBudget` mutates in memory only; the next `save()` (every check records a step or finding immediately after) persists it. That keeps `spendBudget` synchronous for callers.
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 Run: `npx vitest run --project build-session`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/build-session
