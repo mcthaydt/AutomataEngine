@@ -27,6 +27,15 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **Phase 1 — Persistent MCP build sessions (P5)** (2026-07-13,
+  `phase-0-completion` @ `b0c9341`). Added durable session ledgers, atomic
+  recovery, hash-guarded server checks and findings, seeded replay, the empty
+  pack-composition seam, and a workspace-only MCP server with write-through
+  authoring. Spec:
+  [`specs/2026-07-12-p5-persistent-mcp-build-sessions-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md);
+  plan:
+  [`plans/2026-07-12-p5-persistent-mcp-build-sessions.md`](superpowers/plans/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions.md).
+
 - **Phase 0 — Platform integrity** (2026-07-12, `phase-0-completion` @
   `f62910d`). Completed editor entity-ID/render-sync hardening, P4's shared
   `@automata/game-kit` browser shell and scaffold adoption, and
@@ -80,7 +89,7 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 | P2 | M2 | Phase 0 precursor | Schema unification (zod) + agent prompt layer | Shipped |
 | P3 | M3 | Phase 0 (part) | Project-file migrations, formatVersion 2 | Shipped |
 | P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Shipped |
-| P5 | — | Phase 1 | Persistent MCP build sessions | In progress |
+| P5 | — | Phase 1 | Persistent MCP build sessions | Shipped |
 | P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
 | P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
 | P8 | — | Standalone | Hygiene | Shipped |
@@ -126,24 +135,27 @@ scale.
 - **Exit:** generated projects survive engine evolution and long editing
   sessions; the remaining hardening/game-kit/acceptance tasks are all done.
 
-### Phase 1 — Persistent MCP build sessions (P5) · `In progress`
+### Phase 1 — Persistent MCP build sessions (P5) · `Shipped`
+
+Spec: [`2026-07-12-p5-persistent-mcp-build-sessions-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md);
+plan: [`2026-07-12-p5-persistent-mcp-build-sessions.md`](superpowers/plans/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions.md).
 
 - **Goal:** an agent can create, reopen, modify, evaluate, and repair a game
   across process and context resets.
 - **Depends on:** Phase 0 complete.
 - **Tasks:**
-  - Add project open/swap behavior to workspace MCP mode.
+  - Add project open/swap behavior to workspace MCP mode — `Shipped` (`b0c9341`).
   - Persist session state, artifacts, findings, budgets, and resume position
-    outside model context.
-  - Expose changed-file, build, test, browser, and evaluation results.
-  - Make every operation idempotent or artifact-hash guarded.
+    outside model context — `Shipped` (`b0c9341`).
+  - Expose changed-file, build, test, browser, and evaluation results — `Shipped` (`b0c9341`).
+  - Make every operation idempotent or artifact-hash guarded — `Shipped` (`b0c9341`).
   - Stand up the seeded-generation/replay harness and the pack-composition
-    runtime seam that later phases extend.
+    runtime seam that later phases extend — `Shipped` (`b0c9341`).
 - **Exit:** an agent creates, reopens, modifies, evaluates, and repairs a game
   across process and context resets without replaying successful work blindly,
   and generation steps replay deterministically from a recorded seed.
 
-### Phase 2 — Versioned `GameSpec` · `Planned`
+### Phase 2 — Versioned `GameSpec` · `Next`
 
 - **Goal:** a prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
   design checkpoint. **Evaluators:** structural spec validation (schema, budgets,

@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 58/62 steps complete (94%)
+**Overall progress:** 62/62 steps complete (100%)
 
 ## Global Constraints
 
@@ -3020,7 +3020,7 @@ git commit -m "test: Phase 1 exit criterion — resets, cached resume, repair lo
 - Modify: `docs/ROADMAP.md` (flip Phase 1 task statuses; link spec + this plan)
 - No new tests — this task is documentation plus running every gate.
 
-- [ ] **Step 1: AGENTS.md**
+- [x] **Step 1: AGENTS.md**
 
 Add under the Registry Convention section (after the existing MCP-related text):
 
@@ -3038,11 +3038,11 @@ operations are hash-guarded — repeating one with unchanged inputs returns the
 recorded result (`cached: true`) instead of re-running.
 ```
 
-- [ ] **Step 2: ROADMAP.md**
+- [x] **Step 2: ROADMAP.md**
 
 In §3 Phase 1, mark each task line `Shipped` with the merge commit once merged, update the §2 numbering-key row for P5, and add the spec/plan links in the phase header, following the exact format Phase 0 uses. Promote Phase 2 to `Next`. Add the shipped entry at the top of §1 (newest first) once the branch merges — final wording depends on the merge commit hash.
 
-- [ ] **Step 3: Run every gate**
+- [x] **Step 3: Run every gate**
 
 ```bash
 npm run ci                 # lint + typecheck + all vitest projects
@@ -3052,7 +3052,7 @@ npm run verify:new-game    # clean-clone: scaffold → install → ci → build 
 
 Expected: all green. `verify:new-game` is the proof that the mode consolidation didn't break the paved road — it now exercises `openProject` against a fresh clone.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add AGENTS.md docs/ROADMAP.md

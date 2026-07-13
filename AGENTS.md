@@ -34,6 +34,18 @@ edited per game either; declare `automata.devPort` in the game's own
 `package.json`. Run `npm run verify:new-game` after changing scaffold
 templates or the engine/project APIs they use.
 
+### MCP build sessions
+
+The editor MCP server has one mode: `automata-editor-mcp --workspace <repoRoot>`.
+Agents scaffold with `createGame`, open a game with `openProject`, author over
+the project tools (edits write through to `games/<name>/public/project`), and
+run server-executed checks (`runBuild`, `runTests`, `runBrowserEval`,
+`evaluate`) that persist typed findings. Durable session state lives under
+`.automata/sessions/<gameId>/` (gitignored): step ledger with artifact-hash
+idempotency, findings, attempt budgets, and the resume position. Expensive
+operations are hash-guarded — repeating one with unchanged inputs returns the
+recorded result (`cached: true`) instead of re-running.
+
 ### Component/resource schemas (zod)
 
 Component and resource data schemas are authored in zod v4 via
