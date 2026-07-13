@@ -31,4 +31,39 @@ describe('sessionHost', () => {
     expect((await host.executeTool('setProperty', { value: 'Hero', clientStepId: 'rename' })).content).toMatchObject({ deduped: true })
     await host.dispose()
   })
+
+  it('reports lifecycle contract violations and records validation findings', async () => {
+    const root = await makeRepo()
+    const host = createSessionHost({
+      repoRoot: root,
+      sessionsRoot: join(root, '.automata/sessions'),
+      openHeadless: async () => stubHeadless(),
+      lock: false
+    })
+
+    expect(await host.executeTool('getSession', {})).toMatchObject({ ok: false, isError: true })
+    expect(await host.executeTool('setResumePoint', { nextAction: 'x' })).toMatchObject({ ok: false })
+    expect(await host.executeTool('changedFiles', {})).toMatchObject({ ok: false })
+    expect(await host.executeTool('openProject', { gameId: 'unknown' })).toMatchObject({ ok: false })
+    await expect(host.readResource('editor://project')).rejects.toThrow(/no project open/i)
+
+    await host.executeTool('openProject', { gameId: 'probe' })
+    expect(await host.executeTool('validate', {})).toMatchObject({ ok: true })
+    expect(await host.executeTool('getHierarchy', {})).toMatchObject({ ok: false })
+    await host.dispose()
+  })
+
+  it('creates a new game once and returns its durable session on retry', async () => {
+    const root = await makeRepo()
+    const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 })
+
+    const created = await host.executeTool('createGame', { name: 'beacon-run' })
+    expect(created).toMatchObject({ ok: true, content: { gameDir: 'games/beacon-run', alreadyExisted: false } })
+    expect(await host.executeTool('createGame', { name: 'beacon-run' })).toMatchObject({
+      ok: true,
+      content: { alreadyExisted: true }
+    })
+    expect(await host.executeTool('listGames', {})).toMatchObject({ ok: true, content: { games: expect.arrayContaining(['beacon-run', 'probe']) } })
+    await host.dispose()
+  })
 })
