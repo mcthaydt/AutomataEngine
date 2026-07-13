@@ -133,7 +133,7 @@ export function createGameplay(deps: GameplayDeps): Gameplay {
 export function mainTs(): string {
   return `import { createThreeRenderer } from '@automata/engine'
 import { attachCanvasRenderer } from '@automata/engine/browser'
-import { createGameHost, createProjectReader, startGameLoop } from '@automata/game-kit'
+import { composePacks, createGameHost, createProjectReader, startGameLoop } from '@automata/game-kit'
 import { createGameplay } from './game/gameplay'
 import { loadProject } from './project/load'
 import type { SimControl, SimState } from './sim/sim'
@@ -162,6 +162,8 @@ async function main(): Promise<void> {
   const app = document.getElementById('app')
   if (!app) throw new Error('Missing #app')
   const host = createGameHost(app)
+  // Pack-composition seam (empty until capability packs exist); packs will contribute systems here.
+  composePacks([]).boot(host)
   try {
     const compiled = await loadProject(createProjectReader())
     const hud = document.createElement('div')

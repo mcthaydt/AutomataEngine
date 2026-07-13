@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 35/62 steps complete (56%)
+**Overall progress:** 40/62 steps complete (65%)
 
 ## Global Constraints
 
@@ -1765,7 +1765,7 @@ export interface ComposedPacks { packIds: readonly string[]; boot(host: GameHost
 export function composePacks(packs: readonly GamePack[], configs?: Record<string, unknown>): ComposedPacks
 ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/packs.test.ts
@@ -1826,12 +1826,12 @@ describe('pack composition seam', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project game-kit -t 'pack composition'` (confirm the project name in `packages/game-kit/vitest.config.ts`)
 Expected: FAIL — `../src/packs` does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/game-kit/src/packs.ts
@@ -1887,12 +1887,12 @@ Then route the scaffold template through the seam in `tools/scaffold/src/templat
   composePacks([]).boot(host)
 ```
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 Run: `npx vitest run --project game-kit && npx vitest run --project scaffold`
 Expected: PASS (scaffold's template snapshot/expectation tests may need the two added lines reflected — update them in this task).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-kit tools/scaffold
