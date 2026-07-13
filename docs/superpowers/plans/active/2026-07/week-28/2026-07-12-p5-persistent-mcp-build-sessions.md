@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 5/62 steps complete (8%)
+**Overall progress:** 10/62 steps complete (16%)
 
 ## Global Constraints
 
@@ -278,7 +278,7 @@ git commit -m "feat(contracts): add durable build-session schema, findings, budg
 - Consumes: `gameSlugSchema` (workspaceTools), `parseWorkspaceToolArgs`, `workspaceToolArgSchemas`, `parseToolArgs`, `ToolDef`, `ToolName`.
 - Produces (used by Tasks 9–11): `SessionToolName` = `'openProject'|'getSession'|'setResumePoint'|'runBuild'|'runTests'|'runBrowserEval'|'changedFiles'`; `sessionToolArgSchemas`; `sessionToolDefs(): ToolDef[]`; `parseSessionToolArgs(name, args)`; `splitClientStepId(args): { clientStepId?: string; rest: unknown }`; `parseUnifiedToolArgs(name, args)`; `writeToolNames: readonly ToolName[]` (from tools.ts).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/sessionTools.test.ts
@@ -325,12 +325,12 @@ describe('session tools', () => {
 
 Note: if `addEntity`'s command schema requires a different entity shape, adjust the `entity` literal to satisfy it — the assertion under test is only that `clientStepId` does not cause a parse failure.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project contracts -t 'session tools'`
 Expected: FAIL — `../src/sessionTools` does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/tools.ts`, add below the `TOOL_NAMES` constant:
 
@@ -431,12 +431,12 @@ In `packages/contracts/src/prompts.ts`, replace workflow steps 2 and 4 in `build
 
 (Exact surrounding lines stay as they are; only the two numbered steps change. Keep step numbering 1–8.)
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS after updating `packages/contracts/tests/prompts.test.ts`, which currently asserts the old copy: change `expect(text).toContain('npm install')` to `expect(text).toContain('runBuild')` and `expect(text).toContain('--project games/')` to `expect(text).toContain('openProject')` (keep the `createGame`/`evaluate`/`npm run ci` assertions).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts

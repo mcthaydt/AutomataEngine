@@ -64,9 +64,9 @@ ${description}
 
 Workflow:
 1. ${slug ? `Call the createGame tool with name "${slug}".` : 'Pick a lowercase-slug name that fits the description and call the createGame tool with it.'}
-2. Run \`npm install\` at the repo root so Node can resolve the new workspace package.
+2. Call the runBuild tool with gameId "${name}" — it runs npm install for the new workspace package when needed — and confirm it reports passed.
 3. The scaffold is a generic "beacon runner" skeleton, not the described game. Rewrite games/${name}/src/sim/sim.ts (keep it a deterministic, fixed-dt, pure step function — no Math.random inside step) and src/game/gameplay.ts to implement the described mechanics, updating the game's tests as you go.
-4. Reconnect this MCP server with \`--project games/${name}/public/project\`. In project mode the authoring tools (addEntity, addComponent, addResource, setProperty, ...) carry each component/resource type's JSON schema in their descriptions — author to those schemas.
+4. Call the openProject tool with gameId "${name}". The authoring tools (addEntity, addComponent, addResource, setProperty, ...) then carry each component/resource type's JSON schema in their descriptions — author to those schemas. Your edits persist to disk as you make them, and the build session records progress so you can resume after any reset (check getSession).
 5. Author the content: place entities in the scene, set the tuning resource, and keep the validate tool returning zero errors.
 6. Run the evaluate tool and iterate on tuning until the metrics match the description's intent.
 7. Project JSON under public/project is generated — edit src/project/template.ts and regenerate (see the game's README and scripts/) rather than hand-editing JSON.
