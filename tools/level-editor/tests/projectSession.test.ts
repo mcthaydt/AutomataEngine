@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   flyDispose: vi.fn(),
   loopStop: vi.fn(),
   autosaveDispose: vi.fn(),
+  autosaveFlush: vi.fn(),
   chromeDispose: vi.fn(),
   renderFrame: vi.fn(),
   flyUpdate: vi.fn(),
@@ -47,7 +48,7 @@ vi.mock('@automata/engine/browser', () => ({
 
 vi.mock('@automata/editor', () => ({
   createProjectEditor: vi.fn(() => mocks.core),
-  installProjectAutosave: vi.fn(() => mocks.autosaveDispose),
+  installProjectAutosave: vi.fn(() => Object.assign(mocks.autosaveDispose, { flush: mocks.autosaveFlush })),
   loadProjectAutosave: vi.fn(() => mocks.loadAutosaveResult)
 }))
 
@@ -280,6 +281,26 @@ describe('project browser session', () => {
     const recovered = structuredClone(snapshot)
     recovered.scenes.main.name = 'Recovered'
     mocks.loadAutosaveResult = recovered
+    const root = document.createElement('main')
+    const session = await mountProjectSession({
+      root,
+      registration: registration as never,
+      snapshot: snapshot as never,
+      storage: null,
+      autosaveStorage: {} as never,
+      workspace: workspace() as never,
+      onSwitchProject: async () => {}
+    })
+
+    expect(mocks.core!.store.dispatch).toHaveBeenCalledWith({ type: 'recoverSnapshot', snapshot: recovered })
+    expect(root.querySelector('[data-recovery-notice]')).not.toBeNull()
+    root.querySelector<HTMLButtonElement>('[data-recovery-discard]')!.click()
+    expect(mocks.core!.store.dispatch).toHaveBeenCalledWith({ type: 'loadSnapshot', snapshot })
+    expect(root.querySelector('[data-recovery-notice]')).toBeNull()
+    session.dispose()
+  })
+
+  it('exposes a non-destructive autosave flush for beforeunload', async () => {
     const session = await mountProjectSession({
       root: document.createElement('main'),
       registration: registration as never,
@@ -290,7 +311,9 @@ describe('project browser session', () => {
       onSwitchProject: async () => {}
     })
 
-    expect(mocks.core!.store.dispatch).toHaveBeenCalledWith({ type: 'recoverSnapshot', snapshot: recovered })
+    session.flushAutosave()
+    expect(mocks.autosaveFlush).toHaveBeenCalledOnce()
+    expect(mocks.core!.dispose).not.toHaveBeenCalled()
     session.dispose()
   })
 

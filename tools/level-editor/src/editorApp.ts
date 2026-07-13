@@ -35,6 +35,8 @@ export interface ProjectSessionHandle {
   hasUnsavedChanges(): boolean
   save(): Promise<boolean>
   exportBundle(): void
+  /** Flush a pending autosave without tearing down the live editor session. */
+  flushAutosave(): void
   dispose(): void
 }
 
@@ -226,8 +228,9 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     })
   }
 
-  // A pending autosave is flushed by the session disposer; unload has no time for debounce.
-  const onBeforeUnload = (): void => session?.dispose()
+  // beforeunload can be cancelled by the dirty-work confirmation in main.ts. Flush now,
+  // but leave session teardown to pagehide/app disposal after navigation is confirmed.
+  const onBeforeUnload = (): void => session?.flushAutosave()
   window.addEventListener('beforeunload', onBeforeUnload)
 
   return {
@@ -280,7 +283,8 @@ export async function mountProjectSession(
       })
       cleanup.defer(removeNotice)
     }
-    cleanup.defer(installProjectAutosave(core.store, options.autosaveStorage, { debounceMs: 400 }))
+    const autosave = installProjectAutosave(core.store, options.autosaveStorage, { debounceMs: 400 })
+    cleanup.defer(autosave)
 
     let selectedPrefab: string | null = null
     let backingStorage = options.storage
@@ -437,6 +441,7 @@ export async function mountProjectSession(
       hasUnsavedChanges: () => forceDirty || core.store.getState().dirtyPaths.length > 0,
       save,
       exportBundle,
+      flushAutosave: autosave.flush,
       dispose: () => cleanup.dispose()
     }
   } catch (error) {

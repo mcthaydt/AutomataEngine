@@ -10,6 +10,16 @@ export const SLATE_PRO_CSS = `
   user-select: none;
 }
 .ed-root button { font: inherit; color: var(--ink); cursor: pointer; }
+.ed-recovery-notice {
+  position: fixed; z-index: 10; top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  background: #222a3a; color: #cdd6e6; border: 1px solid #e0a83e; border-radius: 6px;
+  box-shadow: 0 8px 22px rgba(0,0,0,.55);
+}
+.ed-recovery-notice button {
+  padding: 4px 8px; background: #1a202c; color: #cdd6e6; border: 1px solid #3a455f;
+  border-radius: 4px; cursor: pointer;
+}
 .ed-menubar-host { display: flex; align-items: center; gap: 8px; background: #1e2433; box-shadow: inset 0 1px 0 var(--bevel); z-index: 5; }
 .ed-menubar { display: flex; gap: 2px; align-items: stretch; padding: 2px 6px;
   background: #1e2433; box-shadow: inset 0 1px 0 var(--bevel); z-index: 5; }

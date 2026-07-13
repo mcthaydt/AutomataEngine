@@ -45,6 +45,7 @@ describe('generic editor app', () => {
       hasUnsavedChanges: () => false,
       save: async () => true,
       exportBundle: () => {},
+      flushAutosave: () => {},
       dispose: () => {}
     }
     const mounted = sessionFactory(handle)
@@ -77,6 +78,7 @@ describe('generic editor app', () => {
       hasUnsavedChanges: () => true,
       save: async () => false,
       exportBundle: () => {},
+      flushAutosave: () => {},
       dispose
     }
     const mounted = sessionFactory(handle)
@@ -115,6 +117,7 @@ describe('generic editor app', () => {
       hasUnsavedChanges: () => false,
       save: async () => true,
       exportBundle: () => {},
+      flushAutosave: () => {},
       dispose: () => {}
     })
 
@@ -170,6 +173,7 @@ describe('generic editor app', () => {
       hasUnsavedChanges: () => false,
       save: async () => true,
       exportBundle: () => {},
+      flushAutosave: () => {},
       dispose: () => {}
     })
     const app = await mountEditorApp({
@@ -188,7 +192,7 @@ describe('generic editor app', () => {
     const secondRoot = document.createElement('main')
     const second = sessionFactory({
       canSave: false, hasUnsavedChanges: () => false, save: async () => true,
-      exportBundle: () => {}, dispose: () => {}
+      exportBundle: () => {}, flushAutosave: () => {}, dispose: () => {}
     })
     const secondApp = await mountEditorApp({
       root: secondRoot,
@@ -252,6 +256,7 @@ describe('generic editor app', () => {
       hasUnsavedChanges: () => true,
       save,
       exportBundle,
+      flushAutosave: () => {},
       dispose
     })
     let mountResolved = false
@@ -282,15 +287,17 @@ describe('generic editor app', () => {
     app.dispose()
   })
 
-  it('disposes the open session on beforeunload so autosave flushes', async () => {
+  it('flushes autosave on beforeunload without disposing a session that may remain open', async () => {
     const root = document.createElement('main')
     document.body.append(root)
     const dispose = vi.fn()
+    const flushAutosave = vi.fn()
     const handle: ProjectSessionHandle = {
       canSave: false,
       hasUnsavedChanges: () => false,
       save: async () => true,
       exportBundle: () => {},
+      flushAutosave,
       dispose
     }
     const mounted = sessionFactory(handle)
@@ -302,7 +309,9 @@ describe('generic editor app', () => {
     await vi.waitFor(() => expect(mounted.mounts).toHaveLength(1))
 
     window.dispatchEvent(new Event('beforeunload'))
-    expect(dispose).toHaveBeenCalled()
+    expect(flushAutosave).toHaveBeenCalledOnce()
+    expect(dispose).not.toHaveBeenCalled()
+    expect(root.querySelector('.mounted-session')).not.toBeNull()
 
     app.dispose()
   })

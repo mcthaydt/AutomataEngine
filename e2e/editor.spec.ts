@@ -17,6 +17,32 @@ test('opens Monkey Ball in the same editor shell', async ({ page }) => {
   await expect(page.locator('[data-project-resources]')).toContainText('Physics')
 })
 
+test('recovers an autosaved edit and can discard it back to disk state', async ({ page }) => {
+  await page.goto('http://127.0.0.1:5175/?game=pulsebreak')
+  await page.evaluate(() => localStorage.clear())
+  await page.evaluate(async () => {
+    const prefix = '/games/pulsebreak/public/project/'
+    const manifest = await (await fetch(`${prefix}automata.project.json`)).json()
+    const scenes = await Promise.all(manifest.scenes.map(async (entry: { path: string }) => {
+      const scene = await (await fetch(`${prefix}${entry.path}`)).json()
+      return { ...scene, name: 'Recovered Arena' }
+    }))
+    const resources = await Promise.all(manifest.resources.map(async (entry: { path: string }) =>
+      (await fetch(`${prefix}${entry.path}`)).json()
+    ))
+    localStorage.setItem('automata/project-autosave/pulsebreak', JSON.stringify({ manifest, scenes, resources }))
+  })
+  await page.getByRole('button', { name: 'Create Pulsebreak Project' }).click()
+
+  await expect(page.locator('[data-recovery-notice]')).toContainText('Recovered unsaved changes')
+  await page.getByRole('button', { name: 'Discard recovered changes' }).click()
+  await expect(page.locator('[data-recovery-notice]')).toBeHidden()
+  await expect.poll(() => page.evaluate(() => {
+    const raw = localStorage.getItem('automata/project-autosave/pulsebreak')
+    return raw ? JSON.parse(raw).scenes[0].name : ''
+  })).toBe('Arena')
+})
+
 test('survives a long editing session without console errors', async ({ page }) => {
   const ignore = [/WebGL/i, /favicon/i, /Failed to load resource/i]
   const errors: string[] = []
