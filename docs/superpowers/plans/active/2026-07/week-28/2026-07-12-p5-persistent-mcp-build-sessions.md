@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 30/62 steps complete (48%)
+**Overall progress:** 35/62 steps complete (56%)
 
 ## Global Constraints
 
@@ -1417,7 +1417,7 @@ export async function runCheck(
 
 Semantics: cache lookup first (`check:<kind>` + hash of `{ kind, gameId, scope, contentHash }` — cache hits spend **no** budget); then budget spend (exhausted → `session`-source `error` finding `budget-exhausted` + refusal); commands run sequentially, stop at first failure; pass ⇒ `autoResolve(sourceFor(kind))`; fail ⇒ one `error` finding (`<kind>-failed` or `<kind>-timeout`) whose message is the last 4000 characters of combined output; every spawned command's full output is an artifact (`<n>.log`). `evaluate` has no spawned commands (in-process; wired in Task 10) — `checkCommands('evaluate', …)` returns `[]` and `runCheck` must never be called with it (throw).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/build-session/tests/checks.test.ts
@@ -1536,12 +1536,12 @@ describe('runCheck', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project build-session -t 'runCheck'`
 Expected: FAIL — `../src/checks` does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/build-session/src/checks.ts
@@ -1728,12 +1728,12 @@ export async function runCheck(
 
 The cache pre-check hashes the same `input` object with the same `hashJson` that `runGuarded` uses internally, so the pre-check and the guard can never disagree.
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 Run: `npx vitest run --project build-session`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/build-session
