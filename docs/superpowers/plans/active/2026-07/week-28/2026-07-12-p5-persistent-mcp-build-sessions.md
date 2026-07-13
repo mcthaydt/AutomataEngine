@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
+**Overall progress:** 5/62 steps complete (8%)
+
 ## Global Constraints
 
 - TDD per AGENTS.md: failing test before implementation, `npm run ci` green before claiming done; `npm run coverage` must hold **90% lines / 90% branches** (new package included).
@@ -65,7 +67,7 @@
 - Consumes: zod (direct import allowed in contracts).
 - Produces (used by Tasks 4–12): `SESSION_SCHEMA_VERSION = 1`, `buildSessionSchema`/`BuildSession`, `stepRecordSchema`/`StepRecord`, `findingSchema`/`Finding`/`FindingSource`, `checkKindSchema`/`CheckKind` (`'build'|'test'|'browser'|'evaluate'`), `budgetStateSchema`/`BudgetState`, `DEFAULT_CHECK_BUDGET_LIMIT = 25`, `baselineSchema`/`Baseline`, `createBuildSession(init)`, `summarizeSession(session): SessionSummary`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/session.test.ts
@@ -113,12 +115,12 @@ describe('build-session schema', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project contracts -t 'build-session schema'`
 Expected: FAIL — `../src/session` does not exist.
 
-- [ ] **Step 3: Implement `session.ts`**
+- [x] **Step 3: Implement `session.ts`**
 
 ```ts
 // packages/contracts/src/session.ts
@@ -251,12 +253,12 @@ Add to `packages/contracts/src/index.ts`:
 export * from './session'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS (including existing prompts tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts/src/session.ts packages/contracts/src/index.ts packages/contracts/tests/session.test.ts
