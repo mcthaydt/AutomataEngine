@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 15/62 steps complete (24%)
+**Overall progress:** 20/62 steps complete (32%)
 
 ## Global Constraints
 
@@ -565,7 +565,7 @@ git commit -m "feat(engine): seeded RNG (mulberry32 + fnv1a seed hash) for the r
 **Interfaces:**
 - Produces (used by Tasks 5–10): `stableStringify(value): string`, `hashText(text): string`, `hashJson(value): string`; `snapshotFiles(entries: ReadonlyArray<{ label: string; dir: string }>): Promise<Record<string, string>>` (keys `label/relativePath`, POSIX separators, sorted walk, skips `node_modules`/`dist`, missing dirs contribute nothing); `diffFiles(before, after): { added: string[]; removed: string[]; changed: string[] }`.
 
-- [ ] **Step 1: Create the package**
+- [x] **Step 1: Create the package**
 
 ```json
 // packages/build-session/package.json
@@ -595,7 +595,7 @@ export default defineConfig({
 
 Copy `packages/contracts/tsconfig.json` to `packages/build-session/tsconfig.json`. Run `npm install` at the repo root so the workspace link exists.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 ```ts
 // packages/build-session/tests/hash.test.ts
@@ -665,12 +665,12 @@ describe('file snapshots', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project build-session`
 Expected: FAIL — modules not found.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```ts
 // packages/build-session/src/hash.ts
@@ -754,7 +754,7 @@ export * from './hash'
 export * from './files'
 ```
 
-- [ ] **Step 5: Run tests, then commit**
+- [x] **Step 5: Run tests, then commit**
 
 Run: `npx vitest run --project build-session` — Expected: PASS.
 
