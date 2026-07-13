@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md`
 
-**Overall progress:** 20/62 steps complete (32%)
+**Overall progress:** 25/62 steps complete (40%)
 
 ## Global Constraints
 
@@ -776,7 +776,7 @@ git commit -m "feat(build-session): new leaf package with canonical hashing and 
 - Consumes: `buildSessionSchema`, `createBuildSession` (Task 1); `node:fs/promises`.
 - Produces (used by Task 6): `sessionDir(sessionsRoot, gameId): string`; `loadOrCreateSession(opts: { sessionsRoot; gameId; projectDir; engineVersion; now?: () => string }): Promise<{ session: BuildSession; created: boolean; quarantinedTo?: string }>`; `saveSession(dir: string, session: BuildSession): Promise<void>` (atomic tmp+rename); `acquireSessionLock(dir: string, pid?: number): Promise<void>` (throws `LockHeldError`); `releaseSessionLock(dir: string): Promise<void>`; `class LockHeldError extends Error`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/build-session/tests/store.test.ts
@@ -852,12 +852,12 @@ describe('session store', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project build-session -t 'session store'`
 Expected: FAIL — `../src/store` does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/build-session/src/store.ts
@@ -956,12 +956,12 @@ export async function releaseSessionLock(dir: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 Run: `npx vitest run --project build-session`
 Expected: PASS. Note: the live-pid case uses `process.ppid` (the test runner's parent — always alive during the test).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/build-session
