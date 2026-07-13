@@ -432,7 +432,7 @@ In `packages/contracts/src/prompts.ts`, replace workflow steps 2 and 4 in `build
 - [ ] **Step 4: Run tests**
 
 Run: `npx vitest run --project contracts`
-Expected: PASS. If `prompts.test.ts` asserted the old `--project` copy, update those assertions to the new copy in the same commit.
+Expected: PASS after updating `packages/contracts/tests/prompts.test.ts`, which currently asserts the old copy: change `expect(text).toContain('npm install')` to `expect(text).toContain('runBuild')` and `expect(text).toContain('--project games/')` to `expect(text).toContain('openProject')` (keep the `createGame`/`evaluate`/`npm run ci` assertions).
 
 - [ ] **Step 5: Commit**
 
@@ -448,7 +448,7 @@ git commit -m "feat(contracts): session/check tool defs, unified parser, openPro
 **Files:**
 - Create: `packages/engine/src/math/random.ts`
 - Modify: `packages/engine/src/index.ts` (add `export * from './math/random'` after the `./math/quat` line)
-- Test: place `random.test.ts` next to the engine's existing math tests — check `packages/engine` for its test layout (`tests/` dir or co-located `*.test.ts`) and follow it.
+- Test: `packages/engine/tests/math/random.test.ts` (engine tests live in `tests/` mirroring `src/` subdirectories; the vitest project name is `engine`)
 
 **Interfaces:**
 - Produces (used by Tasks 6, 12; later by game-kit runtime work): `SeededRng { next(): number; nextInt(maxExclusive: number): number }`, `createSeededRng(seed: number): SeededRng`, `hashStringToSeed(text: string): number`.
@@ -457,7 +457,7 @@ git commit -m "feat(contracts): session/check tool defs, unified parser, openPro
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { createSeededRng, hashStringToSeed } from '../src/math/random' // adjust relative path to the engine test layout
+import { createSeededRng, hashStringToSeed } from '../../src/math/random'
 
 describe('seeded rng', () => {
   it('is deterministic for equal seeds and diverges for different seeds', () => {
@@ -494,7 +494,7 @@ describe('seeded rng', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run --project engine -t 'seeded rng'` (use the engine project name from its `vitest.config.ts`)
+Run: `npx vitest run --project engine -t 'seeded rng'`
 Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement**
@@ -1878,7 +1878,7 @@ export function composePacks(
 
 If `GameHost.cleanup`'s member is named something other than `defer`, match the real name from `packages/game-kit/src/host.ts` in both seam and test (usage elsewhere: `host.cleanup.defer(() => ...)` in `games/pulsebreak/src/main.ts`).
 
-Then route the scaffold template through the seam: in `tools/scaffold/src/templates/srcFiles.ts`, find the generated `main.ts` template (search the file for `createGameHost(`), add `composePacks` to its `@automata/game-kit` import list, and insert immediately after the host-creation line:
+Then route the scaffold template through the seam in `tools/scaffold/src/templates/srcFiles.ts`: the generated `main.ts` template imports at line ~136 — change `import { createGameHost, createProjectReader, startGameLoop } from '@automata/game-kit'` to include `composePacks` — and insert immediately after the `const host = createGameHost(app)` line (~164):
 
 ```ts
   // Pack-composition seam (empty until capability packs exist); packs will contribute systems here.
@@ -2670,7 +2670,7 @@ git commit -m "feat(editor-mcp-server): server-executed check tools, changedFile
 **Files:**
 - Modify: `tools/editor-mcp-server/src/main.ts` (workspace-only CLI)
 - Delete: `tools/editor-mcp-server/src/workspaceHost.ts`, `tools/editor-mcp-server/tests/workspaceHost.test.ts`
-- Modify: `tools/editor-mcp-server/tests/server.test.ts` (rebase any host construction onto `createSessionHost`; keep `headlessHost.test.ts` — the internal open path remains)
+- No change needed: `tests/server.test.ts` (it drives `createMcpServer` with a fake host and `createHeadlessHost` directly — both keep their signatures), `tests/mcpAdapter.test.ts`, `tests/smoke.test.ts`, `tests/headlessHost.test.ts` (the internal open path remains). Verify they still pass, but do not rewrite them.
 - Modify: `tools/scaffold/scripts/verify-new-game.ts` (drive workspace mode + `openProject` over stdio)
 - Modify: `tools/scaffold/src/templates/configFiles.ts` (README copy: `--workspace .` + `openProject`, drop `--project`)
 - Modify: `.gitignore` (add `.automata/`)
@@ -2746,9 +2746,9 @@ void main().catch((error: unknown) => {
 })
 ```
 
-- [ ] **Step 2: Delete `workspaceHost.ts` + its test; migrate `server.test.ts`**
+- [ ] **Step 2: Delete `workspaceHost.ts` + its test**
 
-`workspaceHost.test.ts` assertions worth carrying into `sessionHost.test.ts` (if not already present from Task 9): tool advertisement (createGame/listGames present), and readResource throwing when no project is open. Update `server.test.ts` anywhere it built a workspace host or relied on project-mode boot; the MCP-adapter-level behavior it tests is host-agnostic — construct `createSessionHost` with a temp repo instead.
+`workspaceHost.test.ts` assertions worth carrying into `sessionHost.test.ts` (if not already present from Task 9): tool advertisement (createGame/listGames present), and readResource throwing when no project is open. The other existing test files (`server.test.ts`, `mcpAdapter.test.ts`, `smoke.test.ts`, `headlessHost.test.ts`) need no rewrite — run them to confirm.
 
 - [ ] **Step 3: Update the scaffold README template**
 
