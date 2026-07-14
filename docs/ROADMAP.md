@@ -173,15 +173,35 @@ plan: [`2026-07-13-phase-2-versioned-gamespec.md`](superpowers/plans/active/2026
   capability compatibility) gating the design checkpoint. **Exit:** ten
   differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3 — Vertical slice · first playable · `Next`
+### Phase 3 — Vertical slice · first playable · `In progress`
+
+Spec: [`2026-07-13-phase-3-vertical-slice-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice-design.md);
+plan: [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
 
 - **Goal:** drive one minimal `GameSpec` through the thinnest version of every
-  layer — one pack, hand-minimal content, one placeholder/generated asset,
-  composed by the runtime — into a genuinely playable artifact, proving the
+  layer — one pack (`interaction-inventory`), trivially-generated content, one
+  placeholder asset through a stub asset path, composed by the runtime from a
+  data-driven manifest — into a genuinely playable artifact, proving the
   prompt → spec → compose → play → evaluate seam before any layer is built at
   scale. **Evaluators:** first browser eval (boot/console/frame-time) plus a
   critical-path smoke. **Exit:** a thin but genuinely playable artifact runs
   end-to-end from a minimal `GameSpec` and passes the vertical-slice checkpoint.
+- **Depends on:** Phase 2 complete.
+- **Tasks:**
+  - Contracts: composition + asset-manifest schemas; interaction-inventory
+    capability config — `Planned`.
+  - Capability-pack interface v1 + `PackEvalHook` + `loadComposition` in
+    `@automata/game-kit` — `Planned`.
+  - `@automata/pack-interaction-inventory` (pure core, browser adapter, eval
+    hook, seeded compose section) — `Planned`.
+  - `@automata/pack-registry` + `@automata/game-compose` (`composeGame`,
+    slice report) — `Planned`.
+  - Composition-aware scaffold templates + enriched browser e2e
+    (console capture, frame-time budget) — `Planned`.
+  - `composeGame` / `renderSliceReport` / `recordSliceDecision` MCP tools +
+    end-to-end acceptance with seeded replay — `Planned`.
+  - `games/first-light` slice game: composed, gated, checkpointed, checked
+    in — `Planned`.
 
 ### Phase 4 — Capability packs · `Planned`
 
