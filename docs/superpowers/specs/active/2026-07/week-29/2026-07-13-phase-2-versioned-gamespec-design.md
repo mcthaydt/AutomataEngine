@@ -122,8 +122,9 @@ during implementation, structure binding now):
 - **`specVersion`** — positive int. **`provenance`** — source prompt,
   translations (`{requested, translatedTo, reason}[]` — how "unsupported
   requests are translated and disclosed" becomes checkpoint-visible),
-  created/updated timestamps, and the embedded version history
-  (`{version, reason, date}[]`).
+  and the embedded version history (`{version, reason}[]`). No wall-clock
+  timestamps live in the spec — time belongs to the session ledger and git;
+  this keeps `spec:compile` cacheable and replayable.
 - **`identity`** — `id` (must equal the gameId per the registry convention),
   `title`, `logline`, `themes` (bounded list), `contentRating` (enum:
   `everyone | teen | mature`).
