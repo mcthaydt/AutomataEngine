@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { parseSpecToolArgs, specToolArgSchemas } from './specTools'
 import { parseToolArgs, writeToolNames, type ToolDef, type ToolName } from './tools'
 import { gameSlugSchema, parseWorkspaceToolArgs, workspaceToolArgSchemas } from './workspaceTools'
 
@@ -63,6 +64,7 @@ export function splitClientStepId(args: unknown): { clientStepId?: string; rest:
 export function parseUnifiedToolArgs(name: string, args: unknown): unknown {
   if (name in workspaceToolArgSchemas) return parseWorkspaceToolArgs(name, args)
   if (name in sessionToolArgSchemas) return parseSessionToolArgs(name, args)
+  if (name in specToolArgSchemas) return parseSpecToolArgs(name, args)
   if ((writeToolNames as readonly string[]).includes(name)) {
     return parseToolArgs(name as ToolName, splitClientStepId(args).rest)
   }
