@@ -42,17 +42,41 @@ const BUILD_GAME: PromptDef = {
   ]
 }
 
+const buildGameSpecArgsSchema = z.object({
+  description: z.string().min(1),
+  name: gameSlugSchema.optional()
+})
+
+const BUILD_GAME_SPEC: PromptDef = {
+  name: 'build-game-spec',
+  description:
+    'Compile a plain-language game description into a versioned GameSpec and drive the design checkpoint: scaffold, draft, compile, brief, human decision.',
+  arguments: [
+    { name: 'description', description: 'What the game should be, in plain language.', required: true },
+    { name: 'name', description: 'Optional lowercase-slug package name for the new game.', required: false }
+  ]
+}
+
 export function workspacePromptDefs(): PromptDef[] {
-  return [BUILD_GAME]
+  return [BUILD_GAME, BUILD_GAME_SPEC]
 }
 
 export function getWorkspacePrompt(name: string, args: unknown): PromptResult {
-  if (name !== BUILD_GAME.name) throw new Error(`Unknown prompt "${name}"`)
-  const { description, name: slug } = buildGameArgsSchema.parse(args ?? {})
-  return {
-    description: BUILD_GAME.description,
-    messages: [{ role: 'user', content: { type: 'text', text: buildGameText(description, slug) } }]
+  if (name === BUILD_GAME.name) {
+    const { description, name: slug } = buildGameArgsSchema.parse(args ?? {})
+    return {
+      description: BUILD_GAME.description,
+      messages: [{ role: 'user', content: { type: 'text', text: buildGameText(description, slug) } }]
+    }
   }
+  if (name === BUILD_GAME_SPEC.name) {
+    const { description, name: slug } = buildGameSpecArgsSchema.parse(args ?? {})
+    return {
+      description: BUILD_GAME_SPEC.description,
+      messages: [{ role: 'user', content: { type: 'text', text: buildGameSpecText(description, slug) } }]
+    }
+  }
+  throw new Error(`Unknown prompt "${name}"`)
 }
 
 function buildGameText(description: string, slug?: string): string {
@@ -73,4 +97,22 @@ Workflow:
 8. Finish with \`npm run ci\` at the repo root and confirm it is green.
 
 Conventions: gameId === package name === games/<dir> name; schemas are zod authored with @automata/project helpers (vec3, color, reference, listOf, tableOf); \`npm run dev -w ${name}\` serves the game on its assigned port.`
+}
+
+/** Guides the MCP-calling agent through the bounded prompt-to-spec checkpoint, not later generation work. */
+function buildGameSpecText(description: string, slug?: string): string {
+  const name = slug ?? '<name>'
+  return `Compile the following game description into a versioned GameSpec in this AutomataEngine workspace, then drive it to the design checkpoint. You are the intent compiler's brain; the server is its bound.
+
+Game description:
+${description}
+
+Workflow:
+1. ${slug ? `Call the createGame tool with name "${slug}".` : 'Pick a lowercase-slug name that fits the description and call the createGame tool with it.'}
+2. Draft a GameSpec for "${name}" following the draft JSON schema embedded in the compileGameSpec tool description. Stay inside the supported envelope (one compact district, bounded counts). Where the description asks for something unsupported, translate it to the nearest supported design and record it in translations ({requested, translatedTo, reason}) — never silently approximate. Preserve the user's fantasy, tone, and differentiators. Set identity.id to "${name}".
+3. Call compileGameSpec with the draft, the original description as prompt, and your translations. If it returns findings, repair the draft and recompile — findings carry JSON paths.
+4. Call renderDesignBrief and present the brief to the human verbatim for the design checkpoint.
+5. After the human answers, call recordDesignDecision with approve or reject and their reason. Approval freezes this specVersion; any later change needs changeReason and re-approval.
+
+Do not generate game code, content, or assets from the spec — that is later phases' work.`
 }
