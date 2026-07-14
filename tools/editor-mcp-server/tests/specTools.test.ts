@@ -12,3 +12,18 @@ const args = () => ({ gameId: 'probe', draft: minimalGameSpecDraft(), prompt: 'm
 describe('compileGameSpec / getGameSpec', () => {
   it('lists, validates, persists, caches, and reads spec tools without an open project', async () => { const root = await makeRepo(); const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 }); for (const name of ['compileGameSpec', 'getGameSpec', 'renderDesignBrief', 'recordDesignDecision']) expect(host.listTools().map((tool) => tool.name)).toContain(name); const first = await host.executeTool('compileGameSpec', args()); expect(first).toMatchObject({ ok: true, content: { specVersion: 1, cached: false, checkpoint: 'pending' } }); expect(await host.executeTool('compileGameSpec', args())).toMatchObject({ ok: true, content: { cached: true } }); expect(await host.executeTool('getGameSpec', { gameId: 'probe' })).toMatchObject({ ok: true, content: { specVersion: 1, checkpoint: 'pending' } }); await host.dispose() })
 })
+
+describe('design checkpoint lifecycle', () => {
+  it('briefs, approves, freezes, bumps with a reason, and reopens approval', async () => {
+    const root = await makeRepo(); const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 })
+    await host.executeTool('compileGameSpec', args())
+    expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'looks right' })).toMatchObject({ ok: false })
+    expect(await host.executeTool('renderDesignBrief', { gameId: 'probe' })).toMatchObject({ ok: true, content: { cached: false, artifact: 'artifacts/design-brief.md' } })
+    expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'looks right' })).toMatchObject({ ok: true, content: { recorded: true, specVersion: 1 } })
+    const edited = minimalGameSpecDraft(); (edited.identity as Record<string, unknown>).title = 'Probe II'
+    expect(JSON.stringify((await host.executeTool('compileGameSpec', { ...args(), draft: edited })).content)).toContain('spec-approved-immutable')
+    expect(await host.executeTool('compileGameSpec', { ...args(), draft: edited, changeReason: 'retitle for tone' })).toMatchObject({ ok: true, content: { specVersion: 2, checkpoint: 'pending' } })
+    expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'v2 fine' })).toMatchObject({ ok: false })
+    await host.dispose()
+  })
+})
