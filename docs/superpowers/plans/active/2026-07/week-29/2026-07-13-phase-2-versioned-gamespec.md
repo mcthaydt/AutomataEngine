@@ -1343,6 +1343,28 @@ export function createSpecToolRunner(deps: SpecToolDeps) {
     }
 
     const spec = normalizeGameSpec(stamped.spec)
+    const specHash = hashJson(spec)
+
+    // Identical recompile: the stamped result already matches disk, so answer from the
+    // ledger instead of journaling a duplicate step. This must happen OUTSIDE the seeded
+    // step: its input includes current disk state (below), which differs between the
+    // first compile (no file yet) and a byte-identical recompile, so the seeded-step
+    // cache alone can never report cached for this case.
+    if (current !== null && hashJson(current) === specHash) {
+      const prior = [...engine.session.steps].reverse()
+        .find((step) => step.kind === 'spec:compile' && step.status === 'completed')
+      if (prior) {
+        await engine.autoResolve('spec')
+        return ok({
+          specVersion: spec.specVersion, cached: true,
+          checkpoint: designCheckpointStatus(engine, specHash), stepId: prior.id
+        })
+      }
+    }
+
+    // Current disk state stays in the seeded-step input so a recorded step is never a
+    // stale hit: recompiling an older draft after a version bump must record a fresh
+    // step, not resurrect the pre-bump spec from the cache.
     const input = {
       draft: normalizeGameSpec(validated.draft), prompt: args.prompt, translations: args.translations,
       changeReason: args.changeReason ?? null, currentVersion: current?.specVersion ?? null, currentApproved
@@ -1352,7 +1374,7 @@ export function createSpecToolRunner(deps: SpecToolDeps) {
     await engine.autoResolve('spec')
     return ok({
       specVersion: (guarded.output as GameSpec).specVersion, cached: guarded.cached,
-      checkpoint: designCheckpointStatus(engine, hashJson(guarded.output)), stepId: guarded.step.id
+      checkpoint: designCheckpointStatus(engine, specHash), stepId: guarded.step.id
     })
   }
 
