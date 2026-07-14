@@ -187,6 +187,11 @@ implementation plan:
 
 ### Phase 2 — Versioned `GameSpec`
 
+**Completed 2026-07-13.** Implementation spec:
+[`2026-07-13-phase-2-versioned-gamespec-design.md`](../week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
+implementation plan:
+[`2026-07-13-phase-2-versioned-gamespec.md`](/docs/superpowers/plans/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec.md).
+
 - **Goal.** A prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
   design checkpoint.
 - **Advances checkpoint.** **Design approval** (checkpoint 1) — this phase

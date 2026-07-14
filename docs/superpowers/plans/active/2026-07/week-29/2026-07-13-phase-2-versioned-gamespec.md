@@ -10,6 +10,12 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md`
 
+**Overall progress:** 100% (Tasks 1-12 complete; CI and coverage verified)
+
+> **Completion update (2026-07-13):** All twelve tasks are complete. Final
+> verification: `npm run ci`, full Vitest (231 files / 1057 tests), and
+> `npm run coverage` completed successfully.
+
 ## Global Constraints
 
 - Schemas are zod v4 `z.strictObject`; `.min()/.max()` only (no `.gt/.lt/.positive/.negative`); unknown keys rejected.
@@ -36,7 +42,7 @@
 **Interfaces:**
 - Produces: `gameSpecSchema`, `gameSpecDraftSchema` (spec minus `specVersion`/`provenance`), types `GameSpec`, `GameSpecDraft`, `SpecTranslation`; `capabilityIdSchema`, `CapabilityId`, `CapabilityRule`, `DEFAULT_CAPABILITY_COMPATIBILITY`; `specTranslationSchema`; `minimalGameSpecDraft(gameId?: string): Record<string, unknown>` (valid draft fixture, default gameId `'probe'`). Finding source `'spec'` valid in `findingSchema`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/gameSpec.test.ts
@@ -136,12 +142,12 @@ describe('gameSpec schemas', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/contracts/tests/gameSpec.test.ts`
 Expected: FAIL — `gameSpecSchema` etc. not exported from `../src`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/contracts/src/gameSpec.ts
@@ -304,11 +310,11 @@ export * from './gameSpecFixtures'
 
 In the spec doc's §4 `provenance` bullet, replace "created/updated timestamps, and the embedded version history (`{version, reason, date}[]`)" with "and the embedded version history (`{version, reason}[]`). No wall-clock timestamps live in the spec — time belongs to the session ledger and git; this keeps `spec:compile` cacheable and replayable." Remove `date` from §5's version-history mention if present.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/contracts` — Expected: PASS (all contracts tests, including existing ones).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts docs/superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md
@@ -327,7 +333,7 @@ git commit -m "feat(contracts): GameSpec schemas with envelope bounds; spec find
 - Consumes: `gameSpecDraftSchema`, `specTranslationSchema` (Task 1); `gameSlugSchema`, `ToolDef`.
 - Produces: `SpecToolName`, `specToolArgSchemas`, `specToolDefs(): ToolDef[]`, `parseSpecToolArgs(name, args)`. `parseUnifiedToolArgs` accepts the four tool names.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/specTools.test.ts
@@ -362,12 +368,12 @@ describe('spec tool contracts', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/contracts/tests/specTools.test.ts`
 Expected: FAIL — `specToolDefs` not exported.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/contracts/src/specTools.ts
@@ -437,11 +443,11 @@ In `packages/contracts/src/sessionTools.ts`, import and route (top of file add `
 
 Add `export * from './specTools'` to `packages/contracts/src/index.ts`.
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 Run: `npx vitest run packages/contracts` — Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
@@ -457,7 +463,7 @@ git commit -m "feat(contracts): GameSpec MCP tool defs and unified arg parsing"
 **Interfaces:**
 - Produces: `workspacePromptDefs()` lists `build-game-spec`; `getWorkspacePrompt('build-game-spec', { description, name? })` returns the workflow text.
 
-- [ ] **Step 1: Write the failing test** — append to `packages/contracts/tests/prompts.test.ts`:
+- [x] **Step 1: Write the failing test** — append to `packages/contracts/tests/prompts.test.ts`:
 
 ```ts
 describe('build-game-spec prompt', () => {
@@ -475,11 +481,11 @@ describe('build-game-spec prompt', () => {
 
 (Import `getWorkspacePrompt`, `workspacePromptDefs` if the existing file doesn't already.)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/contracts/tests/prompts.test.ts` — Expected: FAIL — prompt not listed.
 
-- [ ] **Step 3: Implement** — in `packages/contracts/src/prompts.ts` add:
+- [x] **Step 3: Implement** — in `packages/contracts/src/prompts.ts` add:
 
 ```ts
 const buildGameSpecArgsSchema = z.object({
@@ -531,8 +537,8 @@ export function getWorkspacePrompt(name: string, args: unknown): PromptResult {
 }
 ```
 
-- [ ] **Step 4: Run tests** — `npx vitest run packages/contracts` — Expected: PASS.
-- [ ] **Step 5: Commit**
+- [x] **Step 4: Run tests** — `npx vitest run packages/contracts` — Expected: PASS.
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
@@ -554,7 +560,7 @@ git commit -m "feat(contracts): build-game-spec workspace prompt"
 - Consumes: `gameSpecDraftSchema`, `DEFAULT_CAPABILITY_COMPATIBILITY`, `CapabilityId`, `CapabilityRule`, `GameSpecDraft` (Task 1).
 - Produces: `interface SpecIssue { severity: 'error' | 'warning'; code: string; message: string; path: string }`; `validateGameSpec(draft: unknown, options: { gameId: string; compatibility?: Record<CapabilityId, CapabilityRule> }): { ok: true; draft: GameSpecDraft; issues: SpecIssue[] } | { ok: false; issues: SpecIssue[] }`.
 
-- [ ] **Step 1: Create the package skeleton**
+- [x] **Step 1: Create the package skeleton**
 
 ```jsonc
 // packages/game-spec/package.json
@@ -594,7 +600,7 @@ export * from './validate'
 
 Run: `npm install` (links the new workspace package).
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // packages/game-spec/tests/validate.test.ts
@@ -672,11 +678,11 @@ describe('validateGameSpec', () => {
 
 Note for the implementer: `minimalGameSpecDraft` is a real export of `@automata/contracts` (Task 1's `gameSpecFixtures.ts`) — never import another package's test files. The conflict case injects a custom compatibility table because the default table has no incompatible pairs yet; the injected-table path is the contract Phase 4 will use.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run packages/game-spec` — Expected: FAIL — `validateGameSpec` not defined.
 
-- [ ] **Step 4: Write the implementation**
+- [x] **Step 4: Write the implementation**
 
 ```ts
 // packages/game-spec/src/validate.ts
@@ -779,8 +785,8 @@ export function validateGameSpec(draft: unknown, options: ValidateOptions): Vali
 }
 ```
 
-- [ ] **Step 5: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
-- [ ] **Step 6: Commit**
+- [x] **Step 5: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-spec package-lock.json
@@ -797,7 +803,7 @@ git commit -m "feat(game-spec): package scaffold and structural spec validation 
 **Interfaces:**
 - Produces: `normalizeGameSpec<T>(value: T): T` — deep-sorts object keys (arrays keep order: beats/milestones are ordered content). Idempotent; makes `hashJson` stable regardless of agent key order.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-spec/tests/normalize.test.ts
@@ -821,9 +827,9 @@ describe('normalizeGameSpec', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify FAIL** — `npx vitest run packages/game-spec/tests/normalize.test.ts` — `normalizeGameSpec` not exported.
+- [x] **Step 2: Run to verify FAIL** — `npx vitest run packages/game-spec/tests/normalize.test.ts` — `normalizeGameSpec` not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/game-spec/src/normalize.ts
@@ -846,8 +852,8 @@ function sortKeysDeep(value: unknown): unknown {
 }
 ```
 
-- [ ] **Step 4: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
-- [ ] **Step 5: Commit** — `git add packages/game-spec && git commit -m "feat(game-spec): canonical spec normalization for stable hashing"`
+- [x] **Step 4: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
+- [x] **Step 5: Commit** — `git add packages/game-spec && git commit -m "feat(game-spec): canonical spec normalization for stable hashing"`
 
 ### Task 6: `nextSpecVersion` — immutability + versioning
 

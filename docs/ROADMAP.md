@@ -27,6 +27,14 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **Phase 2 — Versioned `GameSpec`** (2026-07-13, `phase-0-completion` @
+  `pending merge`). Added bounded versioned GameSpec contracts, deterministic
+  validation/normalization/versioning/brief rendering, and MCP design-checkpoint
+  tooling with ten-prompt seeded-replay acceptance. Spec:
+  [`2026-07-13-phase-2-versioned-gamespec-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
+  plan:
+  [`2026-07-13-phase-2-versioned-gamespec.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec.md).
+
 - **Phase 1 — Persistent MCP build sessions (P5)** (2026-07-13,
   `phase-0-completion` @ `b0c9341`). Added durable session ledgers, atomic
   recovery, hash-guarded server checks and findings, seeded replay, the empty
@@ -155,14 +163,17 @@ plan: [`2026-07-12-p5-persistent-mcp-build-sessions.md`](superpowers/plans/activ
   across process and context resets without replaying successful work blindly,
   and generation steps replay deterministically from a recorded seed.
 
-### Phase 2 — Versioned `GameSpec` · `Next`
+### Phase 2 — Versioned `GameSpec` · `Shipped`
+
+Spec: [`2026-07-13-phase-2-versioned-gamespec-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
+plan: [`2026-07-13-phase-2-versioned-gamespec.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec.md).
 
 - **Goal:** a prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
   design checkpoint. **Evaluators:** structural spec validation (schema, budgets,
   capability compatibility) gating the design checkpoint. **Exit:** ten
   differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3 — Vertical slice · first playable · `Planned`
+### Phase 3 — Vertical slice · first playable · `Next`
 
 - **Goal:** drive one minimal `GameSpec` through the thinnest version of every
   layer — one pack, hand-minimal content, one placeholder/generated asset,

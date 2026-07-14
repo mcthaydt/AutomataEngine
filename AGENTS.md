@@ -45,6 +45,11 @@ run server-executed checks (`runBuild`, `runTests`, `runBrowserEval`,
 idempotency, findings, attempt budgets, and the resume position. Expensive
 operations are hash-guarded — repeating one with unchanged inputs returns the
 recorded result (`cached: true`) instead of re-running.
+Phase 2 adds the GameSpec surface: agents draft a spec from the prompt and call
+`compileGameSpec` (validated against the supported envelope, versioned, persisted
+to `games/<name>/gamespec.json`), then `renderDesignBrief` and
+`recordDesignDecision` drive the design checkpoint; approval freezes the spec
+version and later changes require a recorded `changeReason`.
 
 ### Component/resource schemas (zod)
 
