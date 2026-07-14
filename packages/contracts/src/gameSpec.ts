@@ -73,12 +73,41 @@ const specBudgetsSchema = z.strictObject({
   buildTimeMinutes: z.number().int().min(5).max(240)
 })
 
-const capabilitySelectionSchema = z.strictObject({
-  id: capabilityIdSchema,
-  /** Empty until Phase 4 packs own their config schemas. */
-  config: z.strictObject({}),
+/**
+ * Per-capability config schemas. interaction-inventory is real as of Phase 3
+ * (the template for Phase 4's seven); the rest stay empty stubs until their
+ * packs own them. All fields are optional with NO zod defaults: `config: {}`
+ * must parse to `{}` so stored Phase-2 specs keep their content hashes —
+ * defaults are applied by the compose step, never by the schema.
+ */
+export const capabilityConfigSchemas = {
+  'interaction-inventory': z.strictObject({
+    requiredItems: z.number().int().min(1).max(8).optional(),
+    interactRadius: z.number().min(0.5).max(5).optional()
+  }),
+  'dialogue-quests': z.strictObject({}),
+  'schedules-relationships': z.strictObject({}),
+  'combat-ai': z.strictObject({}),
+  'economy-progression': z.strictObject({}),
+  'hub-navigation-vehicle': z.strictObject({}),
+  'save-load': z.strictObject({})
+} as const satisfies Record<CapabilityId, z.ZodType>
+
+const capabilitySelection = <Id extends CapabilityId>(id: Id) => z.strictObject({
+  id: z.literal(id),
+  config: capabilityConfigSchemas[id],
   requirements: z.array(z.string().min(1).max(240)).max(10)
 })
+
+const capabilitySelectionSchema = z.discriminatedUnion('id', [
+  capabilitySelection('interaction-inventory'),
+  capabilitySelection('dialogue-quests'),
+  capabilitySelection('schedules-relationships'),
+  capabilitySelection('combat-ai'),
+  capabilitySelection('economy-progression'),
+  capabilitySelection('hub-navigation-vehicle'),
+  capabilitySelection('save-load')
+])
 
 const specLocationSchema = z.strictObject({
   id: z.string().min(1).max(40),
