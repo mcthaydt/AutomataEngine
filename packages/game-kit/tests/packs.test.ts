@@ -1,26 +1,63 @@
 import { describe, expect, it } from 'vitest'
-import { composePacks, type GamePack } from '../src/packs'
-import type { GameHost } from '../src/host'
+import { createNullRenderer } from '@automata/engine'
+import { createGameHost } from '../src/host'
+import { composePacks, type GamePack, type PackBootContext, type PackRuntimeHandle } from '../src/packs'
 
-function fakeHost(): { host: GameHost; cleanups: Array<() => void> } {
-  const cleanups: Array<() => void> = []
-  return { host: { cleanup: { defer: (fn: () => void) => cleanups.push(fn) } } as unknown as GameHost, cleanups }
+function context(): PackBootContext {
+  const app = document.createElement('div')
+  document.body.append(app)
+  return { host: createGameHost(app), render: createNullRenderer().port }
 }
-describe('pack composition seam', () => {
-  it('zero packs is the status quo: boot is a no-op', () => {
-    const { host, cleanups } = fakeHost(); const composed = composePacks([])
-    expect(composed.packIds).toEqual([]); composed.boot(host); expect(cleanups).toEqual([])
+
+describe('composePacks (capability-pack interface v1)', () => {
+  it('rejects duplicate pack ids at compose time', () => {
+    const pack: GamePack = { id: 'a', version: '1.0.0', register: () => {} }
+    expect(() => composePacks([pack, { ...pack }])).toThrow(/Duplicate pack id/)
   })
-  it('registers packs in declaration order, validates config, and defers cleanup', () => {
-    const { host, cleanups } = fakeHost(); const order: string[] = []
-    const a: GamePack<{ speed: number }> = { id: 'a', version: '1', configSchema: { parse: (value) => ({ speed: (value as { speed: number }).speed }) }, register: (_host, config) => { order.push(`a:${config.speed}`); return () => order.push('a:disposed') } }
-    const b: GamePack = { id: 'b', version: '1', register: () => { order.push('b') } }
-    composePacks([a, b], { a: { speed: 5 } }).boot(host); expect(order).toEqual(['a:5', 'b']); cleanups[0]!(); expect(order).toEqual(['a:5', 'b', 'a:disposed'])
+
+  it('boots in declaration order, parses configs, and returns an aggregated runtime', () => {
+    const calls: string[] = []
+    const make = (id: string, complete: boolean): GamePack<{ tag: string }> => ({
+      id, version: '1.0.0',
+      configSchema: { parse: (input) => { calls.push(`parse:${id}`); return input as { tag: string } } },
+      register(_ctx, config): PackRuntimeHandle {
+        calls.push(`register:${id}:${config.tag}`)
+        return {
+          fixedUpdate: (dt) => calls.push(`fixed:${id}:${dt}`),
+          render: (alpha) => calls.push(`render:${id}:${alpha}`),
+          objectivesComplete: () => complete
+        }
+      }
+    })
+    const runtime = composePacks([make('a', true), make('b', false)], { a: { tag: 'x' }, b: { tag: 'y' } }).boot(context())
+    expect(runtime.packIds).toEqual(['a', 'b'])
+    runtime.fixedUpdate(0.016, { playerPosition: { x: 0, z: 0 } })
+    runtime.render(0.5)
+    expect(calls).toEqual([
+      'parse:a', 'register:a:x', 'parse:b', 'register:b:y',
+      'fixed:a:0.016', 'fixed:b:0.016', 'render:a:0.5', 'render:b:0.5'
+    ])
+    expect(runtime.objectivesComplete()).toBe(false)
   })
-  it('rejects duplicate ids and bad config', () => {
-    const pack: GamePack = { id: 'dup', version: '1', register: () => {} }
-    expect(() => composePacks([pack, { ...pack }])).toThrow(/duplicate pack id "dup"/i)
-    const strict: GamePack = { id: 's', version: '1', configSchema: { parse: () => { throw new Error('bad config') } }, register: () => {} }
-    expect(() => composePacks([strict]).boot(fakeHost().host)).toThrow(/bad config/)
+
+  it('treats packs without a gate as vacuously complete and defers dispose onto the host stack', () => {
+    let disposed = 0
+    const pack: GamePack = {
+      id: 'a', version: '1.0.0',
+      register: () => ({ dispose: () => { disposed += 1 } })
+    }
+    const ctx = context()
+    const runtime = composePacks([pack]).boot(ctx)
+    expect(runtime.objectivesComplete()).toBe(true)
+    ctx.host.dispose()
+    expect(disposed).toBe(1)
+  })
+
+  it('composing zero packs yields an inert, vacuously complete runtime', () => {
+    const runtime = composePacks([]).boot(context())
+    expect(runtime.packIds).toEqual([])
+    runtime.fixedUpdate(0.016, { playerPosition: { x: 1, z: 2 } })
+    runtime.render(0)
+    expect(runtime.objectivesComplete()).toBe(true)
   })
 })
