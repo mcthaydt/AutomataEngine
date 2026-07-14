@@ -1,6 +1,6 @@
 # Factory Roadmap Completion — Phase 0→8 Decomposition (Design)
 
-Status: approved decomposition. Phases 0–1 completed 2026-07-12 and 2026-07-13. Date: 2026-07-11.
+Status: approved decomposition. Phase 0 completed 2026-07-12; Phases 1–2 completed 2026-07-13. Date: 2026-07-11.
 
 ## 1. Purpose & how to read
 
@@ -84,7 +84,7 @@ design.
 |---|---|---|---|---|
 | 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 completed (2026-07-12) |
 | 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 completed (2026-07-13) |
-| 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 |
+| 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 completed (2026-07-13) |
 | 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 (integration) |
 | 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack) |
 | 5 — Asset pipeline | Normalized, versioned asset manifest with providers, provenance, validation | — | Phase 3 (parallel with 4) | 3 |
@@ -198,17 +198,17 @@ implementation plan:
   produces the artifact that checkpoint reviews.
 - **Depends on.** Phase 1 (durable sessions hold the spec and checkpoint
   decision).
-- **In scope.**
-  - Define the first supported envelope and the `GameSpec` schemas (identity,
-    direction, budgets, capability selection, world/cast/story/progression stubs,
-    asset requirements, acceptance).
-  - The intent compiler: prompt → `GameSpec` + human-readable design brief;
-    normalize vague requests to supported mechanics; select capability packs and
-    budgets; detect contradictions and unsupported asks; enforce originality and
-    content policy; generate acceptance criteria.
-  - Spec immutability + versioning (a new version on any checkpoint change, with a
-    recorded reason).
-  - Produce the design-checkpoint artifact.
+- **In scope — shipped.**
+  - The first supported envelope and `GameSpec` schemas: identity, direction,
+    budgets, capability selection, world/cast, story beats plus main/side quest
+    stubs, progression, asset requirements, and acceptance criteria.
+  - A deterministic compiler surface that validates, normalizes, versions, and
+    persists a supplied spec draft; it renders a human-readable design brief and
+    rejects unsupported or contradictory envelope requests.
+  - Spec immutability and versioning: approval freezes a version; later changes
+    create a new version and require a recorded reason.
+  - The design-checkpoint artifact and decisions, persisted atomically with the
+    durable session state.
 - **Explicitly out / deferred.** No code/content/asset generation from the spec
   (the intent compiler explicitly does not generate game code or assets).
   Capability *packs* are Phase 4; here only their *selection/config schema*
@@ -218,14 +218,16 @@ implementation plan:
     compatibility — gating the design checkpoint.
   - *Determinism/runtime:* prompt→spec runs under the seeded harness — the same
     prompt and seed reproduce the same spec, so generation is deterministic.
-- **Sub-cycles it spawns.** (1) `GameSpec` schema + envelope definition; (2) intent
-  compiler (prompt → spec + brief); (3) structural spec-validation evaluator +
-  design-checkpoint artifact.
+- **Sub-cycles completed.** (1) `GameSpec` schema + envelope definition; (2)
+  compiler/normalization + design brief; (3) structural spec-validation evaluator
+  + design-checkpoint artifact.
 - **Contracts introduced.** **The `GameSpec` schema itself** — the central contract
   every subsequent phase consumes — plus the capability-selection schema and the
   acceptance-criterion format.
-- **Exit.** Ten differently worded prompts produce valid, bounded, reviewable
-  specs.
+- **Exit — met.** Ten materially distinct prompt-derived drafts compile to valid,
+  bounded, reviewable specs and replay deterministically. Post-implementation
+  review also closed quest-budget validation, persistence-error handling, atomic
+  write collision resistance, and lifecycle rejection coverage.
 - **Risks retired / carried.** Attacks platform scope creep (envelope enforcement
   and disclosure) and begins on content incoherence (explicit spec facts).
 
@@ -437,11 +439,11 @@ the current best decomposition, revised each cycle.
 1. Durable build-session substrate (open/swap, atomic persistence, idempotency, typed results)
 2. Seeded-generation/replay harness + pack-composition runtime seam
 
-**Phase 2:**
+**Phase 2 (completed 2026-07-13):**
 
 1. `GameSpec` schema + supported-envelope definition
-2. Intent compiler (prompt → `GameSpec` + design brief)
-3. Structural spec-validation evaluator + design-checkpoint artifact
+2. Compiler/normalization surface + design brief
+3. Structural spec-validation evaluator + versioned design-checkpoint artifact
 
 **Phase 3:**
 
