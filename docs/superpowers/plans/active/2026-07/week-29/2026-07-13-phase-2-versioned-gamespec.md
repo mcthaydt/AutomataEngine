@@ -15,6 +15,11 @@
 > **Completion update (2026-07-13):** All twelve tasks are complete. Final
 > verification: `npm run ci`, full Vitest (231 files / 1057 tests), and
 > `npm run coverage` completed successfully.
+>
+> **Review remediation (2026-07-13):** Added structurally checked main/side
+> quest stubs, collision-safe atomic spec persistence, missing MCP negative and
+> rejection lifecycle coverage, materially distinct acceptance fixtures, and
+> readability cleanup for the GameSpec brief and MCP runner.
 
 ## Global Constraints
 

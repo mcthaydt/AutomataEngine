@@ -27,6 +27,11 @@ export function minimalGameSpecDraft(gameId = 'probe'): Record<string, unknown> 
       beats: [
         { id: 'b1', kind: 'beginning', summary: 'Arrive.' },
         { id: 'b2', kind: 'ending', summary: 'Light the beacon.' }
+      ],
+      quests: [
+        { id: 'q1', kind: 'main', summary: 'Reach the shop.' },
+        { id: 'q2', kind: 'main', summary: 'Light the beacon.' },
+        { id: 'q3', kind: 'side', summary: 'Help the shopkeeper.' }
       ]
     },
     progression: { milestones: [{ id: 'm1', summary: 'Reach the shop.' }] },

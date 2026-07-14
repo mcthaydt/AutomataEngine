@@ -29,7 +29,7 @@ describe('validateGameSpec', () => {
     expect(codes(validateGameSpec(draft(), { gameId: 'other' }))).toContain('spec-id-mismatch')
   })
 
-  it('cross-checks budgets against world, cast, and assets', () => {
+  it('cross-checks budgets against world, cast, quests, and assets', () => {
     const overCast = draft((value) => {
       (value.budgets as Record<string, unknown>).characterCount = 1
       ;(value.cast as unknown[]).push(
@@ -52,6 +52,10 @@ describe('validateGameSpec', () => {
       )
     })
     expect(codes(validateGameSpec(overAssets, { gameId: 'probe' }))).toContain('spec-budget-assets')
+    const missingMainQuest = draft((value) => {
+      ;((value.story as { quests: unknown[] }).quests).pop()
+    })
+    expect(codes(validateGameSpec(missingMainQuest, { gameId: 'probe' }))).toContain('spec-budget-side-quests')
   })
 
   it('requires a beginning and an ending beat and unique ids', () => {

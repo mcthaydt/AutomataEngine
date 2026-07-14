@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { gameSpecSchema, type GameSpec } from '@automata/contracts'
@@ -9,14 +10,19 @@ export function gameSpecPath(repoRoot: string, gameId: string): string {
 
 export async function readGameSpec(repoRoot: string, gameId: string): Promise<GameSpec | null> {
   let text: string
-  try { text = await readFile(gameSpecPath(repoRoot, gameId), 'utf8') } catch { return null }
+  try {
+    text = await readFile(gameSpecPath(repoRoot, gameId), 'utf8')
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw error
+  }
   return gameSpecSchema.parse(JSON.parse(text))
 }
 
 /** Atomic write: create a sibling temporary file then rename it into place. */
 export async function writeGameSpec(repoRoot: string, gameId: string, spec: GameSpec): Promise<void> {
   const path = gameSpecPath(repoRoot, gameId)
-  const temporaryPath = `${path}.tmp-${process.pid}`
+  const temporaryPath = `${path}.tmp-${randomUUID()}`
   await writeFile(temporaryPath, `${JSON.stringify(spec, null, 2)}\n`)
   await rename(temporaryPath, path)
 }

@@ -11,6 +11,17 @@ async function makeRepo() { const root = await mkdtemp(join(tmpdir(), 'spec-tool
 const args = () => ({ gameId: 'probe', draft: minimalGameSpecDraft(), prompt: 'make a tiny hub game', translations: [] })
 describe('compileGameSpec / getGameSpec', () => {
   it('lists, validates, persists, caches, and reads spec tools without an open project', async () => { const root = await makeRepo(); const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 }); for (const name of ['compileGameSpec', 'getGameSpec', 'renderDesignBrief', 'recordDesignDecision']) expect(host.listTools().map((tool) => tool.name)).toContain(name); const first = await host.executeTool('compileGameSpec', args()); expect(first).toMatchObject({ ok: true, content: { specVersion: 1, cached: false, checkpoint: 'pending' } }); expect(await host.executeTool('compileGameSpec', args())).toMatchObject({ ok: true, content: { cached: true } }); expect(await host.executeTool('getGameSpec', { gameId: 'probe' })).toMatchObject({ ok: true, content: { specVersion: 1, checkpoint: 'pending' } }); await host.dispose() })
+
+  it('records typed findings for invalid drafts without writing and rejects unknown games', async () => {
+    const root = await makeRepo()
+    const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 })
+    const invalid = minimalGameSpecDraft()
+    ;(invalid.budgets as Record<string, unknown>).targetMinutes = 999
+    expect(await host.executeTool('compileGameSpec', { ...args(), draft: invalid })).toMatchObject({ ok: false, isError: true })
+    expect(await host.executeTool('getGameSpec', { gameId: 'probe' })).toMatchObject({ ok: false })
+    expect(await host.executeTool('compileGameSpec', { ...args(), gameId: 'ghost' })).toMatchObject({ ok: false, isError: true })
+    await host.dispose()
+  })
 })
 
 describe('design checkpoint lifecycle', () => {
@@ -24,6 +35,22 @@ describe('design checkpoint lifecycle', () => {
     expect(JSON.stringify((await host.executeTool('compileGameSpec', { ...args(), draft: edited })).content)).toContain('spec-approved-immutable')
     expect(await host.executeTool('compileGameSpec', { ...args(), draft: edited, changeReason: 'retitle for tone' })).toMatchObject({ ok: true, content: { specVersion: 2, checkpoint: 'pending' } })
     expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'v2 fine' })).toMatchObject({ ok: false })
+    await host.dispose()
+  })
+
+  it('records rejection and keeps the current version editable', async () => {
+    const root = await makeRepo()
+    const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 })
+    await host.executeTool('compileGameSpec', args())
+    await host.executeTool('renderDesignBrief', { gameId: 'probe' })
+    expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'reject', reason: 'wrong tone' }))
+      .toMatchObject({ ok: true, content: { decision: 'reject' } })
+    expect(await host.executeTool('getGameSpec', { gameId: 'probe' }))
+      .toMatchObject({ ok: true, content: { checkpoint: 'rejected' } })
+    const revised = minimalGameSpecDraft()
+    ;(revised.direction as Record<string, unknown>).dialogueTone = 'noir'
+    expect(await host.executeTool('compileGameSpec', { ...args(), draft: revised }))
+      .toMatchObject({ ok: true, content: { specVersion: 1, checkpoint: 'pending' } })
     await host.dispose()
   })
 })

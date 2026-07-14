@@ -100,6 +100,13 @@ const specStoryBeatSchema = z.strictObject({
   summary: z.string().min(1).max(400)
 })
 
+/** Quest stubs make the declared main/side-quest budgets structurally verifiable. */
+const specQuestSchema = z.strictObject({
+  id: z.string().min(1).max(40),
+  kind: z.enum(['main', 'side']),
+  summary: z.string().min(1).max(240)
+})
+
 export const acceptanceCriterionSchema = z.strictObject({
   id: z.string().min(1).max(60),
   description: z.string().min(1).max(400),
@@ -125,7 +132,8 @@ export const gameSpecSchema = z.strictObject({
   cast: z.array(specCharacterSchema).min(1).max(12),
   story: z.strictObject({
     premise: z.string().min(1).max(600),
-    beats: z.array(specStoryBeatSchema).min(2).max(20)
+    beats: z.array(specStoryBeatSchema).min(2).max(20),
+    quests: z.array(specQuestSchema).min(1).max(18)
   }),
   progression: z.strictObject({
     milestones: z.array(z.strictObject({

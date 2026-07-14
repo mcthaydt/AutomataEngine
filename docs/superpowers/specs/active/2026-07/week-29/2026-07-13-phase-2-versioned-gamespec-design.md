@@ -146,7 +146,8 @@ during implementation, structure binding now):
 - **`world` / `cast` / `story` / `progression`** — deliberate stubs, per the
   decomposition: world = named locations (`kind: district | interior`); cast =
   named characters with role; story = ordered outline beats with required
-  beginning and ending; progression = a small ordered milestones list. All
+  beginning and ending plus main/side quest stubs; progression = a small ordered
+  milestones list. All
   cross-checked against budgets (locations vs `interiorCount`, cast length ≤
   `characterCount`, …).
 - **`assets`** — `AssetRequirement[]` stubs: stable logical ID, kind enum,

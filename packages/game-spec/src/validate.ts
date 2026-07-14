@@ -61,6 +61,14 @@ export function validateGameSpec(draft: unknown, options: ValidateOptions): Vali
   if (spec.assets.length > spec.budgets.assetBudget) {
     issues.push(error('spec-budget-assets', `${spec.assets.length} asset requirements exceed assetBudget ${spec.budgets.assetBudget}`, 'assets'))
   }
+  const mainQuests = spec.story.quests.filter((quest) => quest.kind === 'main').length
+  const sideQuests = spec.story.quests.filter((quest) => quest.kind === 'side').length
+  if (mainQuests !== spec.budgets.mainQuestCount) {
+    issues.push(error('spec-budget-main-quests', `${mainQuests} main quests must equal mainQuestCount ${spec.budgets.mainQuestCount}`, 'story.quests'))
+  }
+  if (sideQuests !== spec.budgets.sideQuestCount) {
+    issues.push(error('spec-budget-side-quests', `${sideQuests} side quests must equal sideQuestCount ${spec.budgets.sideQuestCount}`, 'story.quests'))
+  }
   const beatKinds = new Set(spec.story.beats.map((beat) => beat.kind))
   if (!beatKinds.has('beginning') || !beatKinds.has('ending')) {
     issues.push(error('spec-story-arc', 'story.beats must include at least one beginning and one ending beat', 'story.beats'))
@@ -69,6 +77,7 @@ export function validateGameSpec(draft: unknown, options: ValidateOptions): Vali
     ...duplicateIds(spec.world.locations, 'world.locations'),
     ...duplicateIds(spec.cast, 'cast'),
     ...duplicateIds(spec.story.beats, 'story.beats'),
+    ...duplicateIds(spec.story.quests, 'story.quests'),
     ...duplicateIds(spec.progression.milestones, 'progression.milestones'),
     ...duplicateIds(spec.assets, 'assets'),
     ...duplicateIds(spec.acceptance, 'acceptance'),
