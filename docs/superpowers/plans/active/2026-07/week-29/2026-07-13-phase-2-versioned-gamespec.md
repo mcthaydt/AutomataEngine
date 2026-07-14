@@ -866,7 +866,7 @@ function sortKeysDeep(value: unknown): unknown {
 - Consumes: `GameSpec`, `GameSpecDraft`, `SpecTranslation` (contracts); `SpecIssue` (Task 4).
 - Produces: `nextSpecVersion(args: { current: GameSpec | null; currentApproved: boolean; draft: GameSpecDraft; prompt: string; translations: SpecTranslation[]; changeReason?: string }): { ok: true; spec: GameSpec } | { ok: false; issue: SpecIssue }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-spec/tests/version.test.ts
@@ -912,9 +912,9 @@ describe('nextSpecVersion', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify FAIL** — `npx vitest run packages/game-spec/tests/version.test.ts`.
+- [x] **Step 2: Run to verify FAIL** — `npx vitest run packages/game-spec/tests/version.test.ts`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/game-spec/src/version.ts
@@ -962,8 +962,8 @@ export function nextSpecVersion(args: NextSpecVersionArgs): NextSpecVersionResul
 }
 ```
 
-- [ ] **Step 4: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
-- [ ] **Step 5: Commit** — `git add packages/game-spec && git commit -m "feat(game-spec): spec immutability and versioning rules"`
+- [x] **Step 4: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
+- [x] **Step 5: Commit** — `git add packages/game-spec && git commit -m "feat(game-spec): spec immutability and versioning rules"`
 
 ### Task 7: `renderDesignBrief`
 
@@ -975,7 +975,7 @@ export function nextSpecVersion(args: NextSpecVersionArgs): NextSpecVersionResul
 **Interfaces:**
 - Produces: `renderDesignBrief(spec: GameSpec): string` — deterministic markdown, pure function of the spec.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-spec/tests/brief.test.ts
@@ -1014,9 +1014,9 @@ describe('renderDesignBrief', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify FAIL** — `npx vitest run packages/game-spec/tests/brief.test.ts`.
+- [x] **Step 2: Run to verify FAIL** — `npx vitest run packages/game-spec/tests/brief.test.ts`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/game-spec/src/brief.ts
@@ -1091,8 +1091,8 @@ export function renderDesignBrief(spec: GameSpec): string {
 }
 ```
 
-- [ ] **Step 4: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
-- [ ] **Step 5: Commit** — `git add packages/game-spec && git commit -m "feat(game-spec): deterministic design-brief rendering"`
+- [x] **Step 4: Run tests** — `npx vitest run packages/game-spec` — Expected: PASS.
+- [x] **Step 5: Commit** — `git add packages/game-spec && git commit -m "feat(game-spec): deterministic design-brief rendering"`
 
 ---
 
@@ -1108,7 +1108,7 @@ export function renderDesignBrief(spec: GameSpec): string {
 - Consumes: `gameSpecSchema`, `GameSpec` (contracts).
 - Produces: `gameSpecPath(repoRoot: string, gameId: string): string` (= `<repoRoot>/games/<gameId>/gamespec.json`); `readGameSpec(repoRoot, gameId): Promise<GameSpec | null>` (null when missing, throws on invalid content); `writeGameSpec(repoRoot, gameId, spec: GameSpec): Promise<void>` (tmp + rename, trailing newline).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tools/editor-mcp-server/tests/specStore.test.ts
@@ -1159,9 +1159,9 @@ describe('specStore', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify FAIL** — `npx vitest run tools/editor-mcp-server/tests/specStore.test.ts`.
+- [x] **Step 2: Run to verify FAIL** — `npx vitest run tools/editor-mcp-server/tests/specStore.test.ts`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // tools/editor-mcp-server/src/specStore.ts
@@ -1193,8 +1193,8 @@ export async function writeGameSpec(repoRoot: string, gameId: string, spec: Game
 }
 ```
 
-- [ ] **Step 4: Run tests** — `npx vitest run tools/editor-mcp-server/tests/specStore.test.ts` — Expected: PASS.
-- [ ] **Step 5: Commit** — `git add tools/editor-mcp-server && git commit -m "feat(editor-mcp-server): atomic gamespec.json store"`
+- [x] **Step 4: Run tests** — `npx vitest run tools/editor-mcp-server/tests/specStore.test.ts` — Expected: PASS.
+- [x] **Step 5: Commit** — `git add tools/editor-mcp-server && git commit -m "feat(editor-mcp-server): atomic gamespec.json store"`
 
 ### Task 9: `compileGameSpec` + `getGameSpec` tools
 
@@ -1209,7 +1209,7 @@ export async function writeGameSpec(repoRoot: string, gameId: string, spec: Game
 
 First `npm install` nothing new — but add `"@automata/game-spec": "*"` to `tools/editor-mcp-server/package.json` dependencies and run `npm install`.
 
-- [ ] **Step 1: Write the failing test** (compile/get half)
+- [x] **Step 1: Write the failing test** (compile/get half)
 
 ```ts
 // tools/editor-mcp-server/tests/specTools.test.ts
@@ -1275,9 +1275,9 @@ describe('compileGameSpec / getGameSpec', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify FAIL** — `npx vitest run tools/editor-mcp-server/tests/specTools.test.ts` — unknown tool / listTools missing.
+- [x] **Step 2: Run to verify FAIL** — `npx vitest run tools/editor-mcp-server/tests/specTools.test.ts` — unknown tool / listTools missing.
 
-- [ ] **Step 3: Implement the runner and wire it**
+- [x] **Step 3: Implement the runner and wire it**
 
 ```ts
 // tools/editor-mcp-server/src/specTools.ts
@@ -1435,8 +1435,8 @@ In `tools/editor-mcp-server/src/sessionHost.ts`:
 - `listTools`: `[...workspaceToolDefs(), ...sessionToolDefs(), ...specToolDefs(), ...(open ? open.headless.host.listTools() : [])]`;
 - in `executeTool`, after the `runBuild/.../changedFiles` line: `if (name === 'compileGameSpec' || name === 'getGameSpec' || name === 'renderDesignBrief' || name === 'recordDesignDecision') return specTools.execute(name, args)`.
 
-- [ ] **Step 4: Run tests** — `npx vitest run tools/editor-mcp-server` — Expected: PASS (including existing suites).
-- [ ] **Step 5: Commit** — `git add tools/editor-mcp-server package-lock.json && git commit -m "feat(editor-mcp-server): compileGameSpec and getGameSpec over the session ledger"`
+- [x] **Step 4: Run tests** — `npx vitest run tools/editor-mcp-server` — Expected: PASS (including existing suites).
+- [x] **Step 5: Commit** — `git add tools/editor-mcp-server package-lock.json && git commit -m "feat(editor-mcp-server): compileGameSpec and getGameSpec over the session ledger"`
 
 ### Task 10: Checkpoint lifecycle — brief + decision + freeze/bump
 
@@ -1446,7 +1446,7 @@ In `tools/editor-mcp-server/src/sessionHost.ts`:
 **Interfaces:**
 - Consumes: everything from Task 9. This task proves the lifecycle contract end-to-end; expect test-driven fixes to `specTools.ts` if behavior deviates.
 
-- [ ] **Step 1: Write the (possibly failing) lifecycle test** — append:
+- [x] **Step 1: Write the (possibly failing) lifecycle test** — append:
 
 ```ts
 describe('design checkpoint lifecycle', () => {
@@ -1496,10 +1496,10 @@ describe('design checkpoint lifecycle', () => {
 })
 ```
 
-- [ ] **Step 2: Run** — `npx vitest run tools/editor-mcp-server/tests/specTools.test.ts`
+- [x] **Step 2: Run** — `npx vitest run tools/editor-mcp-server/tests/specTools.test.ts`
 Expected: PASS if Task 9's implementation is faithful; fix `specTools.ts` on any failure (the test is the contract).
 
-- [ ] **Step 3: Commit** — `git add tools/editor-mcp-server && git commit -m "test(editor-mcp-server): design-checkpoint lifecycle — freeze, bump, re-open"`
+- [x] **Step 3: Commit** — `git add tools/editor-mcp-server && git commit -m "test(editor-mcp-server): design-checkpoint lifecycle — freeze, bump, re-open"`
 
 ### Task 11: Exit criterion — ten prompts + replay determinism
 
@@ -1511,7 +1511,7 @@ Expected: PASS if Task 9's implementation is faithful; fix `specTools.ts` on any
 - Consumes: `createSessionHost`, `createSessionEngine` (build-session), `hashJson`, game-spec functions, `minimalDraft`.
 - Produces: `GAME_SPEC_PROMPTS: ReadonlyArray<{ gameId: string; prompt: string; draft: GameSpecDraft-shaped object }>` (exactly 10 entries).
 
-- [ ] **Step 1: Write the fixtures** — ten differently worded prompts, each with a recorded draft built by varying the minimal draft:
+- [x] **Step 1: Write the fixtures** — ten differently worded prompts, each with a recorded draft built by varying the minimal draft:
 
 ```ts
 // tools/editor-mcp-server/tests/fixtures/gameSpecPrompts.ts
@@ -1540,7 +1540,7 @@ export const GAME_SPEC_PROMPTS: ReadonlyArray<{ gameId: string; prompt: string; 
 ]
 ```
 
-- [ ] **Step 2: Write the acceptance test**
+- [x] **Step 2: Write the acceptance test**
 
 ```ts
 // tools/editor-mcp-server/tests/gameSpecAcceptance.test.ts
@@ -1604,10 +1604,10 @@ describe('Phase 2 exit criterion', () => {
 })
 ```
 
-- [ ] **Step 3: Run** — `npx vitest run tools/editor-mcp-server/tests/gameSpecAcceptance.test.ts`
+- [x] **Step 3: Run** — `npx vitest run tools/editor-mcp-server/tests/gameSpecAcceptance.test.ts`
 Expected: PASS. Any failure is a real defect in Tasks 4–10 — fix there, not in the test.
 
-- [ ] **Step 4: Commit** — `git add tools/editor-mcp-server && git commit -m "test: Phase 2 exit criterion — ten prompts compile to valid specs; seeded replay"`
+- [x] **Step 4: Commit** — `git add tools/editor-mcp-server && git commit -m "test: Phase 2 exit criterion — ten prompts compile to valid specs; seeded replay"`
 
 ### Task 12: Docs, roadmap, and full verification
 
@@ -1616,7 +1616,7 @@ Expected: PASS. Any failure is a real defect in Tasks 4–10 — fix there, not 
 - Modify: `AGENTS.md` (MCP build sessions section: one sentence on the spec tools + gamespec.json)
 - Modify: `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md` (Phase 2 header: completed date + spec/plan links, matching the Phase 0/1 pattern)
 
-- [ ] **Step 1: AGENTS.md** — in "MCP build sessions", after the sentence about server-executed checks, add:
+- [x] **Step 1: AGENTS.md** — in "MCP build sessions", after the sentence about server-executed checks, add:
 
 > Phase 2 adds the GameSpec surface: agents draft a spec from the prompt and call
 > `compileGameSpec` (validated against the supported envelope, versioned, persisted
@@ -1624,14 +1624,14 @@ Expected: PASS. Any failure is a real defect in Tasks 4–10 — fix there, not 
 > `recordDesignDecision` drive the design checkpoint; approval freezes the spec
 > version and later changes require a recorded `changeReason`.
 
-- [ ] **Step 2: ROADMAP.md** — set Phase 2 status to `Shipped` with today's date and the merge commit placeholder filled at merge time; move a summary entry to §1 linking this spec and plan; promote **Phase 3 — Vertical slice** to `Next`. Update the decomposition doc's Phase 2 section header with the completion note and links (same pattern as its Phase 1 section).
+- [x] **Step 2: ROADMAP.md** — set Phase 2 status to `Shipped` with today's date and the merge commit placeholder filled at merge time; move a summary entry to §1 linking this spec and plan; promote **Phase 3 — Vertical slice** to `Next`. Update the decomposition doc's Phase 2 section header with the completion note and links (same pattern as its Phase 1 section).
 
-- [ ] **Step 3: Full verification**
+- [x] **Step 3: Full verification**
 
 Run: `npm run ci` — Expected: lint, typecheck, and all workspaces' tests green.
 Run: `npm run coverage` — Expected: thresholds hold (≥90% lines/branches).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/ROADMAP.md AGENTS.md docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md
