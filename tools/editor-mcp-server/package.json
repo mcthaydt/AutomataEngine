@@ -13,6 +13,7 @@
   "dependencies": {
     "@automata/build-session": "*",
     "@automata/contracts": "*",
+    "@automata/game-spec": "*",
     "@automata/editor": "*",
     "@automata/engine": "*",
     "@automata/project": "*",

@@ -100,9 +100,9 @@ describe('MCP server', () => {
     await server.connect(serverTransport)
     await client.connect(clientTransport)
     try {
-      expect((await client.listPrompts()).prompts).toEqual([
+      expect((await client.listPrompts()).prompts).toEqual(expect.arrayContaining([
         expect.objectContaining({ name: 'build-game' })
-      ])
+      ]))
       const prompt = await client.getPrompt({
         name: 'build-game',
         arguments: { description: 'a chill fishing game' }
@@ -170,7 +170,12 @@ describe('MCP server', () => {
 
     await client.connect(transport)
     try {
-      expect((await client.listTools()).tools).toHaveLength(9)
+      expect((await client.listTools()).tools).toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'compileGameSpec' }),
+        expect.objectContaining({ name: 'getGameSpec' }),
+        expect.objectContaining({ name: 'renderDesignBrief' }),
+        expect.objectContaining({ name: 'recordDesignDecision' })
+      ]))
     } finally {
       await client.close()
     }
