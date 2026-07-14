@@ -6,7 +6,7 @@ export const SESSION_SCHEMA_VERSION = 1
 export const checkKindSchema = z.enum(['build', 'test', 'browser', 'evaluate'])
 export type CheckKind = z.infer<typeof checkKindSchema>
 
-export const findingSourceSchema = z.enum(['build', 'test', 'browser', 'eval', 'validate', 'session', 'spec'])
+export const findingSourceSchema = z.enum(['build', 'test', 'browser', 'eval', 'validate', 'session', 'spec', 'compose'])
 export type FindingSource = z.infer<typeof findingSourceSchema>
 
 export const findingSchema = z.strictObject({
