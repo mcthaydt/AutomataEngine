@@ -1,6 +1,7 @@
 # Factory Roadmap Completion — Phase 0→8 Decomposition (Design)
 
-Status: approved decomposition. Phase 0 completed 2026-07-12; Phases 1–2 completed 2026-07-13. Date: 2026-07-11.
+Status: approved decomposition. Phase 0 completed 2026-07-12; Phases 1–2
+completed 2026-07-13; Phase 3 completed 2026-07-14. Date: 2026-07-11.
 
 ## 1. Purpose & how to read
 
@@ -243,12 +244,16 @@ implementation plan:
   composed by the runtime — into a genuinely playable artifact.
 - **Advances checkpoint.** **Vertical-slice approval** (checkpoint 2).
 - **Depends on.** Phase 2 (a minimal valid `GameSpec` to drive).
-- **In scope.**
-  - One minimal capability pack (the template for Phase 4's seven).
-  - Hand-minimal or trivially-generated content for that pack.
-  - A single placeholder/generated asset through the (stub) asset path.
-  - Runtime composition of pack + content + asset into a playable artifact.
-  - Present at the vertical-slice checkpoint.
+- **In scope — shipped.**
+  - The `interaction-inventory` capability pack, establishing the reusable
+    capability-pack and headless-evaluation interfaces Phase 4 widens.
+  - Seeded minimal content generated from the approved `GameSpec` and recorded
+    in a replayable composition step.
+  - One generated SVG placeholder plus a versioned stub asset manifest.
+  - Data-driven runtime composition of pack + content + asset into the checked-in
+    `games/first-light` playable.
+  - An evidence report and hash-bound vertical-slice checkpoint requiring green
+    build, test, browser, and critical-path evaluation gates.
 - **Explicitly out / deferred.** Breadth. Exactly one pack, one asset, minimal
   content — no second pack, no content compiler, no real asset providers. The
   point is the *seam*, not scale.
@@ -257,16 +262,24 @@ implementation plan:
     a **critical-path completion smoke** on the slice.
   - *Determinism/runtime:* the first real end-to-end exercise of the Phase-1
     composition runtime from a seed.
-- **Sub-cycles it spawns.** A single integration cycle — it deliberately touches
-  every layer thinly, which is the point; not decomposed.
-- **Contracts introduced.** The **capability-pack interface** (proven by the one
-  pack) and the **runtime composition contract** (spec + pack + content + asset →
-  playable) — both templates the later phases widen.
-- **Exit.** A thin but genuinely playable artifact runs end-to-end from a minimal
-  `GameSpec` and passes the vertical-slice checkpoint.
+- **Sub-cycles completed.** One integration cycle touching every layer thinly:
+  contracts → pack → seeded compose → generated project/assets → runtime boot →
+  browser/critical-path evaluation → checkpoint.
+- **Contracts introduced.** The **capability-pack interface**, composition and
+  stub asset manifests, pack-evaluation hook, seeded `compose:game` result, slice
+  evidence report, and hash-bound slice decision. Together they establish the
+  runtime composition contract (spec + pack + content + asset → playable) that
+  later phases widen.
+- **Exit — met.** `games/first-light` composes deterministically from its minimal
+  `GameSpec`, boots as a genuinely playable browser artifact, passes build/test,
+  strict browser boot-console-frame-time, and critical-path evaluation gates,
+  and has an approved vertical-slice checkpoint over the reviewed
+  spec/composition/content hashes.
 - **Risks retired / carried.** Retires the **integration risk** — proves
   prompt → spec → compose → play → evaluate before anything is built at scale
-  (the reason this phase was pulled out in the 2026-07-05 revision).
+  (the reason this phase was pulled out in the 2026-07-05 revision). Carries
+  breadth into Phase 4's remaining packs, Phase 5's real asset providers, and
+  Phase 6's full-domain content generation without reopening the proven seam.
 
 ### Phase 4 — Capability packs
 
