@@ -85,7 +85,7 @@ design.
 | 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 completed (2026-07-12) |
 | 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 completed (2026-07-13) |
 | 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 completed (2026-07-13) |
-| 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 (integration) |
+| 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 completed (2026-07-14) |
 | 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack) |
 | 5 — Asset pipeline | Normalized, versioned asset manifest with providers, provenance, validation | — | Phase 3 (parallel with 4) | 3 |
 | 6 — Content compiler | Generate full world/cast/quest/dialogue/economy/progression from `GameSpec` | — | Phases 4, 5 | 5 (per domain) |
@@ -232,6 +232,11 @@ implementation plan:
   and disclosure) and begins on content incoherence (explicit spec facts).
 
 ### Phase 3 — Vertical slice · first playable
+
+**Completed 2026-07-14.** Implementation spec:
+[`2026-07-13-phase-3-vertical-slice-design.md`](../week-29/2026-07-13-phase-3-vertical-slice-design.md);
+implementation plan:
+[`2026-07-13-phase-3-vertical-slice.md`](/docs/superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
 
 - **Goal.** Drive one minimal `GameSpec` through the thinnest version of every
   layer — one pack, hand-minimal content, one placeholder/generated asset,
@@ -445,7 +450,7 @@ the current best decomposition, revised each cycle.
 2. Compiler/normalization surface + design brief
 3. Structural spec-validation evaluator + versioned design-checkpoint artifact
 
-**Phase 3:**
+**Phase 3 (completed 2026-07-14):**
 
 1. Vertical-slice integration (one pack + minimal content + one asset + composition + browser/critical-path smoke)
 

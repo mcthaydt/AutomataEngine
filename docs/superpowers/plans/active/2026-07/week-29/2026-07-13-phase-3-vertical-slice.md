@@ -10,7 +10,13 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice-design.md`
 
-**Overall progress:** 0%
+**Overall progress:** 100% (Tasks 1-14 complete; all release gates verified)
+
+> **Completion update (2026-07-14):** All fourteen tasks are complete. Final
+> verification: `npm run ci` (247 files / 1133 tests), `npm run coverage`
+> (90.00% branches), `npx playwright test` (8/8), and
+> `npm run verify:new-game` completed successfully. The human vertical-slice
+> checkpoint approved the all-green `first-light` report.
 
 ## Global Constraints
 
@@ -39,7 +45,7 @@
 **Interfaces:**
 - Produces: `compositionManifestSchema`, `CompositionManifest`, `parseCompositionManifest(text: string): CompositionManifest`, `emptyComposition(gameId: string): CompositionManifest`; `assetManifestSchema`, `AssetManifest`, `AssetManifestEntry`; finding source `'compose'` valid in `findingSchema`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/composition.test.ts
@@ -108,12 +114,12 @@ describe('finding sources', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run --project contracts -t 'composition'`
 Expected: FAIL — module `../src` has no export `compositionManifestSchema`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/contracts/src/composition.ts
@@ -205,12 +211,12 @@ export * from './composition'
 export * from './assetManifest'
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS (including all pre-existing contracts tests — the session enum change is additive).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
@@ -226,7 +232,7 @@ git commit -m "feat(contracts): composition + asset-manifest schemas, compose fi
 **Interfaces:**
 - Produces: `capabilityConfigSchemas: Record<CapabilityId, z.ZodType>` (exported), `interaction-inventory` config `{ requiredItems?: int 1..8, interactRadius?: number 0.5..5 }`. `gameSpecSchema` / `gameSpecDraftSchema` shapes otherwise unchanged; `config: {}` remains valid for **every** capability and parses to `{}` (hash-stability guard).
 
-- [ ] **Step 1: Write the failing test** (append to the existing suite)
+- [x] **Step 1: Write the failing test** (append to the existing suite)
 
 ```ts
 // packages/contracts/tests/gameSpec.test.ts — add:
@@ -271,12 +277,12 @@ describe('capability config schemas', () => {
 
 Note: this depends on the compatibility table — `save-load` requires nothing, so the pair above is compatibility-clean and only the unknown config key fails. Do not use `dialogue-quests` here (it `requires: ['interaction-inventory']`, which would still pass — pick a capability whose failure isolates the config check).
 
-- [ ] **Step 2: Run to verify the new cases fail**
+- [x] **Step 2: Run to verify the new cases fail**
 
 Run: `npx vitest run --project contracts -t 'capability config'`
 Expected: FAIL — `capabilityConfigSchemas` is not exported (and today `config: { requiredItems: 2 }` is rejected by the empty strictObject).
 
-- [ ] **Step 3: Implement** — replace `capabilitySelectionSchema` in `packages/contracts/src/gameSpec.ts`:
+- [x] **Step 3: Implement** — replace `capabilitySelectionSchema` in `packages/contracts/src/gameSpec.ts`:
 
 ```ts
 /**
@@ -316,12 +322,12 @@ const capabilitySelectionSchema = z.discriminatedUnion('id', [
 ])
 ```
 
-- [ ] **Step 4: Run the full affected suites**
+- [x] **Step 4: Run the full affected suites**
 
 Run: `npx vitest run --project contracts --project game-spec --project editor-mcp-server`
 Expected: PASS — every existing spec fixture uses `config: {}`, which still parses identically, so validation, normalization, hashes, and the Phase-2 acceptance tests are all unaffected. `z.toJSONSchema(gameSpecDraftSchema)` (rides in the `compileGameSpec` tool description) serializes the discriminated union as `anyOf`; if it throws, that is a regression to fix here, not to work around.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
@@ -346,7 +352,7 @@ git commit -m "feat(contracts): interaction-inventory capability config via disc
 - Consumes: `parseCompositionManifest`, `CompositionManifest` (Task 1); `GameHost` (`./host`); `RenderPort`, `CleanupStack` (`@automata/engine`); `ProjectReader` (`./projectReader`).
 - Produces: `PackBootContext { host: GameHost; render: RenderPort }`, `PackWorldState { playerPosition: { x: number; z: number } }`, `PackRuntimeHandle { fixedUpdate?(dt, world); render?(alpha); objectivesComplete?(): boolean; dispose?(): void }`, `GamePack<TConfig> { id; version; configSchema?; register(ctx, config): PackRuntimeHandle | void }`, `ComposedRuntime { packIds; fixedUpdate(dt, world); render(alpha); objectivesComplete(): boolean }`, `composePacks(packs, configs?): { packIds; boot(ctx): ComposedRuntime }`; `PackEvalHook { packId; createState(); nextTarget(state, player): {x,z} | null; step(state, player): unknown; complete(state): boolean }`; `loadComposition(reader: ProjectReader): Promise<CompositionManifest>`.
 
-- [ ] **Step 1: Rewrite the pack tests (failing)**
+- [x] **Step 1: Rewrite the pack tests (failing)**
 
 ```ts
 // packages/game-kit/tests/packs.test.ts — full replacement
@@ -441,12 +447,12 @@ describe('loadComposition', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run --project game-kit`
 Expected: FAIL — `boot` returns void today; `PackBootContext`, `packEval`, `composition` don't exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/game-kit/src/packs.ts — full replacement
@@ -567,12 +573,12 @@ export * from './composition'
 
 Add `"@automata/contracts": "*"` to `packages/game-kit/package.json` dependencies, then `npm install`.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project game-kit`
-Expected: PASS. Also run `npm run typecheck -w game-kit` — the scaffold templates still emit `composePacks([]).boot(host)` (fixed in Task 10); the two shipped games don't use `composePacks`, so nothing else breaks yet. `npx tsc -p tools/scaffold` is NOT expected to fail (templates are string literals), but `verify:new-game` would — do not run it until Task 10.
+Expected: PASS. Also run `npm run typecheck -w @automata/game-kit` — the package's actual npm workspace name includes the `@automata/` scope. The scaffold templates still emit `composePacks([]).boot(host)` (fixed in Task 10); the two shipped games don't use `composePacks`, so nothing else breaks yet. `npx tsc -p tools/scaffold` is NOT expected to fail (templates are string literals), but `verify:new-game` would — do not run it until Task 10.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-kit package-lock.json
@@ -634,7 +640,7 @@ export default defineConfig({
 - Consumes: `PackEvalHook` (Task 3); `z` via `@automata/project` (lint: no direct `zod`).
 - Produces: `InventoryItem { id: string; position: { x: number; z: number } }`, `InventoryPackConfig { interactRadius: number; items: InventoryItem[]; iconPath: string | null }`, `packConfigSchema` (strict zod, bounds: interactRadius 0.5..5, items 1..8), `InventoryState { collected: readonly string[] }`, `createInventoryState()`, `stepInventory(state, player, config): InventoryState`, `inventoryComplete(state, config): boolean`, `nextItemTarget(state, player, config): { x; z } | null`, `createInventoryEvalHook(config): PackEvalHook`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/pack-interaction-inventory/tests/fixtures.ts
@@ -720,12 +726,12 @@ describe('inventory eval hook', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm install && npx vitest run --project pack-interaction-inventory`
 Expected: FAIL — modules don't exist. (`npm install` first so the new workspace package resolves.)
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/pack-interaction-inventory/src/core.ts
@@ -813,12 +819,12 @@ export * from './core'
 export * from './evalHook'
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project pack-interaction-inventory`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-interaction-inventory package-lock.json
@@ -836,7 +842,7 @@ git commit -m "feat(pack-interaction-inventory): pure inventory core + headless 
 - Consumes: `GamePack`, `PackBootContext`, `PackRuntimeHandle` (Task 3); `createNullRenderer` (`@automata/engine`, tests); core (Task 4).
 - Produces: `interactionInventoryPack: GamePack<InventoryPackConfig>` with `id: 'interaction-inventory'`, `version: '1.0.0'`, `configSchema: packConfigSchema`. HUD div class `inventory-hud` in `ctx.host.overlays`; one sphere renderable per item (entity id `inventory-item-<itemId>`, radius 0.35, color `#ffd23f`, posed at y 0.35).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/pack-interaction-inventory/tests/pack.test.ts
@@ -897,12 +903,12 @@ describe('interaction-inventory pack (browser adapter)', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run --project pack-interaction-inventory -t 'browser adapter'`
 Expected: FAIL — `./pack` does not exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/pack-interaction-inventory/src/pack.ts
@@ -970,12 +976,12 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
 
 Add `export * from './pack'` to `packages/pack-interaction-inventory/src/index.ts`.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project pack-interaction-inventory`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-interaction-inventory
@@ -993,7 +999,7 @@ git commit -m "feat(pack-interaction-inventory): browser GamePack adapter with i
 - Consumes: `SeededRng`, `createSeededRng` (`@automata/engine`); `InventoryPackConfig` (Task 4).
 - Produces: `INVENTORY_DEFAULTS = { requiredItems: 1, interactRadius: 1.5 } as const`; `composeInventorySection(input: { specConfig: { requiredItems?: number; interactRadius?: number }; arena: { half: number; spawn: { x; z }; goal: { x; z } }; iconPath: string | null }, rng: SeededRng): InventoryPackConfig`. Item ids are `item-1`, `item-2`, … in placement order. Placement guarantees: inside `|coord| <= half - 1`, at least 3 units from spawn and goal, at least 2 units between items; throws after a deterministic 200-draw budget.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/pack-interaction-inventory/tests/composeSection.test.ts
@@ -1045,12 +1051,12 @@ describe('composeInventorySection', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run --project pack-interaction-inventory -t 'composeInventorySection'`
 Expected: FAIL — module missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/pack-interaction-inventory/src/composeSection.ts
@@ -1094,12 +1100,12 @@ export function composeInventorySection(input: ComposeSectionInput, rng: SeededR
 }
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project pack-interaction-inventory`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-interaction-inventory
@@ -1121,7 +1127,7 @@ git commit -m "feat(pack-interaction-inventory): seeded compose section with pla
 - Consumes: `interactionInventoryPack`, `packConfigSchema`, `createInventoryEvalHook` (Tasks 4–5); `GamePack`, `PackEvalHook` (Task 3); `CompositionManifest` (Task 1).
 - Produces: `STANDARD_PACKS: Record<string, GamePack>`; `resolvePacks(ids: readonly string[]): GamePack[]` (throws `Unknown pack id "<id>"` listing known ids); `resolveEvalHooks(composition: CompositionManifest): PackEvalHook[]` (parses each entry's config through the pack's schema; entries without a hook builder contribute none). This is the ONLY module that knows the full pack set — Phase 4 adds packs here and nowhere else.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/pack-registry/tests/registry.test.ts
@@ -1158,12 +1164,12 @@ describe('pack registry', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm install && npx vitest run --project pack-registry`
 Expected: FAIL — package empty.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/pack-registry/src/index.ts
@@ -1204,12 +1210,12 @@ export function resolveEvalHooks(composition: CompositionManifest): PackEvalHook
 }
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project pack-registry`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-registry package-lock.json
@@ -1237,7 +1243,7 @@ git commit -m "feat(pack-registry): static registry resolving composition packs 
   ```
   RNG draw order (binding): goal position → icon hue → item placements. Emitted files: `public/project/resources/tuning.resource.json`, `public/project/composition.json`, `public/assets/item-icon.svg` (one per spec `ui` asset requirement, path `public/assets/<requirement.id>.svg`), `public/assets/assets.json`. JSON serialized as `JSON.stringify(value, null, 2) + '\n'` (byte-parity with `projectFilesFromSnapshot`). Base arena constants match the scaffold template: `arenaHalf 12`, `moveSpeed 6`, `goalRadius 1.5`, `timeLimitS 30`, spawn `(-8, -8)`, colors `{ floor: '#12203a', player: '#27e0ff', goal: '#ffd23f' }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-compose/tests/compose.test.ts
@@ -1316,12 +1322,12 @@ describe('composeGame', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm install && npx vitest run --project game-compose`
 Expected: FAIL — package empty.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/game-compose/src/compose.ts
@@ -1427,12 +1433,12 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
 export * from './compose'
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project game-compose`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-compose package-lock.json
@@ -1466,7 +1472,7 @@ git commit -m "feat(game-compose): pure seeded composeGame emitting content, man
   ```
 - Produces (game-compose): `renderSliceReport(evidence: SliceEvidence): string` — deterministic markdown, purely a function of the evidence.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-compose/tests/sliceReport.test.ts
@@ -1509,12 +1515,12 @@ describe('renderSliceReport', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run --project game-compose -t 'renderSliceReport'`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // packages/contracts/src/sliceReport.ts
@@ -1593,12 +1599,12 @@ export function renderSliceReport(evidence: SliceEvidence): string {
 }
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project game-compose --project contracts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts packages/game-compose
@@ -1623,7 +1629,7 @@ git commit -m "feat(game-compose): SliceEvidence contract + deterministic slice 
 - Consumes: `loadComposition`, `composePacks`, `ComposedRuntime` (Task 3); `resolvePacks`, `resolveEvalHooks` (Task 7); `emptyComposition`, `parseCompositionManifest`, `CompositionManifest` (Task 1).
 - Produces: generated games whose `main.ts` boots packs from `composition.json`; `GameplayDeps` gains `objectiveGate?: () => boolean`; generated `evaluateProject(snapshot, opts, composition?)` routes the scripted control through eval hooks and gates success; generated e2e asserts boot + console + frame-time. Template changes are generic — no game names in logic. An `emptyComposition` manifest reproduces today's behavior.
 
-- [ ] **Step 1: Extend the template tests (failing)**
+- [x] **Step 1: Extend the template tests (failing)**
 
 In `tools/scaffold/tests/` locate the test that snapshots/asserts template output (`plan.test.ts` or similar — it asserts `planNewGame` file contents). Add cases:
 
@@ -1647,6 +1653,10 @@ it('emits an empty composition manifest and composition-aware sources', () => {
   expect(evaluation).toContain('resolveEvalHooks')
   expect(evaluation).toContain('emptyComposition')
 
+  // Pins the publicDir-relative read path (see Step 5) — a bare 'composition.json' is a silent false green.
+  const projectIndex = byPath.get('games/probe/src/project/index.ts')!
+  expect(projectIndex).toContain("deps.readText('project/composition.json')")
+
   const pkg = JSON.parse(byPath.get('games/probe/package.json')!) as { dependencies: Record<string, string> }
   expect(pkg.dependencies['@automata/pack-registry']).toBe('*')
   expect(pkg.dependencies['@automata/contracts']).toBe('*')
@@ -1660,7 +1670,7 @@ it('emits an empty composition manifest and composition-aware sources', () => {
 Run: `npx vitest run --project scaffold`
 Expected: the new case FAILS.
 
-- [ ] **Step 2: Update `mainTs()`** — full replacement of the function's template string:
+- [x] **Step 2: Update `mainTs()`** — full replacement of the function's template string:
 
 ```ts
 export function mainTs(): string {
@@ -1746,7 +1756,7 @@ void main()
 }
 ```
 
-- [ ] **Step 3: Update `gameplayTs()`** — add the objective gate. Changes only (apply inside the template string):
+- [x] **Step 3: Update `gameplayTs()`** — add the objective gate. Changes only (apply inside the template string):
 
 In `GameplayDeps` add:
 
@@ -1767,7 +1777,7 @@ Replace the `fixedUpdate` body:
     },
 ```
 
-- [ ] **Step 4: Update `evaluationTs()`** — full replacement of the template string:
+- [x] **Step 4: Update `evaluationTs()`** — full replacement of the template string:
 
 ```ts
 export function evaluationTs(): string {
@@ -1845,7 +1855,9 @@ export async function evaluateProject(
 }
 ```
 
-- [ ] **Step 5: Update `projectIndexTs()`** — composition-aware headless registration (full replacement):
+Recorded deviation from spec §9: metrics gain `objectivesComplete` only, not `itemsCollected` — pack eval-hook state is opaque (`unknown`) by design, so a generic template cannot count items; per-pack metrics arrive when Phase 4 gives hooks a metrics surface.
+
+- [x] **Step 5: Update `projectIndexTs()`** — composition-aware headless registration (full replacement):
 
 ```ts
 export function projectIndexTs(): string {
@@ -1863,14 +1875,19 @@ export { evaluateProject, type EvaluationResult } from './evaluation'
 
 /**
  * Registry convention entry for Node hosts (MCP server, headless evaluation).
- * Reads composition.json from the project dir when present so evaluation is
+ * Reads the composition manifest when present so evaluation is
  * composition-aware; a missing file means a plain scaffold (empty composition).
- * An invalid file is a real error and propagates.
+ * An invalid file is a real error and propagates. NOTE the path prefix:
+ * RegistrationDeps.readText is bound to games/<id>/public (see
+ * loadProjectRegistration in tools/editor-mcp-server/src/projectCatalog.ts),
+ * so the manifest at public/project/composition.json is read as
+ * 'project/composition.json' — a bare 'composition.json' would silently miss
+ * it and evaluation would degrade to the empty composition.
  */
 export const loadHeadlessRegistration: EditorRegistrationLoader = async (deps) => {
   let text: string | null = null
   try {
-    text = await deps.readText('composition.json')
+    text = await deps.readText('project/composition.json')
   } catch {
     text = null
   }
@@ -1889,7 +1906,7 @@ export const loadHeadlessRegistration: EditorRegistrationLoader = async (deps) =
 
 Note: check `GameProjectDefinition`'s public shape for the `gameId` accessor — `defineGameProject` receives `gameId`; if the definition object does not expose it, use `createTemplate().manifest.gameId` instead. Verify while implementing; the generated definition test must still pass.
 
-- [ ] **Step 6: Update `plan.ts` and `configFiles.ts`**
+- [x] **Step 6: Update `plan.ts` and `configFiles.ts`**
 
 In `tools/scaffold/src/plan.ts`, add one entry to `files` (after the `e2e/smoke.spec.ts` entry, before the spread):
 
@@ -1910,7 +1927,7 @@ In `tools/scaffold/src/templates/configFiles.ts` `packageJson`, extend dependenc
     },
 ```
 
-- [ ] **Step 7: Update `testFiles.ts`** — three changes.
+- [x] **Step 7: Update `testFiles.ts`** — three changes.
 
 `gameplayTest()` — add a gate case inside the describe block:
 
@@ -1933,7 +1950,7 @@ In `tools/scaffold/src/templates/configFiles.ts` `packageJson`, extend dependenc
   })
 ```
 
-`editorTest()` — inside the `headless evaluation` describe, add a hook-routing case (uses the real registry with a composed manifest):
+`editorTest()` — the existing `unusedDeps` fixture (whose `readText` rejects) is now genuinely exercised by the new loader and lands on the empty-composition fallback, so the existing registration case still passes; rename it to `noCompositionDeps` and update its comment while here. Inside the `headless evaluation` describe, add a hook-routing case (uses the real registry with a composed manifest):
 
 ```ts
   it('routes the scripted control through composed pack objectives first', async () => {
@@ -1993,13 +2010,17 @@ test('${name} boots to a playable canvas without errors and within frame budget'
 }
 ```
 
-- [ ] **Step 8: Verify**
+- [x] **Step 8: Verify**
+
+Execution note: `verify:new-game` validates a fresh `git clone` of `HEAD`, so the Task 10 checkpoint commit must exist before that command can observe the template changes. Run the scaffold suite, create the Step 9 commit, then run `verify:new-game`; fix any clean-clone regression in a follow-up commit before marking Steps 8–9 complete.
+
+Recorded fallback from spec §9: two clean-clone SwiftShader runs reproduced generic-smoke p95 values of 50.8 ms and 83.4 ms against the 50 ms budget. The generic smoke still samples rAF and verifies a finite positive p95; the strict `p95 < 50 ms` assertion moves to `games/first-light/e2e/slice.spec.ts`, as the design's documented fallback allows.
 
 Run: `npx vitest run --project scaffold` — the Step 1 cases pass.
 Run: `npm run verify:new-game` — the freshly scaffolded game builds, tests, and boots with the composition-aware templates (empty composition ⇒ behavior identical to today).
 Expected: PASS on both. If `verify:new-game` fails on the new imports, the usual cause is a missing workspace link — re-run `npm install`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add tools/scaffold
@@ -2025,7 +2046,7 @@ git commit -m "feat(scaffold): composition-aware templates — manifest boot, ob
 - Produces (contracts): `ComposeToolName = 'composeGame' | 'renderSliceReport' | 'recordSliceDecision'`, `composeToolDefs(): ToolDef[]`, `parseComposeToolArgs(name, args)`. Arg schemas: `composeGame { gameId }`, `renderSliceReport { gameId }`, `recordSliceDecision { gameId, decision: 'approve' | 'reject', reason: string 1..400 }`.
 - Produces (server): `createComposeToolRunner(deps: { repoRoot: string; ensureEngine(gameId): Promise<SessionEngine>; snapshotContent(gameId): Promise<{ hash: string }>; devPortFor(gameId): Promise<number | null> })` with `execute(name, args)`; `sliceCheckpointStatus(engine, { specHash, compositionHash }): 'pending' | 'approved' | 'rejected'`.
 
-- [ ] **Step 1: Write the contracts (small enough to TDD together with the runner test below)**
+- [x] **Step 1: Write the contracts (small enough to TDD together with the runner test below)**
 
 ```ts
 // packages/contracts/src/composeTools.ts
@@ -2078,7 +2099,7 @@ export function parseComposeToolArgs(name: string, args: unknown): unknown {
 }
 ```
 
-- [ ] **Step 2: Write the failing runner test**
+- [x] **Step 2: Write the failing runner test**
 
 ```ts
 // tools/editor-mcp-server/tests/composeTools.test.ts
@@ -2192,7 +2213,7 @@ describe('slice checkpoint tools', () => {
 Run: `npx vitest run --project editor-mcp-server -t 'composeGame tool'`
 Expected: FAIL — tools unknown.
 
-- [ ] **Step 3: Implement the runner**
+- [x] **Step 3: Implement the runner**
 
 ```ts
 // tools/editor-mcp-server/src/composeTools.ts
@@ -2340,7 +2361,8 @@ export function createComposeToolRunner(deps: ComposeToolDeps) {
       return { kind, status: 'missing' }
     })
     const evalStep = [...engine.session.steps].reverse().find((step) => step.kind === 'check:evaluate' && step.status === 'completed')
-    const evalOutput = (evalStep?.result as { output?: { metrics?: Record<string, number | string | boolean> } } | undefined)?.output
+    // runGuarded stores the run's `output` object directly as step.result (engine.ts recordStep) — no extra nesting.
+    const evalOutput = evalStep?.result as { metrics?: Record<string, number | string | boolean> } | undefined
     const { hash: contentHash } = await deps.snapshotContent(gameId)
     const devPort = await deps.devPortFor(gameId)
     return {
@@ -2447,12 +2469,12 @@ if (name === 'composeGame' || name === 'renderSliceReport' || name === 'recordSl
 
 (`readFile` joins the existing `node:fs/promises` import.) Add `"@automata/game-compose": "*"` to `tools/editor-mcp-server/package.json` and `npm install`.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS — new compose tests plus all existing suites (spec tools, sessions, checks) untouched.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts tools/editor-mcp-server package-lock.json
@@ -2465,9 +2487,9 @@ git commit -m "feat(editor-mcp-server): composeGame + slice-checkpoint tools ove
 - Test: `tools/editor-mcp-server/tests/composeFlow.test.ts`
 
 **Interfaces:**
-- Consumes: everything above; `createSessionEngine`, `hashJson` (`@automata/build-session`); `composeGame` (`@automata/game-compose`); the fake-spawner pattern from `tools/editor-mcp-server/tests/sessionChecks.test.ts` (reuse its spawner shape verbatim).
+- Consumes: everything above; `createSessionEngine`, `hashJson`, `CommandSpawner`, `SpawnResult` (`@automata/build-session`); `composeGame` (`@automata/game-compose`); the fake spawner **and** fake `headless()` host from `tools/editor-mcp-server/tests/sessionChecks.test.ts` (reuse both shapes verbatim — the spawner is an object with a `run` method, and the injected `openHeadless` is what lets `check:evaluate` run without real game sources).
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```ts
 // tools/editor-mcp-server/tests/composeFlow.test.ts
@@ -2475,9 +2497,10 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createSessionEngine, hashJson } from '@automata/build-session'
-import { gameSpecSchema, minimalGameSpecDraft } from '@automata/contracts'
+import { createSessionEngine, hashJson, type CommandSpawner, type SpawnResult } from '@automata/build-session'
+import { gameSpecSchema, minimalGameSpecDraft, type ToolResult } from '@automata/contracts'
 import { composeGame } from '@automata/game-compose'
+import type { HeadlessHost } from '../src/headlessHost'
 import { createSessionHost } from '../src/sessionHost'
 
 const roots: string[] = []
@@ -2490,8 +2513,22 @@ function sliceDraft(gameId: string): Record<string, unknown> {
   return draft
 }
 
-/** Fake spawner: every check command "passes" immediately (mirror sessionChecks.test.ts's shape). */
-const passingSpawner = async () => ({ code: 0, stdout: 'ok', stderr: '', timedOut: false })
+/** Fakes copied from sessionChecks.test.ts: every spawned check passes; headless evaluate passes. */
+const OK: SpawnResult = { code: 0, stdout: 'ok', stderr: '', timedOut: false }
+const passingSpawner: CommandSpawner = { async run() { return OK } }
+function headless(): HeadlessHost {
+  const snapshot = { manifest: { id: 'probe', name: 'Probe', gameId: 'probe', formatVersion: 2, scenes: [], resources: [] }, scenes: {}, resources: {} }
+  const host = {
+    get snapshot() { return snapshot }, get commands() { return [] }, listTools: () => [],
+    async executeTool(name: string): Promise<ToolResult> {
+      return name === 'evaluate'
+        ? { ok: true, content: { outcome: 'passed', metrics: { objectivesComplete: true } } }
+        : { ok: false, isError: true, content: 'nope' }
+    },
+    async readResource() { return snapshot }
+  }
+  return { host, registration: {}, snapshot } as unknown as HeadlessHost
+}
 
 async function setup() {
   const root = await mkdtemp(join(tmpdir(), 'compose-flow-'))
@@ -2502,7 +2539,7 @@ async function setup() {
     JSON.stringify({ name: 'probe', exports: { './project': './src/project/index.ts' }, automata: { devPort: 5199 } }))
   const host = createSessionHost({
     repoRoot: root, sessionsRoot: join(root, '.automata/sessions'),
-    lock: false, seedSource: () => 7, spawner: passingSpawner as never
+    lock: false, seedSource: () => 7, spawner: passingSpawner, openHeadless: async () => headless()
   })
   return { root, host }
 }
@@ -2519,27 +2556,31 @@ describe('Phase 3 exit criterion — spec → compose → evaluate → slice che
     const composed = await host.executeTool('composeGame', { gameId: 'probe' })
     expect(composed).toMatchObject({ ok: true, content: { cached: false, itemCount: 2 } })
 
-    // Gates: build/test/browser via fake spawner; evaluate needs an open project.
-    // This harness has no real game sources, so run the three spawned checks
-    // and assert the evaluate gate stays 'missing' in the report — the REAL
-    // evaluate is exercised in Task 13 on first-light. Approval is therefore
-    // exercised on the three-green + reject path here, and fully in Task 13.
+    // Gates: build/test/browser via the fake spawner (spawned checks record check:* steps).
     for (const tool of ['runBuild', 'runTests', 'runBrowserEval']) {
       expect(await host.executeTool(tool, { gameId: 'probe' })).toMatchObject({ ok: true })
     }
 
+    // Evaluate not yet run → report renders anyway, approve refused, reject records.
+    const early = await host.executeTool('renderSliceReport', { gameId: 'probe' })
+    expect(early.ok).toBe(true)
+    const earlyGates = (early.content as { gates: Array<{ kind: string; status: string }> }).gates
+    expect(earlyGates.filter((gate) => gate.status === 'passed').map((gate) => gate.kind).sort()).toEqual(['browser', 'build', 'test'])
+    expect(earlyGates.find((gate) => gate.kind === 'evaluate')).toMatchObject({ status: 'missing' })
+    expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'approve', reason: 'ship' }))
+      .toMatchObject({ ok: false, content: { code: 'slice-gates-not-passed' } })
+    expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'reject', reason: 'evaluate missing' }))
+      .toMatchObject({ ok: true })
+
+    // Green the fourth gate through the injected headless host, then approve on all-green.
+    expect(await host.executeTool('openProject', { gameId: 'probe' })).toMatchObject({ ok: true })
+    expect(await host.executeTool('evaluate', { maxSteps: 4000 })).toMatchObject({ ok: true })
     const report = await host.executeTool('renderSliceReport', { gameId: 'probe' })
     expect(report.ok).toBe(true)
     const gates = (report.content as { gates: Array<{ kind: string; status: string }> }).gates
-    expect(gates.filter((gate) => gate.status === 'passed').map((gate) => gate.kind).sort()).toEqual(['browser', 'build', 'test'])
-    expect(gates.find((gate) => gate.kind === 'evaluate')).toMatchObject({ status: 'missing' })
-
-    // Approve refused while any gate is not passed
-    expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'approve', reason: 'ship' }))
-      .toMatchObject({ ok: false, content: { code: 'slice-gates-not-passed' } })
-    // Reject records fine against the same evidence
-    expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'reject', reason: 'evaluate missing' }))
-      .toMatchObject({ ok: true })
+    expect(gates.every((gate) => gate.status === 'passed')).toBe(true)
+    expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'approve', reason: 'all four gates green' }))
+      .toMatchObject({ ok: true, content: { recorded: true, decision: 'approve' } })
 
     // Recompile with a change reason → spec hash changes → old report no longer covers
     const draft2 = sliceDraft('probe')
@@ -2577,12 +2618,12 @@ describe('Phase 3 exit criterion — spec → compose → evaluate → slice che
 })
 ```
 
-- [ ] **Step 2: Run to verify (fix the harness against reality)**
+- [x] **Step 2: Run to verify (fix the harness against reality)**
 
 Run: `npx vitest run --project editor-mcp-server -t 'Phase 3 exit criterion'`
-Expected: PASS after aligning two assumptions with the actual code — (a) the fake spawner's exact return shape (copy from `tools/editor-mcp-server/tests/sessionChecks.test.ts`), and (b) the gate classification in Task 11's `assembleEvidence` against `runCheck`'s real step records. Fix the source (not the test's intent) where they disagree.
+Expected: PASS. The fakes are copied verbatim from `tools/editor-mcp-server/tests/sessionChecks.test.ts`; if the gate classification in Task 11's `assembleEvidence` disagrees with `runCheck`'s real step records (spawned checks store `{ passed, exitCode, timedOut, tail }` directly as `step.result`; `check:evaluate` stores the evaluate tool's content directly), fix the source, not the test's intent.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tools/editor-mcp-server/tests/composeFlow.test.ts
@@ -2605,7 +2646,7 @@ git commit -m "test(editor-mcp-server): Phase 3 exit flow — compose, gates, sl
 **Interfaces:**
 - Consumes: every prior task. `firstLightGameSpecDraft(): Record<string, unknown>` becomes the checked-in draft fixture (compiles to `games/first-light/gamespec.json` v1).
 
-- [ ] **Step 1: Add the spec fixture** (in `packages/contracts/src/gameSpecFixtures.ts`)
+- [x] **Step 1: Add the spec fixture** (in `packages/contracts/src/gameSpecFixtures.ts`)
 
 ```ts
 /** The Phase 3 vertical-slice game: relight the beacon by gathering its light cells. */
@@ -2666,10 +2707,11 @@ export function firstLightGameSpecDraft(): Record<string, unknown> {
 
 Add a contracts test case asserting `gameSpecDraftSchema.safeParse(firstLightGameSpecDraft()).success === true`. Commit: `git commit -m "feat(contracts): first-light slice spec fixture"`.
 
-- [ ] **Step 2: Write the driver script**
+- [x] **Step 2: Write the driver script**
 
 ```ts
 // scripts/compose-first-light.ts
+import { execSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { firstLightGameSpecDraft } from '@automata/contracts'
 import { createSessionHost } from '../tools/editor-mcp-server/src/sessionHost'
@@ -2691,7 +2733,12 @@ const call = async (name: string, args: unknown): Promise<Record<string, unknown
 
 const [decision, ...reasonParts] = process.argv.slice(2)
 try {
-  await call('createGame', { name: 'first-light' })
+  const scaffold = await call('createGame', { name: 'first-light' })
+  if (scaffold.alreadyExisted !== true) {
+    // A fresh workspace package must be npm-linked before any spawned gate can
+    // build it (verify-new-game does the same install-after-scaffold).
+    execSync('npm install --no-audit --no-fund', { cwd: repoRoot, stdio: 'inherit' })
+  }
   await call('compileGameSpec', {
     gameId: 'first-light', draft: firstLightGameSpecDraft(),
     prompt: 'A tiny night-harbor game: gather the beacon\'s two scattered light cells, then relight it.',
@@ -2719,7 +2766,7 @@ try {
 
 Check the `evaluate` tool's exact arg shape against the open project's tool set (`headlessHost`) before running; adjust `maxSteps` form if the project tool expects different args.
 
-- [ ] **Step 3: Scaffold + compose + gates**
+- [x] **Step 3: Scaffold + compose + gates**
 
 ```bash
 node --import tsx scripts/compose-first-light.ts
@@ -2727,7 +2774,7 @@ node --import tsx scripts/compose-first-light.ts
 
 Expected: every step prints ok; `games/first-light/` now contains the scaffold plus `gamespec.json` and the four composed files; the slice report prints with **all four gates passed** (the composition-aware evaluate collects both items then reaches the seeded goal). If evaluate fails, debug the compose→hook seam before proceeding — that failure is the phase's whole point.
 
-- [ ] **Step 4: Swap the template-parity case for compose parity**
+- [x] **Step 4: Swap the template-parity case for compose parity**
 
 In `games/first-light/tests/project/content.test.ts`, delete the `ships public files equal to the in-code template` case (compose deliberately rewrote the tuning resource). Keep the other cases. Add:
 
@@ -2758,7 +2805,15 @@ describe('compose parity', () => {
 
 Add `"@automata/game-compose": "*"` and `"@automata/pack-interaction-inventory": "*"` to `games/first-light/package.json` dependencies (test + runtime deps; the registry already pulls the pack transitively but the explicit dep keeps the game honest), then `npm install`.
 
-- [ ] **Step 5: Slice e2e**
+- [x] **Step 5: Slice e2e**
+
+Checkpoint evidence (2026-07-14): all functional slice assertions pass, but the approved strict frame gate remains red under the local WebGL2/SwiftShader fallback. The full two-worker slice run measured p95 `100.9 ms`; an isolated `--workers=1` run measured p95 `66.6 ms`, both against `< 50 ms`. Do not record slice approval or ship Phase 3 until the budget passes or the approved plan is explicitly amended.
+
+Performance recovery (scope approved 2026-07-14):
+
+- [x] Profile the renderer boundary: the default always constructs `WebGPURenderer`, which reports its WebGL2 compatibility backend when native WebGPU is unavailable.
+- [x] Isolate the hypothesis with a disposable direct-WebGL override: the unchanged strict slice test passed in 3.4 seconds; the override was reverted before implementation.
+- [x] Add a test-first generic backend selector and rerun the strict slice gate. Direct WebGL is selected only when `requestAdapter()` cannot produce a usable native WebGPU adapter; the unchanged isolated strict test passed in 3.2 seconds and the normal two-worker first-light suite passed both tests in 4.6 seconds. A fresh MCP session then passed build/test/browser/evaluate and rendered an all-green slice report.
 
 ```ts
 // games/first-light/e2e/slice.spec.ts  (port: read automata.devPort from games/first-light/package.json)
@@ -2779,7 +2834,7 @@ test('first-light composes the inventory pack: HUD, icon asset, composition mani
 
 Replace `<devPort>` with the assigned port. Run: `PLAYWRIGHT_ONLY=first-light npx playwright test games/first-light/e2e` — both specs pass.
 
-- [ ] **Step 6: Record the slice decision and check in**
+- [x] **Step 6: Record the slice decision and check in**
 
 ```bash
 node --import tsx scripts/compose-first-light.ts approve "Phase 3 vertical slice approved: playable, gated, deterministic"
@@ -2803,9 +2858,9 @@ git commit -m "feat(first-light): the Phase 3 vertical slice — spec-composed p
 - Modify: `AGENTS.md` (extend the "MCP build sessions" section: one short paragraph on composeGame/renderSliceReport/recordSliceDecision, mirroring the existing Phase 2 paragraph)
 - Modify: this plan (mark tasks complete; add the completion update header)
 
-- [ ] **Step 1: eslint boundaries.** In `eslint.config.js`, add the three new packages to the same regimes game-kit uses (they may not import games, tools, or the editor; third-party engine deps only via `@automata/engine`; no direct `zod` — they use `@automata/project`'s re-export). Concretely: extend the game-kit boundary block's `files` glob (or clone it) to cover `packages/pack-interaction-inventory/**/*.ts`, `packages/pack-registry/**/*.ts`, `packages/game-compose/**/*.ts`, and add those globs to the direct-`zod` ban group (currently `games/**`, `tools/**`, editor packages). Verify with `npx eslint packages/pack-interaction-inventory packages/pack-registry packages/game-compose`.
+- [x] **Step 1: eslint boundaries.** In `eslint.config.js`, add the three new packages to the same regimes game-kit uses (they may not import games, tools, or the editor; third-party engine deps only via `@automata/engine`; no direct `zod` — they use `@automata/project`'s re-export). Concretely: extend the game-kit boundary block's `files` glob (or clone it) to cover `packages/pack-interaction-inventory/**/*.ts`, `packages/pack-registry/**/*.ts`, `packages/game-compose/**/*.ts`, and add those globs to the direct-`zod` ban group (currently `games/**`, `tools/**`, editor packages). Verify with `npx eslint packages/pack-interaction-inventory packages/pack-registry packages/game-compose`.
 
-- [ ] **Step 2: Docs sync.** ROADMAP Phase 3 section: flip to `Shipped` with date + spec/plan links (follow the Phase 2 entry's exact format in §1 and §3). Decomposition doc §Phase 3: add the completion line. AGENTS.md: after the Phase 2 sentence in "MCP build sessions", add:
+- [x] **Step 2: Docs sync.** ROADMAP Phase 3 section: flip to `Shipped` with date + spec/plan links (follow the Phase 2 entry's exact format in §1 and §3). Decomposition doc §Phase 3: add the completion line. AGENTS.md: after the Phase 2 sentence in "MCP build sessions", add:
 
 > Phase 3 adds the compose surface: `composeGame` turns an approved spec into
 > the composition manifest, seeded content, and placeholder assets under
@@ -2814,7 +2869,7 @@ git commit -m "feat(first-light): the Phase 3 vertical slice — spec-composed p
 > approval requires all four gates (build/test/browser/evaluate) green and
 > freezes the reviewed spec/composition/content hashes.
 
-- [ ] **Step 3: Full gates**
+- [x] **Step 3: Full gates**
 
 ```bash
 npm run ci
@@ -2825,7 +2880,7 @@ npm run verify:new-game   # scaffold still green end-to-end
 
 Expected: all green. Fix regressions before the final commit.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add eslint.config.js docs AGENTS.md
@@ -2845,6 +2900,3 @@ git commit -m "docs: Phase 3 vertical slice shipped; boundaries, roadmap, and ag
 | Slice checkpoint round-trips with hash-guarded approval | Task 11–12 gate/refusal/reopen tests + Task 13 recorded approval |
 
 Playable check for the human reviewer: `npm run dev -w first-light`, open the printed URL, collect the two glowing cells (WASD/arrows), watch the HUD count, then reach the beacon — it must not succeed before both cells are collected.
-
-
-

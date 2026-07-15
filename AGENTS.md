@@ -50,6 +50,12 @@ Phase 2 adds the GameSpec surface: agents draft a spec from the prompt and call
 to `games/<name>/gamespec.json`), then `renderDesignBrief` and
 `recordDesignDecision` drive the design checkpoint; approval freezes the spec
 version and later changes require a recorded `changeReason`.
+Phase 3 adds the compose surface: `composeGame` turns an approved spec into
+the composition manifest, seeded content, and placeholder assets under
+`games/<name>/` (a seeded, replayable step); `renderSliceReport` assembles the
+vertical-slice evidence; `recordSliceDecision` records the checkpoint —
+approval requires all four gates (build/test/browser/evaluate) green and
+freezes the reviewed spec/composition/content hashes.
 
 ### Component/resource schemas (zod)
 

@@ -27,6 +27,15 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **Phase 3 — Vertical slice · first playable** (2026-07-14,
+  `phase-0-completion` @ `pending merge`). Added the capability-pack and runtime
+  composition contracts, seeded compose/report/checkpoint MCP flow, enriched
+  browser and critical-path gates, and the checked-in `first-light` playable.
+  Spec:
+  [`2026-07-13-phase-3-vertical-slice-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice-design.md);
+  plan:
+  [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
+
 - **Phase 2 — Versioned `GameSpec`** (2026-07-13, `phase-0-completion` @
   `pending merge`). Added bounded versioned GameSpec contracts, deterministic
   validation/normalization/versioning/brief rendering, and MCP design-checkpoint
@@ -173,7 +182,7 @@ plan: [`2026-07-13-phase-2-versioned-gamespec.md`](superpowers/plans/active/2026
   capability compatibility) gating the design checkpoint. **Exit:** ten
   differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3 — Vertical slice · first playable · `In progress`
+### Phase 3 — Vertical slice · first playable · `Shipped`
 
 Spec: [`2026-07-13-phase-3-vertical-slice-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice-design.md);
 plan: [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
@@ -189,19 +198,19 @@ plan: [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/
 - **Depends on:** Phase 2 complete.
 - **Tasks:**
   - Contracts: composition + asset-manifest schemas; interaction-inventory
-    capability config — `Planned`.
+    capability config — `Shipped`.
   - Capability-pack interface v1 + `PackEvalHook` + `loadComposition` in
-    `@automata/game-kit` — `Planned`.
+    `@automata/game-kit` — `Shipped`.
   - `@automata/pack-interaction-inventory` (pure core, browser adapter, eval
-    hook, seeded compose section) — `Planned`.
+    hook, seeded compose section) — `Shipped`.
   - `@automata/pack-registry` + `@automata/game-compose` (`composeGame`,
-    slice report) — `Planned`.
+    slice report) — `Shipped`.
   - Composition-aware scaffold templates + enriched browser e2e
-    (console capture, frame-time budget) — `Planned`.
+    (console capture, frame-time budget) — `Shipped`.
   - `composeGame` / `renderSliceReport` / `recordSliceDecision` MCP tools +
-    end-to-end acceptance with seeded replay — `Planned`.
+    end-to-end acceptance with seeded replay — `Shipped`.
   - `games/first-light` slice game: composed, gated, checkpointed, checked
-    in — `Planned`.
+    in — `Shipped`.
 
 ### Phase 4 — Capability packs · `Planned`
 
