@@ -70,4 +70,13 @@ describe('composeGame', () => {
     const result = composeGame({ spec: withExtra as GameSpec, seed: 7, specHash: 'h1' })
     expect(result).toMatchObject({ ok: false, issues: [{ code: 'compose-unsupported-capability' }] })
   })
+
+  it('composes without an icon when the spec has no UI asset requirement', () => {
+    const spec = { ...sliceSpec(), assets: [] }
+    const result = composeGame({ spec, seed: 7, specHash: 'h1' })
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.assetManifest.assets).toEqual([])
+    expect(result.composition.packs[0]!.config).toMatchObject({ iconPath: null })
+    expect(result.files.some((file) => file.path.endsWith('.svg'))).toBe(false)
+  })
 })

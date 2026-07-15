@@ -34,4 +34,17 @@ describe('renderSliceReport', () => {
     expect(markdown).toContain('npm run dev -w first-light')
     expect(markdown).toContain('objectivesComplete: true')
   })
+
+  it('labels an empty pack set and unknown acceptance coverage explicitly', () => {
+    const markdown = renderSliceReport({
+      ...evidence,
+      packIds: [],
+      acceptance: [{
+        id: 'a-future', description: 'A future evaluator covers this.',
+        kind: 'future' as never, target: 'future:gate'
+      }]
+    })
+    expect(markdown).toContain('- packs: none')
+    expect(markdown).toContain('covered by unknown')
+  })
 })

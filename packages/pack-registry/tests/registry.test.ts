@@ -25,6 +25,12 @@ describe('pack registry', () => {
     expect(resolveEvalHooks(composition([]))).toEqual([])
   })
 
+  it('ignores composition entries that have no registered evaluation hook', () => {
+    expect(resolveEvalHooks(composition([{
+      id: 'future-pack', version: '1.0.0', config: {}
+    }]))).toEqual([])
+  })
+
   it('exposes exactly the packs that exist (one, in Phase 3)', () => {
     expect(Object.keys(STANDARD_PACKS)).toEqual(['interaction-inventory'])
   })

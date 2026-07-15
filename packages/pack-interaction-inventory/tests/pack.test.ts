@@ -46,6 +46,13 @@ describe('interaction-inventory pack (browser adapter)', () => {
     expect(handle.objectivesComplete!()).toBe(true)
   })
 
+  it('leaves renderables and HUD unchanged when no item is in range', () => {
+    const { render, handle, app } = boot()
+    handle.fixedUpdate!(1 / 60, { playerPosition: { x: 100, z: 100 } })
+    expect(render.calls.filter((call) => call.op === 'remove')).toEqual([])
+    expect(app.querySelector('.inventory-hud')?.textContent).toContain('0/2')
+  })
+
   it('dispose removes remaining renderables and the HUD', () => {
     const { render, handle, app } = boot()
     handle.dispose!()

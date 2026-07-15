@@ -37,6 +37,35 @@ describe('composeGame tool', () => {
     expect(await host.executeTool('composeGame', { gameId: 'probe' })).toMatchObject({ ok: true, content: { cached: true } })
     await host.dispose()
   })
+
+  it('surfaces missing prerequisites and persists a typed unsupported-capability finding', async () => {
+    const { host } = await setup()
+    expect(await host.executeTool('renderSliceReport', { gameId: 'ghost' })).toMatchObject({
+      ok: false,
+      content: expect.stringContaining('no gamespec.json')
+    })
+    expect(await host.executeTool('renderSliceReport', { gameId: 'probe' })).toMatchObject({
+      ok: false,
+      content: expect.stringContaining('no compose:game step')
+    })
+
+    const unsupported = sliceDraft('probe')
+    unsupported.capabilities = [{ id: 'save-load', config: {}, requirements: [] }]
+    expect(await host.executeTool('compileGameSpec', {
+      gameId: 'probe', draft: unsupported, prompt: 'unsupported slice', translations: []
+    })).toMatchObject({ ok: true })
+    await host.executeTool('renderDesignBrief', { gameId: 'probe' })
+    await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'exercise compose finding' })
+    expect(await host.executeTool('composeGame', { gameId: 'probe' })).toMatchObject({
+      ok: false,
+      content: { code: 'compose-unsupported-capability' }
+    })
+    expect(await host.executeTool('createGame', { name: 'probe' })).toMatchObject({
+      ok: true,
+      content: { session: { openFindings: [expect.objectContaining({ source: 'compose', code: 'compose-unsupported-capability' })] } }
+    })
+    await host.dispose()
+  })
 })
 
 describe('slice checkpoint tools', () => {
