@@ -64,4 +64,36 @@ describe('composed writer', () => {
     await expect(readFile(second, 'utf8')).resolves.toBe('second-original')
     expect((await readdir(join(gameRoot, 'public'))).filter((name) => name.includes('.tmp-') || name.includes('.bak-'))).toEqual([])
   })
+
+  it('preserves a backup and aggregates errors when restoration fails', async () => {
+    const gameRoot = await root()
+    await fs.mkdir(join(gameRoot, 'public'))
+    const first = join(gameRoot, 'public/first.txt')
+    const second = join(gameRoot, 'public/second.txt')
+    await writeFile(first, 'first-original')
+    await writeFile(second, 'second-original')
+    let renames = 0
+    const injected: ComposedWriterFs = {
+      ...fs,
+      async rename(from, to) {
+        renames += 1
+        if (renames === 4) throw new Error('commit failed')
+        if (renames === 5) throw new Error('restore failed')
+        await fs.rename(from, to)
+      }
+    }
+    const error = await writeComposedFiles(gameRoot, [
+      { path: 'public/first.txt', text: 'first-new' },
+      { path: 'public/second.txt', text: 'second-new' }
+    ], injected).catch((reason: unknown) => reason)
+    expect(error).toBeInstanceOf(AggregateError)
+    expect((error as AggregateError).errors.map((value) => String(value))).toEqual(expect.arrayContaining([
+      expect.stringContaining('commit failed'),
+      expect.stringContaining('restore failed')
+    ]))
+    await expect(readFile(first, 'utf8')).resolves.toBe('first-original')
+    const debris = (await fs.readdir(join(gameRoot, 'public'))).filter((name) => name.includes('.tmp-') || name.includes('.bak-'))
+    expect(debris).toHaveLength(1)
+    await expect(readFile(join(gameRoot, 'public', debris[0]!), 'utf8')).resolves.toBe('second-original')
+  })
 })

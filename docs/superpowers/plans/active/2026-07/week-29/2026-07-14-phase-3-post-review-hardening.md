@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-3-post-review-hardening-design.md`
 
-**Overall progress:** 0% (Tasks 1–3 pending)
+**Overall progress:** 100% (Tasks 1–3 complete; all release gates verified)
 
 ## Global Constraints
 
@@ -241,7 +241,7 @@ git commit -m "fix(editor-mcp): reject symlinked compose paths"
 - Changes: failed rollback throws `AggregateError` when any cleanup or restoration operation also fails.
 - Guarantee: a backup is removed only by successful rename restoration or successful post-commit cleanup.
 
-- [ ] **Step 1: Write the failing rollback-preservation regression**
+- [x] **Step 1: Write the failing rollback-preservation regression**
 
 Add to `tools/editor-mcp-server/tests/composedWriter.test.ts`:
 
@@ -279,7 +279,7 @@ it('preserves a backup and aggregates errors when restoration fails', async () =
 })
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run:
 
@@ -289,7 +289,7 @@ npx vitest run --project editor-mcp-server -t 'preserves a backup and aggregates
 
 Expected: the writer throws only the commit error and deletes the second original backup.
 
-- [ ] **Step 3: Implement safe rollback aggregation**
+- [x] **Step 3: Implement safe rollback aggregation**
 
 Replace the commit catch body with:
 
@@ -320,7 +320,7 @@ Replace the commit catch body with:
 
 Keep the successful rollback and successful commit cleanup paths unchanged.
 
-- [ ] **Step 4: Verify GREEN and focused integration**
+- [x] **Step 4: Verify GREEN and focused integration**
 
 Run:
 
@@ -330,7 +330,7 @@ npx vitest run --project build-session --project editor-mcp-server
 
 Expected: both projects pass, including the existing successful rollback test.
 
-- [ ] **Step 5: Run full repository verification**
+- [x] **Step 5: Run full repository verification**
 
 Run in order:
 
@@ -343,7 +343,7 @@ git diff --check
 
 Expected: all commands exit 0; coverage remains at least 90% for lines and branches.
 
-- [ ] **Step 6: Close the tracker and commit**
+- [x] **Step 6: Close the tracker and commit**
 
 Set `Overall progress` to `100% (Tasks 1–3 complete; all release gates verified)`, mark every checkbox complete, then run:
 

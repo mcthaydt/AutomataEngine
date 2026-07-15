@@ -72,14 +72,27 @@ export async function writeComposedFiles(root: string, files: readonly ComposedF
       await fs.rename(entry.temporary, entry.target)
       entry.installed = true
     }
-  } catch (error) {
-    for (const entry of [...staged].reverse()) {
-      if (entry.installed) await fs.rm(entry.target, { force: true }).catch(() => undefined)
-      if (entry.backupCreated) await fs.rename(entry.backup, entry.target).catch(() => undefined)
-      await fs.rm(entry.temporary, { force: true }).catch(() => undefined)
-      await fs.rm(entry.backup, { force: true }).catch(() => undefined)
+  } catch (commitError) {
+    const rollbackErrors: unknown[] = []
+    const attempt = async (operation: () => Promise<unknown>): Promise<void> => {
+      try { await operation() } catch (error) { rollbackErrors.push(error) }
     }
-    throw error
+    for (const entry of [...staged].reverse()) {
+      if (entry.installed) await attempt(() => fs.rm(entry.target, { force: true }))
+      if (entry.backupCreated) {
+        try {
+          await fs.rename(entry.backup, entry.target)
+          entry.backupCreated = false
+        } catch (error) {
+          rollbackErrors.push(error)
+        }
+      }
+      await attempt(() => fs.rm(entry.temporary, { force: true }))
+    }
+    if (rollbackErrors.length > 0) {
+      throw new AggregateError([commitError, ...rollbackErrors], 'Compose commit failed and rollback was incomplete')
+    }
+    throw commitError
   }
 
   for (const entry of staged) if (entry.backupCreated) await fs.rm(entry.backup, { force: true })
