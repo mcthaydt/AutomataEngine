@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_CAPABILITY_COMPATIBILITY, capabilityIdSchema, findingSourceSchema,
-  gameSpecDraftSchema, gameSpecSchema, minimalGameSpecDraft
+  firstLightGameSpecDraft, gameSpecDraftSchema, gameSpecSchema, minimalGameSpecDraft
 } from '../src'
 
 const minimalDraft = minimalGameSpecDraft
@@ -41,6 +41,10 @@ describe('gameSpec schemas', () => {
 
   it('admits the spec finding source', () => {
     expect(findingSourceSchema.safeParse('spec').success).toBe(true)
+  })
+
+  it('accepts the first-light vertical-slice draft', () => {
+    expect(gameSpecDraftSchema.safeParse(firstLightGameSpecDraft()).success).toBe(true)
   })
 })
 

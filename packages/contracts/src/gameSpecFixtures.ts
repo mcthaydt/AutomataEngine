@@ -42,3 +42,28 @@ export function minimalGameSpecDraft(gameId = 'probe'): Record<string, unknown> 
     }]
   }
 }
+
+/** The Phase 3 vertical-slice game: relight the beacon by gathering its light cells. */
+export function firstLightGameSpecDraft(): Record<string, unknown> {
+  return {
+    identity: { id: 'first-light', title: 'First Light', logline: 'Relight the harbor beacon by gathering its scattered light cells.', themes: ['exploration', 'restoration'], contentRating: 'everyone' },
+    direction: { visualStyle: 'stylized low-poly night harbor', audioStyle: 'calm ambient synth', dialogueTone: 'quiet and hopeful', camera: 'fixed' },
+    budgets: { targetMinutes: 30, districtCount: 1, interiorCount: 0, characterCount: 1, mainQuestCount: 2, sideQuestCount: 0, enemyTypeCount: 0, assetBudget: 1, buildTimeMinutes: 30 },
+    capabilities: [{ id: 'interaction-inventory', config: { requiredItems: 2, interactRadius: 1.5 }, requirements: ['collect both light cells before the beacon counts'] }],
+    world: { locations: [{ id: 'harbor', name: 'Harbor', kind: 'district', description: 'A small dark harbor arena lit only by the dormant beacon.' }] },
+    cast: [{ id: 'player', name: 'The Keeper', role: 'player', description: 'The lighthouse keeper.' }],
+    story: {
+      premise: 'The beacon went dark; its two light cells are scattered across the harbor.',
+      beats: [{ id: 'b-begin', kind: 'beginning', summary: 'The keeper arrives at the dark harbor.' }, { id: 'b-end', kind: 'ending', summary: 'With both cells recovered, the beacon relights.' }],
+      quests: [{ id: 'q-cells', kind: 'main', summary: 'Gather the two scattered light cells.' }, { id: 'q-beacon', kind: 'main', summary: 'Return to the beacon and relight it.' }]
+    },
+    progression: { milestones: [{ id: 'm-first-cell', summary: 'First light cell recovered.' }, { id: 'm-relit', summary: 'Beacon relit.' }] },
+    assets: [{ id: 'item-icon', kind: 'ui', description: 'Light-cell icon for the inventory HUD.' }],
+    acceptance: [
+      { id: 'a-structural', description: 'The spec validates against the supported envelope.', kind: 'structural', target: 'spec:valid' },
+      { id: 'a-sim', description: 'Deterministic automation collects both cells then reaches the beacon.', kind: 'simulation', target: 'evaluate:critical-path' },
+      { id: 'a-browser', description: 'The game boots clean and holds frame budget in the browser.', kind: 'browser', target: 'e2e:boot-console-frametime' },
+      { id: 'a-manual', description: 'A human approves the playable slice.', kind: 'manual', target: 'checkpoint:slice' }
+    ]
+  }
+}
