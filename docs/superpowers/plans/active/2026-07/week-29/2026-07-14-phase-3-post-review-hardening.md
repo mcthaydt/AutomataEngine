@@ -37,7 +37,7 @@
 - Preserves: `hashText(text: string): string`, implemented through `hashBytes`.
 - Changes: `snapshotFiles` reads `Buffer` values and hashes them through `hashBytes`.
 
-- [ ] **Step 1: Write failing binary snapshot regressions**
+- [x] **Step 1: Write failing binary snapshot regressions**
 
 Add two tests to `packages/build-session/tests/files.test.ts`:
 
@@ -61,7 +61,7 @@ it('reports a binary-only byte mutation as changed', async () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests and verify RED**
+- [x] **Step 2: Run the tests and verify RED**
 
 Run:
 
@@ -71,7 +71,7 @@ npx vitest run --project build-session -t 'invalid UTF-8|binary-only byte mutati
 
 Expected: both tests fail because `readFile(path, 'utf8')` converts both byte sequences to the replacement character before hashing.
 
-- [ ] **Step 3: Implement byte-oriented hashing**
+- [x] **Step 3: Implement byte-oriented hashing**
 
 In `packages/build-session/src/hash.ts`, add:
 
@@ -91,7 +91,7 @@ In `packages/build-session/src/files.ts`, import `hashBytes` and replace the tex
 out[key] = hashBytes(await readFile(path))
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -101,7 +101,7 @@ npx vitest run --project build-session
 
 Expected: the complete build-session project passes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Mark Task 1 complete in this plan, then run:
 

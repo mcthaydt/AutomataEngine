@@ -1,6 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
-import { hashText } from './hash'
+import { hashBytes } from './hash'
 
 const SKIPPED_DIRS = new Set(['node_modules', 'dist', 'coverage'])
 
@@ -27,7 +27,7 @@ export async function snapshotFiles(
         if (!SKIPPED_DIRS.has(item.name)) await walk(path, label, base)
       } else if (item.isFile()) {
         const key = `${label}/${relative(base, path).split(sep).join('/')}`
-        out[key] = hashText(await readFile(path, 'utf8'))
+        out[key] = hashBytes(await readFile(path))
       }
     }
   }

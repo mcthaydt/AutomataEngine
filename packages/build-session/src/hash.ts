@@ -10,8 +10,12 @@ export function stableStringify(value: unknown): string {
   return `{${entries.map(([key, member]) => `${JSON.stringify(key)}:${stableStringify(member)}`).join(',')}}`
 }
 
+export function hashBytes(bytes: Uint8Array): string {
+  return createHash('sha256').update(bytes).digest('hex')
+}
+
 export function hashText(text: string): string {
-  return createHash('sha256').update(text).digest('hex')
+  return hashBytes(Buffer.from(text))
 }
 
 export function hashJson(value: unknown): string {

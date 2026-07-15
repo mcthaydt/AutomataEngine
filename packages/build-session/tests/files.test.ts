@@ -41,4 +41,22 @@ describe('file snapshots', () => {
       added: ['src/c.ts'], removed: ['src/nested/b.ts'], changed: ['src/a.ts']
     })
   })
+
+  it('hashes distinct invalid UTF-8 byte sequences differently', async () => {
+    const root = await makeTree()
+    await writeFile(join(root, 'src/first.bin'), Buffer.from([0xff]))
+    await writeFile(join(root, 'src/second.bin'), Buffer.from([0xfe]))
+    const snapshot = await snapshotFiles([{ label: 'src', dir: join(root, 'src') }])
+    expect(snapshot['src/first.bin']).not.toBe(snapshot['src/second.bin'])
+  })
+
+  it('reports a binary-only byte mutation as changed', async () => {
+    const root = await makeTree()
+    const asset = join(root, 'src/asset.bin')
+    await writeFile(asset, Buffer.from([0xff]))
+    const before = await snapshotFiles([{ label: 'src', dir: join(root, 'src') }])
+    await writeFile(asset, Buffer.from([0xfe]))
+    const after = await snapshotFiles([{ label: 'src', dir: join(root, 'src') }])
+    expect(diffFiles(before, after).changed).toContain('src/asset.bin')
+  })
 })
