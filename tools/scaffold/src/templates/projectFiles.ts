@@ -175,8 +175,10 @@ function validateSnapshot(snapshot: ProjectSnapshot): ValidationIssue[] {
 }
 
 export function evaluationTs(): string {
-  return `import type { ProjectSnapshot } from '@automata/project'
-import { createInitialState, seekGoal, step } from '../sim/sim'
+  return `import { emptyComposition, type CompositionManifest } from '@automata/contracts'
+import { resolveEvalHooks } from '@automata/pack-registry'
+import type { ProjectSnapshot } from '@automata/project'
+import { createInitialState, seekGoal, step, type SimControl, type SimState } from '../sim/sim'
 import { compileProject } from './compiler'
 
 export interface EvaluationResult {
@@ -186,22 +188,45 @@ export interface EvaluationResult {
   steps: number
 }
 
-/** Runtime-safe normalized evaluation used by editor, agent, and MCP hosts. */
+const seekPoint = (state: SimState, target: { x: number; z: number }): SimControl => {
+  const dx = target.x - state.position.x
+  const dz = target.z - state.position.z
+  const distance = Math.hypot(dx, dz)
+  if (distance < 1e-9) return { x: 0, z: 0 }
+  return { x: dx / distance, z: dz / distance }
+}
+
+/** Composition-aware normalized evaluation used by editor, agent, and MCP hosts. */
 export async function evaluateProject(
   snapshot: ProjectSnapshot,
-  opts: { maxSteps: number }
+  opts: { maxSteps: number },
+  composition: CompositionManifest = emptyComposition(snapshot.manifest.gameId)
 ): Promise<EvaluationResult> {
   const compiled = compileProject(snapshot)
   const dt = 1 / 60
   const maxSteps = Math.max(0, Math.floor(opts.maxSteps))
+  const hooks = resolveEvalHooks(composition)
+  const hookStates = hooks.map((hook) => hook.createState())
+  const hooksComplete = (): boolean => hooks.every((hook, index) => hook.complete(hookStates[index]))
 
   let state = createInitialState(compiled.spawn)
   let steps = 0
   while (steps < maxSteps && state.status === 'running') {
-    state = step(state, seekGoal(state, compiled.tuning), dt, compiled.tuning)
+    let target: { x: number; z: number } | null = null
+    for (let index = 0; index < hooks.length && target === null; index += 1) {
+      target = hooks[index]!.nextTarget(hookStates[index], state.position)
+    }
+    const control = target ? seekPoint(state, target) : seekGoal(state, compiled.tuning)
+    let next = step(state, control, dt, compiled.tuning)
+    if (next.status === 'succeeded' && !hooksComplete()) next = { ...next, status: 'running' }
+    state = next
+    for (let index = 0; index < hooks.length; index += 1) {
+      hookStates[index] = hooks[index]!.step(hookStates[index], state.position)
+    }
     steps += 1
   }
 
+  const objectivesComplete = hooksComplete()
   const outcome = state.status === 'succeeded' ? 'passed' : state.status === 'failed' ? 'failed' : 'incomplete'
   const score = outcome === 'passed' ? Math.max(0, 1 - state.elapsedS / compiled.tuning.timeLimitS) : 0
   const distanceToGoal = Math.hypot(
@@ -211,7 +236,7 @@ export async function evaluateProject(
   return {
     outcome,
     score,
-    metrics: { status: state.status, elapsedS: state.elapsedS, distanceToGoal },
+    metrics: { status: state.status, elapsedS: state.elapsedS, distanceToGoal, objectivesComplete },
     steps
   }
 }
@@ -258,7 +283,8 @@ export const loadEditorRegistration: EditorRegistrationLoader = async () => edit
 }
 
 export function projectIndexTs(): string {
-  return `import type { EditorRegistrationLoader } from '@automata/editor/headless'
+  return `import { emptyComposition, parseCompositionManifest } from '@automata/contracts'
+import type { EditorRegistrationLoader } from '@automata/editor/headless'
 import { projectDefinition } from './definition'
 import { evaluateProject } from './evaluation'
 
@@ -271,13 +297,25 @@ export { evaluateProject, type EvaluationResult } from './evaluation'
 
 /**
  * Registry convention entry for Node hosts (MCP server, headless evaluation).
- * This game reads no code-owned data files, so the deps reader goes unused.
+ * Reads composition data when present; plain scaffolds fall back to an empty
+ * composition, while malformed manifests remain real errors.
  */
-export const loadHeadlessRegistration: EditorRegistrationLoader = async () => ({
-  project: projectDefinition,
-  prefabs: [],
-  evaluation: { evaluate: evaluateProject }
-})
+export const loadHeadlessRegistration: EditorRegistrationLoader = async (deps) => {
+  let text: string | null = null
+  try {
+    text = await deps.readText('project/composition.json')
+  } catch {
+    text = null
+  }
+  const composition = text === null
+    ? emptyComposition(projectDefinition.gameId)
+    : parseCompositionManifest(text)
+  return {
+    project: projectDefinition,
+    prefabs: [],
+    evaluation: { evaluate: (snapshot, opts) => evaluateProject(snapshot, opts, composition) }
+  }
+}
 `
 }
 

@@ -75,6 +75,32 @@ describe('planNewGame', () => {
     expect(template).toContain('"gameId": "starfall"')
   })
 
+  it('emits an empty composition manifest and composition-aware sources', () => {
+    const plan = planNewGame('probe')
+    const byPath = new Map(plan.files.map((file) => [file.path, file.content]))
+    const composition = JSON.parse(byPath.get('games/probe/public/project/composition.json')!) as Record<string, unknown>
+    expect(composition).toEqual({ formatVersion: 1, gameId: 'probe', source: null, packs: [], assets: [] })
+
+    const main = byPath.get('games/probe/src/main.ts')!
+    expect(main).toContain('loadComposition(createProjectReader())')
+    expect(main).toContain("from '@automata/pack-registry'")
+    expect(main).toContain('objectiveGate: () => runtime.objectivesComplete()')
+    expect(byPath.get('games/probe/src/game/gameplay.ts')!).toContain('objectiveGate')
+
+    const evaluation = byPath.get('games/probe/src/project/evaluation.ts')!
+    expect(evaluation).toContain('resolveEvalHooks')
+    expect(evaluation).toContain('emptyComposition')
+    expect(byPath.get('games/probe/src/project/index.ts')!).toContain("deps.readText('project/composition.json')")
+
+    const pkg = JSON.parse(byPath.get('games/probe/package.json')!) as { dependencies: Record<string, string> }
+    expect(pkg.dependencies['@automata/pack-registry']).toBe('*')
+    expect(pkg.dependencies['@automata/contracts']).toBe('*')
+
+    const e2e = byPath.get('games/probe/e2e/smoke.spec.ts')!
+    expect(e2e).toContain("page.on('console'")
+    expect(e2e).toContain('requestAnimationFrame')
+  })
+
   it('auto-assigns the next free port above the existing ones', () => {
     expect(planNewGame('starfall').port).toBe(5178)
     expect(planNewGame('starfall', { existingPorts: [5174, 5177, 5190] }).port).toBe(5191)

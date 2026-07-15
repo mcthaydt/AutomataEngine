@@ -12,9 +12,11 @@ export function packageJson(name: string, port: number): string {
       './editor': './src/project/editor.ts'
     },
     dependencies: {
+      '@automata/contracts': '*',
       '@automata/editor': '*',
       '@automata/engine': '*',
       '@automata/game-kit': '*',
+      '@automata/pack-registry': '*',
       '@automata/project': '*'
     },
     devDependencies: { tsx: '^4.20.0' },
