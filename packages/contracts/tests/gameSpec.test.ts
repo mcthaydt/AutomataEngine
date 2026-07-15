@@ -46,6 +46,12 @@ describe('gameSpec schemas', () => {
   it('accepts the first-light vertical-slice draft', () => {
     expect(gameSpecDraftSchema.safeParse(firstLightGameSpecDraft()).success).toBe(true)
   })
+
+  it('rejects asset ids that can become unsafe output paths', () => {
+    const draft = firstLightGameSpecDraft()
+    ;(draft.assets as Array<{ id: string }>)[0]!.id = '../../../other-game/icon'
+    expect(gameSpecDraftSchema.safeParse(draft).success).toBe(false)
+  })
 })
 
 describe('capability config schemas', () => {

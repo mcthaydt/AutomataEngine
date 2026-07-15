@@ -36,7 +36,7 @@
 - Produces: `assetRequirementIdSchema`, a lowercase path-safe identifier matching `/^[a-z][a-z0-9-]*$/` with maximum length 60.
 - Changes: every `composeToolArgSchemas` root becomes `z.strictObject`.
 
-- [ ] **Step 1: Write failing contract regressions**
+- [x] **Step 1: Write failing contract regressions**
 
 Add to `packages/contracts/tests/gameSpec.test.ts`:
 
@@ -60,13 +60,13 @@ it('rejects unknown compose tool arguments', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `npx vitest run --project contracts -t 'unsafe output paths|unknown compose tool arguments'`
 
 Expected: both regressions fail because traversal IDs parse and zod strips unknown keys.
 
-- [ ] **Step 3: Implement the minimal contract hardening**
+- [x] **Step 3: Implement the minimal contract hardening**
 
 In `gameSpec.ts`:
 
@@ -82,13 +82,13 @@ export const assetRequirementSchema = z.strictObject({
 
 In `composeTools.ts`, replace each `z.object({...})` root with `z.strictObject({...})`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `npx vitest run --project contracts --project game-spec --project editor-mcp-server`
 
 Expected: all affected projects pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts

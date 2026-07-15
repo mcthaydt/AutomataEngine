@@ -4,6 +4,7 @@ import {
   compositionManifestSchema,
   emptyComposition,
   findingSourceSchema,
+  parseComposeToolArgs,
   parseCompositionManifest
 } from '../src'
 
@@ -62,5 +63,15 @@ describe('asset manifest stub', () => {
 describe('finding sources', () => {
   it("accepts 'compose'", () => {
     expect(findingSourceSchema.safeParse('compose').success).toBe(true)
+  })
+})
+
+describe('compose tool contracts', () => {
+  it('rejects unknown compose tool arguments', () => {
+    expect(() => parseComposeToolArgs('composeGame', { gameId: 'probe', extra: true })).toThrow()
+    expect(() => parseComposeToolArgs('renderSliceReport', { gameId: 'probe', extra: true })).toThrow()
+    expect(() => parseComposeToolArgs('recordSliceDecision', {
+      gameId: 'probe', decision: 'approve', reason: 'green', extra: true
+    })).toThrow()
   })
 })

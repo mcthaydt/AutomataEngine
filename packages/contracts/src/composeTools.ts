@@ -6,9 +6,9 @@ import { gameSlugSchema } from './workspaceTools'
 export type ComposeToolName = 'composeGame' | 'renderSliceReport' | 'recordSliceDecision'
 
 export const composeToolArgSchemas = {
-  composeGame: z.object({ gameId: gameSlugSchema }),
-  renderSliceReport: z.object({ gameId: gameSlugSchema }),
-  recordSliceDecision: z.object({
+  composeGame: z.strictObject({ gameId: gameSlugSchema }),
+  renderSliceReport: z.strictObject({ gameId: gameSlugSchema }),
+  recordSliceDecision: z.strictObject({
     gameId: gameSlugSchema,
     decision: z.enum(['approve', 'reject']),
     reason: z.string().min(1).max(400)

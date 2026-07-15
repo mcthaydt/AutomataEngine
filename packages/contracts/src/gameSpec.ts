@@ -144,8 +144,10 @@ export const acceptanceCriterionSchema = z.strictObject({
 })
 export type AcceptanceCriterion = z.infer<typeof acceptanceCriterionSchema>
 
+export const assetRequirementIdSchema = z.string().min(1).max(60).regex(/^[a-z][a-z0-9-]*$/)
+
 export const assetRequirementSchema = z.strictObject({
-  id: z.string().min(1).max(60),
+  id: assetRequirementIdSchema,
   kind: z.enum(['model', 'texture', 'audio', 'music', 'ui']),
   description: z.string().min(1).max(400)
 })
