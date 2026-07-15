@@ -123,7 +123,7 @@ git commit -m "fix(build-session): hash snapshot file bytes"
 - Changes: `ComposedWriterFs` adds `lstat(path): Promise<{ isSymbolicLink(): boolean }>`.
 - Produces: an internal validation helper that rejects symbolic links from the game root through every output target.
 
-- [ ] **Step 1: Write failing symlink containment regressions**
+- [x] **Step 1: Write failing symlink containment regressions**
 
 Add separate tests to `tools/editor-mcp-server/tests/composedWriter.test.ts`:
 
@@ -155,7 +155,7 @@ it('rejects an existing target symlink before staging', async () => {
 })
 ```
 
-- [ ] **Step 2: Run the tests and verify RED**
+- [x] **Step 2: Run the tests and verify RED**
 
 Run:
 
@@ -165,7 +165,7 @@ npx vitest run --project editor-mcp-server -t 'symlinked target parent|target sy
 
 Expected: the parent-symlink test writes outside the game root, and the target-symlink test does not reject before staging.
 
-- [ ] **Step 3: Implement symlink validation**
+- [x] **Step 3: Implement symlink validation**
 
 Import `lstat` from `node:fs/promises`, then extend the port and default implementation:
 
@@ -209,7 +209,7 @@ Run validation for the complete set after lexical containment and duplicate chec
 for (const entry of staged) await assertNoSymbolicLinks(fs, gameRoot, entry.target)
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -219,7 +219,7 @@ npx vitest run --project editor-mcp-server
 
 Expected: the complete editor MCP server project passes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Mark Task 2 complete in this plan, then run:
 

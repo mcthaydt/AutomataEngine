@@ -11,6 +11,32 @@ async function root() { const value = await mkdtemp(join(tmpdir(), 'composed-wri
 async function exists(path: string) { try { await fs.access(path); return true } catch { return false } }
 
 describe('composed writer', () => {
+  it('rejects a symlinked target parent before writing outside the game root', async () => {
+    const base = await root()
+    const gameRoot = join(base, 'game')
+    const outside = join(base, 'outside')
+    await fs.mkdir(gameRoot)
+    await fs.mkdir(outside)
+    await fs.symlink(outside, join(gameRoot, 'public'))
+    await expect(writeComposedFiles(gameRoot, [
+      { path: 'public/escaped.txt', text: 'escaped' }
+    ])).rejects.toThrow(/symbolic link/i)
+    expect(await exists(join(outside, 'escaped.txt'))).toBe(false)
+  })
+
+  it('rejects an existing target symlink before staging', async () => {
+    const base = await root()
+    const gameRoot = join(base, 'game')
+    await fs.mkdir(join(gameRoot, 'public'), { recursive: true })
+    const outside = join(base, 'outside.txt')
+    await writeFile(outside, 'outside-original')
+    await fs.symlink(outside, join(gameRoot, 'public/item.txt'))
+    await expect(writeComposedFiles(gameRoot, [
+      { path: 'public/item.txt', text: 'replacement' }
+    ])).rejects.toThrow(/symbolic link/i)
+    await expect(readFile(outside, 'utf8')).resolves.toBe('outside-original')
+  })
+
   it('rejects paths outside the game root and duplicate normalized targets', async () => {
     const gameRoot = await root()
     await expect(writeComposedFiles(gameRoot, [{ path: 'public/assets/../../../other.svg', text: 'bad' }])).rejects.toThrow(/outside game root/i)

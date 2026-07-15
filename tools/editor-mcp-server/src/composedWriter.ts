@@ -1,23 +1,41 @@
 import { randomUUID } from 'node:crypto'
-import { access, mkdir, rename, rm, writeFile } from 'node:fs/promises'
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
+import { access, lstat, mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
 export interface ComposedFile { path: string; text: string }
 export interface ComposedWriterFs {
   access(path: string): Promise<void>
+  lstat(path: string): Promise<{ isSymbolicLink(): boolean }>
   mkdir(path: string, options: { recursive: true }): Promise<unknown>
   rename(from: string, to: string): Promise<void>
   rm(path: string, options: { force: true }): Promise<void>
   writeFile(path: string, text: string): Promise<void>
 }
 
-const nodeFs: ComposedWriterFs = { access, mkdir, rename, rm, writeFile }
+const nodeFs: ComposedWriterFs = { access, lstat, mkdir, rename, rm, writeFile }
 interface StagedFile { target: string; temporary: string; backup: string; backupCreated: boolean; installed: boolean }
 
 async function pathExists(fs: ComposedWriterFs, path: string): Promise<boolean> {
   try { await fs.access(path); return true } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false
     throw error
+  }
+}
+
+async function assertNoSymbolicLinks(fs: ComposedWriterFs, gameRoot: string, target: string): Promise<void> {
+  const paths = [gameRoot]
+  let current = gameRoot
+  for (const segment of relative(gameRoot, target).split(sep)) {
+    current = join(current, segment)
+    paths.push(current)
+  }
+  for (const path of paths) {
+    try {
+      if ((await fs.lstat(path)).isSymbolicLink()) throw new Error(`Composed file path contains a symbolic link: ${path}`)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+      throw error
+    }
   }
 }
 
@@ -37,6 +55,8 @@ export async function writeComposedFiles(root: string, files: readonly ComposedF
     const suffix = randomUUID()
     staged.push({ target, temporary: `${target}.tmp-${suffix}`, backup: `${target}.bak-${suffix}`, backupCreated: false, installed: false })
   }
+
+  for (const entry of staged) await assertNoSymbolicLinks(fs, gameRoot, entry.target)
 
   try {
     for (const [index, file] of files.entries()) {
