@@ -15,10 +15,16 @@ async function repo() { const root = await mkdtemp(join(tmpdir(), 'session-check
 function headless(): HeadlessHost { const snapshot = { manifest: { id: 'probe', name: 'Probe', gameId: 'probe', formatVersion: 2, scenes: [], resources: [] }, scenes: {}, resources: {} }; const host = { get snapshot() { return snapshot }, get commands() { return [] }, listTools: () => [], async executeTool(name: string): Promise<ToolResult> { return name === 'evaluate' ? { ok: true, content: { outcome: 'passed' } } : { ok: false, isError: true, content: 'nope' } }, async readResource() { return snapshot } }; return { host, registration: {}, snapshot } as unknown as HeadlessHost }
 describe('session check tools', () => {
   it('runs checks by explicit gameId without first opening a project and caches a repeated run', async () => {
-    const root = await repo(); const script = [OK, OK]; const spawner: CommandSpawner = { async run() { const next = script.shift(); if (!next) throw new Error('unexpected'); return next } }
+    const root = await repo(); const script = [OK, OK, OK, OK]; const spawner: CommandSpawner = { async run() { const next = script.shift(); if (!next) throw new Error('unexpected'); return next } }
     const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), spawner, openHeadless: async () => headless(), lock: false })
     expect(await host.executeTool('runBuild', { gameId: 'probe' })).toMatchObject({ ok: true, content: { passed: true, cached: false } })
     expect(await host.executeTool('runBuild', { gameId: 'probe' })).toMatchObject({ ok: true, content: { cached: true } })
+    await writeFile(join(root, 'games/probe/src/sim.ts'), 'export const speed = 2')
+    expect(await host.executeTool('runBuild', { gameId: 'probe' })).toMatchObject({ ok: true, content: { passed: true, cached: false } })
+    expect(await host.executeTool('createGame', { name: 'probe' })).toMatchObject({
+      ok: true,
+      content: { session: { staleSteps: 1 } }
+    })
     await host.dispose()
   })
 

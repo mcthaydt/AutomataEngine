@@ -109,7 +109,7 @@ git commit -m "fix(contracts): contain compose ids and reject unknown args"
 - Changes: `SessionEngine.noteContentHash(hash)` marks completed `check:*` steps stale when the prior non-null known hash differs.
 - Ordering contract: check hosts call `noteContentHash(currentHash)` before recording a new check at that hash.
 
-- [ ] **Step 1: Write the failing invalidation test**
+- [x] **Step 1: Write the failing invalidation test**
 
 Add to `packages/build-session/tests/engine.test.ts`:
 
@@ -127,13 +127,13 @@ it('marks completed checks stale when an in-session content hash changes', async
 
 Extend `sessionChecks.test.ts` so an authored project change followed by a new build leaves the new build completed, not immediately stale.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `npx vitest run --project build-session --project editor-mcp-server -t 'in-session content hash changes|new build remains current'`
 
 Expected: the engine test reports `completed`; after the engine fix alone, the host ordering test exposes a newly recorded check being staled.
 
-- [ ] **Step 3: Implement invalidation and correct host ordering**
+- [x] **Step 3: Implement invalidation and correct host ordering**
 
 Implement `noteContentHash` as:
 
@@ -151,13 +151,13 @@ async noteContentHash(hash) {
 
 In `executeCheckTool` and `handleEvaluate`, snapshot and call `noteContentHash(hash)` before `runCheck` / `runGuarded`. Remove the redundant post-check call.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `npx vitest run --project build-session --project editor-mcp-server`
 
 Expected: both projects pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/build-session tools/editor-mcp-server

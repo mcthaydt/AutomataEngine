@@ -77,15 +77,16 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     const engine = await ensureEngine(gameId)
     const kind = name === 'runBuild' ? 'build' : name === 'runTests' ? 'test' : 'browser'
     const { hash } = await contentSnapshot(gameId, projectDir)
+    await engine.noteContentHash(hash)
     const outcome = await runCheck(engine, spawner, repoRoot, kind, gameId, hash, {
       ...(kind === 'build' ? { needsInstall: await needsInstall(gameId) } : {}),
       ...(kind === 'test' ? { scope: (args as { scope?: string }).scope } : {})
     })
-    await engine.noteContentHash(hash)
     return 'refused' in outcome ? { ok: false, isError: true, content: { code: 'budget-exhausted', kind: outcome.kind } } : ok(outcome)
   }
   const handleEvaluate = async (state: OpenState, args: unknown): Promise<ToolResult> => {
     const { hash } = await contentSnapshot(state.gameId, state.projectDir); const input = { args, contentHash: hash }
+    await state.engine.noteContentHash(hash)
     if (!state.engine.findCompleted('check:evaluate', hashJson(input))) {
       if (!state.engine.spendBudget('evaluate').ok) { await state.engine.addFinding({ source: 'session', severity: 'error', code: 'budget-exhausted', message: 'Attempt budget for evaluate is exhausted.', inputHash: hash }); return { ok: false, isError: true, content: { code: 'budget-exhausted', kind: 'evaluate' } } }
     }

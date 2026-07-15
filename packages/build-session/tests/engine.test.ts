@@ -93,4 +93,14 @@ describe('session engine', () => {
     expect(engine.session.steps.map((step) => [step.kind, step.status])).toContainEqual(['check:build', 'stale'])
     expect(engine.summary().openFindings.map((finding) => finding.code)).toEqual(['out-of-band-changes'])
   })
+
+  it('marks completed checks stale when an in-session content hash changes', async () => {
+    const { engine } = await makeEngine()
+    await engine.noteContentHash('h1')
+    await engine.runGuarded('check:build', { contentHash: 'h1' }, async () => ({
+      ok: true, output: { passed: true }
+    }))
+    await engine.noteContentHash('h2')
+    expect(engine.session.steps.find((step) => step.kind === 'check:build')?.status).toBe('stale')
+  })
 })

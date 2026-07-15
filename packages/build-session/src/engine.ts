@@ -89,7 +89,13 @@ export async function createSessionEngine(options: SessionEngineOptions): Promis
     async autoResolve(source) { let resolved = 0; for (const finding of session.findings) if (finding.source === source && finding.resolvedAt === undefined) { finding.resolvedAt = now(); resolved += 1 }; if (resolved) await save(); return resolved },
     spendBudget(kind) { const state = (session.budgets[kind] ??= { limit: DEFAULT_CHECK_BUDGET_LIMIT, spent: 0 }); if (state.spent >= state.limit) return { ok: false, remaining: 0 }; state.spent += 1; return { ok: true, remaining: state.limit - state.spent } },
     async setResumePoint(nextAction) { session.resume.nextAction = nextAction; await save() },
-    async noteContentHash(hash) { session.lastKnownContentHash = hash; await save() },
+    async noteContentHash(hash) {
+      if (session.lastKnownContentHash !== null && session.lastKnownContentHash !== hash) {
+        for (const step of session.steps) if (step.kind.startsWith('check:') && step.status === 'completed') step.status = 'stale'
+      }
+      session.lastKnownContentHash = hash
+      await save()
+    },
     async detectOutOfBand(currentHash) {
       if (session.lastKnownContentHash === null || session.lastKnownContentHash === currentHash) { session.lastKnownContentHash = currentHash; await save(); return false }
       for (const step of session.steps) if (step.kind.startsWith('check:') && step.status === 'completed') step.status = 'stale'
