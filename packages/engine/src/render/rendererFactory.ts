@@ -33,3 +33,31 @@ export function resolveRendererFactory(
 ): RendererFactory {
   return explicit ?? fallback
 }
+
+/**
+ * Pick the native backend before construction. WebGPURenderer's WebGL2
+ * compatibility layer is substantially slower than Three's direct
+ * WebGLRenderer under headless SwiftShader, so unsupported browsers should
+ * not rely on the compatibility layer's implicit fallback.
+ */
+export function resolveDefaultRendererFactory(
+  supportsNativeWebGpu: boolean,
+  webGpuFactory: RendererFactory,
+  webGlFactory: RendererFactory
+): RendererFactory {
+  return supportsNativeWebGpu ? webGpuFactory : webGlFactory
+}
+
+export interface WebGpuProbe {
+  requestAdapter(): Promise<unknown | null>
+}
+
+/** Browsers may expose navigator.gpu while providing no usable adapter. */
+export async function hasUsableWebGpu(gpu: WebGpuProbe | undefined): Promise<boolean> {
+  if (!gpu) return false
+  try {
+    return await gpu.requestAdapter() !== null
+  } catch {
+    return false
+  }
+}

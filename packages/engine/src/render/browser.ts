@@ -3,6 +3,8 @@ import { canvasDims, createResizeReconciler } from './canvasSize'
 import { cappedPixelRatio } from './pixelRatio'
 import {
   resolveRendererFactory,
+  resolveDefaultRendererFactory,
+  hasUsableWebGpu,
   type CanvasRenderer,
   type RendererFactory,
   type RendererSurface,
@@ -24,13 +26,26 @@ export function createWebGLRenderer(canvas: HTMLCanvasElement): RendererSurface 
   return new WebGLRenderer({ canvas, antialias: true })
 }
 
+/** Prefer native WebGPU, but bypass its slow compatibility layer when absent. */
+export async function createDefaultRenderer(canvas: HTMLCanvasElement): Promise<RendererSurface> {
+  const gpu = typeof navigator === 'undefined'
+    ? undefined
+    : (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown | null> } }).gpu
+  const create = resolveDefaultRendererFactory(
+    await hasUsableWebGpu(gpu),
+    createWebGPURenderer,
+    createWebGLRenderer
+  )
+  return await create(canvas)
+}
+
 /** Canvas glue. Untested shim, keep trivially thin. Default backend is WebGPU. */
 export async function attachCanvasRenderer(
   renderer: ThreeSceneRenderer,
   canvas: HTMLCanvasElement,
   opts?: { sizeTo?: 'window' | 'element'; createRenderer?: RendererFactory }
 ): Promise<CanvasRenderer> {
-  const create = resolveRendererFactory(opts?.createRenderer, createWebGPURenderer)
+  const create = resolveRendererFactory(opts?.createRenderer, createDefaultRenderer)
   const gl = await create(canvas)
   gl.setPixelRatio(cappedPixelRatio(window.devicePixelRatio))
   const sizeTo = opts?.sizeTo ?? 'window'
