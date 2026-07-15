@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DEFAULT_CAPABILITY_COMPATIBILITY, capabilityConfigSchemas, capabilityIdSchema, findingSourceSchema,
+  DEFAULT_CAPABILITY_COMPATIBILITY, capabilityIdSchema, findingSourceSchema,
   gameSpecDraftSchema, gameSpecSchema, minimalGameSpecDraft
 } from '../src'
 
