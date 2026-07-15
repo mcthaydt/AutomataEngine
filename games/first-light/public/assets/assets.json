@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "assets": [
+    {
+      "id": "item-icon",
+      "requirement": {
+        "id": "item-icon",
+        "kind": "ui",
+        "description": "Light-cell icon for the inventory HUD."
+      },
+      "path": "assets/item-icon.svg",
+      "provenance": {
+        "provider": "stub-generator",
+        "generator": "svg-icon@1",
+        "specVersion": 1,
+        "seed": 933489342
+      },
+      "validation": {
+        "status": "placeholder"
+      }
+    }
+  ]
+}

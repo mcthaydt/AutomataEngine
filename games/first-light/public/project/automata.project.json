@@ -1,0 +1,20 @@
+{
+  "formatVersion": 2,
+  "id": "first-light",
+  "name": "First Light",
+  "gameId": "first-light",
+  "entrySceneId": "main",
+  "scenes": [
+    {
+      "id": "main",
+      "path": "scenes/main.scene.json"
+    }
+  ],
+  "resources": [
+    {
+      "id": "tuning",
+      "typeId": "first-light.tuning",
+      "path": "resources/tuning.resource.json"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "main",
+  "name": "Main",
+  "entities": [
+    {
+      "id": "spawn",
+      "name": "Spawn",
+      "enabled": true,
+      "components": [
+        {
+          "id": "transform",
+          "typeId": "core.transform",
+          "data": {
+            "position": {
+              "x": -8,
+              "y": 0.5,
+              "z": -8
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        {
+          "id": "spawn-point",
+          "typeId": "first-light.spawn-point",
+          "data": {}
+        }
+      ]
+    }
+  ]
+}

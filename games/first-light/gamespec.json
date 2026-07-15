@@ -1,0 +1,142 @@
+{
+  "acceptance": [
+    {
+      "description": "The spec validates against the supported envelope.",
+      "id": "a-structural",
+      "kind": "structural",
+      "target": "spec:valid"
+    },
+    {
+      "description": "Deterministic automation collects both cells then reaches the beacon.",
+      "id": "a-sim",
+      "kind": "simulation",
+      "target": "evaluate:critical-path"
+    },
+    {
+      "description": "The game boots clean and holds frame budget in the browser.",
+      "id": "a-browser",
+      "kind": "browser",
+      "target": "e2e:boot-console-frametime"
+    },
+    {
+      "description": "A human approves the playable slice.",
+      "id": "a-manual",
+      "kind": "manual",
+      "target": "checkpoint:slice"
+    }
+  ],
+  "assets": [
+    {
+      "description": "Light-cell icon for the inventory HUD.",
+      "id": "item-icon",
+      "kind": "ui"
+    }
+  ],
+  "budgets": {
+    "assetBudget": 1,
+    "buildTimeMinutes": 30,
+    "characterCount": 1,
+    "districtCount": 1,
+    "enemyTypeCount": 0,
+    "interiorCount": 0,
+    "mainQuestCount": 2,
+    "sideQuestCount": 0,
+    "targetMinutes": 30
+  },
+  "capabilities": [
+    {
+      "config": {
+        "interactRadius": 1.5,
+        "requiredItems": 2
+      },
+      "id": "interaction-inventory",
+      "requirements": [
+        "collect both light cells before the beacon counts"
+      ]
+    }
+  ],
+  "cast": [
+    {
+      "description": "The lighthouse keeper.",
+      "id": "player",
+      "name": "The Keeper",
+      "role": "player"
+    }
+  ],
+  "direction": {
+    "audioStyle": "calm ambient synth",
+    "camera": "fixed",
+    "dialogueTone": "quiet and hopeful",
+    "visualStyle": "stylized low-poly night harbor"
+  },
+  "identity": {
+    "contentRating": "everyone",
+    "id": "first-light",
+    "logline": "Relight the harbor beacon by gathering its scattered light cells.",
+    "themes": [
+      "exploration",
+      "restoration"
+    ],
+    "title": "First Light"
+  },
+  "progression": {
+    "milestones": [
+      {
+        "id": "m-first-cell",
+        "summary": "First light cell recovered."
+      },
+      {
+        "id": "m-relit",
+        "summary": "Beacon relit."
+      }
+    ]
+  },
+  "provenance": {
+    "history": [
+      {
+        "reason": "initial compile",
+        "version": 1
+      }
+    ],
+    "prompt": "A tiny night-harbor game: gather the beacon's two scattered light cells, then relight it.",
+    "translations": []
+  },
+  "specVersion": 1,
+  "story": {
+    "beats": [
+      {
+        "id": "b-begin",
+        "kind": "beginning",
+        "summary": "The keeper arrives at the dark harbor."
+      },
+      {
+        "id": "b-end",
+        "kind": "ending",
+        "summary": "With both cells recovered, the beacon relights."
+      }
+    ],
+    "premise": "The beacon went dark; its two light cells are scattered across the harbor.",
+    "quests": [
+      {
+        "id": "q-cells",
+        "kind": "main",
+        "summary": "Gather the two scattered light cells."
+      },
+      {
+        "id": "q-beacon",
+        "kind": "main",
+        "summary": "Return to the beacon and relight it."
+      }
+    ]
+  },
+  "world": {
+    "locations": [
+      {
+        "description": "A small dark harbor arena lit only by the dormant beacon.",
+        "id": "harbor",
+        "kind": "district",
+        "name": "Harbor"
+      }
+    ]
+  }
+}

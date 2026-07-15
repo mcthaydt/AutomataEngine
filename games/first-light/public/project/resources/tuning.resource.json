@@ -1,0 +1,19 @@
+{
+  "id": "tuning",
+  "typeId": "first-light.tuning",
+  "data": {
+    "arenaHalf": 12,
+    "moveSpeed": 6,
+    "goal": {
+      "x": 8.36,
+      "z": 4.88
+    },
+    "goalRadius": 1.5,
+    "timeLimitS": 30,
+    "colors": {
+      "floor": "#12203a",
+      "player": "#27e0ff",
+      "goal": "#ffd23f"
+    }
+  }
+}
