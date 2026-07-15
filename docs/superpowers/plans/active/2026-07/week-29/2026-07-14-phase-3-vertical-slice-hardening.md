@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-3-vertical-slice-hardening-design.md`
 
-**Overall progress:** 0% (Tasks 1–5 pending)
+**Overall progress:** 100% (Tasks 1–5 complete; all release gates verified)
 
 ## Global Constraints
 
@@ -324,7 +324,7 @@ git commit -m "fix(editor-mcp): bind slice approval to current lineage and gates
 - Produces: `writeComposedFiles(root: string, files: readonly { path: string; text: string }[]): Promise<void>`.
 - `ComposeToolDeps` gains optional `writeFiles`, defaulting to `writeComposedFiles`, for deterministic failure injection.
 
-- [ ] **Step 1: Write failing writer and runner regressions**
+- [x] **Step 1: Write failing writer and runner regressions**
 
 Writer tests:
 
@@ -343,13 +343,13 @@ Runner test: inject `writeFiles: async () => { throw new Error('disk full') }`,
 then assert `composeGame` returns `{ code: 'compose-failed' }`, the session has a
 `compose-failed` finding, and no completed `compose:game` step exists.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `npx vitest run --project editor-mcp-server -t 'composed writer|write failure records no compose step'`
 
 Expected: writer module is missing and the runner records the seeded step before failure.
 
-- [ ] **Step 3: Implement the staged writer**
+- [x] **Step 3: Implement the staged writer**
 
 `writeComposedFiles` must:
 
@@ -365,7 +365,7 @@ Use `randomUUID()` suffixes and Node `access`, `mkdir`, `rename`, `rm`, and
 `writeFile`. Export a narrow filesystem dependency only if required by the
 rollback test.
 
-- [ ] **Step 4: Record new compose steps only after persistence**
+- [x] **Step 4: Record new compose steps only after persistence**
 
 For a cache miss, call `writeFiles` inside the `runSeededStep` callback after
 pure compose succeeds and before returning its deterministic output. For a cache
@@ -373,13 +373,13 @@ hit, call `writeFiles` with the recorded deterministic output to preserve repair
 behavior. Catch `ComposeFailure` and all filesystem errors in one boundary,
 persist the first typed issue or `compose-failed`, and return an error result.
 
-- [ ] **Step 5: Verify GREEN and parity**
+- [x] **Step 5: Verify GREEN and parity**
 
 Run: `npx vitest run --project editor-mcp-server --project game-compose --project first-light`
 
 Expected: all pass; `first-light` compose-parity remains byte-identical.
 
-- [ ] **Step 6: Full release verification**
+- [x] **Step 6: Full release verification**
 
 Run in order:
 
@@ -393,7 +393,7 @@ git diff --check
 
 Expected: all commands exit 0; coverage remains at least 90% lines and branches.
 
-- [ ] **Step 7: Close the tracker and commit**
+- [x] **Step 7: Close the tracker and commit**
 
 Set `Overall progress` to `100% (Tasks 1–5 complete; all release gates verified)`
 and mark every checkbox complete.

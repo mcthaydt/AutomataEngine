@@ -17,17 +17,31 @@ function sliceDraft(gameId: string): Record<string, unknown> {
   return draft
 }
 
-async function setup() {
+async function setup(writeFiles?: () => Promise<void>) {
   const root = await mkdtemp(join(tmpdir(), 'compose-'))
   roots.push(root)
   await mkdir(join(root, 'games/probe/public/project'), { recursive: true })
   await writeFile(join(root, 'games/probe/package.json'), JSON.stringify({ name: 'probe', exports: { './project': './src/project/index.ts' }, automata: { devPort: 5199 } }))
-  const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 })
+  const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7, ...(writeFiles ? { writeFiles } : {}) })
   expect((await host.executeTool('compileGameSpec', { gameId: 'probe', draft: sliceDraft('probe'), prompt: 'slice', translations: [] })).ok).toBe(true)
   return { root, host }
 }
 
 describe('composeGame tool', () => {
+  it('write failure records no compose step and persists a typed finding', async () => {
+    const { root, host } = await setup(async () => { throw new Error('disk full') })
+    await host.executeTool('renderDesignBrief', { gameId: 'probe' })
+    await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'go' })
+    expect(await host.executeTool('composeGame', { gameId: 'probe' })).toMatchObject({ ok: false, content: { code: 'compose-failed' } })
+    expect(await host.executeTool('createGame', { name: 'probe' })).toMatchObject({
+      ok: true,
+      content: { session: { openFindings: [expect.objectContaining({ source: 'compose', code: 'compose-failed' })] } }
+    })
+    const session = JSON.parse(await readFile(join(root, '.automata/sessions/probe/session.json'), 'utf8')) as { steps: Array<{ kind: string; status: string }> }
+    expect(session.steps.some((step) => step.kind === 'compose:game' && step.status === 'completed')).toBe(false)
+    await host.dispose()
+  })
+
   it('refuses before design approval, then writes files and caches identical reruns after approval', async () => {
     const { root, host } = await setup()
     expect(await host.executeTool('composeGame', { gameId: 'probe' })).toMatchObject({ ok: false, content: { code: 'compose-requires-approval' } })

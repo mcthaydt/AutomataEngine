@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto'
-import { mkdir, rename, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
-import { hashJson, type SessionEngine } from '@automata/build-session'
+import { writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { hashJson, type GuardedRun, type SessionEngine } from '@automata/build-session'
 import { parseComposeToolArgs, type CompositionManifest, type GameSpec, type SliceEvidence, type SliceGateResult, type ToolResult } from '@automata/contracts'
 import { composeGame, renderSliceReport, type ComposeResult } from '@automata/game-compose'
+import { writeComposedFiles } from './composedWriter'
 import { designCheckpointStatus } from './specTools'
 import { readGameSpec } from './specStore'
 
@@ -12,6 +12,7 @@ export interface ComposeToolDeps {
   ensureEngine(gameId: string): Promise<SessionEngine>
   snapshotContent(gameId: string): Promise<{ hash: string }>
   devPortFor(gameId: string): Promise<number | null>
+  writeFiles?: typeof writeComposedFiles
 }
 
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
@@ -35,19 +36,12 @@ export function sliceCheckpointStatus(engine: SessionEngine, hashes: { specHash:
   return 'pending'
 }
 
-async function writeAtomic(root: string, relativePath: string, text: string): Promise<void> {
-  const path = join(root, relativePath)
-  await mkdir(dirname(path), { recursive: true })
-  const temporary = `${path}.tmp-${randomUUID()}`
-  await writeFile(temporary, text)
-  await rename(temporary, path)
-}
-
 class ComposeFailure extends Error {
   constructor(readonly result: ComposeResult) { super('compose failed') }
 }
 
 export function createComposeToolRunner(deps: ComposeToolDeps) {
+  const writeFiles = deps.writeFiles ?? writeComposedFiles
   const requireSpec = async (gameId: string): Promise<{ spec: GameSpec; engine: SessionEngine } | ToolResult> => {
     const engine = await deps.ensureEngine(gameId)
     const spec = await readGameSpec(deps.repoRoot, gameId)
@@ -109,22 +103,28 @@ export function createComposeToolRunner(deps: ComposeToolDeps) {
           await found.engine.addFinding({ source: 'compose', severity: 'error', code: 'compose-requires-approval', message: 'composeGame requires an approved design checkpoint for the current spec.', inputHash: specHash })
           return fail({ code: 'compose-requires-approval' })
         }
-        const guarded = await found.engine.runSeededStep('compose:game', { specHash }, async (_rng, seed) => {
-          const result = composeGame({ spec: found.spec, seed, specHash })
-          if (!result.ok) throw new ComposeFailure(result)
-          return { composition: result.composition, assetManifest: result.assetManifest, files: result.files, summary: result.summary }
-        }).catch(async (error: unknown) => {
-          if (!(error instanceof ComposeFailure)) throw error
-          const issue = error.result.ok ? undefined : error.result.issues[0]
-          await found.engine.addFinding({ source: 'compose', severity: 'error', code: issue?.code ?? 'compose-failed', message: issue?.message ?? 'compose failed', inputHash: specHash })
-          return null
-        })
-        if (!guarded) {
+        const gameRoot = join(deps.repoRoot, 'games', gameId)
+        let guarded: GuardedRun
+        try {
+          guarded = await found.engine.runSeededStep('compose:game', { specHash }, async (_rng, seed) => {
+            const result = composeGame({ spec: found.spec, seed, specHash })
+            if (!result.ok) throw new ComposeFailure(result)
+            const output = { composition: result.composition, assetManifest: result.assetManifest, files: result.files, summary: result.summary }
+            await writeFiles(gameRoot, output.files)
+            return output
+          })
+          if (guarded.cached) {
+            const output = guarded.output as { files: Array<{ path: string; text: string }> }
+            await writeFiles(gameRoot, output.files)
+          }
+        } catch (error) {
+          const issue = error instanceof ComposeFailure && !error.result.ok ? error.result.issues[0] : undefined
+          const message = issue?.message ?? (error instanceof Error ? error.message : 'compose failed')
+          await found.engine.addFinding({ source: 'compose', severity: 'error', code: issue?.code ?? 'compose-failed', message, inputHash: specHash })
           const finding = found.engine.session.findings.at(-1)
           return fail({ code: finding?.code ?? 'compose-failed', message: finding?.message })
         }
         const output = guarded.output as { composition: CompositionManifest; files: Array<{ path: string; text: string }>; summary: { packIds: string[]; itemCount: number; assetIds: string[] } }
-        for (const file of output.files) await writeAtomic(join(deps.repoRoot, 'games', gameId), file.path, file.text)
         const { hash } = await deps.snapshotContent(gameId)
         await found.engine.noteContentHash(hash)
         await found.engine.autoResolve('compose')

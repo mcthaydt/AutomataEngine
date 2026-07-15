@@ -8,12 +8,12 @@ import { createHeadlessHost, type HeadlessHost } from './headlessHost'
 import { discoverGames } from './projectCatalog'
 import { writeProjectFiles } from './projectWriter'
 import { createSpecToolRunner } from './specTools'
-import { createComposeToolRunner } from './composeTools'
+import { createComposeToolRunner, type ComposeToolDeps } from './composeTools'
 
 export interface SessionHostOptions {
   repoRoot: string; fs?: ScaffoldFs; spawner?: CommandSpawner; sessionsRoot?: string
   projectDirFor?: (gameId: string) => string; openHeadless?: (projectDir: string) => Promise<HeadlessHost>
-  now?: () => string; seedSource?: () => number; lock?: boolean
+  now?: () => string; seedSource?: () => number; lock?: boolean; writeFiles?: ComposeToolDeps['writeFiles']
 }
 export interface SessionMcpHost extends McpToolHost { dispose(): Promise<void> }
 interface OpenState { gameId: string; projectDir: string; headless: HeadlessHost; engine: SessionEngine }
@@ -36,6 +36,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
   const composeTools = createComposeToolRunner({
     repoRoot, ensureEngine,
     snapshotContent: contentSnapshot,
+    ...(options.writeFiles ? { writeFiles: options.writeFiles } : {}),
     devPortFor: async (gameId) => {
       try {
         const pkg = JSON.parse(await readFile(join(repoRoot, 'games', gameId, 'package.json'), 'utf8')) as { automata?: { devPort?: number } }
