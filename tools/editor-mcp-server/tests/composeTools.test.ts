@@ -2,7 +2,9 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
+import { createSessionEngine } from '@automata/build-session'
 import { minimalGameSpecDraft } from '@automata/contracts'
+import { sliceCheckpointStatus } from '../src/composeTools'
 import { createSessionHost } from '../src/sessionHost'
 
 const roots: string[] = []
@@ -46,13 +48,19 @@ describe('composeGame tool', () => {
     })
     expect(await host.executeTool('renderSliceReport', { gameId: 'probe' })).toMatchObject({
       ok: false,
+      content: expect.stringContaining('approved design checkpoint')
+    })
+    await host.executeTool('renderDesignBrief', { gameId: 'probe' })
+    await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'exercise missing composition' })
+    expect(await host.executeTool('renderSliceReport', { gameId: 'probe' })).toMatchObject({
+      ok: false,
       content: expect.stringContaining('no compose:game step')
     })
 
     const unsupported = sliceDraft('probe')
     unsupported.capabilities = [{ id: 'save-load', config: {}, requirements: [] }]
     expect(await host.executeTool('compileGameSpec', {
-      gameId: 'probe', draft: unsupported, prompt: 'unsupported slice', translations: []
+      gameId: 'probe', draft: unsupported, prompt: 'unsupported slice', translations: [], changeReason: 'exercise unsupported capability'
     })).toMatchObject({ ok: true })
     await host.executeTool('renderDesignBrief', { gameId: 'probe' })
     await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'exercise compose finding' })
@@ -69,6 +77,14 @@ describe('composeGame tool', () => {
 })
 
 describe('slice checkpoint tools', () => {
+  it('returns pending when the content hash differs from the recorded checkpoint', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'slice-status-')); roots.push(root)
+    const { engine } = await createSessionEngine({ sessionsRoot: root, gameId: 'probe', projectDir: 'project', engineVersion: 'test', lock: false })
+    await engine.journalStep('checkpoint:slice', { inputHash: 'input', result: { decision: 'approve', specHash: 'spec', compositionHash: 'composition', contentHash: 'old-content' } })
+    expect(sliceCheckpointStatus(engine, { specHash: 'spec', compositionHash: 'composition', contentHash: 'new-content' })).toBe('pending')
+    await engine.dispose()
+  })
+
   it('renders with missing gates, refuses approval, records rejection, and requires a report', async () => {
     const { host } = await setup()
     await host.executeTool('renderDesignBrief', { gameId: 'probe' })

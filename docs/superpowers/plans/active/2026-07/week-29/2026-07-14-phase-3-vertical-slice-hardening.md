@@ -246,7 +246,7 @@ git commit -m "fix(editor-mcp): hash complete game content and check provenance"
 - Matching composition requires completed `compose:game` with `composition.source.specHash === currentSpecHash`.
 - Passing gate requires matching stored `contentHash`; test additionally requires `scope === null`.
 
-- [ ] **Step 1: Write failing end-to-end regressions**
+- [x] **Step 1: Write failing end-to-end regressions**
 
 Add separate tests that prove:
 
@@ -269,13 +269,13 @@ expect(testGateStatus(await host.executeTool('renderSliceReport', { gameId: 'pro
 
 Add a unit-style assertion that identical spec/composition hashes with a changed content hash return `pending` from `sliceCheckpointStatus`.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `npx vitest run --project editor-mcp-server -t 'current composition|current gate provenance|content hash differs'`
 
 Expected: old composition and old/scoped gates are accepted; status ignores content.
 
-- [ ] **Step 3: Implement lineage and gate matching**
+- [x] **Step 3: Implement lineage and gate matching**
 
 Compute `specHash` before composition lookup. Reject unless design is approved.
 Search backward for a completed compose step whose composition source matches
@@ -296,13 +296,13 @@ if (kind === 'test' && result.scope !== null) return { kind, status: 'stale', st
 Require `passed === true` for spawned checks and `outcome === 'passed'` for evaluate.
 Include `contentHash` in `sliceCheckpointStatus` matching and in its compose response call.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `npx vitest run --project editor-mcp-server`
 
 Expected: all editor MCP tests pass, including both former checkpoint bypasses.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server
