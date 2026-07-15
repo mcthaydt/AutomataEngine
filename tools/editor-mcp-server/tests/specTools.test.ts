@@ -31,8 +31,17 @@ describe('design checkpoint lifecycle', () => {
     expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'looks right' })).toMatchObject({ ok: false })
     expect(await host.executeTool('renderDesignBrief', { gameId: 'probe' })).toMatchObject({ ok: true, content: { cached: false, artifact: 'artifacts/design-brief.md' } })
     expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'looks right' })).toMatchObject({ ok: true, content: { recorded: true, specVersion: 1 } })
+    expect(await host.executeTool('compileGameSpec', args())).toMatchObject({
+      ok: true,
+      content: { specVersion: 1, cached: true, checkpoint: 'approved' }
+    })
     const edited = minimalGameSpecDraft(); (edited.identity as Record<string, unknown>).title = 'Probe II'
     expect(JSON.stringify((await host.executeTool('compileGameSpec', { ...args(), draft: edited })).content)).toContain('spec-approved-immutable')
+    expect(await host.executeTool('compileGameSpec', args())).toMatchObject({ ok: true, content: { cached: true } })
+    expect(await host.executeTool('createGame', { name: 'probe' })).toMatchObject({
+      ok: true,
+      content: { session: { openFindings: [] } }
+    })
     expect(await host.executeTool('compileGameSpec', { ...args(), draft: edited, changeReason: 'retitle for tone' })).toMatchObject({ ok: true, content: { specVersion: 2, checkpoint: 'pending' } })
     expect(await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'v2 fine' })).toMatchObject({ ok: false })
     await host.dispose()

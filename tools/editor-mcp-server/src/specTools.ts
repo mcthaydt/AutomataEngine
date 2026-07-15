@@ -48,6 +48,21 @@ export function createSpecToolRunner(deps: SpecToolDeps) {
 
     const current = await readGameSpec(deps.repoRoot, args.gameId)
     const approved = current !== null && designCheckpointStatus(engine, hashJson(current)) === 'approved'
+
+    // Replaying the exact compile input is a read of the existing version, not
+    // an attempted mutation. Recognize it before enforcing approved immutability
+    // so resumable build sessions remain idempotent across human checkpoints.
+    if (current !== null && args.changeReason === undefined) {
+      const replay = nextSpecVersion({ ...args, current, currentApproved: false, draft: validated.draft })
+      if (replay.ok && hashJson(normalizeGameSpec(replay.spec)) === hashJson(current)) {
+        const prior = [...engine.session.steps].reverse().find((step) => step.kind === 'spec:compile' && step.status === 'completed')
+        if (prior) {
+          await engine.autoResolve('spec')
+          return ok({ specVersion: current.specVersion, cached: true, checkpoint: designCheckpointStatus(engine, hashJson(current)), stepId: prior.id })
+        }
+      }
+    }
+
     const stamped = nextSpecVersion({ current, currentApproved: approved, draft: validated.draft, prompt: args.prompt, translations: args.translations, changeReason: args.changeReason })
     if (!stamped.ok) {
       await engine.addFinding({ source: 'spec', severity: 'error', code: stamped.issue.code, message: stamped.issue.message, inputHash: hashJson(validated.draft) })
@@ -58,7 +73,10 @@ export function createSpecToolRunner(deps: SpecToolDeps) {
     const specHash = hashJson(spec)
     if (current !== null && hashJson(current) === specHash) {
       const prior = [...engine.session.steps].reverse().find((step) => step.kind === 'spec:compile' && step.status === 'completed')
-      if (prior) return ok({ specVersion: spec.specVersion, cached: true, checkpoint: designCheckpointStatus(engine, specHash), stepId: prior.id })
+      if (prior) {
+        await engine.autoResolve('spec')
+        return ok({ specVersion: spec.specVersion, cached: true, checkpoint: designCheckpointStatus(engine, specHash), stepId: prior.id })
+      }
     }
     const guarded = await engine.runSeededStep('spec:compile', { draft: normalizeGameSpec(validated.draft), prompt: args.prompt, translations: args.translations, changeReason: args.changeReason ?? null, currentVersion: current?.specVersion ?? null, currentApproved: approved }, async () => spec)
     await writeGameSpec(deps.repoRoot, args.gameId, guarded.output as GameSpec)
