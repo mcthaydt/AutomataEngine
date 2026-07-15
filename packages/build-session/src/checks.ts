@@ -48,9 +48,13 @@ export async function runCheck(engine: SessionEngine, spawner: CommandSpawner, r
       combined += `${result.stdout}\n${result.stderr}`; artifacts.push({ name: `${index}.log`, text: `$ ${command.cmd} ${command.args.join(' ')}\n${result.stdout}\n${result.stderr}` })
       if (result.timedOut || result.code !== 0) { exitCode = result.code; timedOut = result.timedOut; break }
     }
-    return { ok: true, output: { passed: !timedOut && exitCode === 0, exitCode, timedOut, tail: tail(combined) }, artifacts }
+    return {
+      ok: true,
+      output: { passed: !timedOut && exitCode === 0, exitCode, timedOut, tail: tail(combined), contentHash, scope: opts.scope ?? null },
+      artifacts
+    }
   })
-  const output = guarded.output as { passed: boolean; exitCode: number | null; timedOut: boolean; tail: string }; const findingIds: string[] = []
+  const output = guarded.output as { passed: boolean; exitCode: number | null; timedOut: boolean; tail: string; contentHash: string; scope: string | null }; const findingIds: string[] = []
   if (!guarded.cached) {
     if (output.passed) await engine.autoResolve(FINDING_SOURCE[kind])
     else { const finding = await engine.addFinding({ source: FINDING_SOURCE[kind], severity: 'error', code: output.timedOut ? `${kind}-timeout` : `${kind}-failed`, message: tail(output.tail), inputHash: contentHash }); findingIds.push(finding.id) }

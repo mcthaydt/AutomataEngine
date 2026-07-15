@@ -27,6 +27,15 @@ describe('check commands', () => {
   })
 })
 describe('runCheck', () => {
+  it('records check provenance in the durable step result', async () => {
+    const engine = await makeEngine()
+    await runCheck(engine, scriptedSpawner([OK]), '/repo', 'test', 'probe', 'hash-A', { scope: 'sim' })
+    expect(engine.session.steps.find((step) => step.kind === 'check:test')?.result).toMatchObject({
+      contentHash: 'hash-A',
+      scope: 'sim'
+    })
+  })
+
   it('passing check writes an artifact, resolves findings, and caches repeat work', async () => {
     const engine = await makeEngine(); await engine.addFinding({ source: 'build', severity: 'error', code: 'build-failed', message: 'old', inputHash: 'h0' })
     const report = await runCheck(engine, scriptedSpawner([OK]), '/repo', 'build', 'probe', 'hash-A')

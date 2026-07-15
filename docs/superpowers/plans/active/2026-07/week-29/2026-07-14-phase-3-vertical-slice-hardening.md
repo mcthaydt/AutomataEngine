@@ -179,7 +179,7 @@ git commit -m "fix(build-session): stale checks on known content changes"
 - Persisted evaluate result adds `contentHash: string`.
 - `contentSnapshot(gameId)` snapshots `games/<gameId>` as label `game`, inheriting `snapshotFiles` exclusions.
 
-- [ ] **Step 1: Write failing provenance and asset-snapshot tests**
+- [x] **Step 1: Write failing provenance and asset-snapshot tests**
 
 In `checks.test.ts`, assert the stored `check:test` step result contains the input content hash and scope.
 
@@ -188,13 +188,13 @@ In `sessionChecks.test.ts`, after `openProject`, modify only
 `outOfBandChanges: true` plus stale prior checks. Also assert changed-file keys use
 `game/public/assets/item.svg`.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `npx vitest run --project build-session --project editor-mcp-server -t 'records check provenance|asset-only changes'`
 
 Expected: check result lacks metadata and asset-only changes are invisible.
 
-- [ ] **Step 3: Implement complete snapshots and provenance**
+- [x] **Step 3: Implement complete snapshots and provenance**
 
 Change `contentSnapshot` to:
 
@@ -218,13 +218,13 @@ output: {
 
 In `handleEvaluate`, merge `contentHash: hash` into the stored object result while preserving the existing tool response fields.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `npx vitest run --project build-session --project editor-mcp-server`
 
 Expected: both projects pass with updated changed-file expectations.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/build-session tools/editor-mcp-server

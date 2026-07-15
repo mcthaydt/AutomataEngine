@@ -32,10 +32,10 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     engines.set(gameId, engine); return engine
   }
   const specTools = createSpecToolRunner({ repoRoot, ensureEngine })
-  const contentSnapshot = async (gameId: string, projectDir: string) => { const files = await snapshotFiles([{ label: 'src', dir: join(repoRoot, 'games', gameId, 'src') }, { label: 'project', dir: projectDir }]); return { files, hash: hashJson(files) } }
+  const contentSnapshot = async (gameId: string) => { const files = await snapshotFiles([{ label: 'game', dir: join(repoRoot, 'games', gameId) }]); return { files, hash: hashJson(files) } }
   const composeTools = createComposeToolRunner({
     repoRoot, ensureEngine,
-    snapshotContent: (gameId) => contentSnapshot(gameId, projectDirFor(gameId)),
+    snapshotContent: contentSnapshot,
     devPortFor: async (gameId) => {
       try {
         const pkg = JSON.parse(await readFile(join(repoRoot, 'games', gameId, 'package.json'), 'utf8')) as { automata?: { devPort?: number } }
@@ -46,7 +46,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
   const handleOpen = async (gameId: string): Promise<ToolResult> => {
     const available = await discoverGames(repoRoot); if (!available.includes(gameId)) return fail(`Unknown game "${gameId}". Available: ${available.join(', ')}`)
     const projectDir = projectDirFor(gameId); const engine = await ensureEngine(gameId); const headless = await openHeadless(projectDir); open = { gameId, projectDir, headless, engine }
-    const { files, hash } = await contentSnapshot(gameId, projectDir); let outOfBandChanges = false
+    const { files, hash } = await contentSnapshot(gameId); let outOfBandChanges = false
     if (engine.session.baseline === null) { engine.session.baseline = { contentHash: hash, files }; engine.session.formatVersion = headless.snapshot.manifest.formatVersion; await engine.noteContentHash(hash) } else outOfBandChanges = await engine.detectOutOfBand(hash)
     return ok({ opened: gameId, outOfBandChanges, session: engine.summary() })
   }
@@ -55,7 +55,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     if (clientStepId) { const existing = state.engine.findByClientStepId(kind, clientStepId); if (existing) return ok({ ...(existing.result as object), stepId: existing.id, deduped: true }) }
     const result = await state.headless.host.executeTool(name as never, rest); if (!result.ok) return result
     const content = result.content as { changed?: boolean }; if (!content.changed) return result
-    await writeProjectFiles(state.projectDir, state.headless.host.snapshot); const { hash } = await contentSnapshot(state.gameId, state.projectDir)
+    await writeProjectFiles(state.projectDir, state.headless.host.snapshot); const { hash } = await contentSnapshot(state.gameId)
     const step = await state.engine.journalStep(kind, { inputHash: hashJson({ name, args: rest }), result: content, ...(clientStepId ? { clientStepId } : {}) }); await state.engine.noteContentHash(hash)
     return ok({ ...content, stepId: step.id })
   }
@@ -67,16 +67,15 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     if (name === 'changedFiles') {
       if (!open) return fail('no project open — call openProject first')
       if (!open.engine.session.baseline) return fail('session has no baseline yet')
-      const current = await contentSnapshot(open.gameId, open.projectDir)
+      const current = await contentSnapshot(open.gameId)
       return ok(diffFiles(open.engine.session.baseline.files, current.files))
     }
     const requestedGameId = (args as { gameId?: string }).gameId
     const gameId = requestedGameId ?? open?.gameId
     if (!gameId) return fail('no project open and no gameId given')
-    const projectDir = open?.gameId === gameId ? open.projectDir : projectDirFor(gameId)
     const engine = await ensureEngine(gameId)
     const kind = name === 'runBuild' ? 'build' : name === 'runTests' ? 'test' : 'browser'
-    const { hash } = await contentSnapshot(gameId, projectDir)
+    const { hash } = await contentSnapshot(gameId)
     await engine.noteContentHash(hash)
     const outcome = await runCheck(engine, spawner, repoRoot, kind, gameId, hash, {
       ...(kind === 'build' ? { needsInstall: await needsInstall(gameId) } : {}),
@@ -85,12 +84,17 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     return 'refused' in outcome ? { ok: false, isError: true, content: { code: 'budget-exhausted', kind: outcome.kind } } : ok(outcome)
   }
   const handleEvaluate = async (state: OpenState, args: unknown): Promise<ToolResult> => {
-    const { hash } = await contentSnapshot(state.gameId, state.projectDir); const input = { args, contentHash: hash }
+    const { hash } = await contentSnapshot(state.gameId); const input = { args, contentHash: hash }
     await state.engine.noteContentHash(hash)
     if (!state.engine.findCompleted('check:evaluate', hashJson(input))) {
       if (!state.engine.spendBudget('evaluate').ok) { await state.engine.addFinding({ source: 'session', severity: 'error', code: 'budget-exhausted', message: 'Attempt budget for evaluate is exhausted.', inputHash: hash }); return { ok: false, isError: true, content: { code: 'budget-exhausted', kind: 'evaluate' } } }
     }
-    const guarded = await state.engine.runGuarded('check:evaluate', input, async () => { const result = await state.headless.host.executeTool('evaluate', args as never); return { ok: result.ok, output: result.content } })
+    const guarded = await state.engine.runGuarded('check:evaluate', input, async () => {
+      const result = await state.headless.host.executeTool('evaluate', args as never)
+      const content = result.content
+      const output = typeof content === 'object' && content !== null ? { ...content, contentHash: hash } : { value: content, contentHash: hash }
+      return { ok: result.ok, output }
+    })
     const output = guarded.output as { outcome?: string }
     if (!guarded.cached) { if (output?.outcome === 'passed') await state.engine.autoResolve('eval'); else await state.engine.addFinding({ source: 'eval', severity: 'error', code: 'evaluation-failed', message: JSON.stringify(output).slice(0, 4000), inputHash: hash }) }
     return ok({ ...(typeof output === 'object' && output !== null ? output : { value: output }), cached: guarded.cached })

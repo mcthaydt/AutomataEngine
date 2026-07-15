@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -38,9 +38,26 @@ describe('session check tools', () => {
     expect(await host.executeTool('runTests', { scope: 'sim' })).toMatchObject({ ok: true, content: { passed: false } })
     await writeFile(join(root, 'games/probe/src/sim.ts'), 'export const speed = 2')
     expect(await host.executeTool('runTests', {})).toMatchObject({ ok: true, content: { passed: true } })
-    expect(await host.executeTool('changedFiles', {})).toMatchObject({ ok: true, content: { changed: ['src/sim.ts'] } })
+    expect(await host.executeTool('changedFiles', {})).toMatchObject({ ok: true, content: { changed: ['game/src/sim.ts'] } })
     expect(await host.executeTool('evaluate', {})).toMatchObject({ ok: true, content: { outcome: 'passed', cached: false } })
     expect(await host.executeTool('evaluate', {})).toMatchObject({ ok: true, content: { cached: true } })
+    const session = JSON.parse(await readFile(join(root, '.automata/sessions/probe/session.json'), 'utf8')) as { steps: Array<{ kind: string; result: unknown }> }
+    expect(session.steps.find((step) => step.kind === 'check:evaluate')?.result).toMatchObject({ contentHash: expect.any(String) })
+    await host.dispose()
+  })
+
+  it('detects asset-only changes across project opens', async () => {
+    const root = await repo(); await mkdir(join(root, 'games/probe/public/assets'), { recursive: true }); await writeFile(join(root, 'games/probe/public/assets/item.svg'), '<svg />')
+    const spawner: CommandSpawner = { async run() { return OK } }
+    const host = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), spawner, openHeadless: async () => headless(), lock: false })
+    expect(await host.executeTool('openProject', { gameId: 'probe' })).toMatchObject({ ok: true, content: { outOfBandChanges: false } })
+    expect(await host.executeTool('runBuild', { gameId: 'probe' })).toMatchObject({ ok: true, content: { passed: true } })
+    await writeFile(join(root, 'games/probe/public/assets/item.svg'), '<svg><path /></svg>')
+    expect(await host.executeTool('openProject', { gameId: 'probe' })).toMatchObject({
+      ok: true,
+      content: { outOfBandChanges: true, session: { staleSteps: 1 } }
+    })
+    expect(await host.executeTool('changedFiles', {})).toMatchObject({ ok: true, content: { changed: ['game/public/assets/item.svg'] } })
     await host.dispose()
   })
 })
