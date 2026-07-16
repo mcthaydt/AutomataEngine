@@ -2,13 +2,14 @@ import { access, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ENGINE_VERSION } from '@automata/engine/data'
 import { createSessionEngine, diffFiles, hashJson, nodeSpawner, runCheck, snapshotFiles, type CommandSpawner, type SessionEngine } from '@automata/build-session'
-import { composeToolDefs, sessionToolDefs, specToolDefs, splitClientStepId, workspaceToolDefs, writeToolNames, type McpToolHost, type ToolResult } from '@automata/contracts'
+import { assetToolDefs, composeToolDefs, sessionToolDefs, specToolDefs, splitClientStepId, workspaceToolDefs, writeToolNames, type McpToolHost, type ToolResult } from '@automata/contracts'
 import { createNewGameWriter, nodeScaffoldFs, type ScaffoldFs } from '@automata/scaffold'
 import { createHeadlessHost, type HeadlessHost } from './headlessHost'
 import { discoverGames } from './projectCatalog'
 import { writeProjectFiles } from './projectWriter'
 import { createSpecToolRunner } from './specTools'
 import { createComposeToolRunner, type ComposeToolDeps } from './composeTools'
+import { createAssetToolRunner } from './assetTools'
 
 export interface SessionHostOptions {
   repoRoot: string; fs?: ScaffoldFs; spawner?: CommandSpawner; sessionsRoot?: string
@@ -44,6 +45,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
       } catch { return null }
     }
   })
+  const assetTools = createAssetToolRunner({ repoRoot, ensureEngine })
   const handleOpen = async (gameId: string): Promise<ToolResult> => {
     const available = await discoverGames(repoRoot); if (!available.includes(gameId)) return fail(`Unknown game "${gameId}". Available: ${available.join(', ')}`)
     const projectDir = projectDirFor(gameId); const engine = await ensureEngine(gameId); const headless = await openHeadless(projectDir); open = { gameId, projectDir, headless, engine }
@@ -101,7 +103,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     return ok({ ...(typeof output === 'object' && output !== null ? output : { value: output }), cached: guarded.cached })
   }
   const host: SessionMcpHost & { executeCheckTool(name: string, args: unknown): Promise<ToolResult> } = {
-    listTools: () => [...workspaceToolDefs(), ...sessionToolDefs(), ...specToolDefs(), ...composeToolDefs(), ...(open ? open.headless.host.listTools() : [])],
+    listTools: () => [...workspaceToolDefs(), ...sessionToolDefs(), ...specToolDefs(), ...composeToolDefs(), ...assetToolDefs(), ...(open ? open.headless.host.listTools() : [])],
     async executeTool(name, args) {
       try {
         if (name === 'listGames') return ok({ games: await discoverGames(repoRoot) })
@@ -112,6 +114,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
         if (name === 'runBuild' || name === 'runTests' || name === 'runBrowserEval' || name === 'changedFiles') return executeCheckTool(name, args)
         if (name === 'compileGameSpec' || name === 'getGameSpec' || name === 'renderDesignBrief' || name === 'recordDesignDecision') return specTools.execute(name, args)
         if (name === 'composeGame' || name === 'renderSliceReport' || name === 'recordSliceDecision') return composeTools.execute(name, args)
+        if (name === 'listAssets' || name === 'validateAssets') return assetTools.execute(name, args)
         if (!open) return fail('no project open — call openProject first')
         if (WRITE_TOOLS.has(name)) return handleWrite(open, name, args)
         if (name === 'evaluate') return handleEvaluate(open, args)
