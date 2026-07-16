@@ -212,21 +212,20 @@ plan: [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/
   - `games/first-light` slice game: composed, gated, checkpointed, checked
     in — `Shipped`.
 
-### Phase 4 — Capability packs · `Next`
+### Phase 4 — Capability packs · `In progress`
 
-Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
-(pack contract v2, per-pack cycle template, composition-matrix harness).
-Runs in parallel with Phase 5.
+Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md).
 
 - **Goal:** widen from the Phase 3 slice to the initial seven reusable gameplay
   packs; each pack is its own spec→plan cycle against the umbrella spec's
-  contract v2 and template. **Exit:** packs compose without game-specific
-  editor or MCP changes.
+  contract v2 and per-pack template. **Exit:** packs compose without
+  game-specific editor or MCP changes.
+- **Depends on:** Phase 3 complete. Runs in parallel with Phase 5.
 - **Cycles:**
   - Cycle 1 — contract v2 + interaction-inventory widening + composition-matrix
-    harness — `Next` (plan:
+    harness — `Shipped` (plan:
     [`2026-07-14-phase-4-cycle-1-pack-contract-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-4-cycle-1-pack-contract-v2.md)).
-  - Cycle 2 — branching dialogue & quests pack — `Planned`.
+  - Cycle 2 — branching dialogue & quests pack — `Next`.
   - Cycle 3 — schedules & relationships pack — `Planned`.
   - Cycle 4 — combat & enemy AI pack — `Planned`.
   - Cycle 5 — economy, shops & progression pack — `Planned`.

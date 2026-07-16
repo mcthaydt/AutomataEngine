@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript, zod v4 via `@automata/project` re-export (pack/game code) , vitest, npm workspaces.
 
+**Progress:** 100% (9/9 tasks complete)
+
 ## Global Constraints
 
 - Work from the repo root; never edit root `package.json` or `playwright.config.ts` per game (AGENTS.md registry convention).
@@ -32,7 +34,7 @@
 - Consumes: nothing.
 - Produces: `PackEventBus { emit(name: string, payload: unknown): void; on(name: string, handler: (payload: unknown) => void): () => void }` and `createPackEventBus(): PackEventBus` — Task 3 puts a bus on `PackBootContext`; Task 5's pack emits `'itemAcquired'` on it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/packEvents.test.ts
@@ -77,12 +79,12 @@ describe('createPackEventBus (pack contract v2)', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/packEvents.test.ts`
 Expected: FAIL — `Cannot find module '../src/packEvents'` (or equivalent resolve error).
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/packEvents.ts
@@ -124,12 +126,12 @@ Add to `packages/game-kit/src/index.ts` (alongside the existing `packs` export l
 export * from './packEvents'
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/packEvents.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-kit/src/packEvents.ts packages/game-kit/tests/packEvents.test.ts packages/game-kit/src/index.ts
@@ -149,7 +151,7 @@ git commit -m "feat(game-kit): typed pack event bus for contract v2"
 - Consumes: nothing.
 - Produces: `PackStateRegistry { register(sliceId, ownerPackId, initial): void; has(sliceId): boolean; get(sliceId): unknown; set(sliceId, writerPackId, value): void; snapshot(): Record<string, unknown> }` and `createPackStateRegistry(): PackStateRegistry` — Task 3 puts a registry on `PackBootContext`; Task 5's pack owns the `'inventory'` slice.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/game-kit/tests/packState.test.ts
@@ -192,12 +194,12 @@ describe('createPackStateRegistry (pack contract v2)', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/packState.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```ts
 // packages/game-kit/src/packState.ts
@@ -249,12 +251,12 @@ Add to `packages/game-kit/src/index.ts`:
 export * from './packState'
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/game-kit/tests/packState.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-kit/src/packState.ts packages/game-kit/tests/packState.test.ts packages/game-kit/src/index.ts
@@ -283,7 +285,7 @@ git commit -m "feat(game-kit): shared state-slice registry for contract v2"
   - `validatePackSet(packs: readonly GamePack[]): PackSetIssue[]`
   - `PackCompositionError extends Error { issues: PackSetIssue[] }` — thrown by `composePacks` when any error-severity issue exists
 
-- [ ] **Step 1: Update existing tests and add the new failing tests**
+- [x] **Step 1: Update existing tests and add the new failing tests**
 
 Rewrite `packages/game-kit/tests/packs.test.ts` to:
 
@@ -440,12 +442,12 @@ describe('composePacks (pack contract v2)', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/game-kit/tests/packs.test.ts`
 Expected: FAIL — `packCompatibility`, `validatePackSet`, `PackCompositionError`, `PackBootBase` not exported.
 
-- [ ] **Step 3: Rewrite `packages/game-kit/src/packs.ts`**
+- [x] **Step 3: Rewrite `packages/game-kit/src/packs.ts`**
 
 ```ts
 import type { RenderPort } from '@automata/engine'
@@ -622,12 +624,12 @@ export function composePacks(packs: readonly GamePack[], configs: Record<string,
 }
 ```
 
-- [ ] **Step 4: Run the game-kit suite**
+- [x] **Step 4: Run the game-kit suite**
 
 Run: `npx vitest run packages/game-kit`
 Expected: `packs.test.ts` PASSES. Other game-kit tests unaffected (`PackBootContext` construction only happens in packs and tests).
 
-- [ ] **Step 5: Minimal downstream migration — keep the whole workspace green in this commit**
+- [x] **Step 5: Minimal downstream migration — keep the whole workspace green in this commit**
 
 `compatibility` is now required, so `packages/pack-interaction-inventory` fails to typecheck until it declares one. Apply the *minimal* migration here (the real declaration and widening land in Task 5):
 
@@ -655,7 +657,7 @@ import { createPackEventBus, createPackStateRegistry, type PackBootContext } fro
 Run: `npx vitest run packages/pack-interaction-inventory packages/game-compose games/first-light && npm run ci`
 Expected: PASS — every checkpoint commit in this plan leaves `npm run ci` green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-kit/src/packs.ts packages/game-kit/tests/packs.test.ts packages/pack-interaction-inventory/src/pack.ts packages/pack-interaction-inventory/tests/pack.test.ts
@@ -674,7 +676,7 @@ git commit -m "feat(game-kit): pack contract v2 - compatibility validation, boot
 - Consumes: `validatePackSet` (Task 3).
 - Produces: `composeGame` returns `{ ok: false, issues }` with `code: issue.code` when the selected pack set has error-severity issues — the typed-finding path Phase 4 cycles 2–7 rely on (`ComposeFailure` → `engine.addFinding` already wired in `tools/editor-mcp-server/src/composeTools.ts`).
 
-- [ ] **Step 1: Write the invariant test** (add to `packages/game-compose/tests/compose.test.ts`)
+- [x] **Step 1: Write the invariant test** (add to `packages/game-compose/tests/compose.test.ts`)
 
 ```ts
 import { validatePackSet } from '@automata/game-kit'
@@ -687,7 +689,7 @@ it('the composed pack set passes contract-v2 validation with no issues', () => {
 
 This is a pin, not a behavior driver: after Task 3's minimal migration it passes immediately, and it holds the invariant the Step 2 wiring relies on. The negative path is covered by Task 3's unit tests — `composeGame` cannot select an invalid set until multiple packs exist.
 
-- [ ] **Step 2: Wire validation into `composeGame`**
+- [x] **Step 2: Wire validation into `composeGame`**
 
 Add `"@automata/game-kit": "*"` to `packages/game-compose/package.json` `dependencies` (audited: it is **not** there yet — the package currently depends only on contracts, engine, and the inventory pack). Then in `packages/game-compose/src/compose.ts`, after the `unsupported` check (line ~41) and before `const rng = createSeededRng(seed)`, insert:
 
@@ -704,12 +706,12 @@ And add the import at the top of the file:
 import { validatePackSet } from '@automata/game-kit'
 ```
 
-- [ ] **Step 3: Run to verify green**
+- [x] **Step 3: Run to verify green**
 
 Run: `npx vitest run packages/game-compose`
 Expected: PASS — including the new invariant test.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/game-compose/src/compose.ts packages/game-compose/tests/compose.test.ts packages/game-compose/package.json
@@ -736,7 +738,7 @@ git commit -m "feat(game-compose): validate the selected pack set at compose tim
   - The pack's `compatibility`: owns `['inventory']`, emits `['itemAcquired']`
   - `saveState`/`loadState` on the pack's runtime handle; `loadState` reconciles visuals (removes collected items' renderables, updates HUD)
 
-- [ ] **Step 1: Write the failing core tests** (add to `packages/pack-interaction-inventory/tests/core.test.ts`)
+- [x] **Step 1: Write the failing core tests** (add to `packages/pack-interaction-inventory/tests/core.test.ts`)
 
 ```ts
 import { deserializeInventory, serializeInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT } from '../src/core'
@@ -759,12 +761,12 @@ describe('inventory persistence (contract v2 slot)', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run packages/pack-interaction-inventory/tests/core.test.ts`
 Expected: FAIL — new exports missing.
 
-- [ ] **Step 3: Extend `core.ts`** (append; keep existing content unchanged)
+- [x] **Step 3: Extend `core.ts`** (append; keep existing content unchanged)
 
 ```ts
 /** Contract names: the slice this pack owns and the event it emits (v2). */
@@ -786,7 +788,7 @@ export function deserializeInventory(raw: unknown): InventoryState {
 
 Run: `npx vitest run packages/pack-interaction-inventory/tests/core.test.ts` — expected PASS.
 
-- [ ] **Step 4: Write the failing pack tests**
+- [x] **Step 4: Write the failing pack tests**
 
 `boot()` in `packages/pack-interaction-inventory/tests/pack.test.ts` was already migrated to the v2 context in Task 3 Step 5; extend its return value so the new tests can reach the bus and registry:
 
@@ -849,12 +851,12 @@ it('loadState rejects malformed saved state', () => {
 
 (The core-test round-trip in Step 1 uses arbitrary ids — only these pack tests must match `fixtureConfig()`'s real `cell-a`/`cell-b`.)
 
-- [ ] **Step 5: Run to verify the new tests fail**
+- [x] **Step 5: Run to verify the new tests fail**
 
 Run: `npx vitest run packages/pack-interaction-inventory/tests/pack.test.ts`
 Expected: FAIL — no `compatibility` on the pack, no slice writes, no events, no persistence.
 
-- [ ] **Step 6: Rewrite `pack.ts`**
+- [x] **Step 6: Rewrite `pack.ts`**
 
 ```ts
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
@@ -948,17 +950,17 @@ export {
 } from './core'
 ```
 
-- [ ] **Step 7: Run the package suite plus game-compose**
+- [x] **Step 7: Run the package suite plus game-compose**
 
 Run: `npx vitest run packages/pack-interaction-inventory packages/game-compose`
 Expected: PASS — Task 4's `validatePackSet` invariant test stays green with the real declaration (owned slices and emitted events raise no issues).
 
-- [ ] **Step 8: Run first-light's tests (regression: composition.json unchanged, runtime boots)**
+- [x] **Step 8: Run first-light's tests (regression: composition.json unchanged, runtime boots)**
 
 Run: `npx vitest run games/first-light`
 Expected: PASS. `git status` must show **no changes** under `games/first-light/` — the config schema and pack version did not change.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/pack-interaction-inventory packages/game-compose/tests/compose.test.ts
@@ -984,7 +986,7 @@ git commit -m "feat(pack-interaction-inventory): contract v2 - inventory slice, 
   - In the pack: `inventoryEditorContribution: PackEditorContribution` (prefabs `[]` — items are composition-owned; scene-authored items are a logged capability gap).
   - In pack-registry: `resolveEditorContributions(composition: CompositionManifest): Array<{ contribution: PackEditorContribution; config: unknown }>` — Task 7's editor loaders call this.
 
-- [ ] **Step 1: Write the failing contribution test**
+- [x] **Step 1: Write the failing contribution test**
 
 ```ts
 // packages/pack-interaction-inventory/tests/editorContribution.test.ts
@@ -1014,12 +1016,12 @@ describe('inventory editor contribution (thin preview)', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run packages/pack-interaction-inventory/tests/editorContribution.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement the seam**
+- [x] **Step 3: Implement the seam**
 
 ```ts
 // packages/game-kit/src/packEditor.ts
@@ -1111,7 +1113,7 @@ export function resolveEditorContributions(
 
 (Unknown pack ids yield no contribution rather than throwing: the editor must stay usable to *inspect* a game whose packs it cannot preview; `resolvePacks` still throws at runtime boot.)
 
-- [ ] **Step 4: Extend the registry test** (add to `packages/pack-registry/tests/registry.test.ts`)
+- [x] **Step 4: Extend the registry test** (add to `packages/pack-registry/tests/registry.test.ts`)
 
 ```ts
 import { resolveEditorContributions } from '../src/index'
@@ -1135,12 +1137,12 @@ it('resolves editor contributions for composed packs and skips unknown ids', () 
 
 (Note: `composition.packs` max length is 7 and this literal has 2 — fine. The `not-a-pack` entry never reaches `parseCompositionManifest`, so the literal needs no schema blessing.)
 
-- [ ] **Step 5: Run to verify green**
+- [x] **Step 5: Run to verify green**
 
 Run: `npx vitest run packages/pack-interaction-inventory packages/pack-registry packages/game-kit`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-kit/src/packEditor.ts packages/game-kit/src/index.ts \
@@ -1163,7 +1165,7 @@ git commit -m "feat(packs): thin editor-contribution seam (prefab templates + pr
 - Consumes: `resolveEditorContributions` (Task 6), `emptyComposition`/`parseCompositionManifest` from `@automata/contracts`, `EditorRegistrationLoader`'s `deps.readText` (paths relative to the game's `public/`).
 - Produces: pack-aware `loadEditorRegistration` in first-light and in the scaffold template; the static `editorRegistration` export stays pack-free (tests and plain scaffolds rely on it).
 
-- [ ] **Step 1: Rewrite `games/first-light/src/project/editor.ts`**
+- [x] **Step 1: Rewrite `games/first-light/src/project/editor.ts`**
 
 ```ts
 import type { EditorProjectRegistration, EditorRegistrationLoader, ProjectPlayHandle } from '@automata/editor'
@@ -1249,12 +1251,12 @@ export const loadEditorRegistration: EditorRegistrationLoader = async (deps) => 
 
 Check first that `@automata/pack-registry` and `@automata/contracts` are in `games/first-light/package.json` dependencies (`grep -E 'pack-registry|contracts' games/first-light/package.json`) — `main.ts` and `project/index.ts` already import them, so they should be; add if missing.
 
-- [ ] **Step 2: Run first-light tests**
+- [x] **Step 2: Run first-light tests**
 
 Run: `npx vitest run games/first-light`
 Expected: PASS — existing editor-registration tests target the static `editorRegistration`, which is unchanged.
 
-- [ ] **Step 3: Apply the identical change to the scaffold template**
+- [x] **Step 3: Apply the identical change to the scaffold template**
 
 In `tools/scaffold/src/templates/projectFiles.ts`, `editorTs()` (lines ~245–283): replace the trailing
 
@@ -1267,12 +1269,12 @@ with the same composition-aware loader as Step 1 (adjusted: inside the template 
 
 Also check the scaffold's generated `package.json` template (in `tools/scaffold/src/templates/configFiles.ts`) lists `@automata/pack-registry` and `@automata/contracts` as dependencies — `main.ts` already imports pack-registry, so it will; add `@automata/contracts` if absent.
 
-- [ ] **Step 4: Verify the scaffold end-to-end**
+- [x] **Step 4: Verify the scaffold end-to-end**
 
 Run: `npm run verify:new-game`
 Expected: PASS — a fresh scaffold (no composition.json → `emptyComposition` → zero contributions → base registration) builds, tests, and registers cleanly.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add games/first-light/src/project/editor.ts tools/scaffold/src/templates/projectFiles.ts tools/scaffold/src/templates/configFiles.ts
@@ -1292,7 +1294,7 @@ git commit -m "feat(editor): composition-aware pack prefabs + preview markers in
 - Consumes: `STANDARD_PACKS`, `EVAL_HOOK_BUILDERS` path via `resolveEvalHooks`, `composePacks`, `validatePackSet`, `PackCompositionError` (Task 3), `createGameHost`/`createNullRenderer`.
 - Produces: `PACK_FIXTURES: Record<string, () => unknown>` — a deterministic fixture config per standard pack. **Every Phase 4 pack cycle adds its pack to `STANDARD_PACKS`, `EVAL_HOOK_BUILDERS`, `EDITOR_CONTRIBUTIONS`, and `PACK_FIXTURES`; the matrix picks it up automatically.**
 
-- [ ] **Step 1: Add `PACK_FIXTURES` to `packages/pack-registry/src/index.ts`**
+- [x] **Step 1: Add `PACK_FIXTURES` to `packages/pack-registry/src/index.ts`**
 
 ```ts
 /**
@@ -1312,7 +1314,7 @@ export const PACK_FIXTURES: Record<string, () => unknown> = {
 }
 ```
 
-- [ ] **Step 2: Write the matrix test**
+- [x] **Step 2: Write the matrix test**
 
 ```ts
 // packages/pack-registry/tests/compositionMatrix.test.ts
@@ -1416,16 +1418,16 @@ describe('composition matrix (standard packs)', () => {
 })
 ```
 
-- [ ] **Step 3: Add the missing dev dependency**
+- [x] **Step 3: Add the missing dev dependency**
 
 Environment (audited): `packages/pack-registry/vitest.config.ts` already sets `environment: 'happy-dom'`, so `document` is available — no config change needed. Dependency (audited): `packages/pack-registry/package.json` depends only on `@automata/contracts`, `@automata/game-kit`, and the inventory pack — add a `devDependencies` block with `"@automata/engine": "*"` for the test's `createNullRenderer` import.
 
-- [ ] **Step 4: Run to verify green**
+- [x] **Step 4: Run to verify green**
 
 Run: `npx vitest run packages/pack-registry`
 Expected: PASS — fixture coverage + the one single ("interaction-inventory") exercised; pair/conflict tests pass vacuously (empty loops) until pack cycle 2 lands.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-registry
@@ -1442,17 +1444,17 @@ git commit -m "test(pack-registry): composition-matrix harness over standard pac
 
 **Interfaces:** none — verification and documentation.
 
-- [ ] **Step 1: Full CI**
+- [x] **Step 1: Full CI**
 
 Run: `npm run ci`
 Expected: PASS (build, lint, typecheck, all workspaces' tests).
 
-- [ ] **Step 2: Compose parity + scaffold acceptance**
+- [x] **Step 2: Compose parity + scaffold acceptance**
 
 Run: `npx vitest run games/first-light/tests/project/composition.test.ts && npm run verify:new-game`
 Expected: PASS; `git status` shows no unexpected changes under `games/`.
 
-- [ ] **Step 3: Update ROADMAP.md**
+- [x] **Step 3: Update ROADMAP.md**
 
 In `docs/ROADMAP.md` §3, change the Phase 4 heading and body to:
 
@@ -1478,7 +1480,7 @@ Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/spe
   - Cycle 7 — save/load integration pack — `Planned`.
 ```
 
-- [ ] **Step 4: Update the decomposition design's Phase 4 sub-cycle index**
+- [x] **Step 4: Update the decomposition design's Phase 4 sub-cycle index**
 
 In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md` §5, change the Phase 4 block's first line to:
 
@@ -1490,7 +1492,7 @@ In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decom
 
 (lines 2–7 unchanged).
 
-- [ ] **Step 5: Mark this plan complete and commit**
+- [x] **Step 5: Mark this plan complete and commit**
 
 Every checkbox above should now be checked. Then:
 
