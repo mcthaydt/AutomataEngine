@@ -233,11 +233,9 @@ Runs in parallel with Phase 5.
   - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
   - Cycle 7 — save/load integration pack — `Planned`.
 
-### Phase 5 — Asset pipeline · `Next`
+### Phase 5 — Asset pipeline · `In progress`
 
-Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
-(asset manifest v2, provenance/determinism model, procedural-first AI-ready
-provider adapters). Runs in parallel with Phase 4.
+Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md).
 
 - **Goal:** a normalized, versioned asset manifest with provider adapters,
   provenance, validation, optimization, and stable independent replacement.
@@ -245,9 +243,9 @@ provider adapters). Runs in parallel with Phase 4.
   valid provenance and browser budgets.
 - **Cycles:**
   - Cycle 1 — manifest v2 + provenance model + migration + structural
-    validation + MCP surface — `Next` (plan:
+    validation + MCP surface — `Shipped` (plan:
     [`2026-07-14-phase-5-cycle-1-asset-manifest-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-5-cycle-1-asset-manifest-v2.md)).
-  - Cycle 2 — provider-adapter interface + first procedural adapters — `Planned`.
+  - Cycle 2 — provider-adapter interface + first procedural adapters — `Next`.
   - Cycle 3 — asset validation (media) + optimization + independent
     regeneration — `Planned`.
 

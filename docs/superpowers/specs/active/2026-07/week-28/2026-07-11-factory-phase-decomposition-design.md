@@ -479,7 +479,7 @@ the current best decomposition, revised each cycle.
 
 **Phase 5 (runs in parallel with Phase 4):**
 
-1. Asset manifest + provenance model
+1. Asset manifest + provenance model — completed
 2. Provider-adapter interface + first adapters
 3. Asset validation + optimization + independent regeneration
 

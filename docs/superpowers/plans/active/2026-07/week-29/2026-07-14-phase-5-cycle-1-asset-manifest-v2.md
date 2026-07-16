@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript, zod v4 (direct import in contracts only), vitest, npm workspaces, MCP server tooling.
 
+**Progress:** 100% (26/26 steps complete)
+
 ## Global Constraints
 
 - Work from the repo root.
@@ -38,7 +40,7 @@
   - `assetManifestEntrySchema`, `assetManifestSchema` (`formatVersion: 2`), types `AssetManifest`, `AssetManifestEntry`, `AssetProvenance`, `AssetStatus`
   - `migrateAssetManifest(legacy): AssetManifest` and `parseAssetManifest(text: string): AssetManifest` (accepts v1 → migrates, v2 → validates, others → throws)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/assetManifest.test.ts
@@ -112,12 +114,12 @@ describe('asset manifest v2', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/contracts/tests/assetManifest.test.ts`
 Expected: FAIL — `migrateAssetManifest` / `parseAssetManifest` not exported; v2 schema absent.
 
-- [ ] **Step 3: Rewrite `packages/contracts/src/assetManifest.ts`**
+- [x] **Step 3: Rewrite `packages/contracts/src/assetManifest.ts`**
 
 ```ts
 import { z } from 'zod'
@@ -236,7 +238,7 @@ export function parseAssetManifest(text: string): AssetManifest {
 
 (`packages/contracts/src/index.ts` already has `export * from './assetManifest'` — no index change needed.)
 
-- [ ] **Step 4: Run tests; expect downstream compile failures to locate consumers**
+- [x] **Step 4: Run tests; expect downstream compile failures to locate consumers**
 
 Run: `npx vitest run packages/contracts/tests/assetManifest.test.ts`
 Expected: PASS.
@@ -257,7 +259,7 @@ Expected: `packages/game-compose/src/compose.ts` fails — it still builds a v1 
 - Consumes: `AssetManifest`, `AssetManifestEntry` v2 types (Task 1).
 - Produces: `composeGame` emits `formatVersion: 2` manifests whose stub entries carry exactly: `provider: 'stub-generator'`, `providerVersion: '1.0.0'`, `generator: 'svg-icon@1'`, `sourceParams: {}`, `determinism: { kind: 'seeded' }`, `license: { kind: 'generated', notes: 'Procedurally generated placeholder.' }`, `transformations: []`, `status: 'placeholder'`, `references: ['public/project/composition.json']`. Key order in the emitted JSON matches the checked-in file below (compose parity is byte-for-byte).
 
-- [ ] **Step 1: Update the compose test expectations**
+- [x] **Step 1: Update the compose test expectations**
 
 In `packages/game-compose/tests/compose.test.ts`, find every assertion on the asset manifest (search for `formatVersion: 1`, `validation`, `stub-generator`) and update to the v2 shape. Add:
 
@@ -276,12 +278,12 @@ it('emits a v2 asset manifest with seeded stub provenance', () => {
 
 (Adapt the successful-compose helper name to what the test file already uses — read it first.)
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run packages/game-compose/tests/compose.test.ts`
 Expected: FAIL (still emitting v1) plus the Task 1 type error.
 
-- [ ] **Step 3: Update the asset section of `compose.ts`**
+- [x] **Step 3: Update the asset section of `compose.ts`**
 
 Replace lines ~47–56 (`const assetManifest: AssetManifest = { formatVersion: 1, ... }` through the `assetManifest.assets.push({...})` block) with:
 
@@ -309,7 +311,7 @@ Replace lines ~47–56 (`const assetManifest: AssetManifest = { formatVersion: 1
   }
 ```
 
-- [ ] **Step 4: Rewrite `games/first-light/public/assets/assets.json`**
+- [x] **Step 4: Rewrite `games/first-light/public/assets/assets.json`**
 
 Exactly (2-space indent, trailing newline — matching `compose.ts`'s `json()` helper):
 
@@ -350,7 +352,7 @@ Exactly (2-space indent, trailing newline — matching `compose.ts`'s `json()` h
 }
 ```
 
-- [ ] **Step 5: Verify parity byte-for-byte, then commit Tasks 1+2 together**
+- [x] **Step 5: Verify parity byte-for-byte, then commit Tasks 1+2 together**
 
 Run: `npx vitest run packages/contracts packages/game-compose games/first-light/tests/project/composition.test.ts`
 Expected: ALL PASS — the parity test recomposes from seed `933489342` and compares each emitted file to the checked-in bytes; if `assets.json` differs, diff the two texts and fix key order in `compose.ts` (the emitted JSON follows object-literal insertion order).
@@ -379,7 +381,7 @@ git commit -m "feat(assets): manifest v2 with provenance, determinism mode, and 
   - `validateAssetManifest(manifest: AssetManifest, composition?: CompositionManifest | null): AssetIssue[]` — Task 4's `validateAssets` tool and cycle 3's full evaluator build on this.
   - `findingSourceSchema` gains `'asset'`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // packages/contracts/tests/assetValidation.test.ts
@@ -444,12 +446,12 @@ describe('validateAssetManifest (structural slice of the asset evaluator)', () =
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run packages/contracts/tests/assetValidation.test.ts`
 Expected: FAIL — module not found; `'asset'` not in the source enum.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/session.ts` line 9, add `'asset'`:
 
@@ -514,12 +516,12 @@ Add to `packages/contracts/src/index.ts`:
 export * from './assetValidation'
 ```
 
-- [ ] **Step 4: Run to verify green** (including no fallout from the widened enum)
+- [x] **Step 4: Run to verify green** (including no fallout from the widened enum)
 
 Run: `npx vitest run packages/contracts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts/src/assetValidation.ts packages/contracts/src/session.ts \
@@ -546,7 +548,7 @@ git commit -m "feat(contracts): structural asset validation + 'asset' finding so
     - `listAssets` → `{ formatVersion: 2, assets: [{ id, kind, path, status, provenance }] }` where `provenance` is the entry's **full** provenance object (the umbrella spec's cycle-1 scope is "list assets, show provenance, query status" — no field trimming), or `{ missing: true, assets: [] }` when no manifest exists.
     - `validateAssets` → `{ issues, errorCount, warningCount }`; persists error findings under source `'asset'`, calls `autoResolve('asset')` when clean.
 
-- [ ] **Step 1: Write the contracts tool defs** (schema-only, no test needed beyond compile — the pattern is `composeTools.ts` verbatim)
+- [x] **Step 1: Write the contracts tool defs** (schema-only, no test needed beyond compile — the pattern is `composeTools.ts` verbatim)
 
 ```ts
 // packages/contracts/src/assetTools.ts
@@ -586,7 +588,7 @@ Add to `packages/contracts/src/index.ts`:
 export * from './assetTools'
 ```
 
-- [ ] **Step 2: Write the failing server-runner test**
+- [x] **Step 2: Write the failing server-runner test**
 
 ```ts
 // tools/editor-mcp-server/tests/assetTools.test.ts
@@ -677,12 +679,12 @@ describe('asset MCP tools', () => {
 
 Adapt three details to the codebase while implementing (read the existing `composeTools`/`specTools` tests first): (1) `createSessionEngine`'s exact option names, (2) the finding record's resolved/open field name (`status` above — mirror whatever `engine.session.findings` really carries), (3) whether `engineVersion` accepts an arbitrary string in tests. The assertions' *behavioral* content is the contract.
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `npx vitest run tools/editor-mcp-server/tests/assetTools.test.ts`
 Expected: FAIL — `createAssetToolRunner` missing.
 
-- [ ] **Step 4: Implement the runner**
+- [x] **Step 4: Implement the runner**
 
 ```ts
 // tools/editor-mcp-server/src/assetTools.ts
@@ -757,7 +759,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
 }
 ```
 
-- [ ] **Step 5: Wire into `sessionHost.ts`**
+- [x] **Step 5: Wire into `sessionHost.ts`**
 
 Three edits in `tools/editor-mcp-server/src/sessionHost.ts`:
 
@@ -781,12 +783,12 @@ const assetTools = createAssetToolRunner({ repoRoot, ensureEngine })
         if (name === 'listAssets' || name === 'validateAssets') return assetTools.execute(name, args)
 ```
 
-- [ ] **Step 6: Run to verify green**
+- [x] **Step 6: Run to verify green**
 
 Run: `npx vitest run tools/editor-mcp-server`
 Expected: PASS — new tests plus all existing server tests (tool-listing snapshots may need the two new tools added; update those snapshots deliberately, not blindly).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/contracts/src/assetTools.ts packages/contracts/src/index.ts \
@@ -805,17 +807,17 @@ git commit -m "feat(editor-mcp): listAssets + validateAssets tools over manifest
 
 **Interfaces:** none — verification and documentation.
 
-- [ ] **Step 1: Full CI**
+- [x] **Step 1: Full CI**
 
 Run: `npm run ci`
 Expected: PASS.
 
-- [ ] **Step 2: Compose parity one last time**
+- [x] **Step 2: Compose parity one last time**
 
 Run: `npx vitest run games/first-light/tests/project/composition.test.ts`
 Expected: PASS.
 
-- [ ] **Step 3: Update ROADMAP.md**
+- [x] **Step 3: Update ROADMAP.md**
 
 In `docs/ROADMAP.md` §3, change the Phase 5 heading and body to:
 
@@ -838,7 +840,7 @@ Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs
     regeneration — `Planned`.
 ```
 
-- [ ] **Step 4: Update the decomposition design's Phase 5 sub-cycle index**
+- [x] **Step 4: Update the decomposition design's Phase 5 sub-cycle index**
 
 In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md` §5, change the Phase 5 block's first item to:
 
@@ -846,7 +848,7 @@ In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decom
 1. Asset manifest + provenance model — completed
 ```
 
-- [ ] **Step 5: Mark this plan complete and commit**
+- [x] **Step 5: Mark this plan complete and commit**
 
 Every checkbox above should now be checked. Then:
 
