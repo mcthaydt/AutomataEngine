@@ -1,7 +1,7 @@
 import type { CompositionManifest } from '@automata/contracts'
-import type { GamePack, PackEvalHook } from '@automata/game-kit'
+import type { GamePack, PackEditorContribution, PackEvalHook } from '@automata/game-kit'
 import {
-  createInventoryEvalHook, interactionInventoryPack, packConfigSchema
+  createInventoryEvalHook, interactionInventoryPack, inventoryEditorContribution, packConfigSchema
 } from '@automata/pack-interaction-inventory'
 
 /**
@@ -15,6 +15,10 @@ export const STANDARD_PACKS: Record<string, GamePack> = {
 
 const EVAL_HOOK_BUILDERS: Record<string, (config: unknown) => PackEvalHook> = {
   [interactionInventoryPack.id]: (config) => createInventoryEvalHook(packConfigSchema.parse(config))
+}
+
+const EDITOR_CONTRIBUTIONS: Record<string, PackEditorContribution> = {
+  [inventoryEditorContribution.packId]: inventoryEditorContribution
 }
 
 export function resolvePacks(ids: readonly string[]): GamePack[] {
@@ -32,4 +36,14 @@ export function resolveEvalHooks(composition: CompositionManifest): PackEvalHook
     if (build) hooks.push(build(entry.config))
   }
   return hooks
+}
+
+/** Editor contributions + configs for the packs a composition selects. */
+export function resolveEditorContributions(
+  composition: CompositionManifest
+): Array<{ contribution: PackEditorContribution; config: unknown }> {
+  return composition.packs.flatMap((entry) => {
+    const contribution = EDITOR_CONTRIBUTIONS[entry.id]
+    return contribution ? [{ contribution, config: entry.config }] : []
+  })
 }

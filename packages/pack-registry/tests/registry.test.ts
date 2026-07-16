@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CompositionManifest } from '@automata/contracts'
-import { STANDARD_PACKS, resolveEvalHooks, resolvePacks } from '../src'
+import { STANDARD_PACKS, resolveEditorContributions, resolveEvalHooks, resolvePacks } from '../src'
 
 const composition = (packs: CompositionManifest['packs']): CompositionManifest =>
   ({ formatVersion: 1, gameId: 'probe', source: null, packs, assets: [] })
@@ -33,5 +33,21 @@ describe('pack registry', () => {
 
   it('exposes exactly the packs that exist (one, in Phase 3)', () => {
     expect(Object.keys(STANDARD_PACKS)).toEqual(['interaction-inventory'])
+  })
+
+  it('resolves editor contributions for composed packs and skips unknown ids', () => {
+    const composition = {
+      formatVersion: 1 as const, gameId: 'first-light',
+      source: null,
+      packs: [
+        { id: 'interaction-inventory', version: '1.0.0', config: { interactRadius: 1.5, items: [{ id: 'item-1', position: { x: 0, z: 0 } }], iconPath: null } },
+        { id: 'not-a-pack', version: '1.0.0', config: {} }
+      ],
+      assets: []
+    }
+    const resolved = resolveEditorContributions(composition)
+    expect(resolved).toHaveLength(1)
+    expect(resolved[0]!.contribution.packId).toBe('interaction-inventory')
+    expect(resolved[0]!.config).toEqual(composition.packs[0]!.config)
   })
 })
