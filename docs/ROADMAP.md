@@ -212,20 +212,44 @@ plan: [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/
   - `games/first-light` slice game: composed, gated, checkpointed, checked
     in — `Shipped`.
 
-### Phase 4 — Capability packs · `Planned`
+### Phase 4 — Capability packs · `Next`
+
+Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
+(pack contract v2, per-pack cycle template, composition-matrix harness).
+Runs in parallel with Phase 5.
 
 - **Goal:** widen from the Phase 3 slice to the initial seven reusable gameplay
-  packs (interaction/inventory, dialogue/quests, schedules/relationships,
-  combat/AI, economy/shops/progression, hub-navigation + one vehicle, save/load);
-  each pack is its own spec→plan cycle. **Exit:** packs compose without
-  game-specific editor or MCP changes.
+  packs; each pack is its own spec→plan cycle against the umbrella spec's
+  contract v2 and template. **Exit:** packs compose without game-specific
+  editor or MCP changes.
+- **Cycles:**
+  - Cycle 1 — contract v2 + interaction-inventory widening + composition-matrix
+    harness — `Next` (plan:
+    [`2026-07-14-phase-4-cycle-1-pack-contract-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-4-cycle-1-pack-contract-v2.md)).
+  - Cycle 2 — branching dialogue & quests pack — `Planned`.
+  - Cycle 3 — schedules & relationships pack — `Planned`.
+  - Cycle 4 — combat & enemy AI pack — `Planned`.
+  - Cycle 5 — economy, shops & progression pack — `Planned`.
+  - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
+  - Cycle 7 — save/load integration pack — `Planned`.
 
-### Phase 5 — Asset pipeline · `Planned`
+### Phase 5 — Asset pipeline · `Next`
+
+Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
+(asset manifest v2, provenance/determinism model, procedural-first AI-ready
+provider adapters). Runs in parallel with Phase 4.
 
 - **Goal:** a normalized, versioned asset manifest with provider adapters,
   provenance, validation, optimization, and stable independent replacement.
   **Exit:** a failed asset regenerates independently and every release asset has
   valid provenance and browser budgets.
+- **Cycles:**
+  - Cycle 1 — manifest v2 + provenance model + migration + structural
+    validation + MCP surface — `Next` (plan:
+    [`2026-07-14-phase-5-cycle-1-asset-manifest-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-5-cycle-1-asset-manifest-v2.md)).
+  - Cycle 2 — provider-adapter interface + first procedural adapters — `Planned`.
+  - Cycle 3 — asset validation (media) + optimization + independent
+    regeneration — `Planned`.
 
 ### Phase 6 — Content compiler · `Planned`
 

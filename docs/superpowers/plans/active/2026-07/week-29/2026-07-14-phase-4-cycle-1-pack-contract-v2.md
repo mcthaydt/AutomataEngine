@@ -17,7 +17,7 @@
 - The `interaction-inventory` pack `version` stays `'1.0.0'` — the config schema does not change, and the version string is baked into the checked-in `composition.json`.
 - Run `npm run ci` before claiming done; run `npm run verify:new-game` after any scaffold-template change.
 - Mark each step off in this document as it completes; make every commit listed.
-- Parallel-safety with the Phase 5 cycle-1 plan: this plan must not touch `packages/contracts/src/assetManifest.ts` or `games/first-light/public/assets/assets.json`. The only shared file is `packages/game-compose/src/compose.ts` (Task 4 here touches its capability-selection region only).
+- Parallel-safety with the Phase 5 cycle-1 plan: this plan must not touch `packages/contracts/src/assetManifest.ts` or `games/first-light/public/assets/assets.json`. Shared files, all in distinct regions (merge, don't overwrite): `packages/game-compose/src/compose.ts` (this plan: capability-selection region only; Phase 5: asset section only), `packages/game-compose/tests/compose.test.ts` (this plan appends one test; Phase 5 edits asset assertions), and the closeout docs (`docs/ROADMAP.md` §3 — this plan owns the Phase 4 section; decomposition design §5 — this plan owns the Phase 4 block).
 
 ---
 
@@ -622,17 +622,43 @@ export function composePacks(packs: readonly GamePack[], configs: Record<string,
 }
 ```
 
-- [ ] **Step 4: Run the game-kit suite; fix type fallout inside game-kit only**
+- [ ] **Step 4: Run the game-kit suite**
 
 Run: `npx vitest run packages/game-kit`
 Expected: `packs.test.ts` PASSES. Other game-kit tests unaffected (`PackBootContext` construction only happens in packs and tests).
 
-Note: `packages/pack-interaction-inventory` will fail to typecheck (`compatibility` missing, `PackBootContext` in its test) — that is Task 5. Do not fix it here.
+- [ ] **Step 5: Minimal downstream migration — keep the whole workspace green in this commit**
 
-- [ ] **Step 5: Commit**
+`compatibility` is now required, so `packages/pack-interaction-inventory` fails to typecheck until it declares one. Apply the *minimal* migration here (the real declaration and widening land in Task 5):
+
+In `packages/pack-interaction-inventory/src/pack.ts`, extend the game-kit import and add an empty declaration:
+
+```ts
+import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
+import { packCompatibility } from '@automata/game-kit'
+```
+
+and inside the pack literal, directly after `version: '1.0.0',`:
+
+```ts
+  compatibility: packCompatibility(),
+```
+
+In `packages/pack-interaction-inventory/tests/pack.test.ts`, update `boot()`'s context for v2 (Task 5 extends this file further; this is just the compile fix):
+
+```ts
+import { createPackEventBus, createPackStateRegistry, type PackBootContext } from '@automata/game-kit'
+// … in boot():
+  const ctx: PackBootContext = { host: createGameHost(app), render: render.port, events: createPackEventBus(), state: createPackStateRegistry() }
+```
+
+Run: `npx vitest run packages/pack-interaction-inventory packages/game-compose games/first-light && npm run ci`
+Expected: PASS — every checkpoint commit in this plan leaves `npm run ci` green.
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add packages/game-kit/src/packs.ts packages/game-kit/tests/packs.test.ts
+git add packages/game-kit/src/packs.ts packages/game-kit/tests/packs.test.ts packages/pack-interaction-inventory/src/pack.ts packages/pack-interaction-inventory/tests/pack.test.ts
 git commit -m "feat(game-kit): pack contract v2 - compatibility validation, boot context, persistence"
 ```
 
@@ -648,7 +674,7 @@ git commit -m "feat(game-kit): pack contract v2 - compatibility validation, boot
 - Consumes: `validatePackSet` (Task 3).
 - Produces: `composeGame` returns `{ ok: false, issues }` with `code: issue.code` when the selected pack set has error-severity issues — the typed-finding path Phase 4 cycles 2–7 rely on (`ComposeFailure` → `engine.addFinding` already wired in `tools/editor-mcp-server/src/composeTools.ts`).
 
-- [ ] **Step 1: Write the failing test** (add to `packages/game-compose/tests/compose.test.ts`)
+- [ ] **Step 1: Write the invariant test** (add to `packages/game-compose/tests/compose.test.ts`)
 
 ```ts
 import { validatePackSet } from '@automata/game-kit'
@@ -659,16 +685,11 @@ it('the composed pack set passes contract-v2 validation with no issues', () => {
 })
 ```
 
-(This pins the invariant the wiring in Step 3 relies on; the negative path is covered by Task 3's unit tests — `composeGame` cannot select an invalid set until multiple packs exist.)
+This is a pin, not a behavior driver: after Task 3's minimal migration it passes immediately, and it holds the invariant the Step 2 wiring relies on. The negative path is covered by Task 3's unit tests — `composeGame` cannot select an invalid set until multiple packs exist.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Wire validation into `composeGame`**
 
-Run: `npx vitest run packages/game-compose/tests/compose.test.ts`
-Expected: FAIL — `interactionInventoryPack` has no `compatibility` yet (Task 5 not done) **if run before Task 5**. If executing tasks in order, Task 5 has not landed: implement Steps 3 here, then expect this test to pass only after Task 5. Mark this test `.todo` until Task 5 lands, or simply execute Task 4 Steps 1–3 and defer the green run to Task 5 Step 6 (preferred; note it in the commit).
-
-- [ ] **Step 3: Wire validation into `composeGame`**
-
-In `packages/game-compose/src/compose.ts`, after the `unsupported` check (line ~41) and before `const rng = createSeededRng(seed)`, insert:
+Add `"@automata/game-kit": "*"` to `packages/game-compose/package.json` `dependencies` (audited: it is **not** there yet — the package currently depends only on contracts, engine, and the inventory pack). Then in `packages/game-compose/src/compose.ts`, after the `unsupported` check (line ~41) and before `const rng = createSeededRng(seed)`, insert:
 
 ```ts
   const packIssues = validatePackSet([interactionInventoryPack]).filter((issue) => issue.severity === 'error')
@@ -677,15 +698,18 @@ In `packages/game-compose/src/compose.ts`, after the `unsupported` check (line ~
   }
 ```
 
-And extend the game-kit import at the top of the file:
+And add the import at the top of the file:
 
 ```ts
 import { validatePackSet } from '@automata/game-kit'
 ```
 
-(If `@automata/game-kit` is not yet in `packages/game-compose/package.json` dependencies, add `"@automata/game-kit": "*"` there — check first: `grep game-kit packages/game-compose/package.json`.)
+- [ ] **Step 3: Run to verify green**
 
-- [ ] **Step 4: Commit** (test goes green at Task 5 Step 6)
+Run: `npx vitest run packages/game-compose`
+Expected: PASS — including the new invariant test.
+
+- [ ] **Step 4: Commit**
 
 ```bash
 git add packages/game-compose/src/compose.ts packages/game-compose/tests/compose.test.ts packages/game-compose/package.json
@@ -764,11 +788,9 @@ Run: `npx vitest run packages/pack-interaction-inventory/tests/core.test.ts` —
 
 - [ ] **Step 4: Write the failing pack tests**
 
-In `packages/pack-interaction-inventory/tests/pack.test.ts`, update `boot()` for the v2 context and add tests:
+`boot()` in `packages/pack-interaction-inventory/tests/pack.test.ts` was already migrated to the v2 context in Task 3 Step 5; extend its return value so the new tests can reach the bus and registry:
 
 ```ts
-import { createPackEventBus, createPackStateRegistry, packCompatibility, type PackBootContext } from '@automata/game-kit'
-
 function boot(config = fixtureConfig()) {
   const app = document.createElement('div')
   document.body.append(app)
@@ -782,7 +804,7 @@ function boot(config = fixtureConfig()) {
 }
 ```
 
-New tests (existing tests keep passing unchanged):
+New tests (existing tests keep passing unchanged). **Fixture facts (audited):** `fixtureConfig()` items are `cell-a` at `{ x: -2, z: 3 }` and `cell-b` at `{ x: 4, z: -1 }`, with `iconPath: 'assets/item-icon.svg'` — the ids below are `cell-a`/`cell-b`, not `item-1`:
 
 ```ts
 it('declares contract-v2 compatibility: owns the inventory slice, emits itemAcquired', () => {
@@ -795,7 +817,7 @@ it('registers the inventory slice and writes it on pickup', () => {
   const { handle, state } = boot()
   expect(state.get('inventory')).toEqual({ collected: [] })
   handle.fixedUpdate!(1 / 60, { playerPosition: { x: -2, z: 3 } })
-  expect(state.get('inventory')).toEqual({ collected: ['item-1'] })
+  expect(state.get('inventory')).toEqual({ collected: ['cell-a'] })
 })
 
 it('emits itemAcquired with the item id on each pickup', () => {
@@ -803,7 +825,7 @@ it('emits itemAcquired with the item id on each pickup', () => {
   const seen: unknown[] = []
   events.on('itemAcquired', (payload) => seen.push(payload))
   handle.fixedUpdate!(1 / 60, { playerPosition: { x: -2, z: 3 } })
-  expect(seen).toEqual([{ packId: 'interaction-inventory', itemId: 'item-1' }])
+  expect(seen).toEqual([{ packId: 'interaction-inventory', itemId: 'cell-a' }])
 })
 
 it('saveState/loadState round-trips and reconciles renderables + HUD', () => {
@@ -814,7 +836,7 @@ it('saveState/loadState round-trips and reconciles renderables + HUD', () => {
   second.handle.loadState!(saved)
   expect(second.render.calls.filter((call) => call.op === 'remove')).toHaveLength(1)
   expect(second.app.querySelector('.inventory-hud')?.textContent).toContain('1/2')
-  expect(second.state.get('inventory')).toEqual({ collected: ['item-1'] })
+  expect(second.state.get('inventory')).toEqual({ collected: ['cell-a'] })
   second.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 4, z: -1 } })
   expect(second.handle.objectivesComplete!()).toBe(true)
 })
@@ -825,7 +847,7 @@ it('loadState rejects malformed saved state', () => {
 })
 ```
 
-Note: `fixtureConfig()` (in `packages/pack-interaction-inventory/tests/fixtures.ts`) places `item-1` at `{ x: -2, z: 3 }` and `item-2` at `{ x: 4, z: -1 }` — verify with `cat packages/pack-interaction-inventory/tests/fixtures.ts` and adjust the positions in these tests to match if they differ.
+(The core-test round-trip in Step 1 uses arbitrary ids — only these pack tests must match `fixtureConfig()`'s real `cell-a`/`cell-b`.)
 
 - [ ] **Step 5: Run to verify the new tests fail**
 
@@ -926,10 +948,10 @@ export {
 } from './core'
 ```
 
-- [ ] **Step 7: Run the package suite and the deferred Task 4 test**
+- [ ] **Step 7: Run the package suite plus game-compose**
 
 Run: `npx vitest run packages/pack-interaction-inventory packages/game-compose`
-Expected: PASS — including Task 4's `validatePackSet` test.
+Expected: PASS — Task 4's `validatePackSet` invariant test stays green with the real declaration (owned slices and emitted events raise no issues).
 
 - [ ] **Step 8: Run first-light's tests (regression: composition.json unchanged, runtime boots)**
 
@@ -1394,9 +1416,9 @@ describe('composition matrix (standard packs)', () => {
 })
 ```
 
-- [ ] **Step 3: Check the test environment**
+- [ ] **Step 3: Add the missing dev dependency**
 
-The matrix boots against `document` — pack-registry's tests must run in the same DOM environment as `packages/pack-interaction-inventory`. Compare configs: `cat packages/pack-interaction-inventory/vitest.config.ts packages/pack-registry/vitest.config.ts 2>/dev/null` (or the root vitest config's `environment` setting). Mirror whatever gives `pack.test.ts` its `document` (e.g. `environment: 'happy-dom'`) into pack-registry's test config if it is not already repo-global. If `@automata/engine` is missing from `packages/pack-registry/package.json`, add it to `devDependencies` as `"@automata/engine": "*"`.
+Environment (audited): `packages/pack-registry/vitest.config.ts` already sets `environment: 'happy-dom'`, so `document` is available — no config change needed. Dependency (audited): `packages/pack-registry/package.json` depends only on `@automata/contracts`, `@automata/game-kit`, and the inventory pack — add a `devDependencies` block with `"@automata/engine": "*"` for the test's `createNullRenderer` import.
 
 - [ ] **Step 4: Run to verify green**
 

@@ -17,7 +17,7 @@
 - Manifest entry counts / string bounds mirror the v1 stub's style: keep `.max()` bounds on every string and array.
 - Run `npm run ci` before claiming done.
 - Mark each step off in this document as it completes; make every commit listed.
-- Parallel-safety with the Phase 4 cycle-1 plan: this plan owns `packages/contracts/src/assetManifest.ts`, `games/first-light/public/assets/assets.json`, and the **asset section** of `packages/game-compose/src/compose.ts` (lines ~44–57). It must not touch `packages/game-kit`, `packages/pack-*`, or the capability-selection region of `compose.ts`.
+- Parallel-safety with the Phase 4 cycle-1 plan: this plan owns `packages/contracts/src/assetManifest.ts`, `games/first-light/public/assets/assets.json`, and the **asset section** of `packages/game-compose/src/compose.ts` (lines ~44–57). It must not touch `packages/game-kit`, `packages/pack-*`, or the capability-selection region of `compose.ts`. Other shared files, all in distinct regions (merge, don't overwrite): `packages/game-compose/tests/compose.test.ts` (this plan edits asset assertions; Phase 4 appends one pack-set test) and the closeout docs (`docs/ROADMAP.md` §3 — this plan owns the Phase 5 section; decomposition design §5 — this plan owns the Phase 5 block).
 
 ---
 
@@ -543,7 +543,7 @@ git commit -m "feat(contracts): structural asset validation + 'asset' finding so
 - Produces:
   - `AssetToolName = 'listAssets' | 'validateAssets'`; `assetToolArgSchemas` (both `z.strictObject({ gameId: gameSlugSchema })`); `assetToolDefs(): ToolDef[]`; `parseAssetToolArgs(name, args)` — mirroring `composeTools.ts` in contracts exactly.
   - Server runner `createAssetToolRunner(deps: { repoRoot: string; ensureEngine(gameId: string): Promise<SessionEngine> })` with `execute(name, raw): Promise<ToolResult>`:
-    - `listAssets` → `{ formatVersion: 2, assets: [{ id, kind, path, status, provider, determinism }] }`, or `{ missing: true, assets: [] }` when no manifest exists.
+    - `listAssets` → `{ formatVersion: 2, assets: [{ id, kind, path, status, provenance }] }` where `provenance` is the entry's **full** provenance object (the umbrella spec's cycle-1 scope is "list assets, show provenance, query status" — no field trimming), or `{ missing: true, assets: [] }` when no manifest exists.
     - `validateAssets` → `{ issues, errorCount, warningCount }`; persists error findings under source `'asset'`, calls `autoResolve('asset')` when clean.
 
 - [ ] **Step 1: Write the contracts tool defs** (schema-only, no test needed beyond compile — the pattern is `composeTools.ts` verbatim)
@@ -563,7 +563,7 @@ export const assetToolArgSchemas = {
 } as const satisfies Record<AssetToolName, z.ZodType>
 
 const DESCRIPTIONS: Record<AssetToolName, string> = {
-  listAssets: 'List the asset manifest: id, kind, path, status, provider, and determinism mode per asset.',
+  listAssets: 'List the asset manifest: id, kind, path, status, and full provenance per asset.',
   validateAssets: 'Run structural asset validation (ids, paths, references, status rules) and persist findings.'
 }
 
@@ -634,7 +634,7 @@ async function setup(manifest: unknown | null) {
 }
 
 describe('asset MCP tools', () => {
-  it('listAssets summarizes the manifest', async () => {
+  it('listAssets returns each asset with its full provenance', async () => {
     const { runner } = await setup(V2_MANIFEST)
     const result = await runner.execute('listAssets', { gameId: 'demo-game' })
     expect(result.ok).toBe(true)
@@ -642,7 +642,7 @@ describe('asset MCP tools', () => {
       formatVersion: 2,
       assets: [{
         id: 'item-icon', kind: 'ui', path: 'assets/item-icon.svg',
-        status: 'placeholder', provider: 'stub-generator', determinism: 'seeded'
+        status: 'placeholder', provenance: V2_MANIFEST.assets[0]!.provenance
       }]
     })
   })
@@ -730,8 +730,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           formatVersion: manifest.formatVersion,
           assets: manifest.assets.map((entry) => ({
             id: entry.id, kind: entry.requirement.kind, path: entry.path,
-            status: entry.status, provider: entry.provenance.provider,
-            determinism: entry.provenance.determinism.kind
+            status: entry.status, provenance: entry.provenance
           }))
         })
       }
