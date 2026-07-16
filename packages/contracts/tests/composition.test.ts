@@ -39,24 +39,27 @@ describe('composition manifest', () => {
   })
 })
 
-describe('asset manifest stub', () => {
+describe('asset manifest v2', () => {
   const entry = {
     id: 'item-icon',
     requirement: { id: 'item-icon', kind: 'ui', description: 'Light-cell icon for the inventory HUD' },
     path: 'assets/item-icon.svg',
-    provenance: { provider: 'stub-generator', generator: 'svg-icon@1', specVersion: 1, seed: 7 },
-    validation: { status: 'placeholder' }
+    provenance: {
+      provider: 'stub-generator', providerVersion: '1.0.0', generator: 'svg-icon@1', sourceParams: {},
+      specVersion: 1, seed: 7, determinism: { kind: 'seeded' }, license: { kind: 'generated', notes: '' }
+    },
+    transformations: [],
+    status: 'placeholder',
+    references: ['public/project/composition.json']
   }
 
   it('accepts a placeholder entry with provenance', () => {
-    expect(assetManifestSchema.safeParse({ formatVersion: 1, assets: [entry] }).success).toBe(true)
+    expect(assetManifestSchema.safeParse({ formatVersion: 2, assets: [entry] }).success).toBe(true)
   })
 
-  it('rejects unknown providers and unknown validation states', () => {
-    const badProvider = { ...entry, provenance: { ...entry.provenance, provider: 'midjourney' } }
-    expect(assetManifestSchema.safeParse({ formatVersion: 1, assets: [badProvider] }).success).toBe(false)
-    const badStatus = { ...entry, validation: { status: 'shipped' } }
-    expect(assetManifestSchema.safeParse({ formatVersion: 1, assets: [badStatus] }).success).toBe(false)
+  it('rejects unknown statuses and unknown entry keys', () => {
+    expect(assetManifestSchema.safeParse({ formatVersion: 2, assets: [{ ...entry, status: 'shipped' }] }).success).toBe(false)
+    expect(assetManifestSchema.safeParse({ formatVersion: 2, assets: [{ ...entry, extra: true }] }).success).toBe(false)
   })
 })
 

@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "assets": [
     {
       "id": "item-icon",
@@ -11,13 +11,24 @@
       "path": "assets/item-icon.svg",
       "provenance": {
         "provider": "stub-generator",
+        "providerVersion": "1.0.0",
         "generator": "svg-icon@1",
+        "sourceParams": {},
+        "seed": 933489342,
         "specVersion": 1,
-        "seed": 933489342
+        "determinism": {
+          "kind": "seeded"
+        },
+        "license": {
+          "kind": "generated",
+          "notes": "Procedurally generated placeholder."
+        }
       },
-      "validation": {
-        "status": "placeholder"
-      }
+      "transformations": [],
+      "status": "placeholder",
+      "references": [
+        "public/project/composition.json"
+      ]
     }
   ]
 }

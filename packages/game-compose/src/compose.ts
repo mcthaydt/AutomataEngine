@@ -44,14 +44,25 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
   const goal = drawGoal(rng)
   const uiAssets = spec.assets.filter((asset) => asset.kind === 'ui')
   const assetFiles: ComposedFile[] = []
-  const assetManifest: AssetManifest = { formatVersion: 1, assets: [] }
+  const assetManifest: AssetManifest = { formatVersion: 2, assets: [] }
   for (const requirement of uiAssets) {
     const path = `assets/${requirement.id}.svg`
     assetFiles.push({ path: `public/${path}`, text: drawIconSvg(rng) })
     assetManifest.assets.push({
       id: requirement.id, requirement, path,
-      provenance: { provider: 'stub-generator', generator: 'svg-icon@1', specVersion: spec.specVersion, seed },
-      validation: { status: 'placeholder' }
+      provenance: {
+        provider: 'stub-generator',
+        providerVersion: '1.0.0',
+        generator: 'svg-icon@1',
+        sourceParams: {},
+        seed,
+        specVersion: spec.specVersion,
+        determinism: { kind: 'seeded' },
+        license: { kind: 'generated', notes: 'Procedurally generated placeholder.' }
+      },
+      transformations: [],
+      status: 'placeholder',
+      references: ['public/project/composition.json']
     })
   }
   const iconPath = assetManifest.assets[0]?.path ?? null

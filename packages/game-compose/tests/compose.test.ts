@@ -36,8 +36,29 @@ describe('composeGame', () => {
     expect(config.items).toHaveLength(2)
     expect(config.iconPath).toBe('assets/item-icon.svg')
     expect(result.composition.assets).toEqual([{ id: 'item-icon', path: 'assets/item-icon.svg' }])
-    expect(result.assetManifest.assets[0]!.provenance).toEqual({ provider: 'stub-generator', generator: 'svg-icon@1', specVersion: 1, seed: 7 })
+    expect(result.assetManifest.assets[0]!.provenance).toMatchObject({
+      provider: 'stub-generator',
+      providerVersion: '1.0.0',
+      generator: 'svg-icon@1',
+      sourceParams: {},
+      specVersion: 1,
+      seed: 7,
+      determinism: { kind: 'seeded' },
+      license: { kind: 'generated' }
+    })
     expect(result.summary).toEqual({ packIds: ['interaction-inventory'], itemCount: 2, assetIds: ['item-icon'] })
+  })
+
+  it('emits a v2 asset manifest with seeded stub provenance', () => {
+    const result = composeGame({ spec: sliceSpec(), seed: 7, specHash: 'h1' })
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.assetManifest.formatVersion).toBe(2)
+    const entry = result.assetManifest.assets[0]!
+    expect(entry.status).toBe('placeholder')
+    expect(entry.provenance.determinism).toEqual({ kind: 'seeded' })
+    expect(entry.provenance.license.kind).toBe('generated')
+    expect(entry.transformations).toEqual([])
+    expect(entry.references).toEqual(['public/project/composition.json'])
   })
 
   it('emits the file set with stable serialization and a seeded in-bounds goal', () => {
