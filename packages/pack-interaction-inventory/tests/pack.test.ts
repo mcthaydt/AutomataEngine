@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer } from '@automata/engine'
-import { createGameHost, type PackBootContext } from '@automata/game-kit'
+import { createGameHost, createPackEventBus, createPackStateRegistry, type PackBootContext } from '@automata/game-kit'
 import { interactionInventoryPack } from '../src/pack'
 import { fixtureConfig } from './fixtures'
 
@@ -8,7 +8,12 @@ function boot(config = fixtureConfig()) {
   const app = document.createElement('div')
   document.body.append(app)
   const render = createNullRenderer()
-  const ctx: PackBootContext = { host: createGameHost(app), render: render.port }
+  const ctx: PackBootContext = {
+    host: createGameHost(app),
+    render: render.port,
+    events: createPackEventBus(),
+    state: createPackStateRegistry()
+  }
   const handle = interactionInventoryPack.register(ctx, config)
   if (!handle) throw new Error('pack must return a runtime handle')
   return { ctx, render, handle, app }

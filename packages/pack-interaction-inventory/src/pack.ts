@@ -1,4 +1,5 @@
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
+import { packCompatibility } from '@automata/game-kit'
 import {
   createInventoryState, inventoryComplete, packConfigSchema, stepInventory,
   type InventoryPackConfig, type InventoryState
@@ -11,6 +12,7 @@ const ITEM_COLOR = '#ffd23f'
 export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
   id: 'interaction-inventory',
   version: '1.0.0',
+  compatibility: packCompatibility(),
   configSchema: packConfigSchema,
   register(ctx, config): PackRuntimeHandle {
     let state: InventoryState = createInventoryState()
