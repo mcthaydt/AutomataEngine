@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { compositionManifestSchema, assetManifestSchema, gameSpecSchema, minimalGameSpecDraft, type GameSpec } from '@automata/contracts'
+import { validatePackSet } from '@automata/game-kit'
+import { interactionInventoryPack } from '@automata/pack-interaction-inventory'
 import { composeGame } from '../src'
 
 function sliceSpec(): GameSpec {
@@ -15,6 +17,10 @@ function sliceSpec(): GameSpec {
 }
 
 describe('composeGame', () => {
+  it('the composed pack set passes contract-v2 validation with no issues', () => {
+    expect(validatePackSet([interactionInventoryPack])).toEqual([])
+  })
+
   it('is byte-deterministic for the same (spec, seed) and differs across seeds', () => {
     const spec = sliceSpec()
     const a = composeGame({ spec, seed: 7, specHash: 'h1' })

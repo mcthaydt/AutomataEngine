@@ -1,5 +1,6 @@
 import { createSeededRng, type SeededRng } from '@automata/engine'
 import type { AssetManifest, CompositionManifest, GameSpec } from '@automata/contracts'
+import { validatePackSet } from '@automata/game-kit'
 import { composeInventorySection, interactionInventoryPack } from '@automata/pack-interaction-inventory'
 
 export interface ComposedFile { path: string; text: string }
@@ -38,6 +39,11 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
         message: `Phase 3 composes only "interaction-inventory"; spec selects "${entry.id}"`
       }))
     }
+  }
+
+  const packIssues = validatePackSet([interactionInventoryPack]).filter((issue) => issue.severity === 'error')
+  if (packIssues.length > 0) {
+    return { ok: false, issues: packIssues.map((issue) => ({ code: issue.code, message: issue.message })) }
   }
 
   const rng = createSeededRng(seed)
