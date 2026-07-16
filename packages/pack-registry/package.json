@@ -8,5 +8,8 @@
     "@automata/contracts": "*",
     "@automata/game-kit": "*",
     "@automata/pack-interaction-inventory": "*"
+  },
+  "devDependencies": {
+    "@automata/engine": "*"
   }
 }

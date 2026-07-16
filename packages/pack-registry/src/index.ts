@@ -13,6 +13,22 @@ export const STANDARD_PACKS: Record<string, GamePack> = {
   [interactionInventoryPack.id]: interactionInventoryPack as GamePack
 }
 
+/**
+ * Deterministic fixture config per pack, for the composition-matrix harness.
+ * Every pack registered in STANDARD_PACKS MUST have a fixture here; the
+ * matrix test enforces that.
+ */
+export const PACK_FIXTURES: Record<string, () => unknown> = {
+  [interactionInventoryPack.id]: () => ({
+    interactRadius: 1.5,
+    items: [
+      { id: 'item-1', position: { x: -2, z: 3 } },
+      { id: 'item-2', position: { x: 4, z: -1 } }
+    ],
+    iconPath: null
+  })
+}
+
 const EVAL_HOOK_BUILDERS: Record<string, (config: unknown) => PackEvalHook> = {
   [interactionInventoryPack.id]: (config) => createInventoryEvalHook(packConfigSchema.parse(config))
 }
