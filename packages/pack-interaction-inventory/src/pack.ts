@@ -1,21 +1,26 @@
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
 import { packCompatibility } from '@automata/game-kit'
 import {
-  createInventoryState, inventoryComplete, packConfigSchema, stepInventory,
+  createInventoryState, deserializeInventory, inventoryComplete, packConfigSchema,
+  serializeInventory, stepInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT,
   type InventoryPackConfig, type InventoryState
 } from './core'
 
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 }
 const ITEM_COLOR = '#ffd23f'
 
-/** The first real capability pack: item pickups + inventory HUD over interface v1. */
+/** The first real capability pack: item pickups + inventory HUD over interface v2. */
 export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
   id: 'interaction-inventory',
   version: '1.0.0',
-  compatibility: packCompatibility(),
+  compatibility: packCompatibility({
+    stateSlices: { owns: [INVENTORY_SLICE_ID], reads: [] },
+    events: { emits: [ITEM_ACQUIRED_EVENT], consumes: [] }
+  }),
   configSchema: packConfigSchema,
   register(ctx, config): PackRuntimeHandle {
     let state: InventoryState = createInventoryState()
+    ctx.state.register(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
     const entities = new Map(config.items.map((item) => [item.id, { id: `inventory-item-${item.id}` }]))
     for (const item of config.items) {
       const entity = entities.get(item.id)!
@@ -39,19 +44,31 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
     updateHud()
     ctx.host.overlays.append(hud)
 
+    /** Remove renderables for collected ids, publish the slice, refresh the HUD. */
+    const applyState = (next: InventoryState): void => {
+      for (const id of next.collected) {
+        if (state !== next && state.collected.includes(id)) continue
+        const entity = entities.get(id)
+        if (entity) { ctx.render.remove(entity); entities.delete(id) }
+      }
+      state = next
+      ctx.state.set(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
+      updateHud()
+    }
+
     return {
       fixedUpdate(_dt, world) {
         const next = stepInventory(state, world.playerPosition, config)
         if (next === state) return
-        for (const id of next.collected) {
-          if (state.collected.includes(id)) continue
-          const entity = entities.get(id)
-          if (entity) { ctx.render.remove(entity); entities.delete(id) }
+        const acquired = next.collected.filter((id) => !state.collected.includes(id))
+        applyState(next)
+        for (const itemId of acquired) {
+          ctx.events.emit(ITEM_ACQUIRED_EVENT, { packId: interactionInventoryPack.id, itemId })
         }
-        state = next
-        updateHud()
       },
       objectivesComplete: () => inventoryComplete(state, config),
+      saveState: () => serializeInventory(state),
+      loadState(raw) { applyState(deserializeInventory(raw)) },
       dispose() {
         for (const entity of entities.values()) ctx.render.remove(entity)
         entities.clear()

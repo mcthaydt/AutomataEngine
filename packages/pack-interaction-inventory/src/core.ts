@@ -54,3 +54,19 @@ export function nextItemTarget(state: InventoryState, player: { x: number; z: nu
   }
   return best ? { ...best.position } : null
 }
+
+/** Contract names: the slice this pack owns and the event it emits (v2). */
+export const INVENTORY_SLICE_ID = 'inventory'
+export const ITEM_ACQUIRED_EVENT = 'itemAcquired'
+
+const savedInventorySchema = z.strictObject({
+  collected: z.array(z.string().min(1).max(60)).max(8)
+})
+
+export function serializeInventory(state: InventoryState): unknown {
+  return { collected: [...state.collected] }
+}
+
+export function deserializeInventory(raw: unknown): InventoryState {
+  return savedInventorySchema.parse(raw)
+}

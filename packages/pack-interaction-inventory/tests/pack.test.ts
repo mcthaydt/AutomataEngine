@@ -8,15 +8,12 @@ function boot(config = fixtureConfig()) {
   const app = document.createElement('div')
   document.body.append(app)
   const render = createNullRenderer()
-  const ctx: PackBootContext = {
-    host: createGameHost(app),
-    render: render.port,
-    events: createPackEventBus(),
-    state: createPackStateRegistry()
-  }
+  const events = createPackEventBus()
+  const state = createPackStateRegistry()
+  const ctx: PackBootContext = { host: createGameHost(app), render: render.port, events, state }
   const handle = interactionInventoryPack.register(ctx, config)
   if (!handle) throw new Error('pack must return a runtime handle')
-  return { ctx, render, handle, app }
+  return { ctx, render, handle, app, events, state }
 }
 
 describe('interaction-inventory pack (browser adapter)', () => {
@@ -24,6 +21,45 @@ describe('interaction-inventory pack (browser adapter)', () => {
     expect(interactionInventoryPack.id).toBe('interaction-inventory')
     expect(interactionInventoryPack.version).toBe('1.0.0')
     expect(() => interactionInventoryPack.configSchema!.parse({})).toThrow()
+  })
+
+  it('declares contract-v2 compatibility: owns the inventory slice, emits itemAcquired', () => {
+    expect(interactionInventoryPack.compatibility.stateSlices.owns).toEqual(['inventory'])
+    expect(interactionInventoryPack.compatibility.events.emits).toEqual(['itemAcquired'])
+    expect(interactionInventoryPack.compatibility.requires).toEqual([])
+  })
+
+  it('registers the inventory slice and writes it on pickup', () => {
+    const { handle, state } = boot()
+    expect(state.get('inventory')).toEqual({ collected: [] })
+    handle.fixedUpdate!(1 / 60, { playerPosition: { x: -2, z: 3 } })
+    expect(state.get('inventory')).toEqual({ collected: ['cell-a'] })
+  })
+
+  it('emits itemAcquired with the item id on each pickup', () => {
+    const { handle, events } = boot()
+    const seen: unknown[] = []
+    events.on('itemAcquired', (payload) => seen.push(payload))
+    handle.fixedUpdate!(1 / 60, { playerPosition: { x: -2, z: 3 } })
+    expect(seen).toEqual([{ packId: 'interaction-inventory', itemId: 'cell-a' }])
+  })
+
+  it('saveState/loadState round-trips and reconciles renderables + HUD', () => {
+    const first = boot()
+    first.handle.fixedUpdate!(1 / 60, { playerPosition: { x: -2, z: 3 } })
+    const saved = first.handle.saveState!()
+    const second = boot()
+    second.handle.loadState!(saved)
+    expect(second.render.calls.filter((call) => call.op === 'remove')).toHaveLength(1)
+    expect(second.app.querySelector('.inventory-hud')?.textContent).toContain('1/2')
+    expect(second.state.get('inventory')).toEqual({ collected: ['cell-a'] })
+    second.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 4, z: -1 } })
+    expect(second.handle.objectivesComplete!()).toBe(true)
+  })
+
+  it('loadState rejects malformed saved state', () => {
+    const { handle } = boot()
+    expect(() => handle.loadState!({ collected: 42 })).toThrow()
   })
 
   it('adds one renderable per item and a HUD with icon + count', () => {

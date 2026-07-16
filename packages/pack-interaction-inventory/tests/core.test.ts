@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createInventoryState, inventoryComplete, nextItemTarget, packConfigSchema, stepInventory
+  createInventoryState, deserializeInventory, inventoryComplete, nextItemTarget, packConfigSchema,
+  serializeInventory, stepInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT
 } from '../src/core'
 import { createInventoryEvalHook } from '../src/evalHook'
 import { fixtureConfig } from './fixtures'
@@ -59,5 +60,22 @@ describe('inventory eval hook', () => {
     expect(hook.complete(state)).toBe(true)
     expect(hook.nextTarget(state, player)).toBeNull()
     expect(hook.packId).toBe('interaction-inventory')
+  })
+})
+
+describe('inventory persistence (contract v2 slot)', () => {
+  it('exports the slice and event contract names', () => {
+    expect(INVENTORY_SLICE_ID).toBe('inventory')
+    expect(ITEM_ACQUIRED_EVENT).toBe('itemAcquired')
+  })
+
+  it('round-trips state through serialize/deserialize', () => {
+    const state = { collected: ['item-1', 'item-2'] as readonly string[] }
+    expect(deserializeInventory(serializeInventory(state))).toEqual({ collected: ['item-1', 'item-2'] })
+  })
+
+  it('rejects malformed saved state', () => {
+    expect(() => deserializeInventory({ collected: 'item-1' })).toThrow()
+    expect(() => deserializeInventory(null)).toThrow()
   })
 })
