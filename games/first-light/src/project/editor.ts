@@ -50,7 +50,7 @@ export const loadEditorRegistration: EditorRegistrationLoader = async (deps) => 
     : parseCompositionManifest(text)
   const contributions = resolveEditorContributions(composition)
   if (contributions.length === 0) return editorRegistration
-  return {
+  const registration: EditorProjectRegistration<CompiledProject> = {
     ...editorRegistration,
     prefabs: [
       ...editorRegistration.prefabs,
@@ -76,4 +76,5 @@ export const loadEditorRegistration: EditorRegistrationLoader = async (deps) => 
       }
     }
   }
+  return registration
 }
