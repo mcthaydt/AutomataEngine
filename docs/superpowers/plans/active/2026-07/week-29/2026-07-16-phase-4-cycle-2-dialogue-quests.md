@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 25% (16/65 steps complete; Task 3 complete; Task 4 next).
+**Implementation progress:** 32% (21/65 steps complete; Task 4 complete; Task 5 next).
 
 ## Global Constraints
 
@@ -622,7 +622,7 @@ export function choose(dialogue: DialogueDef, session: DialogueSession, index: n
 
 `choose` indexes into `availableChoices` (the filtered list — what the player sees); out-of-range returns `{ session, effects: [] }` unchanged. `session: null` means the dialogue ended.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-dialogue-quests/tests/dialogueCore.test.ts`:
 
@@ -675,12 +675,12 @@ describe('dialogueCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-dialogue-quests -t dialogueCore`
 Expected: FAIL — cannot resolve `../src/dialogueCore`.
 
-- [ ] **Step 3: Implement `src/dialogueCore.ts`**
+- [x] **Step 3: Implement `src/dialogueCore.ts`**
 
 ```ts
 import type { DialogueChoice, DialogueCondition, DialogueDef, DialogueEffect, DialogueNode } from './config'
@@ -732,12 +732,12 @@ Add to `src/index.ts`:
 export * from './dialogueCore'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-dialogue-quests
