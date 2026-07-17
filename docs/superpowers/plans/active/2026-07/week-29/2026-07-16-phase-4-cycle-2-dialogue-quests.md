@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 32% (21/65 steps complete; Task 4 complete; Task 5 next).
+**Implementation progress:** 40% (26/65 steps complete; Task 5 complete; Task 6 next).
 
 ## Global Constraints
 
@@ -771,7 +771,7 @@ export interface PackEvalHook {
 
 All changes optional/additive — existing hooks compile unchanged.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `packages/pack-interaction-inventory/tests/evalHook.test.ts` add:
 
@@ -794,12 +794,12 @@ describe('inventory eval hook slices', () => {
 
 (If `tests/fixtures.ts` exports a differently named helper, use that exact name — read the file first; it exists from cycle 1.)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project pack-interaction-inventory -t 'eval hook slices'`
 Expected: FAIL — `publishSlices` is not a function.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/game-kit/src/packEval.ts` — replace the interface with:
 
@@ -830,12 +830,12 @@ export interface PackEvalHook {
     publishSlices: (state) => ({ inventory: { collected: [...(state as InventoryState).collected] } })
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-interaction-inventory --project game-kit`
 Expected: PASS (new test + all existing).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/game-kit packages/pack-interaction-inventory

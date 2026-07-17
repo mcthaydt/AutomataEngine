@@ -11,6 +11,7 @@ export function createInventoryEvalHook(config: InventoryPackConfig): PackEvalHo
     createState: () => createInventoryState(),
     nextTarget: (state, player) => nextItemTarget(state as InventoryState, player, config),
     step: (state, player) => stepInventory(state as InventoryState, player, config),
-    complete: (state) => inventoryComplete(state as InventoryState, config)
+    complete: (state) => inventoryComplete(state as InventoryState, config),
+    publishSlices: (state) => ({ inventory: { collected: [...(state as InventoryState).collected] } })
   }
 }
