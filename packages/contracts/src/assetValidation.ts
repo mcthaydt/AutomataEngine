@@ -17,6 +17,8 @@ export interface AssetIssue {
     | 'asset-reference-missing'
     | 'asset-schema-invalid'
     | 'asset-status-invalid'
+    | 'asset-media-invalid'
+    | 'asset-media-budget'
   assetId: string | null
   message: string
 }

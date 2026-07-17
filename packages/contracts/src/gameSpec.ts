@@ -88,7 +88,9 @@ export const capabilityConfigSchemas = {
   'dialogue-quests': z.strictObject({
     talkRadius: z.number().min(0.5).max(5).optional()
   }),
-  'schedules-relationships': z.strictObject({}),
+  'schedules-relationships': z.strictObject({
+    slotSeconds: z.number().min(5).max(120).optional()
+  }),
   'combat-ai': z.strictObject({}),
   'economy-progression': z.strictObject({}),
   'hub-navigation-vehicle': z.strictObject({}),

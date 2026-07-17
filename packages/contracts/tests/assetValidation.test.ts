@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseAssetManifest } from '../src/assetManifest'
 import { validateAssetManifest } from '../src/assetValidation'
 import { findingSourceSchema } from '../src/session'
+import type { AssetIssue } from '../src/assetValidation'
 
 const entry = (overrides: Record<string, unknown> = {}) => ({
   id: 'item-icon',
@@ -75,5 +76,15 @@ describe('validateAssetManifest (structural slice of the asset evaluator)', () =
 
   it("the findings surface accepts the 'asset' source", () => {
     expect(findingSourceSchema.parse('asset')).toBe('asset')
+  })
+
+  it('admits media issue codes in the AssetIssue union', () => {
+    const issue: AssetIssue = {
+      severity: 'error', code: 'asset-media-invalid', assetId: 'x', message: 'bad bytes'
+    }
+    const budget: AssetIssue = {
+      severity: 'error', code: 'asset-media-budget', assetId: 'x', message: 'too big'
+    }
+    expect([issue.code, budget.code]).toEqual(['asset-media-invalid', 'asset-media-budget'])
   })
 })

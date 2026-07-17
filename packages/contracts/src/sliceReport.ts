@@ -1,7 +1,7 @@
 import type { AcceptanceCriterion } from './gameSpec'
 
 /** Evidence assembled from the session ledger for the vertical-slice checkpoint. */
-export type SliceGateKind = 'build' | 'test' | 'browser' | 'evaluate'
+export type SliceGateKind = 'build' | 'test' | 'browser' | 'evaluate' | 'asset'
 export type SliceGateStatus = 'passed' | 'failed' | 'missing' | 'stale'
 
 export interface SliceGateResult {

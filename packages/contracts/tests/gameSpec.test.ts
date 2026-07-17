@@ -106,3 +106,20 @@ describe('dialogue-quests capability config', () => {
     expect(() => capabilityConfigSchemas['dialogue-quests'].parse({ npcCount: 3 })).toThrow()
   })
 })
+
+describe('schedules-relationships capability config', () => {
+  it('accepts an empty config unchanged (hash rule)', () => {
+    expect(capabilityConfigSchemas['schedules-relationships'].parse({})).toEqual({})
+  })
+
+  it('accepts slotSeconds within bounds', () => {
+    expect(capabilityConfigSchemas['schedules-relationships'].parse({ slotSeconds: 20 }))
+      .toEqual({ slotSeconds: 20 })
+  })
+
+  it('rejects slotSeconds out of bounds and unknown keys', () => {
+    expect(() => capabilityConfigSchemas['schedules-relationships'].parse({ slotSeconds: 2 })).toThrow()
+    expect(() => capabilityConfigSchemas['schedules-relationships'].parse({ slotSeconds: 500 })).toThrow()
+    expect(() => capabilityConfigSchemas['schedules-relationships'].parse({ walkerCount: 3 })).toThrow()
+  })
+})
