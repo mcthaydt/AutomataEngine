@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 87.5% (7/8 tasks complete)
+**Progress:** 100% (8/8 tasks complete)
 
 ## Global Constraints
 
@@ -1302,7 +1302,7 @@ git commit -m "feat(editor-mcp): generateAssets tool over the procedural provide
 **Files:**
 - Modify: `docs/ROADMAP.md` (Phase 5 cycle list)
 
-- [ ] **Step 1: Run the gates**
+- [x] **Step 1: Run the gates**
 
 ```bash
 npm run ci
@@ -1311,7 +1311,7 @@ npm run verify:new-game
 
 Expected: all green.
 
-- [ ] **Step 2: Prove phase disjointness**
+- [x] **Step 2: Prove phase disjointness**
 
 ```bash
 git log --stat main@{u}..HEAD -- packages/game-compose packages/game-kit games/first-light
@@ -1319,7 +1319,13 @@ git log --stat main@{u}..HEAD -- packages/game-compose packages/game-kit games/f
 
 Expected: empty output — this cycle touched none of the Phase 4 territory. (If the branch base differs, diff against the commit before Task 1 instead.) If anything shows up, stop and remove the change — it belongs to cycle 3 or Phase 4. (`packages/contracts` is deliberately absent from this check: both cycles edit `gameSpec.ts`, and that shared edit is coordinated in Global Constraints, not a violation.)
 
-- [ ] **Step 3: Update the roadmap and commit**
+Observed in the shared inline checkout: the upstream range contains the
+concurrent Phase 4 `1550039` game-kit commit. Auditing this cycle's seven
+commits directly (`be18aa6 7150d7b 6d3ac5d 8c2b548 aea77da e226577 0eaea0b`)
+against `packages/game-compose packages/game-kit games/first-light` produced
+empty output.
+
+- [x] **Step 3: Update the roadmap and commit**
 
 In `docs/ROADMAP.md` under Phase 5 Cycles, change:
 

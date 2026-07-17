@@ -244,9 +244,11 @@ Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs
   - Cycle 1 — manifest v2 + provenance model + migration + structural
     validation + MCP surface — `Shipped` (plan:
     [`2026-07-14-phase-5-cycle-1-asset-manifest-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-5-cycle-1-asset-manifest-v2.md)).
-  - Cycle 2 — provider-adapter interface + first procedural adapters — `In progress`.
+  - Cycle 2 — provider-adapter interface + first procedural adapters —
+    `Shipped` (2026-07-16, plan:
+    [`2026-07-16-phase-5-cycle-2-provider-adapters.md`](superpowers/plans/active/2026-07/week-29/2026-07-16-phase-5-cycle-2-provider-adapters.md)).
   - Cycle 3 — asset validation (media) + optimization + independent
-    regeneration — `Planned`.
+    regeneration — `Next`.
 
 ### Phase 6 — Content compiler · `Planned`
 
