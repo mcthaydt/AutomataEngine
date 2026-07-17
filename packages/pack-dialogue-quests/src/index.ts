@@ -1,4 +1,5 @@
 export * from './config'
+export * from './composeSection'
 export * from './dialogueCore'
 export * from './evalHook'
 export * from './questCore'

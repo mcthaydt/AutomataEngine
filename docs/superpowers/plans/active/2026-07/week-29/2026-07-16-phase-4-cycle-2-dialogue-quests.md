@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 48% (31/65 steps complete; Task 6 complete; Task 7 next).
+**Implementation progress:** 55% (36/65 steps complete; Task 7 complete; Task 8 next).
 
 ## Global Constraints
 
@@ -1020,7 +1020,7 @@ export function composeDialogueSection(input: DialogueComposeInput, rng: SeededR
 
 Guarantees Tasks 10–12 rely on: output parses under `packConfigSchema`; same input + seed ⇒ deep-equal output; in every generated node the progressing choice (accept / turn-in) precedes non-progressing ones; fetch quests reference only ids from `input.inventory.items`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-dialogue-quests/tests/composeSection.test.ts`:
 
@@ -1094,12 +1094,12 @@ describe('composeDialogueSection', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-dialogue-quests -t composeDialogueSection`
 Expected: FAIL — cannot resolve `../src/composeSection`.
 
-- [ ] **Step 3: Implement `src/composeSection.ts`**
+- [x] **Step 3: Implement `src/composeSection.ts`**
 
 ```ts
 import type { SeededRng } from '@automata/engine'
@@ -1211,12 +1211,12 @@ export function composeDialogueSection(input: DialogueComposeInput, rng: SeededR
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-dialogue-quests
