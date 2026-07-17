@@ -80,13 +80,14 @@ composition, exported from the package):
 - `talkRadius: number` (0.5–5)
 - `npcs: [{ id, name, position: {x, z}, dialogueId }]`
 - `dialogues: [{ id, start, nodes: [{ id, speaker, text, choices }] }]` —
-  a choice is `{ text, next: nodeId | null, condition?, effects? }`
-  (`next: null` ends the dialogue)
+  a choice is `{ text, next: nodeId | null, conditions?, effects? }`
+  (`next: null` ends the dialogue; `conditions` is an AND-list — a fetch
+  turn-in needs `questState` AND `hasItems` together)
 - `quests: [{ id, kind: 'main' | 'side', title, giverNpcId, objective }]` —
   objective is `{ kind: 'talk' }` or `{ kind: 'fetch', itemIds }`; the main
   chain is implicit in array order
 
-Conditions are a closed union: `{ kind: 'questState', questId, status }` |
+Each condition is a closed union: `{ kind: 'questState', questId, status }` |
 `{ kind: 'hasItems', itemIds }`. Effects: `{ kind: 'acceptQuest', questId }`
 | `{ kind: 'completeQuest', questId }`.
 
