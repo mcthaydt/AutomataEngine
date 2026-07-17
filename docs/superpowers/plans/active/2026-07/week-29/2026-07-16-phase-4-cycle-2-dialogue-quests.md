@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 55% (36/65 steps complete; Task 7 complete; Task 8 next).
+**Implementation progress:** 63% (41/65 steps complete; Task 8 complete; Task 9 next).
 
 ## Global Constraints
 
@@ -1238,7 +1238,7 @@ git commit -m "feat(pack-dialogue-quests): seeded composeSection with templated 
 
 Behavior detail: hysteresis — the overlay opens when the player is within `talkRadius` of the nearest non-cooldown NPC; it closes (emitting `dialogueEnded`) when the player moves beyond `1.5 × talkRadius` of the engaged NPC or picks a terminal choice; a terminal close puts that NPC on cooldown until the player leaves the 1.5× radius. Nearest NPC wins; ties break by NPC id order. Effects apply through `questCore`, write the `questLog` slice, and emit `questCompleted` per completed quest. The overlay re-renders only on engage, on a choice, and on `itemAcquired` — never per tick.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-dialogue-quests/tests/pack.test.ts` (mirror the structure of `packages/pack-interaction-inventory/tests/pack.test.ts` — read that file first and reuse its boot helper pattern):
 
@@ -1346,12 +1346,12 @@ describe('dialogue-quests pack (browser adapter)', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-dialogue-quests -t 'browser adapter'`
 Expected: FAIL — cannot resolve `../src/pack`.
 
-- [ ] **Step 3: Implement `src/pack.ts`**
+- [x] **Step 3: Implement `src/pack.ts`**
 
 ```ts
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
@@ -1522,12 +1522,12 @@ Add to `src/index.ts`:
 export * from './pack'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS. If the boot-helper details (host/render APIs) drift from the inventory pack's tests, match that file — it is the source of truth for the harness pattern.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-dialogue-quests
