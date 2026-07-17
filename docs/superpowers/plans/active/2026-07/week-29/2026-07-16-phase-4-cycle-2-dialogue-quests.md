@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 40% (26/65 steps complete; Task 5 complete; Task 6 next).
+**Implementation progress:** 48% (31/65 steps complete; Task 6 complete; Task 7 next).
 
 ## Global Constraints
 
@@ -855,7 +855,7 @@ git commit -m "feat(game-kit): additive eval-seam slice view; inventory hook pub
 - Consumes: cores + config from Tasks 2–4; `PackEvalHook`, `EvalSliceView` from `@automata/game-kit`.
 - Produces: `createDialogueQuestsEvalHook(config: DialogueQuestsPackConfig): PackEvalHook`. Behavior contract (Task 10's harness relies on it): `nextTarget` returns the giver NPC of the earliest incomplete quest whose next step is actionable now (accept, talk turn-in, or fetch turn-in with items held per the slices view) and **null when every remaining step is blocked** on missing items; `step` runs a full greedy conversation (always the first available choice) when the player is within `talkRadius` of an NPC.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-dialogue-quests/tests/evalHook.test.ts`:
 
@@ -899,12 +899,12 @@ describe('dialogue-quests eval hook', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-dialogue-quests -t 'eval hook'`
 Expected: FAIL — cannot resolve `../src/evalHook`.
 
-- [ ] **Step 3: Implement `src/evalHook.ts`**
+- [x] **Step 3: Implement `src/evalHook.ts`**
 
 ```ts
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
@@ -981,12 +981,12 @@ export function createDialogueQuestsEvalHook(config: DialogueQuestsPackConfig): 
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-dialogue-quests
