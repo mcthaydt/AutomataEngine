@@ -17,6 +17,8 @@ export interface ComposeToolDeps {
 
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
 const fail = (content: unknown): ToolResult => ({ ok: false, isError: true, content })
+/** Bump when composed-file semantics change so persisted seeded steps replay safely. */
+const COMPOSE_OUTPUT_VERSION = 2
 const GATES = [
   { kind: 'build' as const, step: 'check:build' },
   { kind: 'test' as const, step: 'check:test' },
@@ -107,7 +109,7 @@ export function createComposeToolRunner(deps: ComposeToolDeps) {
         const gameRoot = join(deps.repoRoot, 'games', gameId)
         let guarded: GuardedRun
         try {
-          guarded = await found.engine.runSeededStep('compose:game', { specHash }, async (_rng, seed) => {
+          guarded = await found.engine.runSeededStep('compose:game', { specHash, composeOutputVersion: COMPOSE_OUTPUT_VERSION }, async (_rng, seed) => {
             const result = await composeGame({ spec: found.spec, seed, specHash })
             if (!result.ok) throw new ComposeFailure(result)
             const output = { composition: result.composition, assetManifest: result.assetManifest, files: result.files, summary: result.summary }

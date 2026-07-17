@@ -13,6 +13,7 @@ export const MEDIA_BUDGETS = {
 } as const
 
 export interface WavInfo {
+  audioFormat: number
   sampleRate: number
   channels: number
   bitsPerSample: number
@@ -30,7 +31,7 @@ export function readWavInfo(bytes: Uint8Array): WavInfo {
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let offset = 12
-  let fmt: { sampleRate: number; channels: number; bitsPerSample: number } | null = null
+  let fmt: { audioFormat: number; sampleRate: number; channels: number; bitsPerSample: number } | null = null
   let data: { start: number; length: number } | null = null
   while (offset + 8 <= bytes.length) {
     const chunkId = ascii(bytes, offset, 4)
@@ -41,6 +42,7 @@ export function readWavInfo(bytes: Uint8Array): WavInfo {
     if (chunkId === 'fmt ') {
       if (chunkSize < 16) throw new Error('truncated fmt chunk')
       fmt = {
+        audioFormat: view.getUint16(body, true),
         channels: view.getUint16(body + 2, true),
         sampleRate: view.getUint32(body + 4, true),
         bitsPerSample: view.getUint16(body + 14, true)
@@ -66,6 +68,21 @@ const issueFor = (entry: AssetManifestEntry, code: AssetIssue['code'], message: 
 
 const SVG_COLOR_ATTR = /(?:fill|stroke)="([^"]+)"/g
 
+/** Minimal well-formedness check for the provider's element-only SVG subset. */
+function isWellFormedSvg(text: string): boolean {
+  const stack: string[] = []
+  for (const match of text.matchAll(/<\/?([A-Za-z][\w:.-]*)(?:\s[^<>]*)?\/?>/g)) {
+    const tag = match[0]!
+    const name = match[1]!
+    if (tag.startsWith('</')) {
+      if (stack.pop() !== name) return false
+    } else if (!tag.endsWith('/>')) {
+      stack.push(name)
+    }
+  }
+  return stack.length === 0
+}
+
 /**
  * Validate media bytes after structural manifest validation. The result is
  * deliberately pure: callers own persistence, status transitions, and gates.
@@ -85,7 +102,7 @@ export function validateAssetMedia(
       budget(`SVG "${entry.id}" is ${bytes.length} bytes (max ${MEDIA_BUDGETS.svgMaxBytes})`)
     }
     const text = new TextDecoder().decode(bytes)
-    if (!text.trimStart().startsWith('<svg') || !text.includes('</svg>')) {
+    if (!text.trimStart().startsWith('<svg') || !isWellFormedSvg(text)) {
       invalid(`SVG "${entry.id}" does not parse as an <svg> document`)
       return issues
     }
@@ -122,7 +139,7 @@ export function validateAssetMedia(
     invalid(`WAV "${entry.id}" invalid: ${error instanceof Error ? error.message : String(error)}`)
     return issues
   }
-  if (info.sampleRate !== 22_050 || info.channels !== 1 || info.bitsPerSample !== 16) {
+  if (info.audioFormat !== 1 || info.sampleRate !== 22_050 || info.channels !== 1 || info.bitsPerSample !== 16) {
     invalid(`WAV "${entry.id}" must be 22050 Hz mono 16-bit (got ${info.sampleRate} Hz, ${info.channels}ch, ${info.bitsPerSample}-bit)`)
   }
   const seconds = info.sampleCount / info.sampleRate

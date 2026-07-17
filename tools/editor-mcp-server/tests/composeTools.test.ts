@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createSessionEngine } from '@automata/build-session'
+import { createSessionEngine, hashJson } from '@automata/build-session'
 import { minimalGameSpecDraft } from '@automata/contracts'
 import { sliceCheckpointStatus } from '../src/composeTools'
 import { createSessionHost } from '../src/sessionHost'
@@ -52,6 +52,25 @@ describe('composeGame tool', () => {
     await readFile(join(root, 'games/probe/public/assets/item-icon.svg'), 'utf8')
     expect(await host.executeTool('composeGame', { gameId: 'probe' })).toMatchObject({ ok: true, content: { cached: true } })
     await host.dispose()
+  })
+
+  it('does not reuse a legacy compose step after composed output semantics change', async () => {
+    const { root, host } = await setup()
+    await host.executeTool('renderDesignBrief', { gameId: 'probe' })
+    await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'go' })
+    await host.executeTool('composeGame', { gameId: 'probe' })
+    await host.dispose()
+
+    const sessionPath = join(root, '.automata/sessions/probe/session.json')
+    const session = JSON.parse(await readFile(sessionPath, 'utf8')) as { steps: Array<{ kind: string; inputHash: string }> }
+    const spec = JSON.parse(await readFile(join(root, 'games/probe/gamespec.json'), 'utf8'))
+    session.steps.find((step) => step.kind === 'compose:game')!.inputHash = hashJson({ specHash: hashJson(spec) })
+    await writeFile(sessionPath, JSON.stringify(session))
+
+    const reopened = createSessionHost({ repoRoot: root, sessionsRoot: join(root, '.automata/sessions'), lock: false, seedSource: () => 7 })
+    expect(await reopened.executeTool('composeGame', { gameId: 'probe' }))
+      .toMatchObject({ ok: true, content: { cached: false } })
+    await reopened.dispose()
   })
 
   it('surfaces missing prerequisites and persists a typed unsupported-capability finding', async () => {

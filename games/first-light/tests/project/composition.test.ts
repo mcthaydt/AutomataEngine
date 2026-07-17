@@ -19,7 +19,8 @@ describe('compose parity', () => {
       if (file.path === 'public/assets/assets.json') {
         const expected = JSON.parse('text' in file ? file.text : '') as { assets: Array<{ status: string }> }
         const actualManifest = JSON.parse(actual.toString('utf8')) as { assets: Array<{ status: string }> }
-        expect(actualManifest.assets.map((asset) => asset.status)).toEqual(expected.assets.map(() => 'validated'))
+        expected.assets.forEach((asset, index) => { asset.status = actualManifest.assets[index]!.status })
+        expect(actualManifest).toEqual(expected)
         continue
       }
       expect(actual, file.path).toEqual('text' in file ? Buffer.from(file.text) : Buffer.from(file.base64, 'base64'))

@@ -32,6 +32,13 @@ describe('validateAssetMedia', () => {
     }
   })
 
+  it('rejects malformed SVG markup even when SVG markers are present', async () => {
+    const [svg] = await generated()
+    const malformed = new TextEncoder().encode('<svg><path></svg>')
+    expect(validateAssetMedia(svg!.entry, malformed, style))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ code: 'asset-media-invalid' })]))
+  })
+
   it('flags an off-palette SVG color', async () => {
     const [svg] = await generated()
     const text = new TextDecoder().decode(svg!.bytes).replace(/fill="[^"]+"/, 'fill="#123456"')
@@ -55,5 +62,14 @@ describe('validateAssetMedia', () => {
     expect(info.sampleCount / info.sampleRate).toBeLessThanOrEqual(MEDIA_BUDGETS.sfxMaxSeconds)
     const asMusic = { ...wav.entry, requirement: { ...wav.entry.requirement, kind: 'music' as const } }
     expect(validateAssetMedia(asMusic, wav.bytes, style)).toEqual([])
+  })
+
+  it('rejects a non-PCM WAV header with otherwise matching dimensions', async () => {
+    const assets = await generated()
+    const wav = assets.find((asset) => asset.entry.requirement.kind === 'audio')!
+    const altered = new Uint8Array(wav.bytes)
+    new DataView(altered.buffer).setUint16(20, 3, true)
+    expect(validateAssetMedia(wav.entry, altered, style))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ code: 'asset-media-invalid' })]))
   })
 })
