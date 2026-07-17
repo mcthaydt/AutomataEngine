@@ -43,6 +43,26 @@ describe('validateAssetManifest (structural slice of the asset evaluator)', () =
     expect(issues).toEqual([expect.objectContaining({ code: 'asset-missing', severity: 'error', assetId: 'item-icon' })])
   })
 
+  it('flags composition paths that disagree with the manifest', () => {
+    const issues = validateAssetManifest(
+      manifest([entry()]),
+      composition([{ id: 'item-icon', path: 'assets/other-icon.svg' }])
+    )
+    expect(issues).toEqual([
+      expect.objectContaining({ code: 'asset-path-mismatch', severity: 'error', assetId: 'item-icon' })
+    ])
+  })
+
+  it('flags composed assets that omit the composition manifest reference', () => {
+    const issues = validateAssetManifest(
+      manifest([entry({ references: [] })]),
+      composition([{ id: 'item-icon', path: 'assets/item-icon.svg' }])
+    )
+    expect(issues).toEqual([
+      expect.objectContaining({ code: 'asset-reference-missing', severity: 'error', assetId: 'item-icon' })
+    ])
+  })
+
   it('flags manifest assets absent from the composition as warnings', () => {
     const issues = validateAssetManifest(manifest([entry()]), composition([]))
     expect(issues).toEqual([expect.objectContaining({ code: 'asset-orphaned', severity: 'warning', assetId: 'item-icon' })])

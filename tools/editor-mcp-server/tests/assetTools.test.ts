@@ -37,9 +37,10 @@ async function setup(manifest: unknown | null) {
   const repoRoot = await mkdtemp(join(tmpdir(), 'asset-tools-'))
   roots.push(repoRoot)
   const gameDir = join(repoRoot, 'games', 'demo-game', 'public')
+  const manifestPath = join(gameDir, 'assets', 'assets.json')
   await mkdir(join(gameDir, 'assets'), { recursive: true })
   await mkdir(join(gameDir, 'project'), { recursive: true })
-  if (manifest) await writeFile(join(gameDir, 'assets', 'assets.json'), JSON.stringify(manifest))
+  if (manifest) await writeFile(manifestPath, JSON.stringify(manifest))
   await writeFile(join(gameDir, 'project', 'composition.json'), JSON.stringify(COMPOSITION))
   const { engine } = await createSessionEngine({
     sessionsRoot: join(repoRoot, '.automata', 'sessions'),
@@ -50,7 +51,7 @@ async function setup(manifest: unknown | null) {
   })
   engines.push(engine)
   const runner = createAssetToolRunner({ repoRoot, ensureEngine: async () => engine })
-  return { runner, engine }
+  return { runner, engine, manifestPath }
 }
 
 describe('asset MCP tools', () => {
@@ -74,6 +75,23 @@ describe('asset MCP tools', () => {
     expect(result.content).toEqual({ missing: true, assets: [] })
   })
 
+  it('validateAssets reports schema errors and persists a typed asset finding', async () => {
+    const invalid = { ...V2_MANIFEST, assets: [{ ...V2_MANIFEST.assets[0]!, status: 'shiny' }] }
+    const { runner, engine } = await setup(invalid)
+    const result = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect(result).toMatchObject({
+      ok: true,
+      content: {
+        errorCount: 1,
+        warningCount: 0,
+        issues: [expect.objectContaining({ code: 'asset-schema-invalid', severity: 'error', assetId: null })]
+      }
+    })
+    expect(engine.summary().openFindings).toEqual([
+      expect.objectContaining({ source: 'asset', code: 'asset-schema-invalid' })
+    ])
+  })
+
   it('validateAssets returns issues and persists error findings under source asset', async () => {
     const bad = { ...V2_MANIFEST, assets: [{ ...V2_MANIFEST.assets[0]!, status: 'validated' }] }
     const { runner, engine } = await setup(bad)
@@ -87,9 +105,31 @@ describe('asset MCP tools', () => {
 
   it('validateAssets auto-resolves asset findings when clean', async () => {
     const { runner, engine } = await setup(V2_MANIFEST)
+    const stale = await engine.addFinding({
+      source: 'asset', severity: 'error', code: 'asset-status-invalid', message: 'old', inputHash: 'old'
+    })
     const result = await runner.execute('validateAssets', { gameId: 'demo-game' })
     expect(result.ok).toBe(true)
     expect(result.content).toEqual(expect.objectContaining({ errorCount: 0 }))
+    expect(stale.resolvedAt).toBeDefined()
     expect(engine.session.findings.filter((entry) => entry.source === 'asset' && entry.resolvedAt === undefined)).toEqual([])
+  })
+
+  it('deduplicates unchanged failures and resolves findings absent from a changed run', async () => {
+    const statusError = { ...V2_MANIFEST.assets[0]!, status: 'validated' }
+    const twoErrors = { ...V2_MANIFEST, assets: [{ ...statusError, path: 'assets/wrong.svg' }] }
+    const { runner, engine, manifestPath } = await setup(twoErrors)
+
+    await runner.execute('validateAssets', { gameId: 'demo-game' })
+    await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect(engine.summary().openFindings.map((finding) => finding.code).sort()).toEqual([
+      'asset-path-mismatch',
+      'asset-status-invalid'
+    ])
+
+    await writeFile(manifestPath, JSON.stringify({ ...V2_MANIFEST, assets: [statusError] }))
+    await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect(engine.summary().openFindings.map((finding) => finding.code)).toEqual(['asset-status-invalid'])
+    expect(engine.session.findings.find((finding) => finding.code === 'asset-path-mismatch')?.resolvedAt).toBeDefined()
   })
 })
