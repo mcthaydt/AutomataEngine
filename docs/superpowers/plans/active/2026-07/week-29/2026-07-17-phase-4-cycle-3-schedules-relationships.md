@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 55% (33/60 steps complete).
+**Implementation progress:** 62% (37/60 steps complete).
 
 ## Global Constraints
 
@@ -1390,7 +1390,7 @@ git commit -m "feat(pack-schedules-relationships): seeded composeSection with pe
 - Consumes: everything the package exports; the registry's `STANDARD_PACKS` / `PACK_FIXTURES` / `EVAL_HOOK_BUILDERS` / `EDITOR_CONTRIBUTIONS` tables.
 - Produces: `schedulesRelationshipsEditorContribution: PackEditorContribution` (`prefabs: []`, preview renders walkers at slot-0 stations); registry entries for the new pack. The matrix's `every standard pack has a deterministic fixture` test passes; pairs containing this pack are requires-unsatisfiable and skipped by existing harness logic.
 
-- [ ] **Step 1: Implement `src/editorContribution.ts`** (thin, mirrors the dialogue pack's)
+- [x] **Step 1: Implement `src/editorContribution.ts`** (thin, mirrors the dialogue pack's)
 
 ```ts
 import type { PackEditorContribution } from '@automata/game-kit'
@@ -1427,7 +1427,7 @@ Add to `src/index.ts`:
 export * from './editorContribution'
 ```
 
-- [ ] **Step 2: Write the failing registry test**
+- [x] **Step 2: Write the failing registry test**
 
 Append to `packages/pack-registry/tests/registry.test.ts` (match its existing style — read the file first for import/describe conventions):
 
@@ -1448,12 +1448,12 @@ it('registers schedules-relationships with fixture, eval hook, and editor contri
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-registry -t 'schedules-relationships'`
 Expected: FAIL — `STANDARD_PACKS` has no such key.
 
-- [ ] **Step 4: Register the pack**
+- [x] **Step 4: Register the pack**
 
 In `packages/pack-registry/src/index.ts` add the imports:
 
@@ -1510,7 +1510,7 @@ Add to `EDITOR_CONTRIBUTIONS`:
 
 Also add `"@automata/pack-schedules-relationships": "*"` to `packages/pack-registry/package.json` dependencies and run `npm install`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-registry`
 Expected: PASS — including the matrix's fixture-coverage test; pairs containing schedules are requires-unsatisfiable and skipped.

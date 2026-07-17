@@ -44,8 +44,10 @@ describe('pack registry', () => {
     }
   })
 
-  it('exposes exactly the packs that exist (two, as of Phase 4 cycle 2)', () => {
-    expect(Object.keys(STANDARD_PACKS)).toEqual(['interaction-inventory', 'dialogue-quests'])
+  it('exposes exactly the packs that exist (three, as of Phase 4 cycle 3)', () => {
+    expect(Object.keys(STANDARD_PACKS)).toEqual([
+      'interaction-inventory', 'dialogue-quests', 'schedules-relationships'
+    ])
   })
 
   it('dialogue-quests fixture is deterministic, schema-valid, and references the inventory fixture items', () => {
@@ -73,5 +75,20 @@ describe('pack registry', () => {
     expect(resolved).toHaveLength(1)
     expect(resolved[0]!.contribution.packId).toBe('interaction-inventory')
     expect(resolved[0]!.config).toEqual(composition.packs[0]!.config)
+  })
+
+  it('registers schedules-relationships with fixture, eval hook, and editor contribution', () => {
+    expect(Object.keys(STANDARD_PACKS)).toContain('schedules-relationships')
+    const fixture = PACK_FIXTURES['schedules-relationships']!()
+    expect(fixture).toEqual(PACK_FIXTURES['schedules-relationships']!())
+    const composition = {
+      formatVersion: 1 as const,
+      gameId: 'registry-test',
+      source: null,
+      packs: [{ id: 'schedules-relationships', version: '1.0.0', config: fixture as Record<string, unknown> }],
+      assets: []
+    }
+    expect(resolveEvalHooks(composition)).toHaveLength(1)
+    expect(resolveEditorContributions(composition)).toHaveLength(1)
   })
 })
