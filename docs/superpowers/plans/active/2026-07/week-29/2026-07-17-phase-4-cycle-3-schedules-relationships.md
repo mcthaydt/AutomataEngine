@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 28% (17/60 steps complete).
+**Implementation progress:** 35% (21/60 steps complete).
 
 ## Global Constraints
 
@@ -610,7 +610,7 @@ export function serializeSchedulesState(clock: ClockState, affinities: Affinitie
 export function deserializeSchedulesState(raw: unknown, config: SchedulesRelationshipsPackConfig): SchedulesSavedState  // parse-or-throw
 ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-schedules-relationships/tests/relationshipCore.test.ts`:
 
@@ -666,12 +666,12 @@ describe('relationshipCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-schedules-relationships -t relationshipCore`
 Expected: FAIL — cannot resolve `../src/relationshipCore`.
 
-- [ ] **Step 3: Implement `src/relationshipCore.ts`**
+- [x] **Step 3: Implement `src/relationshipCore.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -736,7 +736,7 @@ Add to `src/index.ts`:
 export * from './relationshipCore'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
