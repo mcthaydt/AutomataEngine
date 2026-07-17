@@ -1,5 +1,6 @@
 import type { EditorProjectRegistration, EditorRegistrationLoader, ProjectPlayHandle } from '@automata/editor'
 import { emptyComposition, parseCompositionManifest } from '@automata/contracts'
+import type { PackPreviewHandle } from '@automata/game-kit'
 import { CORE_TYPE_IDS } from '@automata/project'
 import { resolveEditorContributions } from '@automata/pack-registry'
 import { createGameplay } from '../game/gameplay'
@@ -59,19 +60,27 @@ export const loadEditorRegistration: EditorRegistrationLoader = async (deps) => 
     preview: {
       create(compiled, sceneId, render, physics): ProjectPlayHandle {
         const previewAdapter = editorRegistration.preview!
-        const packHandles = contributions.flatMap(({ contribution, config }) =>
-          contribution.createPreview ? [contribution.createPreview(config, render)] : [])
-        const inner = previewAdapter.create(compiled, sceneId, render, physics)
-        return {
-          fixedUpdate: (dt) => inner.fixedUpdate(dt),
-          render: (alpha, frameDt) => {
-            inner.render(alpha, frameDt)
-            for (const handle of packHandles) handle.render?.(alpha)
-          },
-          dispose: () => {
-            for (const handle of packHandles) handle.dispose()
-            inner.dispose()
+        const packHandles: PackPreviewHandle[] = []
+        try {
+          for (const { contribution, config } of contributions) {
+            const handle = contribution.createPreview?.(config, render)
+            if (handle) packHandles.push(handle)
           }
+          const inner = previewAdapter.create(compiled, sceneId, render, physics)
+          return {
+            fixedUpdate: (dt) => inner.fixedUpdate(dt),
+            render: (alpha, frameDt) => {
+              inner.render(alpha, frameDt)
+              for (const handle of packHandles) handle.render?.(alpha)
+            },
+            dispose: () => {
+              for (const handle of packHandles) handle.dispose()
+              inner.dispose()
+            }
+          }
+        } catch (error) {
+          for (const handle of packHandles.reverse()) handle.dispose()
+          throw error
         }
       }
     }

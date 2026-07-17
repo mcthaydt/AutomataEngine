@@ -31,6 +31,17 @@ describe('pack registry', () => {
     }]))).toEqual([])
   })
 
+  it('rejects a standard pack that has no registered evaluation hook', () => {
+    const id = 'missing-eval-hook'
+    STANDARD_PACKS[id] = { ...STANDARD_PACKS['interaction-inventory']!, id }
+    try {
+      expect(() => resolveEvalHooks(composition([{ id, version: '1.0.0', config: {} }])))
+        .toThrow(/Standard pack "missing-eval-hook" has no evaluation hook/)
+    } finally {
+      delete STANDARD_PACKS[id]
+    }
+  })
+
   it('exposes exactly the packs that exist (one, in Phase 3)', () => {
     expect(Object.keys(STANDARD_PACKS)).toEqual(['interaction-inventory'])
   })

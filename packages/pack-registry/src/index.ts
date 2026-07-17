@@ -49,7 +49,13 @@ export function resolveEvalHooks(composition: CompositionManifest): PackEvalHook
   const hooks: PackEvalHook[] = []
   for (const entry of composition.packs) {
     const build = EVAL_HOOK_BUILDERS[entry.id]
-    if (build) hooks.push(build(entry.config))
+    if (!build) {
+      if (STANDARD_PACKS[entry.id]) {
+        throw new Error(`Standard pack "${entry.id}" has no evaluation hook`)
+      }
+      continue
+    }
+    hooks.push(build(entry.config))
   }
   return hooks
 }

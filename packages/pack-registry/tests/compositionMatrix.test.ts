@@ -69,9 +69,17 @@ function runSet(set: GamePack[]): void {
   const configs = Object.fromEntries(composition.packs.map((entry) => [entry.id, entry.config]))
   const app = document.createElement('div')
   document.body.append(app)
-  const runtime = composePacks(set, configs).boot({ host: createGameHost(app), render: createNullRenderer().port })
-  expect(runtime.packIds, label).toEqual(set.map((pack) => pack.id))
-  expect(driveToCompletion(resolveEvalHooks(composition)), label).toBe(true)
+  const host = createGameHost(app)
+  const render = createNullRenderer()
+  try {
+    const runtime = composePacks(set, configs).boot({ host, render: render.port })
+    expect(runtime.packIds, label).toEqual(set.map((pack) => pack.id))
+    expect(driveToCompletion(resolveEvalHooks(composition)), label).toBe(true)
+  } finally {
+    host.dispose()
+    app.remove()
+  }
+  expect(render.port.objectCount, label).toBe(0)
 }
 
 describe('composition matrix (standard packs)', () => {
@@ -82,6 +90,12 @@ describe('composition matrix (standard packs)', () => {
   it('every requires-satisfiable single composes, boots, and completes headlessly', () => {
     expect(singles.length).toBeGreaterThan(0)
     for (const set of singles) runSet(set)
+  })
+
+  it('tears down each matrix boot after evaluation', () => {
+    const initialChildCount = document.body.childElementCount
+    for (const set of singles) runSet(set)
+    expect(document.body.childElementCount).toBe(initialChildCount)
   })
 
   // Vacuous until a second pack lands; the loops ARE the harness — each pack

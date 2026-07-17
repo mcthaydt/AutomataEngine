@@ -57,6 +57,19 @@ describe('interaction-inventory pack (browser adapter)', () => {
     expect(second.handle.objectivesComplete!()).toBe(true)
   })
 
+  it('loadState restores items collected after the saved snapshot', () => {
+    const { handle, render, app, state } = boot()
+    const saved = handle.saveState!()
+    handle.fixedUpdate!(1 / 60, { playerPosition: { x: -2, z: 3 } })
+    expect(render.port.objectCount).toBe(1)
+
+    handle.loadState!(saved)
+
+    expect(render.port.objectCount).toBe(2)
+    expect(app.querySelector('.inventory-hud')?.textContent).toContain('0/2')
+    expect(state.get('inventory')).toEqual({ collected: [] })
+  })
+
   it('loadState rejects malformed saved state', () => {
     const { handle } = boot()
     expect(() => handle.loadState!({ collected: 42 })).toThrow()

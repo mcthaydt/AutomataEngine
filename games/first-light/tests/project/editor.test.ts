@@ -38,6 +38,31 @@ describe('editor preview', () => {
     preview.dispose()
     expect(render.port.objectCount).toBe(0)
   })
+
+  it('rolls back pack preview handles when inner preview creation fails', async () => {
+    const composition = {
+      formatVersion: 1,
+      gameId: 'first-light',
+      source: null,
+      packs: [{
+        id: 'interaction-inventory',
+        version: '1.0.0',
+        config: {
+          interactRadius: 1.5,
+          items: [{ id: 'item-1', position: { x: 0, z: 0 } }],
+          iconPath: null
+        }
+      }],
+      assets: []
+    }
+    const registration = await loadEditorRegistration({
+      readText: async () => JSON.stringify(composition)
+    })
+    const render = createNullRenderer()
+
+    expect(() => registration.preview!.create(undefined, 'main', render.port, nullPhysics())).toThrow()
+    expect(render.port.objectCount).toBe(0)
+  })
 })
 
 describe('headless evaluation', () => {

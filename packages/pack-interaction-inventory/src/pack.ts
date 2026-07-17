@@ -21,12 +21,14 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
   register(ctx, config): PackRuntimeHandle {
     let state: InventoryState = createInventoryState()
     ctx.state.register(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
-    const entities = new Map(config.items.map((item) => [item.id, { id: `inventory-item-${item.id}` }]))
-    for (const item of config.items) {
-      const entity = entities.get(item.id)!
+    const entities = new Map<string, { id: string }>()
+    const addItemRenderable = (item: InventoryPackConfig['items'][number]): void => {
+      const entity = { id: `inventory-item-${item.id}` }
+      entities.set(item.id, entity)
       ctx.render.add(entity, { primitive: 'sphere', radius: 0.35, color: ITEM_COLOR })
       ctx.render.setPose(entity, { x: item.position.x, y: 0.35, z: item.position.z }, IDENTITY)
     }
+    for (const item of config.items) addItemRenderable(item)
 
     const hud = document.createElement('div')
     hud.className = 'inventory-hud'
@@ -44,12 +46,16 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
     updateHud()
     ctx.host.overlays.append(hud)
 
-    /** Remove renderables for collected ids, publish the slice, refresh the HUD. */
+    /** Reconcile renderables to the restored state, then publish it and refresh the HUD. */
     const applyState = (next: InventoryState): void => {
-      for (const id of next.collected) {
-        if (state !== next && state.collected.includes(id)) continue
-        const entity = entities.get(id)
-        if (entity) { ctx.render.remove(entity); entities.delete(id) }
+      const collected = new Set(next.collected)
+      for (const item of config.items) {
+        const entity = entities.get(item.id)
+        if (collected.has(item.id)) {
+          if (entity) { ctx.render.remove(entity); entities.delete(item.id) }
+        } else if (!entity) {
+          addItemRenderable(item)
+        }
       }
       state = next
       ctx.state.set(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
