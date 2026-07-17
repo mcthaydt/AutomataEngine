@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 69% (45/65 steps complete; Task 9 complete; Task 10 next).
+**Implementation progress:** 78% (51/65 steps complete; Task 10 complete; Task 11 next).
 
 ## Global Constraints
 
@@ -1633,7 +1633,7 @@ git commit -m "feat(pack-dialogue-quests): thin editor contribution (preview mar
 - Consumes: the whole `@automata/pack-dialogue-quests` surface; `EvalSliceView` from Task 5.
 - Produces: `STANDARD_PACKS['dialogue-quests']`, `PACK_FIXTURES['dialogue-quests']`, eval-hook + editor-contribution entries. The pair loop in the matrix stops being vacuous and must pass.
 
-- [ ] **Step 1: Write the failing registry tests**
+- [x] **Step 1: Write the failing registry tests**
 
 In `packages/pack-registry/tests/registry.test.ts`, update the exact-set assertion and add fixture coverage:
 
@@ -1654,12 +1654,12 @@ In `packages/pack-registry/tests/registry.test.ts`, update the exact-set asserti
   })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npx vitest run --project pack-registry`
 Expected: FAIL — `STANDARD_PACKS` has one key; no dialogue fixture.
 
-- [ ] **Step 3: Register the pack**
+- [x] **Step 3: Register the pack**
 
 In `packages/pack-registry/src/index.ts` add imports and entries:
 
@@ -1712,7 +1712,7 @@ const EDITOR_CONTRIBUTIONS: Record<string, PackEditorContribution> = {
 }
 ```
 
-- [ ] **Step 4: Thread slices through the matrix walker**
+- [x] **Step 4: Thread slices through the matrix walker**
 
 In `packages/pack-registry/tests/compositionMatrix.test.ts`, replace `driveToCompletion` with:
 
@@ -1742,12 +1742,12 @@ function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
 }
 ```
 
-- [ ] **Step 5: Run the full matrix + registry suites**
+- [x] **Step 5: Run the full matrix + registry suites**
 
 Run: `npx vitest run --project pack-registry`
 Expected: PASS — including “every declared-compatible pair composes, boots, and completes headlessly” now exercising inventory+dialogue for real. If the pair times out at maxSteps, debug with the composeSection greedy-invariant test before touching the walker.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-registry package-lock.json

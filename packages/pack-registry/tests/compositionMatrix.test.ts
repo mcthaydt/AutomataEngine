@@ -42,22 +42,26 @@ const fixtureComposition = (set: GamePack[]) => ({
   assets: []
 })
 
-/** Scripted walk: seek each hook's next target until every hook completes. */
+/** Seek the first incomplete hook with a target; null means blocked and yields to another pack. */
 function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
   const states = new Map(hooks.map((hook) => [hook.packId, hook.createState()]))
   const player = { x: -8, z: -8 }
   for (let step = 0; step < maxSteps; step += 1) {
-    const pending = hooks.find((hook) => !hook.complete(states.get(hook.packId)))
-    if (!pending) return true
-    const target = pending.nextTarget(states.get(pending.packId), player)
-    if (target) {
+    const slices: Record<string, unknown> = {}
+    for (const hook of hooks) Object.assign(slices, hook.publishSlices?.(states.get(hook.packId)) ?? {})
+    const incomplete = hooks.filter((hook) => !hook.complete(states.get(hook.packId)))
+    if (incomplete.length === 0) return true
+    for (const hook of incomplete) {
+      const target = hook.nextTarget(states.get(hook.packId), player, slices)
+      if (!target) continue
       const dx = target.x - player.x
       const dz = target.z - player.z
       const dist = Math.hypot(dx, dz)
       const stride = Math.min(0.5, dist)
       if (dist > 0) { player.x += (dx / dist) * stride; player.z += (dz / dist) * stride }
+      break
     }
-    for (const hook of hooks) states.set(hook.packId, hook.step(states.get(hook.packId), player))
+    for (const hook of hooks) states.set(hook.packId, hook.step(states.get(hook.packId), player, slices))
   }
   return hooks.every((hook) => hook.complete(states.get(hook.packId)))
 }

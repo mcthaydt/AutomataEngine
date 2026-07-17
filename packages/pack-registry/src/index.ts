@@ -1,5 +1,10 @@
 import type { CompositionManifest } from '@automata/contracts'
+import { createSeededRng } from '@automata/engine'
 import type { GamePack, PackEditorContribution, PackEvalHook } from '@automata/game-kit'
+import {
+  composeDialogueSection, createDialogueQuestsEvalHook, dialogueQuestsEditorContribution,
+  dialogueQuestsPack, packConfigSchema as dialogueConfigSchema
+} from '@automata/pack-dialogue-quests'
 import {
   createInventoryEvalHook, interactionInventoryPack, inventoryEditorContribution, packConfigSchema
 } from '@automata/pack-interaction-inventory'
@@ -10,7 +15,8 @@ import {
  * stays pack-agnostic and games resolve packs purely from composition data.
  */
 export const STANDARD_PACKS: Record<string, GamePack> = {
-  [interactionInventoryPack.id]: interactionInventoryPack as GamePack
+  [interactionInventoryPack.id]: interactionInventoryPack as GamePack,
+  [dialogueQuestsPack.id]: dialogueQuestsPack as GamePack
 }
 
 /**
@@ -29,12 +35,32 @@ export const PACK_FIXTURES: Record<string, () => unknown> = {
   })
 }
 
+PACK_FIXTURES[dialogueQuestsPack.id] = () => composeDialogueSection({
+  specConfig: {},
+  quests: [
+    { id: 'q-main-1', kind: 'main', summary: 'Meet the keeper' },
+    { id: 'q-main-2', kind: 'main', summary: 'Recover the relic' }
+  ],
+  cast: [
+    { id: 'c-keeper', name: 'The Keeper', role: 'quest-giver' },
+    { id: 'c-dock', name: 'Dockhand', role: 'quest-giver' }
+  ],
+  arena: { half: 12, spawn: { x: -8, z: -8 }, goal: { x: 6, z: 6 } },
+  inventory: {
+    items: (PACK_FIXTURES[interactionInventoryPack.id]!() as {
+      items: Array<{ id: string; position: { x: number; z: number } }>
+    }).items
+  }
+}, createSeededRng(42))
+
 const EVAL_HOOK_BUILDERS: Record<string, (config: unknown) => PackEvalHook> = {
-  [interactionInventoryPack.id]: (config) => createInventoryEvalHook(packConfigSchema.parse(config))
+  [interactionInventoryPack.id]: (config) => createInventoryEvalHook(packConfigSchema.parse(config)),
+  [dialogueQuestsPack.id]: (config) => createDialogueQuestsEvalHook(dialogueConfigSchema.parse(config))
 }
 
 const EDITOR_CONTRIBUTIONS: Record<string, PackEditorContribution> = {
-  [inventoryEditorContribution.packId]: inventoryEditorContribution
+  [inventoryEditorContribution.packId]: inventoryEditorContribution,
+  [dialogueQuestsEditorContribution.packId]: dialogueQuestsEditorContribution
 }
 
 export function resolvePacks(ids: readonly string[]): GamePack[] {

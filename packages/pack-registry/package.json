@@ -7,6 +7,7 @@
   "dependencies": {
     "@automata/contracts": "*",
     "@automata/game-kit": "*",
+    "@automata/pack-dialogue-quests": "*",
     "@automata/pack-interaction-inventory": "*"
   },
   "devDependencies": {

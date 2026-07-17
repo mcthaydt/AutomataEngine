@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { CompositionManifest } from '@automata/contracts'
-import { STANDARD_PACKS, resolveEditorContributions, resolveEvalHooks, resolvePacks } from '../src'
+import { PACK_FIXTURES, STANDARD_PACKS, resolveEditorContributions, resolveEvalHooks, resolvePacks } from '../src'
 
 const composition = (packs: CompositionManifest['packs']): CompositionManifest =>
   ({ formatVersion: 1, gameId: 'probe', source: null, packs, assets: [] })
 
 describe('pack registry', () => {
   it('resolves known ids in order and rejects unknown ids with the known set', () => {
-    expect(resolvePacks(['interaction-inventory']).map((pack) => pack.id)).toEqual(['interaction-inventory'])
-    expect(() => resolvePacks(['dialogue-quests'])).toThrow(/Unknown pack id "dialogue-quests".*interaction-inventory/)
+    expect(resolvePacks(['interaction-inventory', 'dialogue-quests']).map((pack) => pack.id))
+      .toEqual(['interaction-inventory', 'dialogue-quests'])
+    expect(() => resolvePacks(['unknown-pack']))
+      .toThrow(/Unknown pack id "unknown-pack".*interaction-inventory.*dialogue-quests/)
   })
 
   it('builds eval hooks from a composition, validating configs through the pack schema', () => {
@@ -42,8 +44,19 @@ describe('pack registry', () => {
     }
   })
 
-  it('exposes exactly the packs that exist (one, in Phase 3)', () => {
-    expect(Object.keys(STANDARD_PACKS)).toEqual(['interaction-inventory'])
+  it('exposes exactly the packs that exist (two, as of Phase 4 cycle 2)', () => {
+    expect(Object.keys(STANDARD_PACKS)).toEqual(['interaction-inventory', 'dialogue-quests'])
+  })
+
+  it('dialogue-quests fixture is deterministic, schema-valid, and references the inventory fixture items', () => {
+    const first = PACK_FIXTURES['dialogue-quests']!() as { quests: Array<{ objective: { kind: string; itemIds?: string[] } }> }
+    expect(PACK_FIXTURES['dialogue-quests']!()).toEqual(first)
+    const inventoryItems = (PACK_FIXTURES['interaction-inventory']!() as { items: Array<{ id: string }> }).items.map((item) => item.id)
+    for (const quest of first.quests) {
+      if (quest.objective.kind === 'fetch') {
+        for (const itemId of quest.objective.itemIds!) expect(inventoryItems).toContain(itemId)
+      }
+    }
   })
 
   it('resolves editor contributions for composed packs and skips unknown ids', () => {
