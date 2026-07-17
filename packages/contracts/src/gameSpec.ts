@@ -153,6 +153,8 @@ export const assetRequirementSchema = z.strictObject({
   kind: z.enum(['model', 'texture', 'audio', 'music', 'ui']),
   description: z.string().min(1).max(400)
 })
+export type AssetRequirement = z.infer<typeof assetRequirementSchema>
+export type AssetKind = AssetRequirement['kind']
 
 export const gameSpecSchema = z.strictObject({
   specVersion: z.number().int().min(1),

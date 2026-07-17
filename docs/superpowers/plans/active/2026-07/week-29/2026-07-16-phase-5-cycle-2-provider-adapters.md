@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
+**Progress:** 12.5% (1/8 tasks complete)
+
 ## Global Constraints
 
 - **Do not modify** `packages/game-compose`, `packages/game-kit`, or `games/first-light` — Phase 4 cycle 2 is concurrently editing that territory; this cycle is code-disjoint by design. Task 8 proves it with `git log --stat`.
@@ -52,7 +54,7 @@ export interface AssetProvider {
 }
 ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/contracts/tests/assetProvider.test.ts`:
 
@@ -91,12 +93,16 @@ describe('asset provider contract', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project contracts -t 'asset provider contract'`
 Expected: FAIL — cannot resolve `../src/assetProvider`.
 
-- [ ] **Step 3: Implement**
+Observed: Vitest passes because all imports are type-only and erased before
+resolution; `npm run typecheck -w @automata/contracts` is the effective red
+gate and failed with `TS2307: Cannot find module '../src/assetProvider'`.
+
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/gameSpec.ts`, next to `assetRequirementSchema`, add:
 
@@ -150,12 +156,12 @@ export * from './assetProvider'
 
 (If `AssetKind`/`AssetRequirement` re-exports collide with existing gameSpec exports at build time, drop the `export type { … }` line from `assetProvider.ts` — both names already flow from `./gameSpec` through the index.)
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project contracts && npm run typecheck`
 Expected: PASS, no type errors anywhere in the workspace.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
