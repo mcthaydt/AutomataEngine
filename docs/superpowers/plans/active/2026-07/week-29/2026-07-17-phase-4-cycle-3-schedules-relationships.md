@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 62% (37/60 steps complete).
+**Implementation progress:** 65% (39/60 steps complete).
 
 ## Global Constraints
 
@@ -1533,7 +1533,7 @@ git commit -m "feat(pack-registry): register schedules-relationships pack + edit
 - Consumes: the existing `runSet` helper and registry tables (no harness policy changes).
 - Produces: a table-driven `SCENARIOS` list of named pack-id sets run through the same compose/boot/complete machinery as pairs; first row is the triple. Later cycles add rows, not code.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append inside the existing describe block in `compositionMatrix.test.ts`:
 
@@ -1555,7 +1555,7 @@ it('every scenario composes, boots, and completes headlessly', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test — it should already pass if Tasks 1–9 are correct; verify it actually exercises the triple**
+- [x] **Step 2: Run the test — it should already pass if Tasks 1–9 are correct; verify it actually exercises the triple**
 
 Run: `npx vitest run --project pack-registry -t scenario`
 Expected: PASS. Then temporarily break it to prove it bites: in `packages/pack-schedules-relationships/src/relationshipCore.ts`, flip `>=` to `>` in `relationshipsComplete`, rerun, and confirm the scenario test FAILS (drive cannot complete). Revert the flip and rerun to green. This break-detect step is mandatory — a scenario that cannot fail is not a gate.

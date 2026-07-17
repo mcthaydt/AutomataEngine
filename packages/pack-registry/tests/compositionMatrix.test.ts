@@ -87,6 +87,11 @@ function runSet(set: GamePack[]): void {
 }
 
 describe('composition matrix (standard packs)', () => {
+  /** Named 3+-pack scenario suites: same compose/boot/headless machinery as pairs. */
+  const SCENARIOS: ReadonlyArray<readonly string[]> = [
+    ['interaction-inventory', 'dialogue-quests', 'schedules-relationships']
+  ]
+
   it('every standard pack has a deterministic fixture', () => {
     expect(Object.keys(PACK_FIXTURES).sort()).toEqual([...ids].sort())
   })
@@ -106,6 +111,17 @@ describe('composition matrix (standard packs)', () => {
   // cycle only adds registry entries and this matrix widens automatically.
   it('every declared-compatible pair composes, boots, and completes headlessly', () => {
     for (const set of pairs) runSet(set)
+  })
+
+  it('every scenario composes, boots, and completes headlessly', () => {
+    for (const scenario of SCENARIOS) {
+      const set = scenario.map((id) => {
+        const pack = STANDARD_PACKS[id]
+        if (!pack) throw new Error(`Scenario references unknown pack "${id}"`)
+        return pack
+      })
+      runSet(set)
+    }
   })
 
   it('every declared conflict fails with PackCompositionError', () => {
