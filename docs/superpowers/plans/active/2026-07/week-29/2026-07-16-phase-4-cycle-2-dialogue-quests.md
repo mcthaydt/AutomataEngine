@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
+**Implementation progress:** 8% (5/65 steps complete; Task 1 complete; Task 2 next).
+
 ## Global Constraints
 
 - Packs import zod ONLY as `import { z } from '@automata/project'` (eslint enforces; no direct `zod` import).
@@ -32,7 +34,7 @@
 - Consumes: existing `capabilityConfigSchemas` table.
 - Produces: `capabilityConfigSchemas['dialogue-quests']` accepting `{ talkRadius?: number }` (0.5–5), rejecting unknown keys; `{}` still parses to `{}`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to the capability-config describe block in `packages/contracts/tests/gameSpec.test.ts` (match the file's existing style):
 
@@ -55,12 +57,12 @@ describe('dialogue-quests capability config', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify the new ones fail**
+- [x] **Step 2: Run tests to verify the new ones fail**
 
 Run: `npx vitest run --project contracts -t 'dialogue-quests capability config'`
 Expected: 1 failure (the in-bounds `talkRadius` parse — the empty-config and rejection tests already pass against the stub, since `z.strictObject({})` rejects every unknown key).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/gameSpec.ts` replace the stub line:
 
@@ -76,12 +78,12 @@ with:
   }),
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS (all contracts tests, including untouched spec-hash fixtures).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts

@@ -85,7 +85,9 @@ export const capabilityConfigSchemas = {
     requiredItems: z.number().int().min(1).max(8).optional(),
     interactRadius: z.number().min(0.5).max(5).optional()
   }),
-  'dialogue-quests': z.strictObject({}),
+  'dialogue-quests': z.strictObject({
+    talkRadius: z.number().min(0.5).max(5).optional()
+  }),
   'schedules-relationships': z.strictObject({}),
   'combat-ai': z.strictObject({}),
   'economy-progression': z.strictObject({}),

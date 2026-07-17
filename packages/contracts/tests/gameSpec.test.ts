@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DEFAULT_CAPABILITY_COMPATIBILITY, capabilityIdSchema, findingSourceSchema,
+  DEFAULT_CAPABILITY_COMPATIBILITY, capabilityConfigSchemas, capabilityIdSchema, findingSourceSchema,
   firstLightGameSpecDraft, gameSpecDraftSchema, gameSpecSchema, minimalGameSpecDraft
 } from '../src'
 
@@ -87,5 +87,22 @@ describe('capability config schemas', () => {
       { id: 'save-load', config: { slots: 3 }, requirements: [] }
     ]
     expect(gameSpecDraftSchema.safeParse(draft).success).toBe(false)
+  })
+})
+
+describe('dialogue-quests capability config', () => {
+  it('accepts an empty config unchanged (hash rule)', () => {
+    expect(capabilityConfigSchemas['dialogue-quests'].parse({})).toEqual({})
+  })
+
+  it('accepts talkRadius within bounds', () => {
+    expect(capabilityConfigSchemas['dialogue-quests'].parse({ talkRadius: 2.5 }))
+      .toEqual({ talkRadius: 2.5 })
+  })
+
+  it('rejects talkRadius out of bounds and unknown keys', () => {
+    expect(() => capabilityConfigSchemas['dialogue-quests'].parse({ talkRadius: 0.1 })).toThrow()
+    expect(() => capabilityConfigSchemas['dialogue-quests'].parse({ talkRadius: 9 })).toThrow()
+    expect(() => capabilityConfigSchemas['dialogue-quests'].parse({ npcCount: 3 })).toThrow()
   })
 })
