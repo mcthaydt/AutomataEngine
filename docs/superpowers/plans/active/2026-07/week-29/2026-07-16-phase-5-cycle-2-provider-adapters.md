@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 25% (2/8 tasks complete)
+**Progress:** 37.5% (3/8 tasks complete)
 
 ## Global Constraints
 
@@ -326,7 +326,7 @@ git commit -m "feat(asset-providers): package scaffold + deriveStyleParams"
 - Consumes: `AssetProvider`, `ProviderContext`, `AssetRequirement` from contracts; `createSeededRng` from engine.
 - Produces: `svgProvider: AssetProvider` — `id: 'procedural-svg'`, `version: '1.0.0'`, `kinds: ['ui', 'texture']`, `fileExtension` always `'svg'`. Also `hsl(hue, saturation, lightness): string` helper (`hsl(210 70% 55%)` format) reused by Task 4.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/asset-providers/tests/svgProvider.test.ts`:
 
@@ -384,12 +384,12 @@ describe('svgProvider', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers -t svgProvider`
 Expected: FAIL — cannot resolve `../src/svgProvider`.
 
-- [ ] **Step 3: Implement `src/svgProvider.ts`**
+- [x] **Step 3: Implement `src/svgProvider.ts`**
 
 ```ts
 import type { AssetProvider, AssetRequirement, ProviderContext, StyleParams } from '@automata/contracts'
@@ -462,7 +462,7 @@ export const svgProvider: AssetProvider = {
 
 Note on the `Math.cos`/`Math.sin` exception: the Global Constraints ban transcendentals for **byte-level sample math** (audio). Here the trig result is quantized through `toFixed(2)` into text, which collapses any conceivable cross-engine ulp difference; the golden-hash test still guards the outcome. Keep the comment in the code.
 
-- [ ] **Step 4: Run tests (twice — second run verifies snapshots), commit**
+- [x] **Step 4: Run tests (twice — second run verifies snapshots), commit**
 
 Run: `npx vitest run --project asset-providers && npx vitest run --project asset-providers`
 Expected: PASS both times (snapshots written on the first, matched on the second).
