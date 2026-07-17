@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 8% (5/65 steps complete; Task 1 complete; Task 2 next).
+**Implementation progress:** 17% (11/65 steps complete; Task 2 complete; Task 3 next).
 
 ## Global Constraints
 
@@ -129,7 +129,7 @@ export const DIALOGUE_ENDED_EVENT = 'dialogueEnded'
 
 `conditions` is an AND-list: a choice is available only when every entry holds.
 
-- [ ] **Step 1: Scaffold the package**
+- [x] **Step 1: Scaffold the package**
 
 `packages/pack-dialogue-quests/package.json`:
 
@@ -177,7 +177,7 @@ export * from './config'
 
 Run: `npm install` (links the workspace).
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/pack-dialogue-quests/tests/fixtures.ts` — the shared fixture lives here, NOT in a test file: importing a `.test.ts` module re-registers its `describe` blocks in every importing file (duplicate runs), and the inventory pack's `tests/fixtures.ts` is the repo convention.
 
@@ -259,12 +259,12 @@ describe('dialogue-quests pack config schema', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: FAIL — cannot resolve `../src/config`.
 
-- [ ] **Step 4: Implement `src/config.ts`**
+- [x] **Step 4: Implement `src/config.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -396,12 +396,12 @@ export const packConfigSchema: z.ZodType<DialogueQuestsPackConfig> = baseConfigS
 })
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS (5 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-dialogue-quests package-lock.json
