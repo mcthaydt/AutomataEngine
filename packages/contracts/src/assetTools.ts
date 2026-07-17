@@ -2,17 +2,23 @@ import { z } from 'zod'
 import type { ToolDef } from './tools'
 import { gameSlugSchema } from './workspaceTools'
 
-/** Phase 5 tools: inspect and structurally validate a game's asset manifest. */
-export type AssetToolName = 'listAssets' | 'validateAssets'
+/** Phase 5 tools: generate, inspect, and validate a game's asset manifest. */
+export type AssetToolName = 'listAssets' | 'validateAssets' | 'generateAssets'
 
 export const assetToolArgSchemas = {
   listAssets: z.strictObject({ gameId: gameSlugSchema }),
-  validateAssets: z.strictObject({ gameId: gameSlugSchema })
+  validateAssets: z.strictObject({ gameId: gameSlugSchema }),
+  generateAssets: z.strictObject({
+    gameId: gameSlugSchema,
+    assetIds: z.array(z.string().min(1).max(60)).min(1).max(80).optional(),
+    seed: z.number().int().min(0).optional()
+  })
 } as const satisfies Record<AssetToolName, z.ZodType>
 
 const DESCRIPTIONS: Record<AssetToolName, string> = {
   listAssets: 'List the asset manifest: id, kind, path, status, and full provenance per asset.',
-  validateAssets: 'Run structural asset validation (ids, paths, references, status rules) and persist findings.'
+  validateAssets: 'Run structural asset validation (ids, paths, references, status rules) and persist findings.',
+  generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed.'
 }
 
 const NAMES = Object.keys(assetToolArgSchemas) as AssetToolName[]

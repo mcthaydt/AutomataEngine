@@ -1,12 +1,16 @@
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
+import { generateGameAssets } from '@automata/asset-providers'
 import { hashJson, type SessionEngine } from '@automata/build-session'
 import {
+  assetManifestSchema,
+  gameSpecSchema,
   parseAssetToolArgs,
   parseAssetManifest,
   parseCompositionManifest,
   validateAssetManifest,
   type AssetManifest,
+  type AssetManifestEntry,
   type AssetIssue,
   type CompositionManifest,
   type ToolResult
@@ -58,9 +62,95 @@ async function readComposition(repoRoot: string, gameId: string): Promise<Compos
   }
 }
 
+async function readGameSpec(repoRoot: string, gameId: string) {
+  const path = join(repoRoot, 'games', gameId, 'gamespec.json')
+  try {
+    return gameSpecSchema.parse(JSON.parse(await readFile(path, 'utf8')))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(
+        `Game "${gameId}" has no gamespec.json — generateAssets needs spec asset requirements`
+      )
+    }
+    throw error
+  }
+}
+
+/** Replace generated ids, append new entries, and preserve unrelated assets. */
+function mergeManifest(existingText: string | null, entries: AssetManifestEntry[]) {
+  const existing = existingText
+    ? parseAssetManifest(existingText)
+    : { formatVersion: 2 as const, assets: [] }
+  const replaced = new Set(entries.map((entry) => entry.id))
+  return assetManifestSchema.parse({
+    formatVersion: 2,
+    assets: [
+      ...existing.assets.filter((entry) => !replaced.has(entry.id)),
+      ...entries
+    ]
+  })
+}
+
 export function createAssetToolRunner(deps: AssetToolDeps) {
   return {
     async execute(name: string, raw: unknown): Promise<ToolResult> {
+      if (name === 'generateAssets') {
+        const args = parseAssetToolArgs(name, raw) as {
+          gameId: string
+          assetIds?: string[]
+          seed?: number
+        }
+        const spec = await readGameSpec(deps.repoRoot, args.gameId)
+        const known = new Map(spec.assets.map((requirement) => [requirement.id, requirement]))
+        for (const id of args.assetIds ?? []) {
+          if (!known.has(id)) {
+            throw new Error(
+              `Unknown asset id "${id}"; spec declares: ${[...known.keys()].join(', ')}`
+            )
+          }
+        }
+        const requirements = args.assetIds
+          ? args.assetIds.map((id) => known.get(id)!)
+          : spec.assets
+        const composition = await readComposition(deps.repoRoot, args.gameId)
+        const seed = args.seed ?? composition?.source?.seed
+        if (seed === undefined) {
+          throw new Error(
+            'No seed: pass an explicit seed or compose the game first (composition.json source.seed)'
+          )
+        }
+        const generated = await generateGameAssets({
+          requirements,
+          direction: spec.direction,
+          seed,
+          specVersion: spec.specVersion
+        })
+        const publicDir = join(deps.repoRoot, 'games', args.gameId, 'public')
+        for (const asset of generated) {
+          const filePath = join(publicDir, asset.path)
+          await mkdir(dirname(filePath), { recursive: true })
+          await writeFile(filePath, asset.bytes)
+        }
+        const manifest = mergeManifest(
+          await readManifestText(deps.repoRoot, args.gameId),
+          generated.map((asset) => asset.entry)
+        )
+        await mkdir(join(publicDir, 'assets'), { recursive: true })
+        await writeFile(
+          join(publicDir, 'assets', 'assets.json'),
+          `${JSON.stringify(manifest, null, 2)}\n`
+        )
+        return ok({
+          seed,
+          assets: generated.map((asset) => ({
+            id: asset.entry.id,
+            path: asset.path,
+            provider: asset.entry.provenance.provider,
+            status: asset.entry.status
+          }))
+        })
+      }
+
       const { gameId } = parseAssetToolArgs(name, raw) as { gameId: string }
       const manifestText = await readManifestText(deps.repoRoot, gameId)
       if (name === 'listAssets') {

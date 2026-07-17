@@ -114,7 +114,9 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
         if (name === 'runBuild' || name === 'runTests' || name === 'runBrowserEval' || name === 'changedFiles') return executeCheckTool(name, args)
         if (name === 'compileGameSpec' || name === 'getGameSpec' || name === 'renderDesignBrief' || name === 'recordDesignDecision') return specTools.execute(name, args)
         if (name === 'composeGame' || name === 'renderSliceReport' || name === 'recordSliceDecision') return composeTools.execute(name, args)
-        if (name === 'listAssets' || name === 'validateAssets') return assetTools.execute(name, args)
+        if (name === 'listAssets' || name === 'validateAssets' || name === 'generateAssets') {
+          return assetTools.execute(name, args)
+        }
         if (!open) return fail('no project open — call openProject first')
         if (WRITE_TOOLS.has(name)) return handleWrite(open, name, args)
         if (name === 'evaluate') return handleEvaluate(open, args)

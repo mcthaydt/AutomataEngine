@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 75% (6/8 tasks complete)
+**Progress:** 87.5% (7/8 tasks complete)
 
 ## Global Constraints
 
@@ -1088,6 +1088,7 @@ git commit -m "feat(asset-providers): provider registry + generateGameAssets wit
 **Files:**
 - Modify: `packages/contracts/src/assetTools.ts`
 - Modify: `tools/editor-mcp-server/src/assetTools.ts`
+- Modify: `tools/editor-mcp-server/src/sessionHost.ts` (dispatch `generateAssets` to the asset runner)
 - Modify: `tools/editor-mcp-server/package.json` (add `"@automata/asset-providers": "*"`)
 - Test: `tools/editor-mcp-server/tests/assetTools.test.ts` (extend)
 
@@ -1095,7 +1096,7 @@ git commit -m "feat(asset-providers): provider registry + generateGameAssets wit
 - Consumes: `generateGameAssets` from Task 6; `gameSpecSchema` from contracts; the existing `createAssetToolRunner` deps shape (`{ repoRoot, ensureEngine }` — unchanged).
 - Produces: MCP tool `generateAssets { gameId, assetIds?: string[], seed?: number }` → `{ ok: true, content: { seed, assets: [{ id, path, provider, status }] } }`. Files written under `games/<gameId>/public/`; `public/assets/assets.json` merged by id.
 
-- [ ] **Step 1: Extend the contracts tool table (failing test first)**
+- [x] **Step 1: Extend the contracts tool table (failing test first)**
 
 Add to the contracts test for asset tools (`packages/contracts/tests/*` — find the existing assetTools describe; if none exists, add `packages/contracts/tests/assetTools.test.ts`):
 
@@ -1139,7 +1140,7 @@ and add the description:
 
 Run: `npx vitest run --project contracts` — expect PASS after the edit.
 
-- [ ] **Step 2: Write the failing MCP runner tests**
+- [x] **Step 2: Write the failing MCP runner tests**
 
 Extend `tools/editor-mcp-server/tests/assetTools.test.ts`. The existing `setup()` helper builds a temp repo with `games/demo-game/public/{assets,project}`; extend the setup (or add a variant `setupWithSpec()`) that also writes a minimal `gamespec.json` at `games/demo-game/gamespec.json`. Careful: `gameSpecFixtures` exports **drafts** — `minimalGameSpecDraft(gameId)` matches `gameSpecDraftSchema`, which omits `specVersion` and `provenance` — while the runner parses the file with the full `gameSpecSchema`, so a raw draft on disk fails parse. Write the compiled shape:
 
@@ -1205,7 +1206,7 @@ describe('generateAssets', () => {
 Run: `npx vitest run --project editor-mcp-server -t generateAssets`
 Expected: FAIL — runner throws `Unknown asset tool` path or missing branch.
 
-- [ ] **Step 3: Implement the runner branch**
+- [x] **Step 3: Implement the runner branch**
 
 In `tools/editor-mcp-server/src/assetTools.ts` add imports:
 
@@ -1282,12 +1283,12 @@ At the top of `execute`, route the new tool before the shared `gameId`-only pars
 
 Add `"@automata/asset-providers": "*"` to `tools/editor-mcp-server/package.json` dependencies and run `npm install`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS — new generateAssets tests plus all existing asset/spec/session tool tests (the tool def surfaces automatically through `assetToolDefs()`; `tests/server.test.ts` may assert the tool list — update its expected names to include `generateAssets` if it does).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts tools/editor-mcp-server package-lock.json

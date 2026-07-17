@@ -1,8 +1,9 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createSessionEngine, type SessionEngine } from '@automata/build-session'
+import { gameSpecSchema, minimalGameSpecDraft } from '@automata/contracts'
 import { createAssetToolRunner } from '../src/assetTools'
 
 const V2_MANIFEST = {
@@ -51,7 +52,29 @@ async function setup(manifest: unknown | null) {
   })
   engines.push(engine)
   const runner = createAssetToolRunner({ repoRoot, ensureEngine: async () => engine })
-  return { runner, engine, manifestPath }
+  return { runner, engine, manifestPath, repoRoot }
+}
+
+async function setupWithSpec() {
+  const context = await setup(null)
+  const spec = gameSpecSchema.parse({
+    specVersion: 1,
+    provenance: {
+      prompt: 'demo prompt',
+      translations: [],
+      history: [{ version: 1, reason: 'initial draft' }]
+    },
+    ...minimalGameSpecDraft('demo-game'),
+    assets: [
+      { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
+      { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
+    ]
+  })
+  await writeFile(
+    join(context.repoRoot, 'games', 'demo-game', 'gamespec.json'),
+    JSON.stringify(spec)
+  )
+  return context
 }
 
 describe('asset MCP tools', () => {
@@ -131,5 +154,73 @@ describe('asset MCP tools', () => {
     await runner.execute('validateAssets', { gameId: 'demo-game' })
     expect(engine.summary().openFindings.map((finding) => finding.code)).toEqual(['asset-status-invalid'])
     expect(engine.session.findings.find((finding) => finding.code === 'asset-path-mismatch')?.resolvedAt).toBeDefined()
+  })
+})
+
+describe('generateAssets', () => {
+  it('generates all spec requirements, writes files, merges the manifest', async () => {
+    const { runner, repoRoot } = await setupWithSpec()
+    const result = await runner.execute('generateAssets', { gameId: 'demo-game', seed: 42 })
+    expect(result.ok).toBe(true)
+    const content = (result as {
+      content: {
+        seed: number
+        assets: Array<{ id: string; path: string; provider: string; status: string }>
+      }
+    }).content
+    expect(content.seed).toBe(42)
+    expect(content.assets.map((asset) => asset.id)).toEqual(['relic-icon', 'pickup-blip'])
+    const svg = await readFile(
+      join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'relic-icon.svg'),
+      'utf8'
+    )
+    expect(svg).toContain('<svg')
+    const manifest = JSON.parse(await readFile(
+      join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'assets.json'),
+      'utf8'
+    ))
+    expect(manifest.formatVersion).toBe(2)
+    expect(manifest.assets).toHaveLength(2)
+    expect(manifest.assets[0].status).toBe('generated')
+  })
+
+  it('is idempotent for a given seed and honors assetIds subsetting', async () => {
+    const { runner, repoRoot } = await setupWithSpec()
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 42 })
+    const audioPath = join(
+      repoRoot,
+      'games',
+      'demo-game',
+      'public',
+      'assets',
+      'pickup-blip.wav'
+    )
+    const firstBytes = await readFile(audioPath)
+    await runner.execute('generateAssets', {
+      gameId: 'demo-game',
+      seed: 42,
+      assetIds: ['pickup-blip']
+    })
+    const secondBytes = await readFile(audioPath)
+    expect(Buffer.compare(firstBytes, secondBytes)).toBe(0)
+    const manifest = JSON.parse(await readFile(
+      join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'assets.json'),
+      'utf8'
+    ))
+    expect(manifest.assets).toHaveLength(2)
+  })
+
+  it('fails with typed errors on unknown assetIds, missing gamespec, and missing seed', async () => {
+    const withSpec = await setupWithSpec()
+    await expect(withSpec.runner.execute('generateAssets', {
+      gameId: 'demo-game',
+      seed: 1,
+      assetIds: ['nope']
+    })).rejects.toThrow(/nope/)
+    await expect(withSpec.runner.execute('generateAssets', { gameId: 'demo-game' }))
+      .rejects.toThrow(/seed/)
+    const bare = await setup(V2_MANIFEST)
+    await expect(bare.runner.execute('generateAssets', { gameId: 'demo-game', seed: 1 }))
+      .rejects.toThrow(/gamespec/)
   })
 })
