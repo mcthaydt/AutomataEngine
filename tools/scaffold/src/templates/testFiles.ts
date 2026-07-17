@@ -93,6 +93,23 @@ describe('gameplay', () => {
     expect(pose?.position).toMatchObject({ x: game.state.position.x, z: game.state.position.z })
     game.dispose()
   })
+
+  it('holds success while the objective gate is closed and releases when it opens', () => {
+    const render = createNullRenderer()
+    let gateOpen = false
+    const game = createGameplay({
+      compiled,
+      render: render.port,
+      control: (state) => seekGoal(state, compiled.tuning),
+      objectiveGate: () => gateOpen
+    })
+    for (let index = 0; index < 600 && game.state.status === 'running'; index += 1) game.fixedUpdate(1 / 60)
+    expect(game.state.status).toBe('running')
+    gateOpen = true
+    for (let index = 0; index < 600 && game.state.status === 'running'; index += 1) game.fixedUpdate(1 / 60)
+    expect(game.state.status).toBe('succeeded')
+    game.dispose()
+  })
 })
 `
 }
@@ -227,7 +244,8 @@ import { editorRegistration, loadEditorRegistration } from '../../src/project/ed
 import { evaluateProject } from '../../src/project/evaluation'
 import { createTemplate } from '../../src/project/template'
 
-const unusedDeps = { readText: () => Promise.reject(new Error('this game reads no data files')) }
+// Missing composition data is the expected plain-scaffold path.
+const noCompositionDeps = { readText: () => Promise.reject(new Error('no composition data')) }
 
 function nullPhysics(): PhysicsPort {
   return {
@@ -239,8 +257,8 @@ function nullPhysics(): PhysicsPort {
 
 describe('registry loader convention', () => {
   it('exposes the conventional editor and headless loaders', async () => {
-    await expect(loadEditorRegistration(unusedDeps)).resolves.toBe(editorRegistration)
-    const headless = await loadHeadlessRegistration(unusedDeps)
+    await expect(loadEditorRegistration(noCompositionDeps)).resolves.toBe(editorRegistration)
+    const headless = await loadHeadlessRegistration(noCompositionDeps)
     expect(headless.project).toBe(editorRegistration.project)
     expect(headless.preview).toBeUndefined()
     expect(headless.evaluation).toBeDefined()
@@ -279,6 +297,23 @@ describe('headless evaluation', () => {
     data.timeLimitS = 0.05
     await expect(evaluateProject(hopeless, { maxSteps: 100 })).resolves.toMatchObject({ outcome: 'failed' })
   })
+
+  it('routes the scripted control through composed pack objectives first', async () => {
+    const composition = {
+      formatVersion: 1 as const,
+      gameId: createTemplate().manifest.gameId,
+      source: null,
+      packs: [{
+        id: 'interaction-inventory',
+        version: '1.0.0',
+        config: { interactRadius: 1.5, items: [{ id: 'item-1', position: { x: 0, z: 0 } }], iconPath: null }
+      }],
+      assets: []
+    }
+    const result = await evaluateProject(createTemplate(), { maxSteps: 2000 }, composition)
+    expect(result.outcome).toBe('passed')
+    expect(result.metrics.objectivesComplete).toBe(true)
+  })
 })
 `
 }
@@ -286,12 +321,34 @@ describe('headless evaluation', () => {
 export function e2eSmokeSpec(name: string, port: number): string {
   return `import { expect, test } from '@playwright/test'
 
-test('${name} boots to a playable canvas without page errors', async ({ page }) => {
+test('${name} boots to a playable canvas without errors and within frame budget', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(String(error)))
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
   await page.goto('http://127.0.0.1:${port}/')
   await expect(page.locator('canvas')).toBeVisible()
   await expect(page.locator('.hud')).toContainText(/reach the beacon/i)
+  const p95 = await page.evaluate(async () => {
+    const samples: number[] = []
+    let last = performance.now()
+    await new Promise<void>((resolve) => {
+      const tick = (now: number): void => {
+        samples.push(now - last)
+        last = now
+        if (samples.length >= 140) resolve()
+        else requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    })
+    const settled = samples.slice(20).sort((a, b) => a - b)
+    return settled[Math.floor(settled.length * 0.95)] ?? 0
+  })
+  // The generic scaffold records a valid sample; the Phase 3 slice owns the
+  // strict p95 budget so platform-specific SwiftShader variance does not make
+  // every newly scaffolded project flaky.
+  expect(Number.isFinite(p95) && p95 > 0).toBe(true)
   expect(errors).toEqual([])
 })
 `

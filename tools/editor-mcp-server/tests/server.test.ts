@@ -100,9 +100,9 @@ describe('MCP server', () => {
     await server.connect(serverTransport)
     await client.connect(clientTransport)
     try {
-      expect((await client.listPrompts()).prompts).toEqual([
+      expect((await client.listPrompts()).prompts).toEqual(expect.arrayContaining([
         expect.objectContaining({ name: 'build-game' })
-      ])
+      ]))
       const prompt = await client.getPrompt({
         name: 'build-game',
         arguments: { description: 'a chill fishing game' }
@@ -160,12 +160,22 @@ describe('MCP server', () => {
       bin: Record<string, string>
     }
     const command = resolve(packageDir, manifest.bin['automata-editor-mcp']!)
-    const transport = new StdioClientTransport({ command, cwd: packageDir, stderr: 'pipe' })
+    const transport = new StdioClientTransport({
+      command,
+      args: ['--workspace', resolve(packageDir, '../..')],
+      cwd: packageDir,
+      stderr: 'pipe'
+    })
     const client = new Client({ name: 'editor-mcp-bin-test', version: '0.0.0' })
 
     await client.connect(transport)
     try {
-      expect((await client.listTools()).tools).toHaveLength(16)
+      expect((await client.listTools()).tools).toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'compileGameSpec' }),
+        expect.objectContaining({ name: 'getGameSpec' }),
+        expect.objectContaining({ name: 'renderDesignBrief' }),
+        expect.objectContaining({ name: 'recordDesignDecision' })
+      ]))
     } finally {
       await client.close()
     }

@@ -36,4 +36,39 @@ describe('project world sync', () => {
     sync.dispose()
     expect(renderer.calls.some((call) => call.op === 'removeGroup')).toBe(true)
   })
+
+  it('does not re-add an unchanged entity on re-sync', () => {
+    const renderer = createNullRenderer()
+    const sync = createProjectWorldSync(renderer.port)
+    sync.syncNow([item('a', 0)], new Set())
+    renderer.calls.length = 0
+
+    sync.syncNow([item('a', 0)], new Set())
+
+    expect(renderer.calls.filter((call) => call.op === 'add')).toHaveLength(0)
+    expect(renderer.calls.filter((call) => call.op === 'remove')).toHaveLength(0)
+  })
+
+  it('re-adds an entity whose position changed', () => {
+    const renderer = createNullRenderer()
+    const sync = createProjectWorldSync(renderer.port)
+    sync.syncNow([item('a', 0)], new Set())
+    renderer.calls.length = 0
+
+    sync.syncNow([item('a', 5)], new Set())
+
+    expect(renderer.calls.filter((call) => call.op === 'remove')).toHaveLength(1)
+    expect(renderer.calls.filter((call) => call.op === 'add')).toHaveLength(1)
+  })
+
+  it('stays bounded under add/remove churn', () => {
+    const renderer = createNullRenderer()
+    const sync = createProjectWorldSync(renderer.port)
+    const many = Array.from({ length: 100 }, (_, index) => item(`e${index}`, index))
+
+    sync.syncNow(many, new Set())
+    expect(renderer.port.objectCount).toBe(100)
+    sync.syncNow([], new Set())
+    expect(renderer.port.objectCount).toBe(0)
+  })
 })

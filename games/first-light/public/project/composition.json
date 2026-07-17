@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "gameId": "first-light",
+  "source": {
+    "specVersion": 1,
+    "specHash": "91eccc5de7c305d0ee637f085fd85f16dec4f6ad95d362fbcd354f0b374c4fac",
+    "seed": 933489342
+  },
+  "packs": [
+    {
+      "id": "interaction-inventory",
+      "version": "1.0.0",
+      "config": {
+        "interactRadius": 1.5,
+        "items": [
+          {
+            "id": "item-1",
+            "position": {
+              "x": 3.46,
+              "z": -1.12
+            }
+          },
+          {
+            "id": "item-2",
+            "position": {
+              "x": -7.19,
+              "z": -2.24
+            }
+          }
+        ],
+        "iconPath": "assets/item-icon.svg"
+      }
+    }
+  ],
+  "assets": [
+    {
+      "id": "item-icon",
+      "path": "assets/item-icon.svg"
+    }
+  ]
+}

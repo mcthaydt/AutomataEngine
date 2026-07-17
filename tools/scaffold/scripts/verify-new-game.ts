@@ -34,32 +34,38 @@ function run(command: string, args: string[], options: RunOptions): Promise<void
   })
 }
 
-function assertMcpServerLoads(cwd: string): Promise<void> {
-  process.stderr.write(`\n>> MCP server --project games/${GAME}/public/project\n`)
+function assertMcpServerOpensProject(cwd: string): Promise<void> {
+  process.stderr.write(`\n>> MCP workspace server: openProject ${GAME}\n`)
   return new Promise((resolvePromise, reject) => {
     const child = spawn(
       'npx',
-      ['tsx', 'tools/editor-mcp-server/src/main.ts', '--project', `games/${GAME}/public/project`],
-      { cwd, stdio: ['pipe', 'ignore', 'pipe'] }
+      ['tsx', 'tools/editor-mcp-server/src/main.ts', '--workspace', '.'],
+      { cwd, stdio: ['pipe', 'pipe', 'pipe'] }
     )
     let stderr = ''
     const timer = setTimeout(() => {
       child.kill()
-      reject(new Error(`MCP server did not report ready. stderr:\n${stderr}`))
-    }, 60_000)
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString()
-      if (/automata-editor MCP ready/.test(stderr)) {
-        clearTimeout(timer)
-        child.kill()
-        process.stderr.write(stderr)
-        resolvePromise()
+      reject(new Error(`MCP openProject timed out. stderr:\n${stderr}`))
+    }, 120_000)
+    let buffer = ''
+    const send = (message: object): void => { child.stdin.write(`${JSON.stringify(message)}\n`) }
+    child.stdout.on('data', (chunk: Buffer) => {
+      buffer += chunk.toString()
+      let newline = buffer.indexOf('\n')
+      while (newline !== -1) {
+        const line = buffer.slice(0, newline); buffer = buffer.slice(newline + 1); newline = buffer.indexOf('\n')
+        if (!line.trim()) continue
+        const message = JSON.parse(line) as { id?: number; error?: unknown; result?: { isError?: boolean; content?: Array<{ text?: string }> } }
+        if (message.id === 1) { send({ jsonrpc: '2.0', method: 'notifications/initialized' }); send({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'openProject', arguments: { gameId: GAME } } }) }
+        if (message.id === 2) { clearTimeout(timer); child.kill(); if (message.error || message.result?.isError) reject(new Error(`openProject failed: ${JSON.stringify(message)}`)); else if (!message.result?.content?.[0]?.text?.includes(`"opened":"${GAME}"`)) reject(new Error(`unexpected openProject result: ${JSON.stringify(message.result)}`)); else resolvePromise() }
       }
     })
+    child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString() })
     child.on('error', (error) => {
       clearTimeout(timer)
       reject(error)
     })
+    send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'verify-new-game', version: '0' } } })
   })
 }
 
@@ -71,7 +77,7 @@ try {
   await run('npm', ['install', '--no-audit', '--no-fund'], { cwd: clone })
   await run('npm', ['run', 'ci'], { cwd: clone })
   await run('npm', ['run', 'build', '-w', GAME], { cwd: clone })
-  await assertMcpServerLoads(clone)
+  await assertMcpServerOpensProject(clone)
   await run('npx', ['playwright', 'test', `games/${GAME}/e2e`], {
     cwd: clone,
     env: { PLAYWRIGHT_ONLY: GAME }

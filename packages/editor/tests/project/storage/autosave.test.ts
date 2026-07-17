@@ -58,6 +58,22 @@ describe('project autosave', () => {
     expect(setSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('flushes a pending write without unsubscribing from later edits', () => {
+    vi.useFakeTimers()
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const storage = memoryStorage()
+    const autosave = installProjectAutosave(store, storage, { debounceMs: 100 })
+
+    store.dispatch(setSpeed(8))
+    autosave.flush()
+    expect((loadProjectAutosave(storage, 'fake-demo')!.resources.tuning!.data as { speed: number }).speed).toBe(8)
+
+    store.dispatch(setSpeed(9))
+    vi.advanceTimersByTime(100)
+    expect((loadProjectAutosave(storage, 'fake-demo')!.resources.tuning!.data as { speed: number }).speed).toBe(9)
+    autosave()
+  })
+
   it('returns null for the legacy envelope, garbage, and future versions', () => {
     const storage = memoryStorage()
     storage.set(projectAutosaveKey('p'), JSON.stringify({ version: 1, snapshot: {} }))
@@ -80,5 +96,17 @@ describe('project autosave', () => {
     vi.advanceTimersByTime(100)
     const raw = storage.get(projectAutosaveKey('fake-demo'))!
     expect(raw).toBe(stringifyProjectBundle(toProjectBundle(store.getState().snapshot)))
+  })
+
+  it('preserves an edit across a persist → reload round-trip', () => {
+    const store = createProjectEditorStore(fakeEditorRegistration, fakeSnapshot())
+    const storage = memoryStorage()
+    const stop = installProjectAutosave(store, storage, { debounceMs: 100 })
+
+    store.dispatch(setSpeed(12))
+    stop()
+
+    const reopened = loadProjectAutosave(storage, 'fake-demo')
+    expect((reopened!.resources.tuning!.data as { speed: number }).speed).toBe(12)
   })
 })

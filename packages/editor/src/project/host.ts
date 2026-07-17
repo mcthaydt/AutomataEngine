@@ -12,6 +12,7 @@ import { createProjectEditorStore, type ProjectEditorStore } from './store'
 import { buildProjectSpatialItems, type SpatialItem } from './spatial'
 import { createProjectWorldSync, type ProjectWorldSync } from './worldSync'
 import type { ProjectSelection } from './selection'
+import { uniqueEntityId } from './ids'
 
 /**
  * The generic project editor core: it owns the session store, the edit-mode
@@ -57,7 +58,6 @@ export function createProjectEditor<Compiled>(opts: ProjectEditorOpts<Compiled>)
   let lastSnapshot: ProjectSnapshot | undefined
   let lastSceneId: string | undefined
   let lastSelection: ProjectSelection | undefined
-  let placeCounter = 0
 
   const activeScene = (): SceneDocument | undefined => {
     const state = store.getState()
@@ -79,12 +79,6 @@ export function createProjectEditor<Compiled>(opts: ProjectEditorOpts<Compiled>)
       ? { type: 'select', selection: { kind: 'entity', sceneId, entityIds: [id] } }
       : { type: 'select', selection: { kind: 'scene', sceneId } })
   }
-  const uniqueEntityId = (scene: SceneDocument, base: string): string => {
-    let id = `${base}-${++placeCounter}`
-    while (scene.entities.some((entity) => entity.id === id)) id = `${base}-${++placeCounter}`
-    return id
-  }
-
   const leavePlay = (): void => {
     if (!play) return
     play.dispose()

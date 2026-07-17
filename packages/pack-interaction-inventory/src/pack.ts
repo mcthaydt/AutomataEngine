@@ -1,0 +1,85 @@
+import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
+import { packCompatibility } from '@automata/game-kit'
+import {
+  createInventoryState, deserializeInventory, inventoryComplete, packConfigSchema,
+  serializeInventory, stepInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT,
+  type InventoryPackConfig, type InventoryState
+} from './core'
+
+const IDENTITY = { x: 0, y: 0, z: 0, w: 1 }
+const ITEM_COLOR = '#ffd23f'
+
+/** The first real capability pack: item pickups + inventory HUD over interface v2. */
+export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
+  id: 'interaction-inventory',
+  version: '1.0.0',
+  compatibility: packCompatibility({
+    stateSlices: { owns: [INVENTORY_SLICE_ID], reads: [] },
+    events: { emits: [ITEM_ACQUIRED_EVENT], consumes: [] }
+  }),
+  configSchema: packConfigSchema,
+  register(ctx, config): PackRuntimeHandle {
+    let state: InventoryState = createInventoryState()
+    ctx.state.register(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
+    const entities = new Map<string, { id: string }>()
+    const addItemRenderable = (item: InventoryPackConfig['items'][number]): void => {
+      const entity = { id: `inventory-item-${item.id}` }
+      entities.set(item.id, entity)
+      ctx.render.add(entity, { primitive: 'sphere', radius: 0.35, color: ITEM_COLOR })
+      ctx.render.setPose(entity, { x: item.position.x, y: 0.35, z: item.position.z }, IDENTITY)
+    }
+    for (const item of config.items) addItemRenderable(item)
+
+    const hud = document.createElement('div')
+    hud.className = 'inventory-hud'
+    if (config.iconPath !== null) {
+      const icon = document.createElement('img')
+      icon.src = config.iconPath
+      icon.alt = 'item'
+      icon.width = 16
+      icon.height = 16
+      hud.append(icon)
+    }
+    const count = document.createElement('span')
+    hud.append(count)
+    const updateHud = (): void => { count.textContent = ` ${state.collected.length}/${config.items.length}` }
+    updateHud()
+    ctx.host.overlays.append(hud)
+
+    /** Reconcile renderables to the restored state, then publish it and refresh the HUD. */
+    const applyState = (next: InventoryState): void => {
+      const collected = new Set(next.collected)
+      for (const item of config.items) {
+        const entity = entities.get(item.id)
+        if (collected.has(item.id)) {
+          if (entity) { ctx.render.remove(entity); entities.delete(item.id) }
+        } else if (!entity) {
+          addItemRenderable(item)
+        }
+      }
+      state = next
+      ctx.state.set(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
+      updateHud()
+    }
+
+    return {
+      fixedUpdate(_dt, world) {
+        const next = stepInventory(state, world.playerPosition, config)
+        if (next === state) return
+        const acquired = next.collected.filter((id) => !state.collected.includes(id))
+        applyState(next)
+        for (const itemId of acquired) {
+          ctx.events.emit(ITEM_ACQUIRED_EVENT, { packId: interactionInventoryPack.id, itemId })
+        }
+      },
+      objectivesComplete: () => inventoryComplete(state, config),
+      saveState: () => serializeInventory(state),
+      loadState(raw) { applyState(deserializeInventory(raw)) },
+      dispose() {
+        for (const entity of entities.values()) ctx.render.remove(entity)
+        entities.clear()
+        hud.remove()
+      }
+    }
+  }
+}

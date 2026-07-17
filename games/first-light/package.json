@@ -1,0 +1,34 @@
+{
+  "name": "first-light",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./project": "./src/project/index.ts",
+    "./editor": "./src/project/editor.ts"
+  },
+  "dependencies": {
+    "@automata/contracts": "*",
+    "@automata/editor": "*",
+    "@automata/engine": "*",
+    "@automata/game-kit": "*",
+    "@automata/game-compose": "*",
+    "@automata/pack-interaction-inventory": "*",
+    "@automata/pack-registry": "*",
+    "@automata/project": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "validate:project": "node --import tsx scripts/validate-project.ts",
+    "generate:project": "node --import tsx scripts/generate-project.ts",
+    "build": "npm run validate:project && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "automata": {
+    "devPort": 5178
+  }
+}

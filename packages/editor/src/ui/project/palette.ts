@@ -1,4 +1,5 @@
 import type { ProjectCommand } from '@automata/project'
+import { uniqueComponentId } from '../../project/ids'
 import type { ProjectEditorState } from '../../project/store'
 
 /**
@@ -79,19 +80,11 @@ function renderAddComponent(root: HTMLElement, state: ProjectEditorState, option
     button.dataset.addComponent = type.typeId
     button.textContent = type.label
     button.addEventListener('click', () => {
-      const componentId = uniqueComponentId(entity.components.map((component) => component.id), type.typeId)
+      const base = type.typeId.split('.').pop() ?? 'component'
+      const componentId = uniqueComponentId(entity.components.map((component) => component.id), base)
       options.dispatch({ type: 'addComponent', sceneId: selection.sceneId, entityId, component: { id: componentId, typeId: type.typeId, data: structuredClone(type.defaultData) } })
     })
     menu.append(button)
   }
   root.append(menu)
-}
-
-function uniqueComponentId(existing: string[], typeId: string): string {
-  const base = typeId.split('.').pop() ?? 'component'
-  const taken = new Set(existing)
-  let id = base
-  let counter = 1
-  while (taken.has(id)) id = `${base}-${++counter}`
-  return id
 }

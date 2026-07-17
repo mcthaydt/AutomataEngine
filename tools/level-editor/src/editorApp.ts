@@ -26,6 +26,7 @@ import {
 import { applyGameMigration, PROJECT_FORMAT_VERSION, stringifyProjectBundle, toProjectBundle, type ProjectSnapshot } from '@automata/project'
 import type { BrowserWorkspace, OpenedBrowserProject } from './browserWorkspace'
 import type { ProjectCatalog } from './projectCatalog'
+import { showRecoveryNotice } from './recoveryNotice'
 
 export type DirtyAction = 'save' | 'export' | 'discard' | 'cancel'
 
@@ -34,6 +35,8 @@ export interface ProjectSessionHandle {
   hasUnsavedChanges(): boolean
   save(): Promise<boolean>
   exportBundle(): void
+  /** Flush a pending autosave without tearing down the live editor session. */
+  flushAutosave(): void
   dispose(): void
 }
 
@@ -225,6 +228,11 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
     })
   }
 
+  // beforeunload can be cancelled by the dirty-work confirmation in main.ts. Flush now,
+  // but leave session teardown to pagehide/app disposal after navigation is confirmed.
+  const onBeforeUnload = (): void => session?.flushAutosave()
+  window.addEventListener('beforeunload', onBeforeUnload)
+
   return {
     hasUnsavedChanges: () => session?.hasUnsavedChanges() ?? false,
     dispose() {
@@ -233,6 +241,7 @@ export async function mountEditorApp(options: EditorAppOptions): Promise<EditorA
       chooserGeneration++
       session?.dispose()
       session = null
+      window.removeEventListener('beforeunload', onBeforeUnload)
       options.root.replaceChildren()
       removeTheme()
     }
@@ -269,8 +278,13 @@ export async function mountProjectSession(
     const autosaved = loadProjectAutosave(options.autosaveStorage, options.snapshot.manifest.id)
     if (autosaved && stringifyProjectBundle(toProjectBundle(autosaved)) !== stringifyProjectBundle(toProjectBundle(options.snapshot))) {
       core.store.dispatch({ type: 'recoverSnapshot', snapshot: autosaved })
+      const removeNotice = showRecoveryNotice(options.root, {
+        onDiscard: () => core.store.dispatch({ type: 'loadSnapshot', snapshot: options.snapshot })
+      })
+      cleanup.defer(removeNotice)
     }
-    cleanup.defer(installProjectAutosave(core.store, options.autosaveStorage, { debounceMs: 400 }))
+    const autosave = installProjectAutosave(core.store, options.autosaveStorage, { debounceMs: 400 })
+    cleanup.defer(autosave)
 
     let selectedPrefab: string | null = null
     let backingStorage = options.storage
@@ -427,6 +441,7 @@ export async function mountProjectSession(
       hasUnsavedChanges: () => forceDirty || core.store.getState().dirtyPaths.length > 0,
       save,
       exportBundle,
+      flushAutosave: autosave.flush,
       dispose: () => cleanup.dispose()
     }
   } catch (error) {

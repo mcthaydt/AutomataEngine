@@ -27,6 +27,38 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **Phase 3 — Vertical slice · first playable** (2026-07-14,
+  `phase-0-completion` @ `pending merge`). Added the capability-pack and runtime
+  composition contracts, seeded compose/report/checkpoint MCP flow, enriched
+  browser and critical-path gates, and the checked-in `first-light` playable.
+  Spec:
+  [`2026-07-13-phase-3-vertical-slice-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice-design.md);
+  plan:
+  [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
+
+- **Phase 2 — Versioned `GameSpec`** (2026-07-13, `phase-0-completion` @
+  `pending merge`). Added bounded versioned GameSpec contracts, deterministic
+  validation/normalization/versioning/brief rendering, and MCP design-checkpoint
+  tooling with ten-prompt seeded-replay acceptance. Spec:
+  [`2026-07-13-phase-2-versioned-gamespec-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
+  plan:
+  [`2026-07-13-phase-2-versioned-gamespec.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec.md).
+
+- **Phase 1 — Persistent MCP build sessions (P5)** (2026-07-13,
+  `phase-0-completion` @ `b0c9341`). Added durable session ledgers, atomic
+  recovery, hash-guarded server checks and findings, seeded replay, the empty
+  pack-composition seam, and a workspace-only MCP server with write-through
+  authoring. Spec:
+  [`specs/2026-07-12-p5-persistent-mcp-build-sessions-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md);
+  plan:
+  [`plans/2026-07-12-p5-persistent-mcp-build-sessions.md`](superpowers/plans/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions.md).
+
+- **Phase 0 — Platform integrity** (2026-07-12, `phase-0-completion` @
+  `f62910d`). Completed editor entity-ID/render-sync hardening, P4's shared
+  `@automata/game-kit` browser shell and scaffold adoption, and
+  visible/reversible save-reopen recovery with long-session acceptance coverage.
+  Spec: [`specs/2026-07-11-phase-0-completion-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-11-phase-0-completion-design.md);
+  plan: [`plans/2026-07-11-phase-0-completion.md`](superpowers/plans/active/2026-07/week-28/2026-07-11-phase-0-completion.md).
 - **P8 — Standalone hygiene** (2026-07-11). Retired Monkey Ball's legacy
   ingestion seam (`importLegacyMonkeyBallProject`, `legacyTypes`,
   `scripts/build-project.ts`, quarantined legacy fixtures; dropped the pre-P3
@@ -73,8 +105,8 @@ nobody has to guess. **The trap: P3 (project-file migrations) is not Phase 3
 | (P1) | M1 | Phase 0 precursor | Paved road: scaffold + convention registry | Shipped |
 | P2 | M2 | Phase 0 precursor | Schema unification (zod) + agent prompt layer | Shipped |
 | P3 | M3 | Phase 0 (part) | Project-file migrations, formatVersion 2 | Shipped |
-| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Planned |
-| P5 | — | Phase 1 | Persistent MCP build sessions | Next |
+| P4 | — | Phase 0 (part) | Richer `@automata/game-kit` | Shipped |
+| P5 | — | Phase 1 | Persistent MCP build sessions | Shipped |
 | P6 | — | Cross-cutting | Generated agent docs (llms.txt / API digest) | Planned |
 | P7 | — | — | Retrofit Last Lightkeeper | Moot — game deleted 2026-07-04 |
 | P8 | — | Standalone | Hygiene | Shipped |
@@ -106,68 +138,115 @@ in Phase 1 and extended by later phases). An early **vertical slice (Phase 3)**
 proves the whole pipeline seam on a thin playable before any layer is built at
 scale.
 
-### Phase 0 — Platform integrity · `In progress`
+### Phase 0 — Platform integrity · `Shipped`
 
 - **Goal:** generated projects survive engine evolution and long editing
   sessions.
 - **Depends on:** M1, M2/P2 (shipped).
 - **Tasks:**
   - **P3 project-file migrations** — `Shipped` (2026-07-05).
-  - Editor entity-ID and render-timing hardening — `Planned`.
+  - Editor entity-ID and render-timing hardening — `Shipped` (2026-07-12).
   - **P4** — expand `@automata/game-kit` around the literal game duplication
-    (shared browser boot, loop, visibility, HUD, project-reader) — `Planned`.
-  - Save/reopen recovery and longer browser acceptance coverage — `Planned`.
+    (shared browser boot, loop, visibility, HUD, project-reader) — `Shipped` (2026-07-12).
+  - Save/reopen recovery and longer browser acceptance coverage — `Shipped` (2026-07-12).
 - **Exit:** generated projects survive engine evolution and long editing
   sessions; the remaining hardening/game-kit/acceptance tasks are all done.
 
-### Phase 1 — Persistent MCP build sessions (P5) · `Next`
+### Phase 1 — Persistent MCP build sessions (P5) · `Shipped`
+
+Spec: [`2026-07-12-p5-persistent-mcp-build-sessions-design.md`](superpowers/specs/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions-design.md);
+plan: [`2026-07-12-p5-persistent-mcp-build-sessions.md`](superpowers/plans/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions.md).
 
 - **Goal:** an agent can create, reopen, modify, evaluate, and repair a game
   across process and context resets.
 - **Depends on:** Phase 0 complete.
 - **Tasks:**
-  - Add project open/swap behavior to workspace MCP mode.
+  - Add project open/swap behavior to workspace MCP mode — `Shipped` (`b0c9341`).
   - Persist session state, artifacts, findings, budgets, and resume position
-    outside model context.
-  - Expose changed-file, build, test, browser, and evaluation results.
-  - Make every operation idempotent or artifact-hash guarded.
+    outside model context — `Shipped` (`b0c9341`).
+  - Expose changed-file, build, test, browser, and evaluation results — `Shipped` (`b0c9341`).
+  - Make every operation idempotent or artifact-hash guarded — `Shipped` (`b0c9341`).
   - Stand up the seeded-generation/replay harness and the pack-composition
-    runtime seam that later phases extend.
+    runtime seam that later phases extend — `Shipped` (`b0c9341`).
 - **Exit:** an agent creates, reopens, modifies, evaluates, and repairs a game
   across process and context resets without replaying successful work blindly,
   and generation steps replay deterministically from a recorded seed.
 
-### Phase 2 — Versioned `GameSpec` · `Planned`
+### Phase 2 — Versioned `GameSpec` · `Shipped`
+
+Spec: [`2026-07-13-phase-2-versioned-gamespec-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
+plan: [`2026-07-13-phase-2-versioned-gamespec.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec.md).
 
 - **Goal:** a prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
   design checkpoint. **Evaluators:** structural spec validation (schema, budgets,
   capability compatibility) gating the design checkpoint. **Exit:** ten
   differently worded prompts produce valid, bounded, reviewable specs.
 
-### Phase 3 — Vertical slice · first playable · `Planned`
+### Phase 3 — Vertical slice · first playable · `Shipped`
+
+Spec: [`2026-07-13-phase-3-vertical-slice-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice-design.md);
+plan: [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
 
 - **Goal:** drive one minimal `GameSpec` through the thinnest version of every
-  layer — one pack, hand-minimal content, one placeholder/generated asset,
-  composed by the runtime — into a genuinely playable artifact, proving the
+  layer — one pack (`interaction-inventory`), trivially-generated content, one
+  placeholder asset through a stub asset path, composed by the runtime from a
+  data-driven manifest — into a genuinely playable artifact, proving the
   prompt → spec → compose → play → evaluate seam before any layer is built at
   scale. **Evaluators:** first browser eval (boot/console/frame-time) plus a
   critical-path smoke. **Exit:** a thin but genuinely playable artifact runs
   end-to-end from a minimal `GameSpec` and passes the vertical-slice checkpoint.
+- **Depends on:** Phase 2 complete.
+- **Tasks:**
+  - Contracts: composition + asset-manifest schemas; interaction-inventory
+    capability config — `Shipped`.
+  - Capability-pack interface v1 + `PackEvalHook` + `loadComposition` in
+    `@automata/game-kit` — `Shipped`.
+  - `@automata/pack-interaction-inventory` (pure core, browser adapter, eval
+    hook, seeded compose section) — `Shipped`.
+  - `@automata/pack-registry` + `@automata/game-compose` (`composeGame`,
+    slice report) — `Shipped`.
+  - Composition-aware scaffold templates + enriched browser e2e
+    (console capture, frame-time budget) — `Shipped`.
+  - `composeGame` / `renderSliceReport` / `recordSliceDecision` MCP tools +
+    end-to-end acceptance with seeded replay — `Shipped`.
+  - `games/first-light` slice game: composed, gated, checkpointed, checked
+    in — `Shipped`.
 
-### Phase 4 — Capability packs · `Planned`
+### Phase 4 — Capability packs · `In progress`
+
+Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md).
 
 - **Goal:** widen from the Phase 3 slice to the initial seven reusable gameplay
-  packs (interaction/inventory, dialogue/quests, schedules/relationships,
-  combat/AI, economy/shops/progression, hub-navigation + one vehicle, save/load);
-  each pack is its own spec→plan cycle. **Exit:** packs compose without
+  packs; each pack is its own spec→plan cycle against the umbrella spec's
+  contract v2 and per-pack template. **Exit:** packs compose without
   game-specific editor or MCP changes.
+- **Depends on:** Phase 3 complete. Runs in parallel with Phase 5.
+- **Cycles:**
+  - Cycle 1 — contract v2 + interaction-inventory widening + composition-matrix
+    harness — `Shipped` (plan:
+    [`2026-07-14-phase-4-cycle-1-pack-contract-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-4-cycle-1-pack-contract-v2.md)).
+  - Cycle 2 — branching dialogue & quests pack — `Next`.
+  - Cycle 3 — schedules & relationships pack — `Planned`.
+  - Cycle 4 — combat & enemy AI pack — `Planned`.
+  - Cycle 5 — economy, shops & progression pack — `Planned`.
+  - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
+  - Cycle 7 — save/load integration pack — `Planned`.
 
-### Phase 5 — Asset pipeline · `Planned`
+### Phase 5 — Asset pipeline · `In progress`
+
+Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md).
 
 - **Goal:** a normalized, versioned asset manifest with provider adapters,
   provenance, validation, optimization, and stable independent replacement.
   **Exit:** a failed asset regenerates independently and every release asset has
   valid provenance and browser budgets.
+- **Cycles:**
+  - Cycle 1 — manifest v2 + provenance model + migration + structural
+    validation + MCP surface — `Shipped` (plan:
+    [`2026-07-14-phase-5-cycle-1-asset-manifest-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-5-cycle-1-asset-manifest-v2.md)).
+  - Cycle 2 — provider-adapter interface + first procedural adapters — `Next`.
+  - Cycle 3 — asset validation (media) + optimization + independent
+    regeneration — `Planned`.
 
 ### Phase 6 — Content compiler · `Planned`
 
@@ -197,7 +276,7 @@ scale.
 Work that supports the arc but does not sit inside a single phase. P5's detail
 lives under **Phase 1** in section 3 (it is a phase, not a cross-cutting item).
 
-### P4 — Richer `@automata/game-kit` · `Planned` (also a Phase 0 task)
+### P4 — Richer `@automata/game-kit` · `Shipped` (also a Phase 0 task)
 
 - **What today looks like:** each game's browser entry point duplicates the same
   boot code — `games/monkey-ball/src/main.ts` (~200 lines) and

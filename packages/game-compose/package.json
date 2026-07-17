@@ -1,0 +1,13 @@
+{
+  "name": "@automata/game-compose",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@automata/contracts": "*",
+    "@automata/engine": "*",
+    "@automata/game-kit": "*",
+    "@automata/pack-interaction-inventory": "*"
+  }
+}

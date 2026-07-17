@@ -12,7 +12,17 @@ export function projectAutosaveKey(projectId: string): string {
   return `automata/project-autosave/${projectId}`
 }
 
-export function installProjectAutosave(store: ProjectEditorStore, storage: StoragePort, opts: { debounceMs: number }): () => void {
+/** A disposable autosave subscription that can flush its debounce without stopping future saves. */
+export interface ProjectAutosaveSubscription {
+  (): void
+  flush(): void
+}
+
+export function installProjectAutosave(
+  store: ProjectEditorStore,
+  storage: StoragePort,
+  opts: { debounceMs: number }
+): ProjectAutosaveSubscription {
   let timer: ReturnType<typeof setTimeout> | null = null
   const write = (): void => {
     timer = null
@@ -24,14 +34,18 @@ export function installProjectAutosave(store: ProjectEditorStore, storage: Stora
     if (timer) clearTimeout(timer)
     timer = setTimeout(write, opts.debounceMs)
   })
-  return () => {
+  const flush = (): void => {
     if (timer) {
       clearTimeout(timer)
       timer = null
       write()
     }
+  }
+  const dispose = (): void => {
+    flush()
     unsubscribe()
   }
+  return Object.assign(dispose, { flush })
 }
 
 export function loadProjectAutosave(storage: StoragePort, projectId: string): ProjectSnapshot | null {

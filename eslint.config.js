@@ -5,7 +5,15 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     // Game, tools, and editor may only use third-party libs through @automata/engine.
-    files: ['games/**/*.ts', 'tools/**/*.ts', 'packages/editor/**/*.ts', 'packages/editor-agent/**/*.ts'],
+    files: [
+      'games/**/*.ts',
+      'tools/**/*.ts',
+      'packages/editor/**/*.ts',
+      'packages/editor-agent/**/*.ts',
+      'packages/pack-interaction-inventory/**/*.ts',
+      'packages/pack-registry/**/*.ts',
+      'packages/game-compose/**/*.ts'
+    ],
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [{
@@ -16,9 +24,14 @@ export default tseslint.config(
     }
   },
   {
-    // game-kit may use third-party engine deps only via @automata/engine, and
-    // must not depend on any game or the editor.
-    files: ['packages/game-kit/**/*.ts'],
+    // Reusable game packages may use third-party engine deps only through
+    // @automata/engine, and must not depend on any game or the editor.
+    files: [
+      'packages/game-kit/**/*.ts',
+      'packages/pack-interaction-inventory/**/*.ts',
+      'packages/pack-registry/**/*.ts',
+      'packages/game-compose/**/*.ts'
+    ],
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [
@@ -28,7 +41,7 @@ export default tseslint.config(
           },
           {
             group: ['monkey-ball', 'monkey-ball/*', 'pulsebreak', 'pulsebreak/*', 'level-editor', 'level-editor/*', '@automata/editor', '@automata/editor/*'],
-            message: 'game-kit must not import games or the editor.'
+            message: 'Reusable game packages must not import games or the editor.'
           }
         ]
       }]

@@ -34,6 +34,29 @@ edited per game either; declare `automata.devPort` in the game's own
 `package.json`. Run `npm run verify:new-game` after changing scaffold
 templates or the engine/project APIs they use.
 
+### MCP build sessions
+
+The editor MCP server has one mode: `automata-editor-mcp --workspace <repoRoot>`.
+Agents scaffold with `createGame`, open a game with `openProject`, author over
+the project tools (edits write through to `games/<name>/public/project`), and
+run server-executed checks (`runBuild`, `runTests`, `runBrowserEval`,
+`evaluate`) that persist typed findings. Durable session state lives under
+`.automata/sessions/<gameId>/` (gitignored): step ledger with artifact-hash
+idempotency, findings, attempt budgets, and the resume position. Expensive
+operations are hash-guarded — repeating one with unchanged inputs returns the
+recorded result (`cached: true`) instead of re-running.
+Phase 2 adds the GameSpec surface: agents draft a spec from the prompt and call
+`compileGameSpec` (validated against the supported envelope, versioned, persisted
+to `games/<name>/gamespec.json`), then `renderDesignBrief` and
+`recordDesignDecision` drive the design checkpoint; approval freezes the spec
+version and later changes require a recorded `changeReason`.
+Phase 3 adds the compose surface: `composeGame` turns an approved spec into
+the composition manifest, seeded content, and placeholder assets under
+`games/<name>/` (a seeded, replayable step); `renderSliceReport` assembles the
+vertical-slice evidence; `recordSliceDecision` records the checkpoint —
+approval requires all four gates (build/test/browser/evaluate) green and
+freezes the reviewed spec/composition/content hashes.
+
 ### Component/resource schemas (zod)
 
 Component and resource data schemas are authored in zod v4 via

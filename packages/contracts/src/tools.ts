@@ -61,6 +61,12 @@ export const toolArgSchemas = {
 /** Derived from the schema map so a new tool can never be silently left unadvertised. */
 const TOOL_NAMES = Object.keys(toolArgSchemas) as ToolName[]
 
+/** The mutating project tools; session hosts journal these and support clientStepId dedupe. */
+export const writeToolNames: readonly ToolName[] = [
+  'addEntity', 'removeEntities', 'reparentEntity', 'addComponent', 'removeComponent',
+  'addResource', 'removeResource', 'setProperty', 'insertArrayItem', 'removeArrayItem', 'moveArrayItem'
+]
+
 const TOOL_DESCRIPTIONS: Record<ToolName, string> = {
   addEntity: 'Add an entity to a project scene.',
   removeEntities: 'Remove entities and their descendants from a project scene.',

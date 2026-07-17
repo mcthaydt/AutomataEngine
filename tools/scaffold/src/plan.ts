@@ -51,7 +51,7 @@ export function planNewGame(name: string, options: PlanOptions = {}): ScaffoldPl
     at('README.md', config.readmeMd(name, label, port)),
     at('src/index.ts', src.indexTs()),
     at('src/vite-env.d.ts', src.viteEnvDts()),
-    at('src/main.ts', src.mainTs(name)),
+    at('src/main.ts', src.mainTs()),
     at('src/sim/sim.ts', src.simTs()),
     at('src/game/gameplay.ts', src.gameplayTs()),
     at('src/project/types.ts', project.typesTs(name)),
@@ -70,6 +70,7 @@ export function planNewGame(name: string, options: PlanOptions = {}): ScaffoldPl
     at('tests/project/content.test.ts', tests.contentTest(name, label)),
     at('tests/project/editor.test.ts', tests.editorTest()),
     at('e2e/smoke.spec.ts', tests.e2eSmokeSpec(name, port)),
+    at('public/project/composition.json', `${JSON.stringify({ formatVersion: 1, gameId: name, source: null, packs: [], assets: [] }, null, 2)}\n`),
     ...projectFilesFromSnapshot(snapshot).map((file) => at(file.path, file.content))
   ]
   return { name, label, port, files }

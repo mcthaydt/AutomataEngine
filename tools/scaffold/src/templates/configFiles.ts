@@ -12,8 +12,11 @@ export function packageJson(name: string, port: number): string {
       './editor': './src/project/editor.ts'
     },
     dependencies: {
+      '@automata/contracts': '*',
       '@automata/editor': '*',
       '@automata/engine': '*',
+      '@automata/game-kit': '*',
+      '@automata/pack-registry': '*',
       '@automata/project': '*'
     },
     devDependencies: { tsx: '^4.20.0' },
@@ -123,7 +126,7 @@ Three equivalent ways to change it:
    to regenerate \`public/project\`. The content test keeps both in sync.
 2. Open it in the editor: \`npm run dev:editor\`, choose ${label}.
 3. Let an agent edit it over MCP:
-   \`node_modules/.bin/automata-editor-mcp --project games/${name}/public/project\`
+   \`node_modules/.bin/automata-editor-mcp --workspace .\` then call the openProject tool with gameId "${name}"
    exposes typed add/set/validate/evaluate tools.
 
 \`npm run build -w ${name}\` refuses to ship an invalid project.

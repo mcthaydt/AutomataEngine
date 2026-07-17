@@ -1,6 +1,7 @@
 # Factory Roadmap Completion — Phase 0→8 Decomposition (Design)
 
-Status: draft for review. Date: 2026-07-11.
+Status: approved decomposition. Phase 0 completed 2026-07-12; Phases 1–2
+completed 2026-07-13; Phase 3 completed 2026-07-14. Date: 2026-07-11.
 
 ## 1. Purpose & how to read
 
@@ -15,8 +16,9 @@ brainstorming starts from a firm scope instead of re-deriving it.
 It deliberately does **not** carry:
 
 - **Live status / sequencing** — owned by [`/docs/ROADMAP.md`](/docs/ROADMAP.md).
-  When a phase or sub-cycle starts, ships, or slips, update the roadmap, not this
-  file.
+  This design records completed phase boundaries and must be synchronized with
+  the roadmap whenever a phase ships; the roadmap remains the source of truth
+  for work in flight and what comes next.
 - **Strategy & architecture** — the north star, product contract, full `GameSpec`
   interface, the six subsystems, the complete evaluator taxonomy, the repair
   table, risks, and success metrics live in the
@@ -81,10 +83,10 @@ design.
 
 | Phase | Goal (one line) | Advances checkpoint | Depends on | Sub-cycles |
 |---|---|---|---|---|
-| 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 remaining |
-| 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 |
-| 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 |
-| 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 (integration) |
+| 0 — Platform integrity | Generated projects survive engine evolution and long editing sessions | — (internal enabler) | M1, M2/P2 (shipped) | 3 completed (2026-07-12) |
+| 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 completed (2026-07-13) |
+| 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 completed (2026-07-13) |
+| 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 completed (2026-07-14) |
 | 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack) |
 | 5 — Asset pipeline | Normalized, versioned asset manifest with providers, provenance, validation | — | Phase 3 (parallel with 4) | 3 |
 | 6 — Content compiler | Generate full world/cast/quest/dialogue/economy/progression from `GameSpec` | — | Phases 4, 5 | 5 (per domain) |
@@ -111,15 +113,15 @@ simple and expand where it is not.
 - **Depends on.** M1 (paved road) and M2/P2 (schema unification) — both shipped.
 - **In scope.**
   - **P3 project-file migrations** — *shipped 2026-07-05.*
-  - **P8 standalone hygiene** — *shipping 2026-07-11* (legacy Monkey Ball importer
+  - **P8 standalone hygiene** — *shipped 2026-07-11* (legacy Monkey Ball importer
     retired; level editor decoupled from one game's `publicDir`). P8 is a
     standalone cleanup off the phase critical path; noted here for a complete
     platform-integrity picture, tracked as its own item in the roadmap.
-  - Editor entity-ID and render-timing hardening — *remaining.*
+  - Editor entity-ID and render-timing hardening — *shipped 2026-07-12.*
   - **P4 — richer `@automata/game-kit`:** lift the duplicated browser shell (boot,
     loop, input, visibility, project-reader) out of each game's `main.ts` into the
-    kit and regenerate the scaffold template to inherit it — *remaining.*
-  - Save/reopen recovery and longer browser acceptance coverage — *remaining.*
+    kit and regenerate the scaffold template to inherit it — *shipped 2026-07-12.*
+  - Save/reopen recovery and longer browser acceptance coverage — *shipped 2026-07-12.*
 - **Explicitly out / deferred.** No `GameSpec`, no generation, no evaluators
   beyond acceptance coverage. Pure durability and hygiene of the existing
   hand-authored pipeline.
@@ -129,25 +131,31 @@ simple and expand where it is not.
     generated-output evaluator yet.
   - *Determinism/runtime:* none new; stabilizes the project-format and game-kit
     surface the Phase 1 seeded harness will drive.
-- **Sub-cycles it spawns.** (1) editor entity-ID + render-timing hardening; (2) P4
+- **Sub-cycles completed.** (1) editor entity-ID + render-timing hardening; (2) P4
   game-kit shell extraction + scaffold regeneration; (3) save/reopen recovery +
-  acceptance-coverage expansion. (P3 and P8 already have their own cycles.)
+  acceptance-coverage expansion. (P3 and P8 already had their own cycles.)
 - **Contracts introduced.** A stabilized `@automata/game-kit` browser-shell
   surface (boot/loop/input/visibility/project-reader) and a hardened
   project-format load path.
 - **Exit.** Generated projects survive engine evolution and long editing sessions;
   the hardening, game-kit, and acceptance tasks are all done.
-- **Risks retired / carried.** Retires per-game boot-code duplication. Carries no
-  generation risks yet.
+- **Risks retired / carried.** Retires per-game boot-code duplication, silent or
+  non-reversible autosave recovery, session-relative editor IDs, and per-item
+  render-sync serialization. Carries no generation risks yet.
 
 ### Phase 1 — Persistent MCP build sessions (P5)
+
+**Completed 2026-07-13.** Implementation spec:
+[`2026-07-12-p5-persistent-mcp-build-sessions-design.md`](2026-07-12-p5-persistent-mcp-build-sessions-design.md);
+implementation plan:
+[`2026-07-12-p5-persistent-mcp-build-sessions.md`](/docs/superpowers/plans/active/2026-07/week-28/2026-07-12-p5-persistent-mcp-build-sessions.md).
 
 - **Goal.** An agent can create, reopen, modify, evaluate, and repair a game
   across process and context resets.
 - **Advances checkpoint.** None — internal enabler; the durable substrate every
   autonomous phase runs on.
 - **Depends on.** Phase 0 complete.
-- **In scope.**
+- **In scope — shipped.**
   - Project open/swap behavior in workspace MCP mode.
   - Persist session state, artifacts, findings, budgets, and resume position
     *outside model context*.
@@ -163,21 +171,27 @@ simple and expand where it is not.
     results as typed findings) — the pipe every later evaluator reports through.
   - *Determinism/runtime:* **the** phase that establishes the seeded harness and
     composition runtime; foundational for both spines.
-- **Sub-cycles it spawns.** (1) durable build-session substrate — open/swap,
-  persistence, idempotency, results surface (the orchestrator state machine's
-  durability); (2) seeded-generation/replay harness + pack-composition runtime
-  seam.
-- **Contracts introduced.** The durable build-session schema (spec versions,
-  artifact hashes, findings, budgets, resumable next action); the typed-findings
-  result surface; the seed/replay contract; the runtime pack-composition seam
-  interface.
+- **Sub-cycles completed.** (1) durable build-session substrate — open/swap,
+  atomic persistence, idempotency, results surface, and write-through authoring;
+  (2) seeded-generation/replay harness + pack-composition runtime seam.
+- **Contracts introduced.** The durable build-session schema (versioned session
+  documents, artifact hashes, findings, budgets, resumable next action); the
+  typed-findings result surface; the seed/replay contract; and the runtime
+  `GamePack`/`composePacks` seam interface.
 - **Exit.** An agent creates, reopens, modifies, evaluates, and repairs a game
   across resets without blindly replaying successful work, and generation steps
   replay deterministically from a recorded seed.
 - **Risks retired / carried.** Retires "provider continuation state as source of
-  truth" (durable artifacts). Carries seam correctness forward.
+  truth" through durable, hash-guarded artifacts and write-through project
+  edits. Carries real-pack and generated-content seam correctness forward to
+  Phases 3–6.
 
 ### Phase 2 — Versioned `GameSpec`
+
+**Completed 2026-07-13.** Implementation spec:
+[`2026-07-13-phase-2-versioned-gamespec-design.md`](../week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
+implementation plan:
+[`2026-07-13-phase-2-versioned-gamespec.md`](/docs/superpowers/plans/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec.md).
 
 - **Goal.** A prompt compiles into a valid, bounded, reviewable `GameSpec` plus a
   design checkpoint.
@@ -185,17 +199,17 @@ simple and expand where it is not.
   produces the artifact that checkpoint reviews.
 - **Depends on.** Phase 1 (durable sessions hold the spec and checkpoint
   decision).
-- **In scope.**
-  - Define the first supported envelope and the `GameSpec` schemas (identity,
-    direction, budgets, capability selection, world/cast/story/progression stubs,
-    asset requirements, acceptance).
-  - The intent compiler: prompt → `GameSpec` + human-readable design brief;
-    normalize vague requests to supported mechanics; select capability packs and
-    budgets; detect contradictions and unsupported asks; enforce originality and
-    content policy; generate acceptance criteria.
-  - Spec immutability + versioning (a new version on any checkpoint change, with a
-    recorded reason).
-  - Produce the design-checkpoint artifact.
+- **In scope — shipped.**
+  - The first supported envelope and `GameSpec` schemas: identity, direction,
+    budgets, capability selection, world/cast, story beats plus main/side quest
+    stubs, progression, asset requirements, and acceptance criteria.
+  - A deterministic compiler surface that validates, normalizes, versions, and
+    persists a supplied spec draft; it renders a human-readable design brief and
+    rejects unsupported or contradictory envelope requests.
+  - Spec immutability and versioning: approval freezes a version; later changes
+    create a new version and require a recorded reason.
+  - The design-checkpoint artifact and decisions, persisted atomically with the
+    durable session state.
 - **Explicitly out / deferred.** No code/content/asset generation from the spec
   (the intent compiler explicitly does not generate game code or assets).
   Capability *packs* are Phase 4; here only their *selection/config schema*
@@ -205,30 +219,41 @@ simple and expand where it is not.
     compatibility — gating the design checkpoint.
   - *Determinism/runtime:* prompt→spec runs under the seeded harness — the same
     prompt and seed reproduce the same spec, so generation is deterministic.
-- **Sub-cycles it spawns.** (1) `GameSpec` schema + envelope definition; (2) intent
-  compiler (prompt → spec + brief); (3) structural spec-validation evaluator +
-  design-checkpoint artifact.
+- **Sub-cycles completed.** (1) `GameSpec` schema + envelope definition; (2)
+  compiler/normalization + design brief; (3) structural spec-validation evaluator
+  + design-checkpoint artifact.
 - **Contracts introduced.** **The `GameSpec` schema itself** — the central contract
   every subsequent phase consumes — plus the capability-selection schema and the
   acceptance-criterion format.
-- **Exit.** Ten differently worded prompts produce valid, bounded, reviewable
-  specs.
+- **Exit — met.** Ten materially distinct prompt-derived drafts compile to valid,
+  bounded, reviewable specs and replay deterministically. Post-implementation
+  review also closed quest-budget validation, persistence-error handling, atomic
+  write collision resistance, and lifecycle rejection coverage.
 - **Risks retired / carried.** Attacks platform scope creep (envelope enforcement
   and disclosure) and begins on content incoherence (explicit spec facts).
 
 ### Phase 3 — Vertical slice · first playable
+
+**Completed 2026-07-14.** Implementation spec:
+[`2026-07-13-phase-3-vertical-slice-design.md`](../week-29/2026-07-13-phase-3-vertical-slice-design.md);
+implementation plan:
+[`2026-07-13-phase-3-vertical-slice.md`](/docs/superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
 
 - **Goal.** Drive one minimal `GameSpec` through the thinnest version of every
   layer — one pack, hand-minimal content, one placeholder/generated asset,
   composed by the runtime — into a genuinely playable artifact.
 - **Advances checkpoint.** **Vertical-slice approval** (checkpoint 2).
 - **Depends on.** Phase 2 (a minimal valid `GameSpec` to drive).
-- **In scope.**
-  - One minimal capability pack (the template for Phase 4's seven).
-  - Hand-minimal or trivially-generated content for that pack.
-  - A single placeholder/generated asset through the (stub) asset path.
-  - Runtime composition of pack + content + asset into a playable artifact.
-  - Present at the vertical-slice checkpoint.
+- **In scope — shipped.**
+  - The `interaction-inventory` capability pack, establishing the reusable
+    capability-pack and headless-evaluation interfaces Phase 4 widens.
+  - Seeded minimal content generated from the approved `GameSpec` and recorded
+    in a replayable composition step.
+  - One generated SVG placeholder plus a versioned stub asset manifest.
+  - Data-driven runtime composition of pack + content + asset into the checked-in
+    `games/first-light` playable.
+  - An evidence report and hash-bound vertical-slice checkpoint requiring green
+    build, test, browser, and critical-path evaluation gates.
 - **Explicitly out / deferred.** Breadth. Exactly one pack, one asset, minimal
   content — no second pack, no content compiler, no real asset providers. The
   point is the *seam*, not scale.
@@ -237,16 +262,24 @@ simple and expand where it is not.
     a **critical-path completion smoke** on the slice.
   - *Determinism/runtime:* the first real end-to-end exercise of the Phase-1
     composition runtime from a seed.
-- **Sub-cycles it spawns.** A single integration cycle — it deliberately touches
-  every layer thinly, which is the point; not decomposed.
-- **Contracts introduced.** The **capability-pack interface** (proven by the one
-  pack) and the **runtime composition contract** (spec + pack + content + asset →
-  playable) — both templates the later phases widen.
-- **Exit.** A thin but genuinely playable artifact runs end-to-end from a minimal
-  `GameSpec` and passes the vertical-slice checkpoint.
+- **Sub-cycles completed.** One integration cycle touching every layer thinly:
+  contracts → pack → seeded compose → generated project/assets → runtime boot →
+  browser/critical-path evaluation → checkpoint.
+- **Contracts introduced.** The **capability-pack interface**, composition and
+  stub asset manifests, pack-evaluation hook, seeded `compose:game` result, slice
+  evidence report, and hash-bound slice decision. Together they establish the
+  runtime composition contract (spec + pack + content + asset → playable) that
+  later phases widen.
+- **Exit — met.** `games/first-light` composes deterministically from its minimal
+  `GameSpec`, boots as a genuinely playable browser artifact, passes build/test,
+  strict browser boot-console-frame-time, and critical-path evaluation gates,
+  and has an approved vertical-slice checkpoint over the reviewed
+  spec/composition/content hashes.
 - **Risks retired / carried.** Retires the **integration risk** — proves
   prompt → spec → compose → play → evaluate before anything is built at scale
-  (the reason this phase was pulled out in the 2026-07-05 revision).
+  (the reason this phase was pulled out in the 2026-07-05 revision). Carries
+  breadth into Phase 4's remaining packs, Phase 5's real asset providers, and
+  Phase 6's full-domain content generation without reopening the proven seam.
 
 ### Phase 4 — Capability packs
 
@@ -405,38 +438,38 @@ simple and expand where it is not.
   passes mechanical tests yet is dull) — mitigated by keeping the human
   slice/release checkpoints until evaluation correlates with player judgment.
 
-## 5. Sub-cycle index (ordered backlog)
+## 5. Sub-cycle index (ordered program)
 
 Every independent spec→plan cycle the arc spawns — 27 in total — roughly ordered. Order within a
 phase is flexible; cross-phase order follows the dependency graph. **Phase 4 and
-Phase 5 cycles can interleave.** This backlog is the part most likely to churn as
-earlier phases teach the later ones what they actually need — treat it as the
-current best decomposition, revised each cycle.
+Phase 5 cycles can interleave.** The remaining program is the part most likely to
+churn as earlier phases teach the later ones what they actually need — treat it as
+the current best decomposition, revised each cycle.
 
-**Phase 0 (remaining):**
+**Phase 0 (completed 2026-07-12):**
 
-1. Editor entity-ID + render-timing hardening
-2. P4 — game-kit browser-shell extraction + scaffold template regen
-3. Save/reopen recovery + longer browser acceptance coverage
+1. Editor entity-ID + render-timing hardening — completed
+2. P4 — game-kit browser-shell extraction + scaffold template regen — completed
+3. Save/reopen recovery + longer browser acceptance coverage — completed
 
-**Phase 1:**
+**Phase 1 (completed 2026-07-13):**
 
-1. Durable build-session substrate (open/swap, persistence, idempotency, results surface)
+1. Durable build-session substrate (open/swap, atomic persistence, idempotency, typed results)
 2. Seeded-generation/replay harness + pack-composition runtime seam
 
-**Phase 2:**
+**Phase 2 (completed 2026-07-13):**
 
 1. `GameSpec` schema + supported-envelope definition
-2. Intent compiler (prompt → `GameSpec` + design brief)
-3. Structural spec-validation evaluator + design-checkpoint artifact
+2. Compiler/normalization surface + design brief
+3. Structural spec-validation evaluator + versioned design-checkpoint artifact
 
-**Phase 3:**
+**Phase 3 (completed 2026-07-14):**
 
 1. Vertical-slice integration (one pack + minimal content + one asset + composition + browser/critical-path smoke)
 
-**Phase 4 (seven peers):**
+**Phase 4 (seven peers; cycle 1 completed — see roadmap for live status):**
 
-1. Interaction & inventory pack
+1. Interaction & inventory pack — contract v2 + widening completed
 2. Branching dialogue & quests pack
 3. Schedules & relationships pack
 4. Combat & enemy AI pack
@@ -446,7 +479,7 @@ current best decomposition, revised each cycle.
 
 **Phase 5 (runs in parallel with Phase 4):**
 
-1. Asset manifest + provenance model
+1. Asset manifest + provenance model — completed
 2. Provider-adapter interface + first adapters
 3. Asset validation + optimization + independent regeneration
 
