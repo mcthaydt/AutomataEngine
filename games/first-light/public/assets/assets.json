@@ -10,22 +10,30 @@
       },
       "path": "assets/item-icon.svg",
       "provenance": {
-        "provider": "stub-generator",
-        "providerVersion": "1.0.0",
-        "generator": "svg-icon@1",
-        "sourceParams": {},
-        "seed": 933489342,
+        "provider": "procedural-svg",
+        "providerVersion": "1.0.1",
+        "generator": "svg-emblem@1",
+        "sourceParams": {
+          "kind": "ui"
+        },
+        "seed": 1414274785,
         "specVersion": 1,
         "determinism": {
           "kind": "seeded"
         },
         "license": {
           "kind": "generated",
-          "notes": "Procedurally generated placeholder."
+          "notes": "Procedurally generated."
         }
       },
-      "transformations": [],
-      "status": "placeholder",
+      "transformations": [
+        {
+          "tool": "svg-minify",
+          "toolVersion": "1.0.0",
+          "params": {}
+        }
+      ],
+      "status": "validated",
       "references": [
         "public/project/composition.json"
       ]
