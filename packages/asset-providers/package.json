@@ -1,0 +1,12 @@
+{
+  "name": "@automata/asset-providers",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@automata/contracts": "*",
+    "@automata/engine": "*",
+    "@automata/project": "*"
+  }
+}

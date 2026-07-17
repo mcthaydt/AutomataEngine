@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 12.5% (1/8 tasks complete)
+**Progress:** 25% (2/8 tasks complete)
 
 ## Global Constraints
 
@@ -184,7 +184,7 @@ git commit -m "feat(contracts): AssetProvider contract types (StyleParams, Provi
 - Consumes: `StyleParams` from `@automata/contracts`; `hashStringToSeed`, `createSeededRng` from `@automata/engine`.
 - Produces: `deriveStyleParams(direction: { visualStyle: string; audioStyle: string }, seed: number): StyleParams` — deterministic; hue in [0,360), 2 accent hues, saturation/lightness in sensible fixed ranges.
 
-- [ ] **Step 1: Scaffold**
+- [x] **Step 1: Scaffold**
 
 `packages/asset-providers/package.json`:
 
@@ -230,7 +230,7 @@ export * from './styleParams'
 
 Run: `npm install`
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/asset-providers/tests/styleParams.test.ts`:
 
@@ -267,12 +267,12 @@ describe('deriveStyleParams', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers`
 Expected: FAIL — cannot resolve `../src/styleParams`.
 
-- [ ] **Step 4: Implement `src/styleParams.ts`**
+- [x] **Step 4: Implement `src/styleParams.ts`**
 
 ```ts
 import type { StyleParams } from '@automata/contracts'
@@ -303,7 +303,7 @@ export function deriveStyleParams(direction: { visualStyle: string; audioStyle: 
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass, commit**
+- [x] **Step 5: Run tests to verify they pass, commit**
 
 Run: `npx vitest run --project asset-providers`
 Expected: PASS.
