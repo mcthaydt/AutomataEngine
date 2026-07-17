@@ -34,6 +34,9 @@ export default defineConfig({
   testDir: '.',
   testMatch: ['e2e/**/*.spec.ts', 'games/*/e2e/**/*.spec.ts'],
   timeout: 30_000,
+  // Frame-budget specs measure scheduler latency; parallel browsers make that
+  // signal describe host contention rather than the game under test.
+  workers: 1,
   use: {
     headless: true,
     launchOptions: {
