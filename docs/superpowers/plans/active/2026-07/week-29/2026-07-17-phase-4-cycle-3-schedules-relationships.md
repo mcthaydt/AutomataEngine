@@ -21,7 +21,7 @@
 - The eval hook's completion must NOT depend on clock or walker progress (the 2000-step matrix budget cannot fit slot cycles); completion derives from questLog diffs only.
 - Gates for cycle completion: `npm run ci`, `npm run verify:new-game`, composition matrix (incl. new scenario suite) green, first-light recompose bit-identical.
 - Commit after every task with the repo's conventional style (`feat(pack-schedules-relationships): …`, `test(…): …`, etc.).
-- Cross-plan coordination: Phase 5 cycle 3 runs in parallel. **This plan's Task 10 (composeGame wiring) must land before Phase 5 cycle 3's compose-wiring task starts** — both edit `packages/game-compose/src/compose.ts`. Expected shared-file rebases beyond that: `package-lock.json`, `docs/ROADMAP.md`. Overlap anywhere else means a territory violation.
+- Cross-plan coordination: Phase 5 cycle 3 runs in parallel. **This plan's Task 11 (composeGame wiring) AND Task 12 (cycle gates, including the bit-identical first-light recompose proof) must both land before Phase 5 cycle 3's compose-wiring task starts** — both plans edit `packages/game-compose/src/compose.ts`, and Task 12's bit-identical proof becomes impossible once Phase 5 replaces the stub asset path. Expected shared-file rebases beyond that: `package-lock.json`, `docs/ROADMAP.md`. Overlap anywhere else means a territory violation.
 
 ---
 

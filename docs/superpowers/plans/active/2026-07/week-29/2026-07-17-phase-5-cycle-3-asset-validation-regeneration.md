@@ -18,7 +18,7 @@
 - Golden-hash updates (provider/orchestrator fixtures) are a reviewed act in the task that causes them, never a drive-by.
 - Gates for cycle completion: `npm run ci`, `npm run verify:new-game`, first-light recompose baseline reviewed and committed, release (`asset`) gate proven to hard-fail a `failed` fixture.
 - Commit after every task (`feat(asset-providers): …`, `feat(editor-mcp-server): …`, etc.).
-- Cross-plan coordination: Phase 4 cycle 3 runs in parallel and owns `packages/game-compose/src/compose.ts` until its Task 11 lands. **Do not start Task 6 (compose wiring) before that lands**; rebase over it. Expected shared-file rebases: `package-lock.json`, `docs/ROADMAP.md`. Overlap anywhere else means a territory violation.
+- Cross-plan coordination: Phase 4 cycle 3 runs in parallel and owns `packages/game-compose/src/compose.ts` until its **cycle close (Task 12)** lands — not just its Task 11 compose wiring. Task 12's first-light recompose proof requires bit-identical output, which this plan's Task 6 makes impossible (stub assets replaced, `composeGame` async). **Do not start Task 6 (compose wiring) before Phase 4 cycle 3 Task 12 lands**; rebase over it. Expected shared-file rebases: `package-lock.json`, `docs/ROADMAP.md`. Overlap anywhere else means a territory violation.
 - Tasks 1–5 must not touch `game-compose`, `game-kit`, or any `pack-*` package.
 
 ---
@@ -201,10 +201,9 @@ Expected: FAIL — cannot resolve `../src/validateMedia`.
 - [ ] **Step 4: Implement `src/validateMedia.ts`**
 
 ```ts
-import type { AssetIssue, AssetManifestEntry } from '@automata/contracts'
+import type { AssetIssue, AssetManifestEntry, StyleParams } from '@automata/contracts'
 import { propRecipeSchema, recipeToRenderables } from './propRecipe'
 import { svgPaletteColors } from './svgProvider'
-import type { StyleParams } from '@automata/contracts'
 
 /**
  * Media slice of the Phase 5 asset evaluator: pure byte-level checks per kind.
@@ -817,7 +816,7 @@ git commit -m "feat(editor-mcp-server): regenerateAsset tool + asset release gat
 
 ---
 
-### Task 6: Compose wiring — real providers in `composeGame` (BLOCKED until Phase 4 cycle 3 Task 11 lands)
+### Task 6: Compose wiring — real providers in `composeGame` (BLOCKED until Phase 4 cycle 3 closes — Task 12)
 
 **Files:**
 - Modify: `packages/game-compose/src/compose.ts` (async; providers replace the stub SVG path)
@@ -839,8 +838,8 @@ All spec asset requirements (every kind) generate through `generateGameAssets` (
 
 - [ ] **Step 1: Confirm the dependency cleared**
 
-Run: `git log --oneline -5 -- packages/game-compose/src/compose.ts`
-Expected: Phase 4 cycle 3's "compose schedules section" commit is present. If not, STOP — this task is blocked.
+Run: `git log --oneline -5 -- packages/game-compose/src/compose.ts` and `git log --oneline -5 -- docs/ROADMAP.md`
+Expected: Phase 4 cycle 3's "compose schedules section" commit AND its cycle-close commit ("docs: Phase 4 cycle 3 shipped …") are both present — the close commit proves its bit-identical first-light recompose gate already ran against the pre-provider compose path. If either is missing, STOP — this task is blocked.
 
 - [ ] **Step 2: Write the failing tests**
 
@@ -876,8 +875,9 @@ it('section configs are unchanged by asset generation (no new rng draws)', async
   expect(result.ok).toBe(true)
   if (!result.ok) return
   // compare pack configs against the frozen cycle-3 golden captured by Phase 4
-  // cycle 3 Task 11 (tests/fixtures/frozen-inv-dlg.json): packs must deep-equal;
-  // the golden's asset entries are superseded by this task and excluded here.
+  // cycle 3 Task 11 (tests/fixtures/frozen-inv-dlg.json): composition.packs must
+  // deep-equal the golden's packs. The golden's asset manifest/files are
+  // superseded by this task — Step 4 relaxes the golden test to packs-only.
 })
 ```
 
@@ -912,6 +912,7 @@ In `packages/game-compose/src/compose.ts`:
   const iconPath = assetManifest.assets.find((entry) => entry.requirement.kind === 'ui')?.path ?? null
 ```
 
+- **Relax the frozen-golden test** (committed by Phase 4 cycle 3 Task 11 in `packages/game-compose/tests/compose.test.ts` against `tests/fixtures/frozen-inv-dlg.json`): this task legitimately changes asset bytes/manifest and makes the result async, so full-output equality can no longer hold. Change its assertion to compare `result.composition.packs` (and only packs) against the golden's `composition.packs`, `await`ing the call. Do NOT regenerate or edit the fixture file itself — the committed golden's pack configs remain the frozen baseline; shrinking the comparison scope is this task's reviewed act.
 - Composition `assets` mapping and file list stay as-is (they read `assetManifest.assets`).
 - In `tools/editor-mcp-server/src/composedWriter.ts`, extend the file type and write step: `'text' in file ? fs.writeFile(target, file.text) : fs.writeFile(target, Buffer.from(file.base64, 'base64'))` (update the `ComposedWriterFs.writeFile` signature to accept `string | Uint8Array`). Extend its tests with a base64 round-trip case.
 - In `composeTools.ts` the `runSeededStep` callback already awaits `composeGame` — verify types compile; the cached-replay path re-writes both variants through the same writer.
