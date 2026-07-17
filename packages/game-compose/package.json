@@ -6,6 +6,7 @@
   "exports": { ".": "./src/index.ts" },
   "dependencies": {
     "@automata/contracts": "*",
+    "@automata/asset-providers": "*",
     "@automata/engine": "*",
     "@automata/game-kit": "*",
     "@automata/pack-dialogue-quests": "*",

@@ -2,14 +2,14 @@ import { randomUUID } from 'node:crypto'
 import { access, lstat, mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
-export interface ComposedFile { path: string; text: string }
+export type ComposedFile = { path: string; text: string } | { path: string; base64: string }
 export interface ComposedWriterFs {
   access(path: string): Promise<void>
   lstat(path: string): Promise<{ isSymbolicLink(): boolean }>
   mkdir(path: string, options: { recursive: true }): Promise<unknown>
   rename(from: string, to: string): Promise<void>
   rm(path: string, options: { force: true }): Promise<void>
-  writeFile(path: string, text: string): Promise<void>
+  writeFile(path: string, contents: string | Uint8Array): Promise<void>
 }
 
 const nodeFs: ComposedWriterFs = { access, lstat, mkdir, rename, rm, writeFile }
@@ -62,7 +62,7 @@ export async function writeComposedFiles(root: string, files: readonly ComposedF
     for (const [index, file] of files.entries()) {
       const entry = staged[index]!
       await fs.mkdir(dirname(entry.target), { recursive: true })
-      await fs.writeFile(entry.temporary, file.text)
+      await fs.writeFile(entry.temporary, 'text' in file ? file.text : Buffer.from(file.base64, 'base64'))
     }
     for (const entry of staged) {
       if (await pathExists(fs, entry.target)) {

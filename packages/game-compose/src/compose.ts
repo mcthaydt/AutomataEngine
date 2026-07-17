@@ -1,11 +1,12 @@
 import { createSeededRng, type SeededRng } from '@automata/engine'
 import type { AssetManifest, CompositionManifest, GameSpec } from '@automata/contracts'
+import { generateGameAssets } from '@automata/asset-providers'
 import { validatePackSet, type GamePack } from '@automata/game-kit'
 import { composeDialogueSection, dialogueQuestsPack } from '@automata/pack-dialogue-quests'
 import { composeInventorySection, interactionInventoryPack } from '@automata/pack-interaction-inventory'
 import { composeSchedulesSection, schedulesRelationshipsPack } from '@automata/pack-schedules-relationships'
 
-export interface ComposedFile { path: string; text: string }
+export type ComposedFile = { path: string; text: string } | { path: string; base64: string }
 export interface ComposeIssue { code: string; message: string }
 export type ComposeResult =
   | { ok: true; composition: CompositionManifest; assetManifest: AssetManifest; files: ComposedFile[]; summary: { packIds: string[]; itemCount: number; assetIds: string[] } }
@@ -22,15 +23,8 @@ const round2 = (value: number): number => Math.round(value * 100) / 100
 const drawGoal = (rng: SeededRng): { x: number; z: number } =>
   ({ x: round2(2 + rng.next() * 8), z: round2(2 + rng.next() * 8) })
 
-const drawIconSvg = (rng: SeededRng): string => {
-  const hue = Math.floor(rng.next() * 360)
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">\n` +
-    `  <circle cx="16" cy="16" r="12" fill="hsl(${hue} 90% 60%)" stroke="#ffffff" stroke-width="2"/>\n` +
-    `</svg>\n`
-}
-
-/** Pure spec→artifacts compose. RNG order: goal, icon hues, item placements, NPC placements, then walker stations. */
-export function composeGame(args: { spec: GameSpec; seed: number; specHash: string }): ComposeResult {
+/** Pure spec→artifacts compose. Provider child seeds never perturb section RNG state. */
+export async function composeGame(args: { spec: GameSpec; seed: number; specHash: string }): Promise<ComposeResult> {
   const { spec, seed, specHash } = args
   const supported = new Set<string>([interactionInventoryPack.id, dialogueQuestsPack.id, schedulesRelationshipsPack.id])
   const unsupported = spec.capabilities.filter((entry) => !supported.has(entry.id))
@@ -59,32 +53,25 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
     return { ok: false, issues: packIssues.map((issue) => ({ code: issue.code, message: issue.message })) }
   }
 
+  const generated = await generateGameAssets({
+    requirements: spec.assets,
+    direction: spec.direction,
+    seed,
+    specVersion: spec.specVersion
+  })
+  const assetFiles: ComposedFile[] = generated.map((asset) => ({
+    path: `public/${asset.path}`,
+    base64: Buffer.from(asset.bytes).toString('base64')
+  }))
+  const assetManifest: AssetManifest = {
+    formatVersion: 2,
+    assets: generated.map((asset) => ({ ...asset.entry, references: ['public/project/composition.json'] }))
+  }
+  const iconPath = assetManifest.assets.find((entry) => entry.requirement.kind === 'ui')?.path ?? null
   const rng = createSeededRng(seed)
   const goal = drawGoal(rng)
-  const uiAssets = spec.assets.filter((asset) => asset.kind === 'ui')
-  const assetFiles: ComposedFile[] = []
-  const assetManifest: AssetManifest = { formatVersion: 2, assets: [] }
-  for (const requirement of uiAssets) {
-    const path = `assets/${requirement.id}.svg`
-    assetFiles.push({ path: `public/${path}`, text: drawIconSvg(rng) })
-    assetManifest.assets.push({
-      id: requirement.id, requirement, path,
-      provenance: {
-        provider: 'stub-generator',
-        providerVersion: '1.0.0',
-        generator: 'svg-icon@1',
-        sourceParams: {},
-        seed,
-        specVersion: spec.specVersion,
-        determinism: { kind: 'seeded' },
-        license: { kind: 'generated', notes: 'Procedurally generated placeholder.' }
-      },
-      transformations: [],
-      status: 'placeholder',
-      references: ['public/project/composition.json']
-    })
-  }
-  const iconPath = assetManifest.assets[0]?.path ?? null
+  // Preserve the frozen section RNG stream after replacing the former stub icon.
+  for (const asset of spec.assets) if (asset.kind === 'ui') rng.next()
   const inventorySelection = spec.capabilities.find((entry) => entry.id === interactionInventoryPack.id)
   if (!inventorySelection) {
     return {

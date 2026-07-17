@@ -11,6 +11,11 @@ async function root() { const value = await mkdtemp(join(tmpdir(), 'composed-wri
 async function exists(path: string) { try { await fs.access(path); return true } catch { return false } }
 
 describe('composed writer', () => {
+  it('writes base64 composed files without text decoding', async () => {
+    const gameRoot = await root()
+    await writeComposedFiles(gameRoot, [{ path: 'public/assets/tone.wav', base64: Buffer.from([0, 255, 1]).toString('base64') }])
+    expect(await readFile(join(gameRoot, 'public/assets/tone.wav'))).toEqual(Buffer.from([0, 255, 1]))
+  })
   it('rejects a symlinked target parent before writing outside the game root', async () => {
     const base = await root()
     const gameRoot = join(base, 'game')
