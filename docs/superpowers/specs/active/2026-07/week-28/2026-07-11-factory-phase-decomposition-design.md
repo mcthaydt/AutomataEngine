@@ -467,10 +467,10 @@ the current best decomposition, revised each cycle.
 
 1. Vertical-slice integration (one pack + minimal content + one asset + composition + browser/critical-path smoke)
 
-**Phase 4 (seven peers; cycle 1 completed — see roadmap for live status):**
+**Phase 4 (seven peers; cycles 1–2 completed — see roadmap for live status):**
 
 1. Interaction & inventory pack — contract v2 + widening completed
-2. Branching dialogue & quests pack
+2. Branching dialogue & quests pack — completed
 3. Schedules & relationships pack
 4. Combat & enemy AI pack
 5. Economy, shops & progression pack
@@ -480,7 +480,7 @@ the current best decomposition, revised each cycle.
 **Phase 5 (runs in parallel with Phase 4):**
 
 1. Asset manifest + provenance model — completed
-2. Provider-adapter interface + first adapters
+2. Provider-adapter interface + first adapters — completed
 3. Asset validation + optimization + independent regeneration
 
 **Phase 6 (five domain peers):**
