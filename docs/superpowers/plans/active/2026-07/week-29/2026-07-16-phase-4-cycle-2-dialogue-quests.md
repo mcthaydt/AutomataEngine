@@ -4,7 +4,7 @@
 
 **Goal:** Ship `@automata/pack-dialogue-quests` — proximity-triggered branching dialogue plus a talk/fetch quest log — as the second standard pack, proving contract v2's cross-pack seam (slice read + event consumption) end-to-end through the composition matrix.
 
-**Architecture:** One package, two pure cores (`questCore`, `dialogueCore`) under a strict cross-referenced config schema; a browser `GamePack` adapter with a dialogue overlay and quest HUD; a seeded `composeSection` fed by the composed inventory section (ordered composition in `game-compose`); a headless eval hook riding an additive `PackEvalHook` slice extension. Spec: [`2026-07-16-phase-4-cycle-2-dialogue-quests-design.md`](../../../specs/active/2026-07/week-29/2026-07-16-phase-4-cycle-2-dialogue-quests-design.md).
+**Architecture:** One package, two pure cores (`questCore`, `dialogueCore`) under a strict cross-referenced config schema; a browser `GamePack` adapter with a dialogue overlay and quest HUD; a seeded `composeSection` fed by the composed inventory section (ordered composition in `game-compose`); a headless eval hook riding an additive `PackEvalHook` slice extension, threaded through both the matrix harness and the production `evaluateProject` walker. Spec: [`2026-07-16-phase-4-cycle-2-dialogue-quests-design.md`](../../../specs/active/2026-07/week-29/2026-07-16-phase-4-cycle-2-dialogue-quests-design.md).
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
@@ -18,6 +18,7 @@
 - Every eval-seam change is additive/optional; the existing inventory hook and any third-party hook must compile untouched.
 - Gates for cycle completion: `npm run ci`, `npm run verify:new-game`, composition matrix green, first-light recompose bit-identical.
 - Commit after every task with the repo's conventional style (`feat(pack-dialogue-quests): …`, `test(…): …`, etc.).
+- Cross-plan coordination: Phase 5 cycle 2 lands in parallel and also edits `packages/contracts/src/gameSpec.ts` (type exports next to `assetRequirementSchema`), `package-lock.json`, and `docs/ROADMAP.md`. Rebase conflicts in exactly those three files are expected; overlap anywhere else means a territory violation.
 
 ---
 
@@ -57,7 +58,7 @@ describe('dialogue-quests capability config', () => {
 - [ ] **Step 2: Run tests to verify the new ones fail**
 
 Run: `npx vitest run --project contracts -t 'dialogue-quests capability config'`
-Expected: 2 failures (talkRadius parse + bounds; the empty-config test already passes against the stub).
+Expected: 1 failure (the in-bounds `talkRadius` parse — the empty-config and rejection tests already pass against the stub, since `z.strictObject({})` rejects every unknown key).
 
 - [ ] **Step 3: Implement**
 
@@ -97,6 +98,7 @@ git commit -m "feat(contracts): real dialogue-quests capability config (talkRadi
 - Create: `packages/pack-dialogue-quests/vitest.config.ts`
 - Create: `packages/pack-dialogue-quests/src/config.ts`
 - Create: `packages/pack-dialogue-quests/src/index.ts`
+- Create: `packages/pack-dialogue-quests/tests/fixtures.ts`
 - Test: `packages/pack-dialogue-quests/tests/config.test.ts`
 
 **Interfaces:**
@@ -175,11 +177,10 @@ Run: `npm install` (links the workspace).
 
 - [ ] **Step 2: Write the failing tests**
 
-`packages/pack-dialogue-quests/tests/config.test.ts`:
+`packages/pack-dialogue-quests/tests/fixtures.ts` — the shared fixture lives here, NOT in a test file: importing a `.test.ts` module re-registers its `describe` blocks in every importing file (duplicate runs), and the inventory pack's `tests/fixtures.ts` is the repo convention.
 
 ```ts
-import { describe, expect, it } from 'vitest'
-import { packConfigSchema, type DialogueQuestsPackConfig } from '../src/config'
+import type { DialogueQuestsPackConfig } from '../src/config'
 
 /** Minimal internally consistent config; tests mutate copies to break one reference at a time. */
 export function validConfig(): DialogueQuestsPackConfig {
@@ -204,6 +205,14 @@ export function validConfig(): DialogueQuestsPackConfig {
     quests: [{ id: 'q-1', kind: 'main', title: 'Fetch the relic', giverNpcId: 'npc-1', objective: { kind: 'fetch', itemIds: ['item-1'] } }]
   }
 }
+```
+
+`packages/pack-dialogue-quests/tests/config.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest'
+import { packConfigSchema } from '../src/config'
+import { validConfig } from './fixtures'
 
 describe('dialogue-quests pack config schema', () => {
   it('parses a valid config unchanged', () => {
@@ -617,7 +626,7 @@ export function choose(dialogue: DialogueDef, session: DialogueSession, index: n
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { validConfig } from './config.test'
+import { validConfig } from './fixtures'
 import { createQuestLog, acceptQuest } from '../src/questCore'
 import { availableChoices, choose, startDialogue } from '../src/dialogueCore'
 
@@ -743,7 +752,7 @@ git commit -m "feat(pack-dialogue-quests): dialogueCore pure traversal with cond
 - Test: `packages/pack-interaction-inventory/tests/evalHook.test.ts` (extend existing file; create if the eval hook is currently only covered indirectly)
 
 **Interfaces:**
-- Produces (consumed by Task 6 and Task 10):
+- Produces (consumed by Tasks 6, 10, and 11):
 
 ```ts
 export type EvalSliceView = Readonly<Record<string, unknown>>
@@ -850,7 +859,7 @@ git commit -m "feat(game-kit): additive eval-seam slice view; inventory hook pub
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { validConfig } from './config.test'
+import { validConfig } from './fixtures'
 import { createDialogueQuestsEvalHook } from '../src/evalHook'
 
 const config = validConfig()   // one fetch main quest 'q-1' needing 'item-1', giver npc-1 at (5,5)
@@ -1007,7 +1016,7 @@ export interface DialogueComposeInput {
 export function composeDialogueSection(input: DialogueComposeInput, rng: SeededRng): DialogueQuestsPackConfig
 ```
 
-Guarantees Task 10/11 rely on: output parses under `packConfigSchema`; same input + seed ⇒ deep-equal output; in every generated node the progressing choice (accept / turn-in) precedes non-progressing ones; fetch quests reference only ids from `input.inventory.items`.
+Guarantees Tasks 10–12 rely on: output parses under `packConfigSchema`; same input + seed ⇒ deep-equal output; in every generated node the progressing choice (accept / turn-in) precedes non-progressing ones; fetch quests reference only ids from `input.inventory.items`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1225,7 +1234,7 @@ git commit -m "feat(pack-dialogue-quests): seeded composeSection with templated 
 - Consumes: everything from Tasks 2–4; `GamePack`, `PackRuntimeHandle`, `packCompatibility` from `@automata/game-kit`.
 - Produces: `dialogueQuestsPack: GamePack<DialogueQuestsPackConfig>` with `id: 'dialogue-quests'`, `version: '1.0.0'`, the spec §2.2 compatibility declaration, `configSchema: packConfigSchema`. DOM contract (tests + later e2e rely on): `.quest-hud` (always present), `.dialogue-overlay` (present only while open) containing `.dialogue-text` and one `<li>` per available choice; keydown `'1'`–`'9'` on `window` selects a choice while open.
 
-Behavior detail: hysteresis — the overlay opens when the player is within `talkRadius` of the nearest non-cooldown NPC; it closes (emitting `dialogueEnded`) when the player moves beyond `1.5 × talkRadius` of the engaged NPC or picks a terminal choice; a terminal close puts that NPC on cooldown until the player leaves the 1.5× radius. Nearest NPC wins; ties break by NPC id order. Effects apply through `questCore`, write the `questLog` slice, and emit `questCompleted` per completed quest.
+Behavior detail: hysteresis — the overlay opens when the player is within `talkRadius` of the nearest non-cooldown NPC; it closes (emitting `dialogueEnded`) when the player moves beyond `1.5 × talkRadius` of the engaged NPC or picks a terminal choice; a terminal close puts that NPC on cooldown until the player leaves the 1.5× radius. Nearest NPC wins; ties break by NPC id order. Effects apply through `questCore`, write the `questLog` slice, and emit `questCompleted` per completed quest. The overlay re-renders only on engage, on a choice, and on `itemAcquired` — never per tick.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1235,7 +1244,7 @@ Behavior detail: hysteresis — the overlay opens when the player is within `tal
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer } from '@automata/engine'
 import { composePacks, createGameHost, type GamePack } from '@automata/game-kit'
-import { validConfig } from './config.test'
+import { validConfig } from './fixtures'
 import { dialogueQuestsPack } from '../src/pack'
 import { QUEST_COMPLETED_EVENT, DIALOGUE_ENDED_EVENT } from '../src/config'
 
@@ -1293,15 +1302,19 @@ describe('dialogue-quests pack (browser adapter)', () => {
     host.dispose(); app.remove()
   })
 
-  it('accepts a quest via number key, filters choices by inventory, completes with items', () => {
+  it('accepts a quest via number key, filters choices by inventory, completes on a return visit', () => {
     const withItem = boot(validConfig(), ['item-1'])
     withItem.step(NPC.x - 1, NPC.z)
     const choices = [...withItem.app.querySelectorAll('.dialogue-overlay li')].map((li) => li.textContent)
     expect(choices).toEqual(['I will help.', 'Bye.'])   // turn-in hidden: quest not active yet
-    withItem.key('1')                                    // accept
-    withItem.step(NPC.x - 1, NPC.z)                      // re-render choices on the accepted node
-    expect([...withItem.app.querySelectorAll('.dialogue-overlay li')][0]!.textContent).toBe('Done already.')
-    withItem.key('1')                                    // turn in (items held)
+    withItem.key('1')                                    // accept → advances to the 'done' node
+    expect(withItem.app.querySelector('.dialogue-text')?.textContent).toContain('Thanks.')
+    withItem.key('1')                                    // 'Bye.' — terminal close, NPC goes on cooldown
+    expect(withItem.app.querySelector('.dialogue-overlay')).toBeNull()
+    withItem.step(NPC.x - 4, NPC.z)                      // beyond 1.5× radius: cooldown clears
+    withItem.step(NPC.x - 1, NPC.z)                      // return visit reopens at greet
+    expect([...withItem.app.querySelectorAll('.dialogue-overlay li')][0]!.textContent).toBe('Hand it over.')
+    withItem.key('1')                                    // turn in (quest active + items held)
     expect(withItem.runtime.objectivesComplete()).toBe(true)
     expect(withItem.app.querySelector('.quest-hud')?.textContent).toContain('1/1')
     withItem.host.dispose(); withItem.app.remove()
@@ -1465,8 +1478,8 @@ export const dialogueQuestsPack: GamePack<DialogueQuestsPackConfig> = {
       fixedUpdate(_dt, world) {
         const player = world.playerPosition
         if (engaged) {
+          // No per-tick re-render: the overlay changes only on choice or itemAcquired.
           if (distance(player, engaged.npc.position) > config.talkRadius * EXIT_FACTOR) closeOverlay(true)
-          else renderOverlay()
           return
         }
         if (cooldownNpcId) {
@@ -1539,7 +1552,7 @@ git commit -m "feat(pack-dialogue-quests): browser adapter - overlay, quest HUD,
 ```ts
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer } from '@automata/engine'
-import { validConfig } from './config.test'
+import { validConfig } from './fixtures'
 import { dialogueQuestsEditorContribution } from '../src/editorContribution'
 
 describe('dialogue-quests editor contribution', () => {
@@ -1741,7 +1754,92 @@ git commit -m "feat(pack-registry): register dialogue-quests; thread eval slices
 
 ---
 
-### Task 11: Ordered sections in game-compose + first-light freeze proof
+### Task 11: Thread eval slices through the production evaluator
+
+Task 10 fixed only the test twin. The real self-check path is `evaluateProject` — generated from `tools/scaffold/src/templates/projectFiles.ts` and checked in per game at `games/<name>/src/project/evaluation.ts` — which resolves hooks via `resolveEvalHooks(composition)` and today calls `nextTarget`/`step` with no slice view. Left alone, any composed game with a fetch quest drives the dialogue hook against an empty inventory forever and the MCP `evaluate` gate ends `incomplete` — the exact cross-pack seam this cycle exists to prove.
+
+**Files:**
+- Modify: `tools/scaffold/src/templates/projectFiles.ts` (the walker loop inside `evaluateProject` in the template string)
+- Modify: `games/first-light/src/project/evaluation.ts` (checked-in template copy)
+- Modify: `games/monkey-ball/src/project/evaluation.ts` (same)
+- Modify: `games/pulsebreak/src/project/evaluation.ts` (same)
+- Test: `games/first-light/tests/project/evaluation.test.ts` (create)
+
+**Interfaces:**
+- Consumes: `PackEvalHook.publishSlices` (Task 5); `PACK_FIXTURES`, `resolveEvalHooks` from `@automata/pack-registry` (Task 10).
+- Produces: `evaluateProject` merges every hook's published slices each tick and passes the view to every `nextTarget`/`step` call. Public signature unchanged; hook-less and single-pack games behave identically.
+
+- [ ] **Step 1: Write the failing test**
+
+`games/first-light/tests/project/evaluation.test.ts` — mirror the snapshot/composition fixture patterns already used in `tests/project/editor.test.ts` and `tests/project/composition.test.ts` (read both first; reuse their helpers rather than inventing new ones):
+
+```ts
+import { describe, expect, it } from 'vitest'
+import { PACK_FIXTURES } from '@automata/pack-registry'
+import { evaluateProject } from '../../src/project/evaluation'
+// snapshot + composition helpers: reuse the ones editor.test.ts / composition.test.ts use
+
+describe('evaluateProject cross-pack slices', () => {
+  it('completes an inventory + dialogue composition headlessly (fetch unblocks via slices)', async () => {
+    const composition = compositionWith([
+      { id: 'interaction-inventory', version: '1.0.0', config: PACK_FIXTURES['interaction-inventory']!() },
+      { id: 'dialogue-quests', version: '1.0.0', config: PACK_FIXTURES['dialogue-quests']!() }
+    ])
+    const result = await evaluateProject(loadSnapshot(), { maxSteps: 20000 }, composition)
+    expect(result.metrics.objectivesComplete).toBe(true)
+  })
+})
+```
+
+(`compositionWith`/`loadSnapshot` are stand-ins for whatever those files actually export — match them exactly.)
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run --project first-light -t 'cross-pack slices'`
+Expected: FAIL — `objectivesComplete` is `false`: without slices the dialogue hook sees an empty inventory, its fetch quest never satisfies, and `nextTarget` yields null until `maxSteps`.
+
+- [ ] **Step 3: Implement**
+
+In `tools/scaffold/src/templates/projectFiles.ts`, replace the walker loop inside `evaluateProject` with:
+
+```ts
+  while (steps < maxSteps && state.status === 'running') {
+    const slices: Record<string, unknown> = {}
+    for (let index = 0; index < hooks.length; index += 1) {
+      Object.assign(slices, hooks[index]!.publishSlices?.(hookStates[index]) ?? {})
+    }
+    let target: { x: number; z: number } | null = null
+    for (let index = 0; index < hooks.length && target === null; index += 1) {
+      target = hooks[index]!.nextTarget(hookStates[index], state.position, slices)
+    }
+    const control = target ? seekPoint(state, target) : seekGoal(state, compiled.tuning)
+    let next = step(state, control, dt, compiled.tuning)
+    if (next.status === 'succeeded' && !hooksComplete()) next = { ...next, status: 'running' }
+    state = next
+    for (let index = 0; index < hooks.length; index += 1) {
+      hookStates[index] = hooks[index]!.step(hookStates[index], state.position, slices)
+    }
+    steps += 1
+  }
+```
+
+Apply the identical change to the three checked-in copies (`games/{first-light,monkey-ball,pulsebreak}/src/project/evaluation.ts`) — they must stay in lockstep with the template; diff each against the template body after editing. (Editing `games/first-light/src/project` is fine: the freeze covers compose output under `public/project`, not scaffold sources.)
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `npx vitest run --project first-light && npm run verify:new-game`
+Expected: PASS — new test green, existing first-light project tests untouched, and `verify:new-game` green (AGENTS.md requires it after any scaffold-template change).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add tools/scaffold games/first-light games/monkey-ball games/pulsebreak
+git commit -m "feat(scaffold): thread eval slices through evaluateProject (template + game copies)"
+```
+
+---
+
+### Task 12: Ordered sections in game-compose + first-light freeze proof
 
 **Files:**
 - Modify: `packages/game-compose/package.json` (add `"@automata/pack-dialogue-quests": "*"`)
@@ -1874,7 +1972,7 @@ git commit -m "feat(game-compose): ordered pack sections - dialogue composes ove
 
 ---
 
-### Task 12: Full gates + roadmap/docs closeout
+### Task 13: Full gates + roadmap/docs closeout
 
 **Files:**
 - Modify: `docs/ROADMAP.md` (Phase 4 cycle list)
@@ -1918,7 +2016,8 @@ git commit -m "docs: Phase 4 cycle 2 shipped - dialogue & quests pack"
 
 ## Self-review notes (already applied)
 
-- **Spec coverage:** §2.1→Task 1; §2.2/§2.3→Tasks 2, 8; §3.1→Task 3; §3.2→Task 4; §3.3→Task 8; §4.1→Tasks 7, 11; §4.2→Tasks 5, 6, 10; §5→Tasks 9, 10; §6→every task's test steps + Task 12 gates; §7 risks→greedy invariant test (Task 7), minimal ordered-section change (Task 11), tie-break/closed-overlay tests (Task 8).
+- **Spec coverage:** §2.1→Task 1; §2.2/§2.3→Tasks 2, 8; §3.1→Task 3; §3.2→Task 4; §3.3→Task 8; §4.1→Tasks 7, 12; §4.2→Tasks 5, 6, 10, 11; §5→Tasks 9, 10; §6→every task's test steps + Task 13 gates; §7 risks→greedy invariant test (Task 7), minimal ordered-section change (Task 12), tie-break/closed-overlay tests (Task 8).
 - **Deviation from spec noted:** the config uses `conditions?: DialogueCondition[]` (AND-list) rather than a single condition — fetch turn-ins need `questState AND hasItems`. The spec is amended alongside this plan.
-- **Type consistency:** `validConfig()` fixture is exported from `tests/config.test.ts` and reused by Tasks 4, 6, 8, 9; slice/event names come only from `src/config.ts` constants; `EvalSliceView` defined once in Task 5 and consumed in Tasks 6, 10.
-- **Known look-before-you-code spots** (flagged in-task): inventory `tests/fixtures.ts` helper name (Task 5), inventory `tests/pack.test.ts` boot-helper pattern (Task 8), game-compose spec fixture helper (Task 11).
+- **Type consistency:** `validConfig()` fixture lives in `tests/fixtures.ts` (never a test file — importing one re-registers its describes) and is reused by Tasks 4, 6, 8, 9; slice/event names come only from `src/config.ts` constants; `EvalSliceView` defined once in Task 5 and consumed in Tasks 6, 10, 11.
+- **Known look-before-you-code spots** (flagged in-task): inventory `tests/fixtures.ts` helper name (Task 5), inventory `tests/pack.test.ts` boot-helper pattern (Task 8), first-light `tests/project` snapshot/composition helpers (Task 11), game-compose spec fixture helper (Task 12).
+- **Post-review fixes (2026-07-16):** production `evaluateProject` slice threading added as Task 11 — the matrix walker alone left the real `evaluate` gate blind to cross-pack slices; Task 8's completion test rewritten as a two-visit cooldown flow (the single-visit 'Done already.' path exists only in composeSection's generated trees, not in `validConfig`); the overlay now renders on engage/choice/`itemAcquired` instead of every tick.

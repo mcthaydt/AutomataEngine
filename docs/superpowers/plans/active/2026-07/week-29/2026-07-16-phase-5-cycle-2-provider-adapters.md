@@ -11,6 +11,7 @@
 ## Global Constraints
 
 - **Do not modify** `packages/game-compose`, `packages/game-kit`, or `games/first-light` — Phase 4 cycle 2 is concurrently editing that territory; this cycle is code-disjoint by design. Task 8 proves it with `git log --stat`.
+- Shared-file exception: both cycles edit `packages/contracts/src/gameSpec.ts` (Phase 4 fills the dialogue-quests capability stub; this cycle adds the `AssetRequirement`/`AssetKind` exports), plus `package-lock.json` and `docs/ROADMAP.md`. Rebase conflicts in exactly those three files are expected — coordinate merge order; overlap anywhere else is a violation.
 - All provider output must be **bit-deterministic** from `(requirement, ctx)`: no `Math.sin`/`Math.cos`/any transcendental stdlib call, no `Date`, no `Math.random`, no locale-dependent formatting. Arithmetic limited to IEEE-deterministic `+ - * /` and integer ops.
 - Audio: 16-bit PCM mono WAV, 22,050 Hz; `audio` kind ≤1 s, `music` kind ≤8 s.
 - Prop recipes: ≤12 parts, primitives limited to `box | sphere | cylinder` (the engine's full `RenderableDef` vocabulary).
@@ -1134,7 +1135,23 @@ Run: `npx vitest run --project contracts` — expect PASS after the edit.
 
 - [ ] **Step 2: Write the failing MCP runner tests**
 
-Extend `tools/editor-mcp-server/tests/assetTools.test.ts`. The existing `setup()` helper builds a temp repo with `games/demo-game/public/{assets,project}`; extend the setup (or add a variant) that also writes a minimal `gamespec.json` at `games/demo-game/gamespec.json`. Use the repo's existing GameSpec fixture helper — `@automata/contracts` exports fixtures from `gameSpecFixtures` (check the exact export name in `packages/contracts/src/gameSpecFixtures.ts` and reuse it; give it `assets: [{ id: 'relic-icon', kind: 'ui', description: 'Icon.' }, { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }]`).
+Extend `tools/editor-mcp-server/tests/assetTools.test.ts`. The existing `setup()` helper builds a temp repo with `games/demo-game/public/{assets,project}`; extend the setup (or add a variant `setupWithSpec()`) that also writes a minimal `gamespec.json` at `games/demo-game/gamespec.json`. Careful: `gameSpecFixtures` exports **drafts** — `minimalGameSpecDraft(gameId)` matches `gameSpecDraftSchema`, which omits `specVersion` and `provenance` — while the runner parses the file with the full `gameSpecSchema`, so a raw draft on disk fails parse. Write the compiled shape:
+
+```ts
+import { gameSpecSchema, minimalGameSpecDraft } from '@automata/contracts'
+
+const spec = gameSpecSchema.parse({
+  specVersion: 1,
+  provenance: { prompt: 'demo prompt', translations: [], history: [{ version: 1, reason: 'initial draft' }] },
+  ...minimalGameSpecDraft('demo-game'),
+  assets: [
+    { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
+    { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
+  ]
+})
+```
+
+(the `parse` inside the setup makes fixture drift fail loudly at the fixture, not inside the tool under test).
 
 ```ts
 describe('generateAssets', () => {
@@ -1293,7 +1310,7 @@ Expected: all green.
 git log --stat main@{u}..HEAD -- packages/game-compose packages/game-kit games/first-light
 ```
 
-Expected: empty output — this cycle touched none of the Phase 4 territory. (If the branch base differs, diff against the commit before Task 1 instead.) If anything shows up, stop and remove the change — it belongs to cycle 3 or Phase 4.
+Expected: empty output — this cycle touched none of the Phase 4 territory. (If the branch base differs, diff against the commit before Task 1 instead.) If anything shows up, stop and remove the change — it belongs to cycle 3 or Phase 4. (`packages/contracts` is deliberately absent from this check: both cycles edit `gameSpec.ts`, and that shared edit is coordinated in Global Constraints, not a violation.)
 
 - [ ] **Step 3: Update the roadmap and commit**
 
@@ -1327,5 +1344,6 @@ git commit -m "docs: Phase 5 cycle 2 shipped - provider adapters + procedural pr
 - **Spec coverage:** spec §2→Task 1; §3 providers→Tasks 3/4/5 (+ style derivation Task 2); §4 registry/orchestrator→Task 6; §5 MCP→Task 7; §6 testing→in-task tests + Task 8 gates; §7 risks→golden-hash snapshots (drift visibility), polynomial sine (determinism), disjointness proof (concurrency).
 - **Placeholder scan:** none; every code step is complete.
 - **Type consistency:** `ProviderContext`/`StyleParams`/`GeneratedBytes` defined once (Task 1) and imported everywhere; `hsl` defined in Task 3, reused in Task 4; `GeneratedAsset { entry, path, bytes }` consistent between Tasks 6 and 7.
-- **Known look-before-you-code spots** (flagged in-task): contracts `gameSpecFixtures` export name (Task 7), the assetTools test `setup()` return shape (Task 7), `tests/server.test.ts` tool-list assertion (Task 7), `RenderableDef` export from the engine index (Task 4).
+- **Known look-before-you-code spots** (flagged in-task): the assetTools test `setup()` return shape (Task 7), `tests/server.test.ts` tool-list assertion (Task 7), `RenderableDef` export from the engine index (Task 4).
+- **Post-review fix (2026-07-16):** Task 7's gamespec fixture guidance corrected — `minimalGameSpecDraft` is a *draft* (no `specVersion`/`provenance`) and must be wrapped into the compiled shape before writing `gamespec.json`, since the runner parses with the full `gameSpecSchema`.
 - **SVG trig exception** is documented in Task 3 (layout-only, quantized via `toFixed(2)`, golden-guarded) — audio remains strictly transcendental-free.
