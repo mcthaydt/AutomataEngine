@@ -27,8 +27,8 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
-- **Phase 3 — Vertical slice · first playable** (2026-07-14,
-  `phase-0-completion` @ `pending merge`). Added the capability-pack and runtime
+- **Phase 3 — Vertical slice · first playable** (2026-07-14, merged to `main`
+  @ `ccd2657`). Added the capability-pack and runtime
   composition contracts, seeded compose/report/checkpoint MCP flow, enriched
   browser and critical-path gates, and the checked-in `first-light` playable.
   Spec:
@@ -36,8 +36,8 @@ Newest first. Each links to the spec/plan that defines it.
   plan:
   [`2026-07-13-phase-3-vertical-slice.md`](superpowers/plans/active/2026-07/week-29/2026-07-13-phase-3-vertical-slice.md).
 
-- **Phase 2 — Versioned `GameSpec`** (2026-07-13, `phase-0-completion` @
-  `pending merge`). Added bounded versioned GameSpec contracts, deterministic
+- **Phase 2 — Versioned `GameSpec`** (2026-07-13, merged to `main` @
+  `ccd2657`). Added bounded versioned GameSpec contracts, deterministic
   validation/normalization/versioning/brief rendering, and MCP design-checkpoint
   tooling with ten-prompt seeded-replay acceptance. Spec:
   [`2026-07-13-phase-2-versioned-gamespec-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-13-phase-2-versioned-gamespec-design.md);
@@ -225,7 +225,7 @@ Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/spe
   - Cycle 1 — contract v2 + interaction-inventory widening + composition-matrix
     harness — `Shipped` (plan:
     [`2026-07-14-phase-4-cycle-1-pack-contract-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-4-cycle-1-pack-contract-v2.md)).
-  - Cycle 2 — branching dialogue & quests pack — `Next`.
+  - Cycle 2 — branching dialogue & quests pack — `In progress`.
   - Cycle 3 — schedules & relationships pack — `Planned`.
   - Cycle 4 — combat & enemy AI pack — `Planned`.
   - Cycle 5 — economy, shops & progression pack — `Planned`.
@@ -244,7 +244,7 @@ Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs
   - Cycle 1 — manifest v2 + provenance model + migration + structural
     validation + MCP surface — `Shipped` (plan:
     [`2026-07-14-phase-5-cycle-1-asset-manifest-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-5-cycle-1-asset-manifest-v2.md)).
-  - Cycle 2 — provider-adapter interface + first procedural adapters — `Next`.
+  - Cycle 2 — provider-adapter interface + first procedural adapters — `In progress`.
   - Cycle 3 — asset validation (media) + optimization + independent
     regeneration — `Planned`.
 
