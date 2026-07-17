@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 48% (29/60 steps complete).
+**Implementation progress:** 55% (33/60 steps complete).
 
 ## Global Constraints
 
@@ -1175,7 +1175,7 @@ export function composeSchedulesSection(input: SchedulesComposeInput, rng: Seede
 
 Guarantees later tasks rely on: output parses under `packConfigSchema`; same input + seed ⇒ deep-equal output; walkers exist only for `ambient` cast members; tracked relationships are exactly the distinct main-quest givers (in first-appearance order) with their main-quest ids.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-schedules-relationships/tests/composeSection.test.ts`:
 
@@ -1259,12 +1259,12 @@ describe('composeSchedulesSection', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-schedules-relationships -t composeSchedulesSection`
 Expected: FAIL — cannot resolve `../src/composeSection`.
 
-- [ ] **Step 3: Implement `src/composeSection.ts`**
+- [x] **Step 3: Implement `src/composeSection.ts`**
 
 ```ts
 import type { SeededRng } from '@automata/engine'
@@ -1364,7 +1364,7 @@ Add to `src/index.ts`:
 export * from './composeSection'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
