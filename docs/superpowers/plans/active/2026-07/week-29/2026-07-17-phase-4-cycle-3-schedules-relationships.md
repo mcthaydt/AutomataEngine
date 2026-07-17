@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 15% (9/60 steps complete).
+**Implementation progress:** 22% (13/60 steps complete).
 
 ## Global Constraints
 
@@ -383,7 +383,7 @@ export function stepClock(state: ClockState, dt: number, slotSeconds: number): {
 
 `stepClock` is pure; slots wrap `SLOT_COUNT - 1 → 0`; a dt spanning multiple slots advances multiple slots (`slotChanged` true if any boundary crossed).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-schedules-relationships/tests/clockCore.test.ts`:
 
@@ -423,12 +423,12 @@ describe('clockCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-schedules-relationships -t clockCore`
 Expected: FAIL — cannot resolve `../src/clockCore`.
 
-- [ ] **Step 3: Implement `src/clockCore.ts`**
+- [x] **Step 3: Implement `src/clockCore.ts`**
 
 ```ts
 import { SLOT_COUNT } from './config'
@@ -459,7 +459,7 @@ Add to `src/index.ts`:
 export * from './clockCore'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
