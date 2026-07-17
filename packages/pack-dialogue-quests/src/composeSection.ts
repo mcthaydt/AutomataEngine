@@ -19,6 +19,9 @@ const KEEPOUT = 3
 const SEPARATION = 2
 const DRAW_BUDGET = 200
 const GIVER_ROLES = ['quest-giver', 'ally', 'vendor']
+// Each quest contributes two stateful choices. Three per page leaves room for
+// navigation and exit while keeping every dialogue choice list keyboard-safe.
+const QUESTS_PER_MENU_PAGE = 3
 
 const round2 = (value: number): number => Math.round(value * 100) / 100
 const far = (a: { x: number; z: number }, b: { x: number; z: number }, min: number): boolean =>
@@ -48,6 +51,33 @@ function questChoices(quest: QuestDef): { greet: DialogueChoice[]; nodes: Dialog
     { id: doneId, speaker: '', text: 'Well done.', choices: [{ text: 'Bye.', next: null }] }
   ]
   return { greet, nodes }
+}
+
+/**
+ * Keep a single cast giver as a single NPC even for the full 18-quest spec.
+ * Menu pages expose three quests each (six stateful choices), followed by a
+ * forward link and exit. The largest generated tree has 42 nodes, within the
+ * pack's deliberate 48-node safety limit.
+ */
+function composeDialogueNodes(npcName: string, parts: ReadonlyArray<ReturnType<typeof questChoices>>): DialogueDef['nodes'] {
+  const pages: Array<ReadonlyArray<ReturnType<typeof questChoices>>> = []
+  for (let offset = 0; offset < parts.length; offset += QUESTS_PER_MENU_PAGE) {
+    pages.push(parts.slice(offset, offset + QUESTS_PER_MENU_PAGE))
+  }
+
+  return pages.flatMap((page, index) => {
+    const id = index === 0 ? 'greet' : `greet-${index + 1}`
+    const nextPageId = index + 1 < pages.length ? `greet-${index + 2}` : null
+    const choices: DialogueChoice[] = [
+      ...page.flatMap((part) => part.greet),
+      ...(nextPageId ? [{ text: 'More requests.', next: nextPageId }] : []),
+      { text: 'Just passing through.', next: null }
+    ]
+    return [
+      { id, speaker: npcName, text: `${npcName} nods at you.`, choices },
+      ...page.flatMap((part) => part.nodes.map((node) => ({ ...node, speaker: npcName })))
+    ]
+  })
 }
 
 /** Seeded NPC placement and templated quest trees; defaults live here, not in GameSpec. */
@@ -103,15 +133,7 @@ export function composeDialogueSection(input: DialogueComposeInput, rng: SeededR
     return {
       id: npc.dialogueId,
       start: 'greet',
-      nodes: [
-        {
-          id: 'greet',
-          speaker: npc.name,
-          text: `${npc.name} nods at you.`,
-          choices: [...parts.flatMap((part) => part.greet), { text: 'Just passing through.', next: null }]
-        },
-        ...parts.flatMap((part) => part.nodes.map((node) => ({ ...node, speaker: npc.name })))
-      ]
+      nodes: composeDialogueNodes(npc.name, parts)
     }
   })
 

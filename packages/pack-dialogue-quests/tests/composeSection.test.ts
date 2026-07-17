@@ -58,6 +58,24 @@ describe('composeDialogueSection', () => {
     }
   })
 
+  it('paginates a full quest list for one giver within dialogue limits', () => {
+    const crowded = input()
+    crowded.quests = Array.from({ length: 18 }, (_, index) => ({
+      id: `q-${index + 1}`,
+      kind: index < 8 ? 'main' : 'side',
+      summary: `Quest ${index + 1}`
+    }))
+    crowded.cast = [
+      { id: 'c-player', name: 'You', role: 'player' },
+      { id: 'c-keeper', name: 'The Keeper', role: 'quest-giver' }
+    ]
+
+    const config = composeDialogueSection(crowded, createSeededRng(7))
+
+    expect(() => packConfigSchema.parse(config)).not.toThrow()
+    expect(config.dialogues[0]!.nodes.every((node) => node.choices.length <= 9)).toBe(true)
+  })
+
   it('throws when no cast member can give quests', () => {
     const bad = input()
     ;(bad as { cast: unknown }).cast = [{ id: 'c-player', name: 'You', role: 'player' }]

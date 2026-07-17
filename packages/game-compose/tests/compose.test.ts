@@ -137,6 +137,14 @@ describe('composeGame', () => {
     }
   })
 
+  it('returns a typed missing-requirement issue when dialogue is selected without inventory', () => {
+    const spec = specWithCapabilities([{ id: 'dialogue-quests', config: {}, requirements: [] }])
+
+    const result = composeGame({ spec, seed: 11, specHash: 'h' })
+
+    expect(result).toMatchObject({ ok: false, issues: [{ code: 'pack-missing-requirement' }] })
+  })
+
   it('inventory-only output is byte-identical to the pre-dialogue compose (first-light freeze)', () => {
     const spec = specWithCapabilities([{ id: 'interaction-inventory', config: {}, requirements: [] }])
     const result = composeGame({ spec, seed: 11, specHash: 'h' })

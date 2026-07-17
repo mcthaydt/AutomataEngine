@@ -44,8 +44,14 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
   }
 
   const wantsDialogue = spec.capabilities.some((entry) => entry.id === dialogueQuestsPack.id)
-  const selectedPacks = wantsDialogue ? [interactionInventoryPack, dialogueQuestsPack] : [interactionInventoryPack]
-  const packIssues = validatePackSet(selectedPacks as GamePack[]).filter((issue) => issue.severity === 'error')
+  // Validate the set the spec actually selected. Adding inventory implicitly
+  // hid dialogue's declared requirement and later dereferenced it unsafely.
+  const selectedPacks = spec.capabilities.flatMap((entry): GamePack[] => {
+    if (entry.id === interactionInventoryPack.id) return [interactionInventoryPack]
+    if (entry.id === dialogueQuestsPack.id) return [dialogueQuestsPack]
+    return []
+  })
+  const packIssues = validatePackSet(selectedPacks).filter((issue) => issue.severity === 'error')
   if (packIssues.length > 0) {
     return { ok: false, issues: packIssues.map((issue) => ({ code: issue.code, message: issue.message })) }
   }
@@ -76,7 +82,16 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
     })
   }
   const iconPath = assetManifest.assets[0]?.path ?? null
-  const inventorySelection = spec.capabilities.find((entry) => entry.id === interactionInventoryPack.id)!
+  const inventorySelection = spec.capabilities.find((entry) => entry.id === interactionInventoryPack.id)
+  if (!inventorySelection) {
+    return {
+      ok: false,
+      issues: [{
+        code: 'pack-missing-requirement',
+        message: `Pack "${dialogueQuestsPack.id}" requires missing pack "${interactionInventoryPack.id}"`
+      }]
+    }
+  }
   const packConfig = composeInventorySection({
     specConfig: inventorySelection.config as { requiredItems?: number; interactRadius?: number },
     arena: { half: ARENA.half, spawn: ARENA.spawn, goal },

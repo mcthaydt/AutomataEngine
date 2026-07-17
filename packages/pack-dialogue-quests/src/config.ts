@@ -64,7 +64,8 @@ export type DialogueNode = z.infer<typeof dialogueNodeSchema>
 const dialogueDefSchema = z.strictObject({
   id: idSchema,
   start: idSchema,
-  nodes: z.array(dialogueNodeSchema).min(1).max(40)
+  // Six three-quest menu pages plus two response nodes per quest totals 42.
+  nodes: z.array(dialogueNodeSchema).min(1).max(48)
 })
 export type DialogueDef = z.infer<typeof dialogueDefSchema>
 
