@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 92% (55/60 steps complete).
+**Implementation progress:** 100% (60/60 steps complete).
 
 ## Global Constraints
 
@@ -1696,7 +1696,7 @@ git commit -m "feat(game-compose): compose schedules section after dialogue (fro
 - Modify: `docs/ROADMAP.md` (Phase 4 cycle 3 → `Shipped`, promote cycle 4 to `Next`)
 - Modify: `docs/superpowers/plans/active/2026-07/week-29/2026-07-17-phase-4-cycle-3-schedules-relationships.md` (progress header)
 
-- [ ] **Step 1: Run the full gate set**
+- [x] **Step 1: Run the full gate set**
 
 ```bash
 npm run ci
@@ -1706,18 +1706,18 @@ npx vitest run --project pack-registry
 
 Expected: all green. If `npm run ci` runs eslint, confirm no direct `zod` imports slipped into the new package.
 
-- [ ] **Step 2: first-light recompose proof**
+- [x] **Step 2: first-light recompose proof**
 
 Regenerate first-light's composition through the repo's established recompose flow (see `games/first-light/scripts/` — cycle 2 used the same proof) and run `git status --porcelain games/first-light`.
 Expected: empty output — bit-identical.
 
-- [ ] **Step 3: Update docs**
+- [x] **Step 3: Update docs**
 
 - `docs/ROADMAP.md` Phase 4 cycles: cycle 3 → `Shipped` (date + plan link), cycle 4 (combat & enemy AI) → `Next`.
 - This plan's `**Implementation progress:**` line → 100%.
 - `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md` §sub-cycle index: mark `Schedules & relationships pack — completed`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs

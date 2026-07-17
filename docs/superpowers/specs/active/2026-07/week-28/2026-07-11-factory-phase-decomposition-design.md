@@ -467,11 +467,11 @@ the current best decomposition, revised each cycle.
 
 1. Vertical-slice integration (one pack + minimal content + one asset + composition + browser/critical-path smoke)
 
-**Phase 4 (seven peers; cycles 1–2 completed — see roadmap for live status):**
+**Phase 4 (seven peers; cycles 1–3 completed — see roadmap for live status):**
 
 1. Interaction & inventory pack — contract v2 + widening completed
 2. Branching dialogue & quests pack — completed
-3. Schedules & relationships pack
+3. Schedules & relationships pack — completed
 4. Combat & enemy AI pack
 5. Economy, shops & progression pack
 6. Compact-hub navigation + one vehicle pack

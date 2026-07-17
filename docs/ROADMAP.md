@@ -227,9 +227,9 @@ Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/spe
     [`2026-07-14-phase-4-cycle-1-pack-contract-v2.md`](superpowers/plans/active/2026-07/week-29/2026-07-14-phase-4-cycle-1-pack-contract-v2.md)).
   - Cycle 2 — branching dialogue & quests pack — `Shipped` (2026-07-16, plan:
     [`2026-07-16-phase-4-cycle-2-dialogue-quests.md`](superpowers/plans/active/2026-07/week-29/2026-07-16-phase-4-cycle-2-dialogue-quests.md)).
-  - Cycle 3 — schedules & relationships pack — `In progress` (spec→plan
-    started 2026-07-17).
-  - Cycle 4 — combat & enemy AI pack — `Planned`.
+  - Cycle 3 — schedules & relationships pack — `Shipped` (2026-07-17, plan:
+    [`2026-07-17-phase-4-cycle-3-schedules-relationships.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-4-cycle-3-schedules-relationships.md)).
+  - Cycle 4 — combat & enemy AI pack — `Next`.
   - Cycle 5 — economy, shops & progression pack — `Planned`.
   - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
   - Cycle 7 — save/load integration pack — `Planned`.
