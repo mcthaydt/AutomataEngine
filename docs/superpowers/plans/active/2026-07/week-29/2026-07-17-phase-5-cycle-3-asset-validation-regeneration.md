@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (direct `zod` import is correct in `contracts`/`asset-providers` — the `@automata/project` re-export rule applies to packs only), vitest, `@automata/build-session` guarded steps.
 
-**Implementation progress:** 0% (0/37 steps complete).
+**Implementation progress:** 100% (37/37 steps complete).
 
 ## Global Constraints
 
@@ -41,7 +41,7 @@
 export type SliceGateKind = 'build' | 'test' | 'browser' | 'evaluate' | 'asset'
 ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/contracts/tests/assetValidation.test.ts`:
 
@@ -59,12 +59,12 @@ it('admits media issue codes in the AssetIssue union', () => {
 
 (This is a compile-time contract test — it fails typecheck until the union grows.)
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run --project contracts -t 'media issue codes'`
 Expected: FAIL (TS error: codes not assignable).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/assetValidation.ts` add to the `code` union:
 
@@ -79,12 +79,12 @@ In `packages/contracts/src/sliceReport.ts`:
 export type SliceGateKind = 'build' | 'test' | 'browser' | 'evaluate' | 'asset'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
@@ -119,14 +119,14 @@ export function svgPaletteColors(style: StyleParams): string[]   // exact color 
 
 Checks per kind: `ui`/`texture` — parses as an `<svg>` document, every `fill`/`stroke` color ∈ `svgPaletteColors(style)`, size ≤ `svgMaxBytes`; `model` — parses under `propRecipeSchema`, every part maps via `recipeToRenderables`, size ≤ `propMaxBytes`; `audio`/`music` — `readWavInfo` succeeds, 22 050 Hz mono 16-bit, duration within kind bound, `peak ≤ wavPeakMax`, size ≤ `wavMaxBytes`. Malformed → `asset-media-invalid`; budget breaches → `asset-media-budget`. All issues `severity: 'error'`.
 
-- [ ] **Step 1: Extract `svgPaletteColors` from the SVG provider**
+- [x] **Step 1: Extract `svgPaletteColors` from the SVG provider**
 
 READ `packages/asset-providers/src/svgProvider.ts` first. Locate where it builds its color strings from `StyleParams.palette` (base hue + accent hues + saturation/lightness). Move that construction into an exported `svgPaletteColors(style: StyleParams): string[]` returning every color string the provider can emit (including any fixed stroke/background colors it uses), and refactor the provider to draw from this function. Byte-stability check: run the provider golden-hash tests after the refactor —
 
 Run: `npx vitest run --project asset-providers -t svg`
 Expected: PASS with unchanged goldens (pure refactor).
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/asset-providers/tests/validateMedia.test.ts`:
 
@@ -193,12 +193,12 @@ describe('validateAssetMedia', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers -t validateAssetMedia`
 Expected: FAIL — cannot resolve `../src/validateMedia`.
 
-- [ ] **Step 4: Implement `src/validateMedia.ts`**
+- [x] **Step 4: Implement `src/validateMedia.ts`**
 
 ```ts
 import type { AssetIssue, AssetManifestEntry, StyleParams } from '@automata/contracts'
@@ -322,7 +322,7 @@ Add to `src/index.ts`:
 export * from './validateMedia'
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run --project asset-providers`
 Expected: PASS (new + existing goldens).
@@ -359,7 +359,7 @@ export const WAV_NORMALIZE_PEAK = 29_491   // ≈ 0.9 × 32767, below MEDIA_BUDG
 
 Steps: SVG/`ui`/`texture` — canonical whitespace collapse between tags (`tool: 'svg-minify'`); `model` — canonical re-serialization via the repo's `JSON.stringify(value, null, 2) + '\n'` after schema parse (`tool: 'prop-canonicalize'`); `audio`/`music` — integer peak-normalization to `WAV_NORMALIZE_PEAK` (`tool: 'wav-normalize'`, params `{ peakBefore, peakAfter }`). `generateGameAssets` applies the stage: bytes are replaced and the transformation appended to the entry; goldens update in this task as the reviewed act.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/asset-providers/tests/optimize.test.ts`:
 
@@ -411,12 +411,12 @@ describe('optimizeAssetBytes', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers -t optimizeAssetBytes`
 Expected: FAIL — cannot resolve `../src/optimize`.
 
-- [ ] **Step 3: Implement `src/optimize.ts`**
+- [x] **Step 3: Implement `src/optimize.ts`**
 
 ```ts
 import type { AssetKind } from '@automata/contracts'
@@ -509,12 +509,12 @@ Add to `src/index.ts`:
 export * from './optimize'
 ```
 
-- [ ] **Step 4: Update golden hashes (reviewed act)**
+- [x] **Step 4: Update golden hashes (reviewed act)**
 
 Run: `npx vitest run --project asset-providers`
 Expected: orchestrator-level golden/hash fixtures FAIL because bytes changed (per-provider goldens test `provider.generate` directly and stay green). Inspect each diff, confirm it is exactly the optimize stage, regenerate the affected fixtures per the test file's documented procedure, and rerun to green. Provider `version` fields do NOT bump (providers unchanged); the transformation record carries the tool version.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/asset-providers
@@ -535,7 +535,7 @@ git commit -m "feat(asset-providers): deterministic optimization stage in the or
 - Consumes: `validateAssetMedia`, `deriveStyleParams` from `@automata/asset-providers`; `engine.runGuarded` from `@automata/build-session`.
 - Produces: `validateAssets` now (1) runs structural + media validation, (2) rewrites `public/assets/assets.json` flipping per-entry status — no media errors and status `generated` → `validated`; any media error → `failed`; `placeholder`/`validated` unchanged, (3) records a hash-guarded `check:assets` step whose result is `{ passed: boolean; contentHash: string }` where `passed` = zero errors AND every entry `validated`, (4) response gains `statuses: Record<string, AssetStatus>` and `passed: boolean`. `AssetToolDeps` gains `snapshotContent(gameId): Promise<{ hash: string }>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 READ `tools/editor-mcp-server/tests/assetTools.test.ts` first and reuse its temp-workspace/session scaffolding. Add:
 
@@ -585,12 +585,12 @@ it('regenerating and revalidating a failed asset returns it to validated', async
 
 (The third test uses `generateAssets` for recovery; Task 5's `regenerateAsset` gets its own tests.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project editor-mcp-server -t 'check:assets'`
 Expected: FAIL — response has no `passed`/`statuses`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `tools/editor-mcp-server/src/assetTools.ts`, inside the `validateAssets` branch after the structural pass:
 
@@ -643,12 +643,12 @@ Update the `validateAssets` description in `packages/contracts/src/assetTools.ts
   validateAssets: 'Run structural + media asset validation, flip generated→validated / →failed statuses, persist findings, and record the check:assets gate step.',
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS (new + existing asset tool tests; existing tests may need their expected response shape extended with `passed`/`statuses` — that is this task's intended API change, not a regression).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/editor-mcp-server packages/contracts
@@ -682,7 +682,7 @@ regenerateAsset: z.strictObject({
 
 `regenerateAsset` re-runs exactly one requirement through `generateGameAssets` (which includes the optimize stage) behind `engine.runGuarded('asset:regenerate', { assetId, seed, specVersion }, …)`; the merged entry keeps the previous entry's `references`, resets provenance/transformations from the fresh run, and lands as `generated` (validation is a separate, explicit step). Every other file and manifest entry is byte-for-byte untouched.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tools/editor-mcp-server/tests/assetTools.test.ts`:
 
@@ -738,12 +738,12 @@ it('slice evidence includes the asset gate and fails it while assets are not val
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project editor-mcp-server -t regenerate`
 Expected: FAIL — `Unknown asset tool "regenerateAsset"`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/contracts/src/assetTools.ts` — add the name, schema (above), and description:
 
@@ -802,12 +802,12 @@ const GATES = [
 
 The evidence loop already handles `passed`-shaped results (`build`/`browser` path); `check:assets` results carry `{ passed, contentHash }`, so no loop changes — verify by reading the branch.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project editor-mcp-server`
 Expected: PASS. Existing slice-evidence tests that enumerate gates gain the `asset` row — update their expectations in this task (intended API change).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts tools/editor-mcp-server
@@ -836,12 +836,12 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
 
 All spec asset requirements (every kind) generate through `generateGameAssets` (optimize stage included); entries land `status: 'generated'` with `references: ['public/project/composition.json']`; `iconPath` resolves from the generated `ui` entry; the stub `drawIconSvg` and `'stub-generator'` provenance are deleted. The RNG draw order for sections is UNCHANGED (asset generation uses child seeds from the same `seed`, not draws from the section `rng`) — section configs stay byte-identical; only asset bytes/manifest change.
 
-- [ ] **Step 1: Confirm the dependency cleared**
+- [x] **Step 1: Confirm the dependency cleared**
 
 Run: `git log --oneline -5 -- packages/game-compose/src/compose.ts` and `git log --oneline -5 -- docs/ROADMAP.md`
 Expected: Phase 4 cycle 3's "compose schedules section" commit AND its cycle-close commit ("docs: Phase 4 cycle 3 shipped …") are both present — the close commit proves its bit-identical first-light recompose gate already ran against the pre-provider compose path. If either is missing, STOP — this task is blocked.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 In `packages/game-compose/tests/compose.test.ts` add (and convert existing `composeGame` call sites in this file to `await` — the signature change is this task's point):
 
@@ -881,12 +881,12 @@ it('section configs are unchanged by asset generation (no new rng draws)', async
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project game-compose`
 Expected: FAIL — `composeGame` is sync and still emits `stub-generator` entries.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 In `packages/game-compose/src/compose.ts`:
 
@@ -917,12 +917,12 @@ In `packages/game-compose/src/compose.ts`:
 - In `tools/editor-mcp-server/src/composedWriter.ts`, extend the file type and write step: `'text' in file ? fs.writeFile(target, file.text) : fs.writeFile(target, Buffer.from(file.base64, 'base64'))` (update the `ComposedWriterFs.writeFile` signature to accept `string | Uint8Array`). Extend its tests with a base64 round-trip case.
 - In `composeTools.ts` the `runSeededStep` callback already awaits `composeGame` — verify types compile; the cached-replay path re-writes both variants through the same writer.
 
-- [ ] **Step 5: Run tests + full server suite**
+- [x] **Step 5: Run tests + full server suite**
 
 Run: `npx vitest run --project game-compose --project editor-mcp-server`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-compose tools/editor-mcp-server package-lock.json
@@ -937,7 +937,7 @@ git commit -m "feat(game-compose): real provider assets in composeGame (binary c
 - Modify: `games/first-light/public/assets/*`, `games/first-light/public/project/composition.json` (recompose artifacts — reviewed diff)
 - Modify: `docs/ROADMAP.md`, this plan's progress header, decomposition-doc sub-cycle index
 
-- [ ] **Step 1: Recompose first-light and review the intended diff**
+- [x] **Step 1: Recompose first-light and review the intended diff**
 
 Recompose through the repo's established flow (same proof path as Phase 4 cycle 3 Task 12). Run `git diff --stat games/first-light`.
 Expected: changes ONLY under `public/assets/` and `public/project/composition.json` (+ `public/assets/assets.json`): stub icon replaced by provider output, manifest entries now `generated` with real provenance and an optimization transformation. Section configs (`resources/tuning.resource.json`, pack configs inside `composition.json`) must be unchanged — any diff there is a draw-order regression; STOP and fix. Commit the reviewed baseline:
@@ -947,7 +947,7 @@ git add games/first-light
 git commit -m "chore(first-light): reviewed baseline - provider-generated assets via compose"
 ```
 
-- [ ] **Step 2: End-to-end release-gate proof**
+- [x] **Step 2: End-to-end release-gate proof**
 
 Against a temp workspace game (the MCP test fixtures or a scratch `new-game`):
 
@@ -957,7 +957,7 @@ Against a temp workspace game (the MCP test fixtures or a scratch `new-game`):
 
 Expected: exactly the lifecycle above; step 3 proves the Phase 7 repair hook end-to-end.
 
-- [ ] **Step 3: Run the full gate set**
+- [x] **Step 3: Run the full gate set**
 
 ```bash
 npm run ci
@@ -966,13 +966,13 @@ npm run verify:new-game
 
 Expected: green.
 
-- [ ] **Step 4: Update docs**
+- [x] **Step 4: Update docs**
 
 - `docs/ROADMAP.md` Phase 5 cycles: cycle 3 → `Shipped` (date + plan link). All three Phase 5 cycles are now shipped — move Phase 5 itself to `Shipped` in section 3 and add the section-1 entry (newest first) with the merge commit, per the roadmap's own discipline.
 - `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md` sub-cycle index: mark `Asset validation + optimization + independent regeneration — completed`.
 - This plan's `**Implementation progress:**` line → 100%.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs

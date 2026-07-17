@@ -481,7 +481,7 @@ the current best decomposition, revised each cycle.
 
 1. Asset manifest + provenance model — completed
 2. Provider-adapter interface + first adapters — completed
-3. Asset validation + optimization + independent regeneration
+3. Asset validation + optimization + independent regeneration — completed
 
 **Phase 6 (five domain peers):**
 

@@ -27,6 +27,12 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
+- **Phase 5 — Asset pipeline** (2026-07-17, merged to `main` @ `5e64962`).
+  Completed manifest provenance, deterministic procedural providers, media
+  validation and optimization, isolated regeneration, and the asset release
+  gate. Plan:
+  [`2026-07-17-phase-5-cycle-3-asset-validation-regeneration.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-3-asset-validation-regeneration.md).
+
 - **Phase 3 — Vertical slice · first playable** (2026-07-14, merged to `main`
   @ `ccd2657`). Added the capability-pack and runtime
   composition contracts, seeded compose/report/checkpoint MCP flow, enriched
@@ -234,7 +240,7 @@ Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/spe
   - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
   - Cycle 7 — save/load integration pack — `Planned`.
 
-### Phase 5 — Asset pipeline · `In progress`
+### Phase 5 — Asset pipeline · `Shipped`
 
 Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md).
 
@@ -250,7 +256,8 @@ Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs
     `Shipped` (2026-07-16, plan:
     [`2026-07-16-phase-5-cycle-2-provider-adapters.md`](superpowers/plans/active/2026-07/week-29/2026-07-16-phase-5-cycle-2-provider-adapters.md)).
   - Cycle 3 — asset validation (media) + optimization + independent
-    regeneration — `In progress` (spec→plan started 2026-07-17).
+    regeneration — `Shipped` (2026-07-17, plan:
+    [`2026-07-17-phase-5-cycle-3-asset-validation-regeneration.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-3-asset-validation-regeneration.md)).
 
 ### Phase 6 — Content compiler · `Planned`
 
