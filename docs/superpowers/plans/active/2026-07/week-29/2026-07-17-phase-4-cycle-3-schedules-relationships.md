@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 0% (0/60 steps complete).
+**Implementation progress:** 7% (4/60 steps complete).
 
 ## Global Constraints
 
@@ -35,7 +35,7 @@
 - Consumes: existing `capabilityConfigSchemas` table.
 - Produces: `capabilityConfigSchemas['schedules-relationships']` accepting `{ slotSeconds?: number }` (5–120), rejecting unknown keys; `{}` still parses to `{}`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to the capability-config describe block in `packages/contracts/tests/gameSpec.test.ts` (match the file's existing style):
 
@@ -58,12 +58,12 @@ describe('schedules-relationships capability config', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify the new ones fail**
+- [x] **Step 2: Run tests to verify the new ones fail**
 
 Run: `npx vitest run --project contracts -t 'schedules-relationships capability config'`
 Expected: 1 failure (the in-bounds `slotSeconds` parse — the empty-config and rejection tests already pass against the stub).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/gameSpec.ts` replace the stub line:
 
@@ -79,7 +79,7 @@ with:
   }),
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project contracts`
 Expected: PASS (all contracts tests, including untouched spec-hash fixtures).
