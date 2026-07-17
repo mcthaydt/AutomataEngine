@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`propProvider > replays bit-identically; golden hash pinned 1`] = `"5ae2fc5a0c600bd537a5cbb688918320e3e124257d803daf71f15619a5b9f420"`;

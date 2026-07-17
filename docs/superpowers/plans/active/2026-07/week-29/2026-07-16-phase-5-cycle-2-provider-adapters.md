@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 37.5% (3/8 tasks complete)
+**Progress:** 50% (4/8 tasks complete)
 
 ## Global Constraints
 
@@ -502,7 +502,7 @@ export function recipeToRenderables(recipe: PropRecipe): Array<{ def: Renderable
 export const propProvider: AssetProvider   // id 'procedural-prop', kinds ['model'], fileExtension 'prop.json'
 ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/asset-providers/tests/propProvider.test.ts`:
 
@@ -557,12 +557,12 @@ describe('propProvider', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers -t propProvider`
 Expected: FAIL — cannot resolve the new modules.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/asset-providers/src/propRecipe.ts`:
 
@@ -674,7 +674,7 @@ export const propProvider: AssetProvider = {
 }
 ```
 
-- [ ] **Step 4: Run tests (twice for snapshots), commit**
+- [x] **Step 4: Run tests (twice for snapshots), commit**
 
 Run: `npx vitest run --project asset-providers && npx vitest run --project asset-providers`
 Expected: PASS both times.
