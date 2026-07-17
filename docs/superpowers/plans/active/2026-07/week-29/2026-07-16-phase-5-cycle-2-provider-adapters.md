@@ -1365,7 +1365,7 @@ git commit -m "docs: Phase 5 cycle 2 shipped - provider adapters + procedural pr
 
 ## Code-review patch addendum (2026-07-17)
 
-**Review patch progress:** 67% (2/3 tasks complete)
+**Review patch progress:** 100% (3/3 tasks complete)
 
 ### Review Patch 1: Manifest uniqueness + composition-seed fallback proof
 
@@ -1407,6 +1407,6 @@ git commit -m "docs: Phase 5 cycle 2 shipped - provider adapters + procedural pr
 - [x] Assert RIFF size, `fmt ` size, PCM format, mono channel count, byte rate,
   block alignment, 16-bit depth, `data` id, and payload size; mutation-check
   the already-correct writer so the expanded test is proven sensitive.
-- [ ] Run affected tests, explicit asset-provider typecheck, `npm run ci`, and
+- [x] Run affected tests, explicit asset-provider typecheck, `npm run ci`, and
   `npm run verify:new-game`.
-- [ ] Mark this addendum 100% and commit the scoped review patch.
+- [x] Mark this addendum 100% and commit the scoped review patch.
