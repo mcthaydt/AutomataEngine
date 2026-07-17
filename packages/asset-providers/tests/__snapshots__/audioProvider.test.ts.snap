@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`audioProvider > replays bit-identically; goldens pinned per kind 1`] = `"af2bbefd0ccc08680f5f92ba6a767bc8623f65d560dd48c8f98c2051fbc1dfa3"`;
+
+exports[`audioProvider > replays bit-identically; goldens pinned per kind 2`] = `"633c9d91e052d7d30e7213812bb9390d0eff4d0865d6ed11a6c60c01ea22c09b"`;

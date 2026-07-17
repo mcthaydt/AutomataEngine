@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 50% (4/8 tasks complete)
+**Progress:** 62.5% (5/8 tasks complete)
 
 ## Global Constraints
 
@@ -699,7 +699,7 @@ git commit -m "feat(asset-providers): primitive prop-recipe provider + recipeToR
 - Consumes: contracts provider types; `createSeededRng`.
 - Produces: `detSin(phase: number): number` (phase in cycles, pure `+ - * /`); `writeWav(samples: Int16Array, sampleRate: number): Uint8Array`; `audioProvider: AssetProvider` (`id: 'procedural-audio'`, `kinds: ['audio', 'music']`, `fileExtension` `'wav'`; `audio` ≤1 s, `music` ≤8 s at 22,050 Hz mono).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/asset-providers/tests/audioProvider.test.ts`:
 
@@ -764,12 +764,12 @@ describe('audioProvider', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers -t 'detSin|writeWav|audioProvider'`
 Expected: FAIL — modules missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/asset-providers/src/deterministicSine.ts`:
 
@@ -898,7 +898,7 @@ export const audioProvider: AssetProvider = {
 }
 ```
 
-- [ ] **Step 4: Run tests (twice for snapshots), commit**
+- [x] **Step 4: Run tests (twice for snapshots), commit**
 
 Run: `npx vitest run --project asset-providers && npx vitest run --project asset-providers`
 Expected: PASS both times.
