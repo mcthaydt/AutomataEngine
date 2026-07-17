@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export (packages) / direct `zod` (contracts only — that package imports zod directly today), vitest (node environment — no DOM needed), `@automata/engine` seeded RNG + string hashing.
 
-**Progress:** 62.5% (5/8 tasks complete)
+**Progress:** 75% (6/8 tasks complete)
 
 ## Global Constraints
 
@@ -935,7 +935,7 @@ export interface GeneratedAsset { entry: AssetManifestEntry; path: string; bytes
 export function generateGameAssets(input: GenerateAssetsInput): Promise<GeneratedAsset[]>
 ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/asset-providers/tests/generate.test.ts`:
 
@@ -1003,12 +1003,12 @@ describe('generateGameAssets', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project asset-providers -t 'registry|generateGameAssets'`
 Expected: FAIL — modules missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/asset-providers/src/registry.ts`:
 
@@ -1071,7 +1071,7 @@ export async function generateGameAssets(input: GenerateAssetsInput): Promise<Ge
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass, commit**
+- [x] **Step 4: Run tests to verify they pass, commit**
 
 Run: `npx vitest run --project asset-providers`
 Expected: PASS.
