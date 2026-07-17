@@ -2,6 +2,7 @@ import type { AssetManifestEntry, AssetRequirement } from '@automata/contracts'
 import { hashStringToSeed } from '@automata/engine'
 import { resolveProvider } from './registry'
 import { deriveStyleParams } from './styleParams'
+import { optimizeAssetBytes } from './optimize'
 
 export interface GenerateAssetsInput {
   requirements: readonly AssetRequirement[]
@@ -34,16 +35,19 @@ export async function generateGameAssets(
       style,
       specVersion: input.specVersion
     })
+    const optimized = optimizeAssetBytes(requirement.kind, bytes)
+    const finalBytes = optimized?.bytes ?? bytes
+    const transformations = optimized ? [optimized.transformation] : []
     const path = `assets/${requirement.id}.${provider.fileExtension(requirement)}`
     generated.push({
       path,
-      bytes,
+      bytes: finalBytes,
       entry: {
         id: requirement.id,
         requirement,
         path,
         provenance,
-        transformations: [],
+        transformations,
         status: 'generated',
         references: []
       }
