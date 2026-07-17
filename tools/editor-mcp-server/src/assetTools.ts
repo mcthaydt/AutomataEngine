@@ -81,12 +81,12 @@ function mergeManifest(existingText: string | null, entries: AssetManifestEntry[
   const existing = existingText
     ? parseAssetManifest(existingText)
     : { formatVersion: 2 as const, assets: [] }
-  const replaced = new Set(entries.map((entry) => entry.id))
+  const generatedById = new Map(entries.map((entry) => [entry.id, entry]))
   return assetManifestSchema.parse({
     formatVersion: 2,
     assets: [
-      ...existing.assets.filter((entry) => !replaced.has(entry.id)),
-      ...entries
+      ...existing.assets.filter((entry) => !generatedById.has(entry.id)),
+      ...generatedById.values()
     ]
   })
 }

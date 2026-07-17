@@ -1360,3 +1360,53 @@ git commit -m "docs: Phase 5 cycle 2 shipped - provider adapters + procedural pr
 - **Known look-before-you-code spots** (flagged in-task): the assetTools test `setup()` return shape (Task 7), `tests/server.test.ts` tool-list assertion (Task 7), `RenderableDef` export from the engine index (Task 4).
 - **Post-review fix (2026-07-16):** Task 7's gamespec fixture guidance corrected — `minimalGameSpecDraft` is a *draft* (no `specVersion`/`provenance`) and must be wrapped into the compiled shape before writing `gamespec.json`, since the runner parses with the full `gameSpecSchema`.
 - **SVG trig exception** is documented in Task 3 (layout-only, quantized via `toFixed(2)`, golden-guarded) — audio remains strictly transcendental-free.
+
+---
+
+## Code-review patch addendum (2026-07-17)
+
+**Review patch progress:** 67% (2/3 tasks complete)
+
+### Review Patch 1: Manifest uniqueness + composition-seed fallback proof
+
+**Files:**
+- Modify: `packages/contracts/src/assetTools.ts`
+- Modify: `packages/contracts/tests/assetTools.test.ts`
+- Modify: `tools/editor-mcp-server/src/assetTools.ts`
+- Modify: `tools/editor-mcp-server/tests/assetTools.test.ts`
+
+- [x] Add a contract regression that rejects repeated `assetIds`, and a runner
+  regression that invokes `generateAssets` without an explicit seed after
+  writing `composition.source.seed`; add a defensive merge regression for a
+  schema-parseable GameSpec with repeated requirements.
+- [x] Run the duplicate-id regression red; mutation-check the already-working
+  composition fallback so the coverage test is proven sensitive.
+- [x] Reject duplicate ids in the zod argument schema and defensively collapse
+  incoming generated entries by id inside `mergeManifest`.
+- [x] Run contracts + editor-MCP tests green.
+
+### Review Patch 2: Palette-only, transcendental-free SVG v1.0.1
+
+**Files:**
+- Modify: `packages/asset-providers/src/svgProvider.ts`
+- Modify: `packages/asset-providers/tests/svgProvider.test.ts`
+- Modify: `packages/asset-providers/tests/__snapshots__/svgProvider.test.ts.snap`
+
+- [x] Add regressions that reject non-palette `fill`/`stroke` values, reject
+  `Math.sin`/`Math.cos` in the provider source, and expect provider v1.0.1.
+- [x] Run the SVG regressions red.
+- [x] Build icon coordinates with `detSin(phase)` / `detSin(phase + 0.25)`, use
+  a palette hue for the outline, and bump the provider version to `1.0.1`.
+- [x] Regenerate the deliberate SVG golden and run asset-provider tests twice.
+
+### Review Patch 3: Complete WAV header proof + closeout
+
+**Files:**
+- Modify: `packages/asset-providers/tests/audioProvider.test.ts`
+
+- [x] Assert RIFF size, `fmt ` size, PCM format, mono channel count, byte rate,
+  block alignment, 16-bit depth, `data` id, and payload size; mutation-check
+  the already-correct writer so the expanded test is proven sensitive.
+- [ ] Run affected tests, explicit asset-provider typecheck, `npm run ci`, and
+  `npm run verify:new-game`.
+- [ ] Mark this addendum 100% and commit the scoped review patch.

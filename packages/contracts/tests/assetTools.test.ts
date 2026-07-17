@@ -20,4 +20,17 @@ describe('generateAssets tool contract', () => {
       seed: -1
     })).toThrow()
   })
+
+  it('rejects duplicate assetIds before generation', () => {
+    const definition = assetToolDefs().find((entry) => entry.name === 'generateAssets')!
+    const assetIdsSchema = (definition.schema as {
+      properties: { assetIds: { uniqueItems?: boolean } }
+    }).properties.assetIds
+    expect(assetIdsSchema.uniqueItems).toBe(true)
+    expect(() => assetToolArgSchemas.generateAssets.parse({
+      gameId: 'demo-game',
+      assetIds: ['relic-icon', 'relic-icon'],
+      seed: 7
+    })).toThrow(/duplicate/i)
+  })
 })

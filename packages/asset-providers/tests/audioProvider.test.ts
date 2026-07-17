@@ -26,6 +26,9 @@ const ambience = {
 }
 const sha = (bytes: Uint8Array): string => createHash('sha256').update(bytes).digest('hex')
 
+const readU16 = (bytes: Uint8Array, at: number): number =>
+  bytes[at]! | (bytes[at + 1]! << 8)
+
 const readU32 = (bytes: Uint8Array, at: number): number =>
   bytes[at]! |
   (bytes[at + 1]! << 8) |
@@ -46,8 +49,17 @@ describe('writeWav', () => {
   it('emits a canonical RIFF header for 22050 Hz mono 16-bit', () => {
     const bytes = writeWav(new Int16Array([0, 1000, -1000]), 22050)
     expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('RIFF')
+    expect(readU32(bytes, 4)).toBe(42)
     expect(String.fromCharCode(...bytes.slice(8, 12))).toBe('WAVE')
+    expect(String.fromCharCode(...bytes.slice(12, 16))).toBe('fmt ')
+    expect(readU32(bytes, 16)).toBe(16)
+    expect(readU16(bytes, 20)).toBe(1)
+    expect(readU16(bytes, 22)).toBe(1)
     expect(readU32(bytes, 24)).toBe(22050)
+    expect(readU32(bytes, 28)).toBe(44100)
+    expect(readU16(bytes, 32)).toBe(2)
+    expect(readU16(bytes, 34)).toBe(16)
+    expect(String.fromCharCode(...bytes.slice(36, 40))).toBe('data')
     expect(readU32(bytes, 40)).toBe(6)
     expect(bytes.length).toBe(44 + 6)
   })

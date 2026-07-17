@@ -5,6 +5,7 @@ import type {
   StyleParams
 } from '@automata/contracts'
 import { createSeededRng, type SeededRng } from '@automata/engine'
+import { detSin } from './deterministicSine'
 
 export const hsl = (hue: number, saturation: number, lightness: number): string =>
   `hsl(${hue} ${Math.round(saturation * 100)}% ${Math.round(lightness * 100)}%)`
@@ -19,18 +20,18 @@ function drawIcon(rng: SeededRng, palette: StyleParams['palette']): string {
   const inner = 6 + rng.next() * 4
   const coords: string[] = []
   for (let index = 0; index < points * 2; index += 1) {
-    const angle = (index / (points * 2)) * Math.PI * 2
+    const phase = index / (points * 2)
     const radius = index % 2 === 0 ? outer : inner
-    // Trig is used only for text layout. Fixed two-decimal serialization
-    // quantizes sub-ulp engine differences, and golden hashes guard the bytes.
     coords.push(
-      `${fixed(16 + radius * Math.cos(angle))},${fixed(16 + radius * Math.sin(angle))}`
+      `${fixed(16 + radius * detSin(phase + 0.25))},${fixed(16 + radius * detSin(phase))}`
     )
   }
-  const accent = palette.accentHues[rng.nextInt(palette.accentHues.length)]!
+  const accentIndex = rng.nextInt(palette.accentHues.length)
+  const accent = palette.accentHues[accentIndex]!
+  const outline = palette.accentHues[(accentIndex + 1) % palette.accentHues.length]!
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">\n` +
     `  <rect x="1" y="1" width="30" height="30" rx="6" fill="${hsl(palette.baseHue, palette.saturation, palette.lightness)}"/>\n` +
-    `  <polygon points="${coords.join(' ')}" fill="${hsl(accent, palette.saturation, palette.lightness)}" stroke="#ffffff" stroke-width="1"/>\n` +
+    `  <polygon points="${coords.join(' ')}" fill="${hsl(accent, palette.saturation, palette.lightness)}" stroke="${hsl(outline, palette.saturation, palette.lightness)}" stroke-width="1"/>\n` +
     `</svg>\n`
 }
 
@@ -52,7 +53,7 @@ function drawTexture(rng: SeededRng, palette: StyleParams['palette']): string {
 
 export const svgProvider: AssetProvider = {
   id: 'procedural-svg',
-  version: '1.0.0',
+  version: '1.0.1',
   kinds: ['ui', 'texture'],
   fileExtension: () => 'svg',
   async generate(requirement: AssetRequirement, ctx: ProviderContext) {

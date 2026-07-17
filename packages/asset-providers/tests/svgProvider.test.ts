@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 import type { ProviderContext } from '@automata/contracts'
 import { svgProvider } from '../src/svgProvider'
@@ -41,6 +42,20 @@ describe('svgProvider', () => {
     const hues = [...text.matchAll(/hsl\((\d+) /g)].map((match) => Number(match[1]))
     expect(hues.length).toBeGreaterThan(0)
     for (const hue of hues) expect([210, 90, 330]).toContain(hue)
+    const colors = [...text.matchAll(/(?:fill|stroke)="(?!url\()([^"]+)"/g)]
+      .map((match) => match[1])
+    const paletteColors = new Set([
+      'hsl(210 70% 55%)',
+      'hsl(90 70% 55%)',
+      'hsl(330 70% 55%)'
+    ])
+    expect(colors.length).toBeGreaterThan(0)
+    for (const color of colors) expect(paletteColors).toContain(color)
+  })
+
+  it('does not use implementation-dependent trigonometric functions', async () => {
+    const source = await readFile(new URL('../src/svgProvider.ts', import.meta.url), 'utf8')
+    expect(source).not.toMatch(/Math\.(?:sin|cos)/)
   })
 
   it('texture output declares a tileable pattern', async () => {
@@ -53,7 +68,7 @@ describe('svgProvider', () => {
     const { provenance } = await svgProvider.generate(icon, ctx)
     expect(provenance).toMatchObject({
       provider: 'procedural-svg',
-      providerVersion: '1.0.0',
+      providerVersion: '1.0.1',
       seed: 1234,
       determinism: { kind: 'seeded' },
       license: { kind: 'generated' }

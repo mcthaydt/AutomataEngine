@@ -10,7 +10,14 @@ export const assetToolArgSchemas = {
   validateAssets: z.strictObject({ gameId: gameSlugSchema }),
   generateAssets: z.strictObject({
     gameId: gameSlugSchema,
-    assetIds: z.array(z.string().min(1).max(60)).min(1).max(80).optional(),
+    assetIds: z.array(z.string().min(1).max(60))
+      .min(1)
+      .max(80)
+      .refine((assetIds) => new Set(assetIds).size === assetIds.length, {
+        message: 'assetIds must not contain duplicate ids'
+      })
+      .meta({ uniqueItems: true })
+      .optional(),
     seed: z.number().int().min(0).optional()
   })
 } as const satisfies Record<AssetToolName, z.ZodType>

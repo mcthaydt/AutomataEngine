@@ -55,7 +55,10 @@ async function setup(manifest: unknown | null) {
   return { runner, engine, manifestPath, repoRoot }
 }
 
-async function setupWithSpec() {
+async function setupWithSpec(assets: unknown[] = [
+  { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
+  { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
+]) {
   const context = await setup(null)
   const spec = gameSpecSchema.parse({
     specVersion: 1,
@@ -65,10 +68,7 @@ async function setupWithSpec() {
       history: [{ version: 1, reason: 'initial draft' }]
     },
     ...minimalGameSpecDraft('demo-game'),
-    assets: [
-      { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
-      { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
-    ]
+    assets
   })
   await writeFile(
     join(context.repoRoot, 'games', 'demo-game', 'gamespec.json'),
@@ -208,6 +208,34 @@ describe('generateAssets', () => {
       'utf8'
     ))
     expect(manifest.assets).toHaveLength(2)
+  })
+
+  it('falls back to composition.source.seed when seed is omitted', async () => {
+    const { runner, repoRoot } = await setupWithSpec()
+    await writeFile(
+      join(repoRoot, 'games', 'demo-game', 'public', 'project', 'composition.json'),
+      JSON.stringify({
+        ...COMPOSITION,
+        source: { specVersion: 1, specHash: 'spec-hash', seed: 73 }
+      })
+    )
+
+    const result = await runner.execute('generateAssets', { gameId: 'demo-game' })
+
+    expect(result).toMatchObject({ ok: true, content: { seed: 73 } })
+  })
+
+  it('defensively merges duplicate spec requirements by id', async () => {
+    const requirement = { id: 'relic-icon', kind: 'ui', description: 'Icon.' }
+    const { runner, repoRoot } = await setupWithSpec([requirement, requirement])
+
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 1 })
+
+    const manifest = JSON.parse(await readFile(
+      join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'assets.json'),
+      'utf8'
+    ))
+    expect(manifest.assets.map((entry: { id: string }) => entry.id)).toEqual(['relic-icon'])
   })
 
   it('fails with typed errors on unknown assetIds, missing gamespec, and missing seed', async () => {

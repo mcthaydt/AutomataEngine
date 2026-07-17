@@ -1,5 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`svgProvider > golden hashes stay stable (regenerate deliberately with a version bump) 1`] = `"6612c873e65cf2b45c3d87d89dc4e1a3d116e852384e343bbb743f7c28d82ceb"`;
+exports[`svgProvider > golden hashes stay stable (regenerate deliberately with a version bump) 1`] = `"edd93dfb0d7b2f6523af7738280e60eb04c04ba3a62bafd1840f693ee90c6624"`;
 
 exports[`svgProvider > golden hashes stay stable (regenerate deliberately with a version bump) 2`] = `"5e632703d34f1ac3270fc95d7218e00124795a57cd69a3cd9b3e4ca267c5df96"`;
