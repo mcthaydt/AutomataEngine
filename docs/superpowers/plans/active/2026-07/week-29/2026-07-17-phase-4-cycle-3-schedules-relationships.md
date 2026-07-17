@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 65% (39/60 steps complete).
+**Implementation progress:** 82% (49/60 steps complete).
 
 ## Global Constraints
 
@@ -84,7 +84,7 @@ with:
 Run: `npx vitest run --project contracts`
 Expected: PASS (all contracts tests, including untouched spec-hash fixtures).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts
@@ -356,7 +356,7 @@ export const packConfigSchema: z.ZodType<SchedulesRelationshipsPackConfig> = bas
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS (6 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships package-lock.json
@@ -464,7 +464,7 @@ export * from './clockCore'
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships
@@ -578,7 +578,7 @@ export * from './scheduleCore'
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships
@@ -741,7 +741,7 @@ export * from './relationshipCore'
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships
@@ -987,7 +987,7 @@ export * from './pack'
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships
@@ -1138,7 +1138,7 @@ export function createSchedulesRelationshipsEvalHook(config: SchedulesRelationsh
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships
@@ -1369,7 +1369,7 @@ export * from './composeSection'
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships
@@ -1515,7 +1515,7 @@ Also add `"@automata/pack-schedules-relationships": "*"` to `packages/pack-regis
 Run: `npx vitest run --project pack-registry`
 Expected: PASS — including the matrix's fixture-coverage test; pairs containing schedules are requires-unsatisfiable and skipped.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-schedules-relationships packages/pack-registry package-lock.json
@@ -1560,7 +1560,7 @@ it('every scenario composes, boots, and completes headlessly', () => {
 Run: `npx vitest run --project pack-registry -t scenario`
 Expected: PASS. Then temporarily break it to prove it bites: in `packages/pack-schedules-relationships/src/relationshipCore.ts`, flip `>=` to `>` in `relationshipsComplete`, rerun, and confirm the scenario test FAILS (drive cannot complete). Revert the flip and rerun to green. This break-detect step is mandatory — a scenario that cannot fail is not a gate.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/pack-registry
