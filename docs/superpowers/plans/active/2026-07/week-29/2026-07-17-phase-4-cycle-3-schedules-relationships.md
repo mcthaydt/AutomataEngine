@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 35% (21/60 steps complete).
+**Implementation progress:** 42% (25/60 steps complete).
 
 ## Global Constraints
 
@@ -763,7 +763,7 @@ git commit -m "feat(pack-schedules-relationships): relationship affinity core wi
 
 Behavior contract: walkers render as spheres (radius 0.35, color `#3ddc84`) at their current-slot station and walk on slot change; a `.clock-hud` chip shows the slot name; a `.relationships-hud` panel shows `name: tier` per tracked npc; consuming `questCompleted` bumps affinity, writes the `relationships` slice, and emits `relationshipChanged`; slot changes write the `clock` slice and emit `timeSlotChanged`; `objectivesComplete` is `relationshipsComplete`; save/load round-trips clock + affinities and snaps walkers to their current-slot station.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-schedules-relationships/tests/pack.test.ts` (happy-dom; mirrors the dialogue pack's adapter-test setup — `createGameHost` + `createNullRenderer`):
 
@@ -847,12 +847,12 @@ describe('schedules-relationships pack adapter', () => {
 
 **Note:** the composed runtime does not expose the boot context's event bus. Give the test access by having the stub capture `ctx.events` into a module-level variable, OR — simpler and matching the dialogue pack's own adapter tests — read the dialogue pack's test file `packages/pack-dialogue-quests/tests/pack.test.ts` FIRST and mirror its established host/event access pattern exactly (including how it emits events into the composed context). Adjust the test skeleton above to that pattern; keep the assertions.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-schedules-relationships -t adapter`
 Expected: FAIL — cannot resolve `../src/pack`.
 
-- [ ] **Step 3: Implement `src/pack.ts`**
+- [x] **Step 3: Implement `src/pack.ts`**
 
 ```ts
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
@@ -982,7 +982,7 @@ Add to `src/index.ts`:
 export * from './pack'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
