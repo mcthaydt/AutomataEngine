@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 17% (11/65 steps complete; Task 2 complete; Task 3 next).
+**Implementation progress:** 25% (16/65 steps complete; Task 3 complete; Task 4 next).
 
 ## Global Constraints
 
@@ -434,7 +434,7 @@ export function serializeQuestLog(log: QuestLog): unknown
 export function deserializeQuestLog(raw: unknown, quests: readonly QuestDef[]): QuestLog  // throws on malformed/mismatched keys
 ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-dialogue-quests/tests/questCore.test.ts`:
 
@@ -499,12 +499,12 @@ describe('questCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-dialogue-quests -t questCore`
 Expected: FAIL — cannot resolve `../src/questCore`.
 
-- [ ] **Step 3: Implement `src/questCore.ts`**
+- [x] **Step 3: Implement `src/questCore.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -585,12 +585,12 @@ Add to `src/index.ts`:
 export * from './questCore'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-dialogue-quests
