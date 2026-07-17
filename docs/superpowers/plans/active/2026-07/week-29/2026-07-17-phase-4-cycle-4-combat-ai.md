@@ -1821,10 +1821,16 @@ In `docs/ROADMAP.md` Phase 4 cycles list, change cycle 4's line to `Shipped` wit
 
 (Match the exact link style of the cycle 2/3 lines above it; adjust the date if shipping lands on a later day.)
 
+Also bump the Phase 4 row of the phase-map table in
+`docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`
+(line ~90) from `3 of 7 completed (2026-07-17)` to `4 of 7 completed (<ship date>)` —
+a prior commit (`f69c9b5`) established that this table is kept in sync with cycle status.
+
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/game-compose package-lock.json docs/ROADMAP.md
+git add packages/game-compose package-lock.json docs/ROADMAP.md \
+  docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md
 git commit -m "feat(game-compose): compose combat-ai sections; cycle 4 shipped"
 ```
 
