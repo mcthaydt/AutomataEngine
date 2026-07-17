@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 95% (62/65 steps complete; Task 12 complete; Task 13 next).
+**Implementation progress:** 100% (65/65 steps complete; Phase 4 Cycle 2 shipped).
 
 ## Global Constraints
 
@@ -1985,7 +1985,7 @@ git commit -m "feat(game-compose): ordered pack sections - dialogue composes ove
 **Files:**
 - Modify: `docs/ROADMAP.md` (Phase 4 cycle list)
 
-- [ ] **Step 1: Run every gate**
+- [x] **Step 1: Run every gate**
 
 ```bash
 npm run ci                 # lint + typecheck + full vitest
@@ -1995,7 +1995,7 @@ npx playwright test        # e2e including first-light slice/smoke
 
 Expected: all green. Fix forward anything red before proceeding — do not skip a gate.
 
-- [ ] **Step 2: Update the roadmap**
+- [x] **Step 2: Update the roadmap**
 
 In `docs/ROADMAP.md` under Phase 4 Cycles, change:
 
@@ -2013,7 +2013,7 @@ to (fill in the actual merge/ship commit once known; if shipping directly on mai
 
 (Cycle 3's line replaces its current `Planned` entry.)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/ROADMAP.md
