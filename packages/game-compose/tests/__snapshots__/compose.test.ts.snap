@@ -110,3 +110,795 @@ exports[`composeGame > inventory-only output is byte-identical to the pre-dialog
   },
 ]
 `;
+
+exports[`composeGame > keeps inventory+dialogue output bit-identical when schedules is not selected (frozen rule) 1`] = `
+{
+  "assetManifest": {
+    "assets": [
+      {
+        "id": "item-icon",
+        "path": "assets/item-icon.svg",
+        "provenance": {
+          "determinism": {
+            "kind": "seeded",
+          },
+          "generator": "svg-icon@1",
+          "license": {
+            "kind": "generated",
+            "notes": "Procedurally generated placeholder.",
+          },
+          "provider": "stub-generator",
+          "providerVersion": "1.0.0",
+          "seed": 11,
+          "sourceParams": {},
+          "specVersion": 1,
+        },
+        "references": [
+          "public/project/composition.json",
+        ],
+        "requirement": {
+          "description": "Light-cell icon for the inventory HUD",
+          "id": "item-icon",
+          "kind": "ui",
+        },
+        "status": "placeholder",
+        "transformations": [],
+      },
+    ],
+    "formatVersion": 2,
+  },
+  "composition": {
+    "assets": [
+      {
+        "id": "item-icon",
+        "path": "assets/item-icon.svg",
+      },
+    ],
+    "formatVersion": 1,
+    "gameId": "first-light",
+    "packs": [
+      {
+        "config": {
+          "iconPath": "assets/item-icon.svg",
+          "interactRadius": 1.5,
+          "items": [
+            {
+              "id": "item-1",
+              "position": {
+                "x": 1.98,
+                "z": 7.72,
+              },
+            },
+          ],
+        },
+        "id": "interaction-inventory",
+        "version": "1.0.0",
+      },
+      {
+        "config": {
+          "dialogues": [
+            {
+              "id": "dlg-npc-1",
+              "nodes": [
+                {
+                  "choices": [
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q1",
+                          "status": "active",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "completeQuest",
+                          "questId": "q1",
+                        },
+                      ],
+                      "next": "q1-done",
+                      "text": "Here about "Reach the shop." — done.",
+                    },
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q1",
+                          "status": "available",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "acceptQuest",
+                          "questId": "q1",
+                        },
+                      ],
+                      "next": "q1-accepted",
+                      "text": "I'll take on "Reach the shop.".",
+                    },
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q2",
+                          "status": "active",
+                        },
+                        {
+                          "itemIds": [
+                            "item-1",
+                          ],
+                          "kind": "hasItems",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "completeQuest",
+                          "questId": "q2",
+                        },
+                      ],
+                      "next": "q2-done",
+                      "text": "Here about "Light the beacon." — done.",
+                    },
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q2",
+                          "status": "available",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "acceptQuest",
+                          "questId": "q2",
+                        },
+                      ],
+                      "next": "q2-accepted",
+                      "text": "I'll take on "Light the beacon.".",
+                    },
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q3",
+                          "status": "active",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "completeQuest",
+                          "questId": "q3",
+                        },
+                      ],
+                      "next": "q3-done",
+                      "text": "Here about "Help the shopkeeper." — done.",
+                    },
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q3",
+                          "status": "available",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "acceptQuest",
+                          "questId": "q3",
+                        },
+                      ],
+                      "next": "q3-accepted",
+                      "text": "I'll take on "Help the shopkeeper.".",
+                    },
+                    {
+                      "next": null,
+                      "text": "Just passing through.",
+                    },
+                  ],
+                  "id": "greet",
+                  "speaker": "The Keeper",
+                  "text": "The Keeper nods at you.",
+                },
+                {
+                  "choices": [
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q1",
+                          "status": "active",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "completeQuest",
+                          "questId": "q1",
+                        },
+                      ],
+                      "next": "q1-done",
+                      "text": "Done already.",
+                    },
+                    {
+                      "next": null,
+                      "text": "On my way.",
+                    },
+                  ],
+                  "id": "q1-accepted",
+                  "speaker": "The Keeper",
+                  "text": "Good. That settles it.",
+                },
+                {
+                  "choices": [
+                    {
+                      "next": null,
+                      "text": "Bye.",
+                    },
+                  ],
+                  "id": "q1-done",
+                  "speaker": "The Keeper",
+                  "text": "Well done.",
+                },
+                {
+                  "choices": [
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q2",
+                          "status": "active",
+                        },
+                        {
+                          "itemIds": [
+                            "item-1",
+                          ],
+                          "kind": "hasItems",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "completeQuest",
+                          "questId": "q2",
+                        },
+                      ],
+                      "next": "q2-done",
+                      "text": "Done already.",
+                    },
+                    {
+                      "next": null,
+                      "text": "On my way.",
+                    },
+                  ],
+                  "id": "q2-accepted",
+                  "speaker": "The Keeper",
+                  "text": "Bring it back when you have it.",
+                },
+                {
+                  "choices": [
+                    {
+                      "next": null,
+                      "text": "Bye.",
+                    },
+                  ],
+                  "id": "q2-done",
+                  "speaker": "The Keeper",
+                  "text": "Well done.",
+                },
+                {
+                  "choices": [
+                    {
+                      "conditions": [
+                        {
+                          "kind": "questState",
+                          "questId": "q3",
+                          "status": "active",
+                        },
+                      ],
+                      "effects": [
+                        {
+                          "kind": "completeQuest",
+                          "questId": "q3",
+                        },
+                      ],
+                      "next": "q3-done",
+                      "text": "Done already.",
+                    },
+                    {
+                      "next": null,
+                      "text": "On my way.",
+                    },
+                  ],
+                  "id": "q3-accepted",
+                  "speaker": "The Keeper",
+                  "text": "Good. That settles it.",
+                },
+                {
+                  "choices": [
+                    {
+                      "next": null,
+                      "text": "Bye.",
+                    },
+                  ],
+                  "id": "q3-done",
+                  "speaker": "The Keeper",
+                  "text": "Well done.",
+                },
+              ],
+              "start": "greet",
+            },
+          ],
+          "npcs": [
+            {
+              "dialogueId": "dlg-npc-1",
+              "id": "npc-1",
+              "name": "The Keeper",
+              "position": {
+                "x": 0.84,
+                "z": -9.24,
+              },
+            },
+          ],
+          "quests": [
+            {
+              "giverNpcId": "npc-1",
+              "id": "q1",
+              "kind": "main",
+              "objective": {
+                "kind": "talk",
+              },
+              "title": "Reach the shop.",
+            },
+            {
+              "giverNpcId": "npc-1",
+              "id": "q2",
+              "kind": "main",
+              "objective": {
+                "itemIds": [
+                  "item-1",
+                ],
+                "kind": "fetch",
+              },
+              "title": "Light the beacon.",
+            },
+            {
+              "giverNpcId": "npc-1",
+              "id": "q3",
+              "kind": "side",
+              "objective": {
+                "kind": "talk",
+              },
+              "title": "Help the shopkeeper.",
+            },
+          ],
+          "talkRadius": 2,
+        },
+        "id": "dialogue-quests",
+        "version": "1.0.0",
+      },
+    ],
+    "source": {
+      "seed": 11,
+      "specHash": "hash-11",
+      "specVersion": 1,
+    },
+  },
+  "files": [
+    {
+      "path": "public/project/resources/tuning.resource.json",
+      "text": "{
+  "id": "tuning",
+  "typeId": "first-light.tuning",
+  "data": {
+    "arenaHalf": 12,
+    "moveSpeed": 6,
+    "goal": {
+      "x": 6.09,
+      "z": 6.24
+    },
+    "goalRadius": 1.5,
+    "timeLimitS": 30,
+    "colors": {
+      "floor": "#12203a",
+      "player": "#27e0ff",
+      "goal": "#ffd23f"
+    }
+  }
+}
+",
+    },
+    {
+      "path": "public/project/composition.json",
+      "text": "{
+  "formatVersion": 1,
+  "gameId": "first-light",
+  "source": {
+    "specVersion": 1,
+    "specHash": "hash-11",
+    "seed": 11
+  },
+  "packs": [
+    {
+      "id": "interaction-inventory",
+      "version": "1.0.0",
+      "config": {
+        "interactRadius": 1.5,
+        "items": [
+          {
+            "id": "item-1",
+            "position": {
+              "x": 1.98,
+              "z": 7.72
+            }
+          }
+        ],
+        "iconPath": "assets/item-icon.svg"
+      }
+    },
+    {
+      "id": "dialogue-quests",
+      "version": "1.0.0",
+      "config": {
+        "talkRadius": 2,
+        "npcs": [
+          {
+            "id": "npc-1",
+            "name": "The Keeper",
+            "position": {
+              "x": 0.84,
+              "z": -9.24
+            },
+            "dialogueId": "dlg-npc-1"
+          }
+        ],
+        "dialogues": [
+          {
+            "id": "dlg-npc-1",
+            "start": "greet",
+            "nodes": [
+              {
+                "id": "greet",
+                "speaker": "The Keeper",
+                "text": "The Keeper nods at you.",
+                "choices": [
+                  {
+                    "text": "Here about \\"Reach the shop.\\" — done.",
+                    "next": "q1-done",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q1",
+                        "status": "active"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "completeQuest",
+                        "questId": "q1"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "I'll take on \\"Reach the shop.\\".",
+                    "next": "q1-accepted",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q1",
+                        "status": "available"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "acceptQuest",
+                        "questId": "q1"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "Here about \\"Light the beacon.\\" — done.",
+                    "next": "q2-done",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q2",
+                        "status": "active"
+                      },
+                      {
+                        "kind": "hasItems",
+                        "itemIds": [
+                          "item-1"
+                        ]
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "completeQuest",
+                        "questId": "q2"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "I'll take on \\"Light the beacon.\\".",
+                    "next": "q2-accepted",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q2",
+                        "status": "available"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "acceptQuest",
+                        "questId": "q2"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "Here about \\"Help the shopkeeper.\\" — done.",
+                    "next": "q3-done",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q3",
+                        "status": "active"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "completeQuest",
+                        "questId": "q3"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "I'll take on \\"Help the shopkeeper.\\".",
+                    "next": "q3-accepted",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q3",
+                        "status": "available"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "acceptQuest",
+                        "questId": "q3"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "Just passing through.",
+                    "next": null
+                  }
+                ]
+              },
+              {
+                "id": "q1-accepted",
+                "speaker": "The Keeper",
+                "text": "Good. That settles it.",
+                "choices": [
+                  {
+                    "text": "Done already.",
+                    "next": "q1-done",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q1",
+                        "status": "active"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "completeQuest",
+                        "questId": "q1"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "On my way.",
+                    "next": null
+                  }
+                ]
+              },
+              {
+                "id": "q1-done",
+                "speaker": "The Keeper",
+                "text": "Well done.",
+                "choices": [
+                  {
+                    "text": "Bye.",
+                    "next": null
+                  }
+                ]
+              },
+              {
+                "id": "q2-accepted",
+                "speaker": "The Keeper",
+                "text": "Bring it back when you have it.",
+                "choices": [
+                  {
+                    "text": "Done already.",
+                    "next": "q2-done",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q2",
+                        "status": "active"
+                      },
+                      {
+                        "kind": "hasItems",
+                        "itemIds": [
+                          "item-1"
+                        ]
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "completeQuest",
+                        "questId": "q2"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "On my way.",
+                    "next": null
+                  }
+                ]
+              },
+              {
+                "id": "q2-done",
+                "speaker": "The Keeper",
+                "text": "Well done.",
+                "choices": [
+                  {
+                    "text": "Bye.",
+                    "next": null
+                  }
+                ]
+              },
+              {
+                "id": "q3-accepted",
+                "speaker": "The Keeper",
+                "text": "Good. That settles it.",
+                "choices": [
+                  {
+                    "text": "Done already.",
+                    "next": "q3-done",
+                    "conditions": [
+                      {
+                        "kind": "questState",
+                        "questId": "q3",
+                        "status": "active"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "kind": "completeQuest",
+                        "questId": "q3"
+                      }
+                    ]
+                  },
+                  {
+                    "text": "On my way.",
+                    "next": null
+                  }
+                ]
+              },
+              {
+                "id": "q3-done",
+                "speaker": "The Keeper",
+                "text": "Well done.",
+                "choices": [
+                  {
+                    "text": "Bye.",
+                    "next": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "quests": [
+          {
+            "id": "q1",
+            "kind": "main",
+            "title": "Reach the shop.",
+            "giverNpcId": "npc-1",
+            "objective": {
+              "kind": "talk"
+            }
+          },
+          {
+            "id": "q2",
+            "kind": "main",
+            "title": "Light the beacon.",
+            "giverNpcId": "npc-1",
+            "objective": {
+              "kind": "fetch",
+              "itemIds": [
+                "item-1"
+              ]
+            }
+          },
+          {
+            "id": "q3",
+            "kind": "side",
+            "title": "Help the shopkeeper.",
+            "giverNpcId": "npc-1",
+            "objective": {
+              "kind": "talk"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "assets": [
+    {
+      "id": "item-icon",
+      "path": "assets/item-icon.svg"
+    }
+  ]
+}
+",
+    },
+    {
+      "path": "public/assets/item-icon.svg",
+      "text": "<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <circle cx="16" cy="16" r="12" fill="hsl(218 90% 60%)" stroke="#ffffff" stroke-width="2"/>
+</svg>
+",
+    },
+    {
+      "path": "public/assets/assets.json",
+      "text": "{
+  "formatVersion": 2,
+  "assets": [
+    {
+      "id": "item-icon",
+      "requirement": {
+        "id": "item-icon",
+        "kind": "ui",
+        "description": "Light-cell icon for the inventory HUD"
+      },
+      "path": "assets/item-icon.svg",
+      "provenance": {
+        "provider": "stub-generator",
+        "providerVersion": "1.0.0",
+        "generator": "svg-icon@1",
+        "sourceParams": {},
+        "seed": 11,
+        "specVersion": 1,
+        "determinism": {
+          "kind": "seeded"
+        },
+        "license": {
+          "kind": "generated",
+          "notes": "Procedurally generated placeholder."
+        }
+      },
+      "transformations": [],
+      "status": "placeholder",
+      "references": [
+        "public/project/composition.json"
+      ]
+    }
+  ]
+}
+",
+    },
+  ],
+  "ok": true,
+  "summary": {
+    "assetIds": [
+      "item-icon",
+    ],
+    "itemCount": 1,
+    "packIds": [
+      "interaction-inventory",
+      "dialogue-quests",
+    ],
+  },
+}
+`;

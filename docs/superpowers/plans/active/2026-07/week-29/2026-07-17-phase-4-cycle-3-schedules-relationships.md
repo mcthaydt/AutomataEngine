@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 82% (49/60 steps complete).
+**Implementation progress:** 92% (55/60 steps complete).
 
 ## Global Constraints
 
@@ -1580,7 +1580,7 @@ git commit -m "test(pack-registry): 3-pack scenario suite (inventory+dialogue+sc
 - Consumes: `composeSchedulesSection`, `schedulesRelationshipsPack` from the package; the existing compose flow.
 - Produces: `composeGame` accepts specs selecting `schedules-relationships` (requires dialogue), composes its section AFTER dialogue with the threaded outputs, and appends its RNG draws last. Inventory-only and inventory+dialogue outputs are byte-identical to before this task.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `packages/game-compose/tests/compose.test.ts`, first READ the file and locate the existing fixture-spec helpers (cycle 2 added dialogue-selecting spec fixtures — reuse their builder pattern). Add:
 
@@ -1624,7 +1624,7 @@ it('keeps inventory+dialogue output bit-identical when schedules is not selected
 })
 ```
 
-- [ ] **Step 2: Capture the frozen baseline BEFORE touching compose.ts**
+- [x] **Step 2: Capture the frozen baseline BEFORE touching compose.ts**
 
 On the pre-change tree, run a one-off script to write the golden:
 
@@ -1639,12 +1639,12 @@ import { composeGame } from './packages/game-compose/src/compose.ts'
 
 Simplest reliable route: add the capture as a normal vitest test that writes the fixture file when it does not exist and asserts equality when it does (a self-priming golden). Commit the fixture in this task.
 
-- [ ] **Step 3: Run tests to verify the new ones fail**
+- [x] **Step 3: Run tests to verify the new ones fail**
 
 Run: `npx vitest run --project game-compose`
 Expected: the schedules-composition test FAILS (`compose-unsupported-capability`); the frozen test passes (baseline just captured).
 
-- [ ] **Step 4: Implement the wiring in `compose.ts`**
+- [x] **Step 4: Implement the wiring in `compose.ts`**
 
 - Add the import: `import { composeSchedulesSection, schedulesRelationshipsPack } from '@automata/pack-schedules-relationships'`.
 - Add `schedulesRelationshipsPack.id` to the `supported` set and to the `selectedPacks` flatMap (return `[schedulesRelationshipsPack]` for its id) so `validatePackSet` sees it.
@@ -1676,12 +1676,12 @@ Expected: the schedules-composition test FAILS (`compose-unsupported-capability`
 
 - Update the cycle-2 error message string `'Phase 4 cycle 2 composes only […]'` to `'Phase 4 cycle 3 composes only […]'` (the supported list now includes schedules).
 
-- [ ] **Step 5: Run tests to verify everything passes, including the frozen golden**
+- [x] **Step 5: Run tests to verify everything passes, including the frozen golden**
 
 Run: `npx vitest run --project game-compose`
 Expected: PASS — new tests green AND the frozen inventory+dialogue golden unchanged.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-compose package-lock.json

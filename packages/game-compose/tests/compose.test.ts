@@ -23,7 +23,8 @@ function specWithCapabilities(capabilities: GameSpec['capabilities']): GameSpec 
     capabilities,
     cast: [
       ...spec.cast,
-      { id: 'keeper', name: 'The Keeper', role: 'quest-giver', description: 'Keeper of the beacon.' }
+      { id: 'keeper', name: 'The Keeper', role: 'quest-giver', description: 'Keeper of the beacon.' },
+      { id: 'stroller', name: 'Stroller', role: 'ambient', description: 'Walks the station lanes.' }
     ]
   })
 }
@@ -162,5 +163,50 @@ describe('composeGame', () => {
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.issues[0]!.code).toBe('compose-unsupported-capability')
+  })
+
+  it('composes the schedules section after dialogue with tracked givers from the dialogue section', () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'dialogue-quests', config: {}, requirements: [] },
+      { id: 'schedules-relationships', config: {}, requirements: [] }
+    ])
+    const result = composeGame({ spec, seed: 11, specHash: 'hash-11' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.composition.packs.map((pack) => pack.id))
+      .toEqual(['interaction-inventory', 'dialogue-quests', 'schedules-relationships'])
+    const schedules = result.composition.packs[2]!.config as {
+      walkers: unknown[]
+      relationships: { tracked: Array<{ npcId: string }> }
+    }
+    const dialogue = result.composition.packs[1]!.config as {
+      npcs: Array<{ id: string }>
+      quests: Array<{ id: string; kind: string; giverNpcId: string }>
+    }
+    const giverIds = new Set(dialogue.quests.filter((quest) => quest.kind === 'main').map((quest) => quest.giverNpcId))
+    expect(schedules.walkers).toHaveLength(1)
+    expect(schedules.relationships.tracked.map((entry) => entry.npcId).sort()).toEqual([...giverIds].sort())
+  })
+
+  it('rejects schedules-relationships without dialogue-quests via pack-set validation', () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'schedules-relationships', config: {}, requirements: [] }
+    ])
+    const result = composeGame({ spec, seed: 11, specHash: 'hash-11' })
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues.some((issue) => issue.code === 'pack-missing-requirement')).toBe(true)
+  })
+
+  it('keeps inventory+dialogue output bit-identical when schedules is not selected (frozen rule)', () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'dialogue-quests', config: {}, requirements: [] }
+    ])
+    const before = composeGame({ spec, seed: 11, specHash: 'hash-11' })
+    expect(before.ok).toBe(true)
+    expect(before).toMatchSnapshot()
   })
 })

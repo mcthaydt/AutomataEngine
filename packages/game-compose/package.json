@@ -9,6 +9,7 @@
     "@automata/engine": "*",
     "@automata/game-kit": "*",
     "@automata/pack-dialogue-quests": "*",
-    "@automata/pack-interaction-inventory": "*"
+    "@automata/pack-interaction-inventory": "*",
+    "@automata/pack-schedules-relationships": "*"
   }
 }
