@@ -1,6 +1,7 @@
 export * from './config'
 export * from './composeSection'
 export * from './dialogueCore'
+export { dialogueQuestsEditorContribution } from './editorContribution'
 export * from './evalHook'
 export * from './pack'
 export * from './questCore'

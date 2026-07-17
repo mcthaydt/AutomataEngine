@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 63% (41/65 steps complete; Task 8 complete; Task 9 next).
+**Implementation progress:** 69% (45/65 steps complete; Task 9 complete; Task 10 next).
 
 ## Global Constraints
 
@@ -1547,7 +1547,7 @@ git commit -m "feat(pack-dialogue-quests): browser adapter - overlay, quest HUD,
 - Consumes: `PackEditorContribution` from `@automata/game-kit`; `packConfigSchema`.
 - Produces: `dialogueQuestsEditorContribution: PackEditorContribution` with `packId: 'dialogue-quests'`, `prefabs: []`, `createPreview` drawing one marker per NPC.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-dialogue-quests/tests/editorContribution.test.ts` (mirror `packages/pack-interaction-inventory/tests/editorContribution.test.ts`):
 
@@ -1574,12 +1574,12 @@ describe('dialogue-quests editor contribution', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project pack-dialogue-quests -t 'editor contribution'`
 Expected: FAIL — cannot resolve `../src/editorContribution`.
 
-- [ ] **Step 3: Implement `src/editorContribution.ts`**
+- [x] **Step 3: Implement `src/editorContribution.ts`**
 
 ```ts
 import type { PackEditorContribution } from '@automata/game-kit'
@@ -1609,7 +1609,7 @@ export const dialogueQuestsEditorContribution: PackEditorContribution = {
 }
 ```
 
-- [ ] **Step 4: Run tests, commit**
+- [x] **Step 4: Run tests, commit**
 
 Run: `npx vitest run --project pack-dialogue-quests`
 Expected: PASS.
