@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 7% (4/60 steps complete).
+**Implementation progress:** 15% (9/60 steps complete).
 
 ## Global Constraints
 
@@ -136,7 +136,7 @@ export interface RelationshipsSliceValue { affinities: Record<string, number> }
 
 `stations` has exactly `SLOT_COUNT` entries (station for slot i). Zero walkers is legal.
 
-- [ ] **Step 1: Scaffold the package**
+- [x] **Step 1: Scaffold the package**
 
 `packages/pack-schedules-relationships/package.json`:
 
@@ -184,7 +184,7 @@ export * from './config'
 
 Run: `npm install` (links the workspace).
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/pack-schedules-relationships/tests/fixtures.ts` (shared fixture lives here, NOT in a test file — repo convention):
 
@@ -264,12 +264,12 @@ describe('schedules-relationships pack config schema', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: FAIL — cannot resolve `../src/config`.
 
-- [ ] **Step 4: Implement `src/config.ts`**
+- [x] **Step 4: Implement `src/config.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -351,7 +351,7 @@ export const packConfigSchema: z.ZodType<SchedulesRelationshipsPackConfig> = bas
 })
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS (6 tests).
