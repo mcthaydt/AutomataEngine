@@ -1,6 +1,7 @@
 import { createSeededRng, type SeededRng } from '@automata/engine'
 import type { AssetManifest, CompositionManifest, GameSpec } from '@automata/contracts'
-import { validatePackSet } from '@automata/game-kit'
+import { validatePackSet, type GamePack } from '@automata/game-kit'
+import { composeDialogueSection, dialogueQuestsPack } from '@automata/pack-dialogue-quests'
 import { composeInventorySection, interactionInventoryPack } from '@automata/pack-interaction-inventory'
 
 export interface ComposedFile { path: string; text: string }
@@ -27,21 +28,24 @@ const drawIconSvg = (rng: SeededRng): string => {
     `</svg>\n`
 }
 
-/** Pure spec→artifacts compose. RNG draw order: goal position → icon hue → item placements. */
+/** Pure spec→artifacts compose. RNG order: goal, icon hues, item placements, then NPC placements. */
 export function composeGame(args: { spec: GameSpec; seed: number; specHash: string }): ComposeResult {
   const { spec, seed, specHash } = args
-  const unsupported = spec.capabilities.filter((entry) => entry.id !== interactionInventoryPack.id)
+  const supported = new Set<string>([interactionInventoryPack.id, dialogueQuestsPack.id])
+  const unsupported = spec.capabilities.filter((entry) => !supported.has(entry.id))
   if (unsupported.length > 0) {
     return {
       ok: false,
       issues: unsupported.map((entry) => ({
         code: 'compose-unsupported-capability',
-        message: `Phase 3 composes only "interaction-inventory"; spec selects "${entry.id}"`
+        message: `Phase 4 cycle 2 composes only [${[...supported].join(', ')}]; spec selects "${entry.id}"`
       }))
     }
   }
 
-  const packIssues = validatePackSet([interactionInventoryPack]).filter((issue) => issue.severity === 'error')
+  const wantsDialogue = spec.capabilities.some((entry) => entry.id === dialogueQuestsPack.id)
+  const selectedPacks = wantsDialogue ? [interactionInventoryPack, dialogueQuestsPack] : [interactionInventoryPack]
+  const packIssues = validatePackSet(selectedPacks as GamePack[]).filter((issue) => issue.severity === 'error')
   if (packIssues.length > 0) {
     return { ok: false, issues: packIssues.map((issue) => ({ code: issue.code, message: issue.message })) }
   }
@@ -72,18 +76,40 @@ export function composeGame(args: { spec: GameSpec; seed: number; specHash: stri
     })
   }
   const iconPath = assetManifest.assets[0]?.path ?? null
-  const selection = spec.capabilities[0]!
+  const inventorySelection = spec.capabilities.find((entry) => entry.id === interactionInventoryPack.id)!
   const packConfig = composeInventorySection({
-    specConfig: selection.config as { requiredItems?: number; interactRadius?: number },
+    specConfig: inventorySelection.config as { requiredItems?: number; interactRadius?: number },
     arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
     iconPath
   }, rng)
+  const packs: CompositionManifest['packs'] = [
+    {
+      id: interactionInventoryPack.id,
+      version: interactionInventoryPack.version,
+      config: packConfig as unknown as Record<string, unknown>
+    }
+  ]
+  if (wantsDialogue) {
+    const dialogueSelection = spec.capabilities.find((entry) => entry.id === dialogueQuestsPack.id)!
+    const dialogueConfig = composeDialogueSection({
+      specConfig: dialogueSelection.config as { talkRadius?: number },
+      quests: spec.story.quests,
+      cast: spec.cast,
+      arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
+      inventory: { items: packConfig.items }
+    }, rng)
+    packs.push({
+      id: dialogueQuestsPack.id,
+      version: dialogueQuestsPack.version,
+      config: dialogueConfig as unknown as Record<string, unknown>
+    })
+  }
 
   const composition: CompositionManifest = {
     formatVersion: 1,
     gameId: spec.identity.id,
     source: { specVersion: spec.specVersion, specHash, seed },
-    packs: [{ id: interactionInventoryPack.id, version: interactionInventoryPack.version, config: packConfig as unknown as Record<string, unknown> }],
+    packs,
     assets: assetManifest.assets.map((entry) => ({ id: entry.id, path: entry.path }))
   }
   const tuningResource = {

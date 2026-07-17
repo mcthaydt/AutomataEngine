@@ -8,6 +8,7 @@
     "@automata/contracts": "*",
     "@automata/engine": "*",
     "@automata/game-kit": "*",
+    "@automata/pack-dialogue-quests": "*",
     "@automata/pack-interaction-inventory": "*"
   }
 }

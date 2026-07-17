@@ -16,6 +16,18 @@ function sliceSpec(): GameSpec {
   })
 }
 
+function specWithCapabilities(capabilities: GameSpec['capabilities']): GameSpec {
+  const spec = sliceSpec()
+  return gameSpecSchema.parse({
+    ...spec,
+    capabilities,
+    cast: [
+      ...spec.cast,
+      { id: 'keeper', name: 'The Keeper', role: 'quest-giver', description: 'Keeper of the beacon.' }
+    ]
+  })
+}
+
 describe('composeGame', () => {
   it('the composed pack set passes contract-v2 validation with no issues', () => {
     expect(validatePackSet([interactionInventoryPack])).toEqual([])
@@ -105,5 +117,42 @@ describe('composeGame', () => {
     expect(result.assetManifest.assets).toEqual([])
     expect(result.composition.packs[0]!.config).toMatchObject({ iconPath: null })
     expect(result.files.some((file) => file.path.endsWith('.svg'))).toBe(false)
+  })
+
+  it('composes inventory + dialogue-quests with ordered sections', () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'dialogue-quests', config: {}, requirements: [] }
+    ])
+    const result = composeGame({ spec, seed: 11, specHash: 'h' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.composition.packs.map((entry) => entry.id)).toEqual(['interaction-inventory', 'dialogue-quests'])
+    const dialogueConfig = result.composition.packs[1]!.config as { quests: Array<{ objective: { kind: string; itemIds?: string[] } }> }
+    const itemIds = (result.composition.packs[0]!.config as { items: Array<{ id: string }> }).items.map((item) => item.id)
+    for (const quest of dialogueConfig.quests) {
+      if (quest.objective.kind === 'fetch') {
+        for (const id of quest.objective.itemIds!) expect(itemIds).toContain(id)
+      }
+    }
+  })
+
+  it('inventory-only output is byte-identical to the pre-dialogue compose (first-light freeze)', () => {
+    const spec = specWithCapabilities([{ id: 'interaction-inventory', config: {}, requirements: [] }])
+    const result = composeGame({ spec, seed: 11, specHash: 'h' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.files).toMatchSnapshot()
+  })
+
+  it('still rejects capabilities without a composed pack', () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'combat-ai', config: {}, requirements: [] }
+    ])
+    const result = composeGame({ spec, seed: 11, specHash: 'h' })
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues[0]!.code).toBe('compose-unsupported-capability')
   })
 })

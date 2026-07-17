@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 86% (56/65 steps complete; Task 11 complete; Task 12 next).
+**Implementation progress:** 95% (62/65 steps complete; Task 12 complete; Task 13 next).
 
 ## Global Constraints
 
@@ -1858,7 +1858,7 @@ git commit -m "feat(scaffold): thread eval slices through evaluateProject (templ
 - Consumes: `composeDialogueSection`, `dialogueQuestsPack` from the new package; existing `composeGame` contract.
 - Produces: `composeGame` accepts specs selecting `interaction-inventory` alone (unchanged output — bit-identical) or `interaction-inventory` + `dialogue-quests` (composition gains a second pack entry). Other capabilities still fail with `compose-unsupported-capability`. RNG draw order: goal → icon hues → item placements → **NPC placements last**.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `packages/game-compose/tests/compose.test.ts` (reuse the file's existing spec fixture helper; extend it with a `dialogue-quests` capability entry — read the file first for the helper's exact name/shape):
 
@@ -1905,12 +1905,12 @@ Add to `packages/game-compose/tests/compose.test.ts` (reuse the file's existing 
 
 **Order of operations matters:** commit the snapshot test FIRST against the unmodified `composeGame` (it records today's byte-exact output), THEN modify `composeGame` — the snapshot then proves the freeze.
 
-- [ ] **Step 2: Run new tests — snapshot passes (recorded), pair test fails**
+- [x] **Step 2: Run new tests — snapshot passes (recorded), pair test fails**
 
 Run: `npx vitest run --project game-compose`
 Expected: pair test FAILS (`compose-unsupported-capability`); snapshot recorded green.
 
-- [ ] **Step 3: Implement ordered sections in `compose.ts`**
+- [x] **Step 3: Implement ordered sections in `compose.ts`**
 
 Changes to `packages/game-compose/src/compose.ts`:
 
@@ -1961,17 +1961,17 @@ After the existing inventory `packConfig` block (all existing RNG draws untouche
 
 and use `packs` in the composition literal (`packs,` instead of the inline single-entry array). Note the existing code selects the inventory capability as `spec.capabilities[0]!` — replace that with the explicit `inventorySelection` lookup above so capability order in the spec no longer matters.
 
-- [ ] **Step 4: Run tests to verify all pass (snapshot must NOT change)**
+- [x] **Step 4: Run tests to verify all pass (snapshot must NOT change)**
 
 Run: `npx vitest run --project game-compose`
 Expected: PASS — pair test green, snapshot green (byte-identical), unsupported test green.
 
-- [ ] **Step 5: Run the checked-in first-light regression**
+- [x] **Step 5: Run the checked-in first-light regression**
 
 Run: `npx vitest run --project first-light`
 Expected: PASS — the checked-in `games/first-light/public/project/composition.json` still matches its recompose.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-compose package-lock.json

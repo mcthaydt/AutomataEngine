@@ -1,0 +1,112 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`composeGame > inventory-only output is byte-identical to the pre-dialogue compose (first-light freeze) 1`] = `
+[
+  {
+    "path": "public/project/resources/tuning.resource.json",
+    "text": "{
+  "id": "tuning",
+  "typeId": "first-light.tuning",
+  "data": {
+    "arenaHalf": 12,
+    "moveSpeed": 6,
+    "goal": {
+      "x": 6.09,
+      "z": 6.24
+    },
+    "goalRadius": 1.5,
+    "timeLimitS": 30,
+    "colors": {
+      "floor": "#12203a",
+      "player": "#27e0ff",
+      "goal": "#ffd23f"
+    }
+  }
+}
+",
+  },
+  {
+    "path": "public/project/composition.json",
+    "text": "{
+  "formatVersion": 1,
+  "gameId": "first-light",
+  "source": {
+    "specVersion": 1,
+    "specHash": "h",
+    "seed": 11
+  },
+  "packs": [
+    {
+      "id": "interaction-inventory",
+      "version": "1.0.0",
+      "config": {
+        "interactRadius": 1.5,
+        "items": [
+          {
+            "id": "item-1",
+            "position": {
+              "x": 1.98,
+              "z": 7.72
+            }
+          }
+        ],
+        "iconPath": "assets/item-icon.svg"
+      }
+    }
+  ],
+  "assets": [
+    {
+      "id": "item-icon",
+      "path": "assets/item-icon.svg"
+    }
+  ]
+}
+",
+  },
+  {
+    "path": "public/assets/item-icon.svg",
+    "text": "<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <circle cx="16" cy="16" r="12" fill="hsl(218 90% 60%)" stroke="#ffffff" stroke-width="2"/>
+</svg>
+",
+  },
+  {
+    "path": "public/assets/assets.json",
+    "text": "{
+  "formatVersion": 2,
+  "assets": [
+    {
+      "id": "item-icon",
+      "requirement": {
+        "id": "item-icon",
+        "kind": "ui",
+        "description": "Light-cell icon for the inventory HUD"
+      },
+      "path": "assets/item-icon.svg",
+      "provenance": {
+        "provider": "stub-generator",
+        "providerVersion": "1.0.0",
+        "generator": "svg-icon@1",
+        "sourceParams": {},
+        "seed": 11,
+        "specVersion": 1,
+        "determinism": {
+          "kind": "seeded"
+        },
+        "license": {
+          "kind": "generated",
+          "notes": "Procedurally generated placeholder."
+        }
+      },
+      "transformations": [],
+      "status": "placeholder",
+      "references": [
+        "public/project/composition.json"
+      ]
+    }
+  ]
+}
+",
+  },
+]
+`;
