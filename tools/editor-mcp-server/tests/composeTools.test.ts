@@ -107,6 +107,8 @@ describe('slice checkpoint tools', () => {
     expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'reject', reason: 'no report' })).toMatchObject({ ok: false })
     const report = await host.executeTool('renderSliceReport', { gameId: 'probe' })
     expect(report).toMatchObject({ ok: true, content: { artifact: 'artifacts/slice-report.md' } })
+    expect((report.content as { gates: Array<{ kind: string; status: string }> }).gates)
+      .toContainEqual({ kind: 'asset', status: 'missing' })
     expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'approve', reason: 'ship' })).toMatchObject({ ok: false, content: { code: 'slice-gates-not-passed' } })
     expect(await host.executeTool('recordSliceDecision', { gameId: 'probe', decision: 'reject', reason: 'red' })).toMatchObject({ ok: true, content: { recorded: true, decision: 'reject' } })
     await host.dispose()

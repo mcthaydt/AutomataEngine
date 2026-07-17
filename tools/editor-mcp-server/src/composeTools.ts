@@ -21,7 +21,8 @@ const GATES = [
   { kind: 'build' as const, step: 'check:build' },
   { kind: 'test' as const, step: 'check:test' },
   { kind: 'browser' as const, step: 'check:browser' },
-  { kind: 'evaluate' as const, step: 'check:evaluate' }
+  { kind: 'evaluate' as const, step: 'check:evaluate' },
+  { kind: 'asset' as const, step: 'check:assets' }
 ]
 
 export function sliceCheckpointStatus(engine: SessionEngine, hashes: { specHash: string; compositionHash: string; contentHash: string }): 'pending' | 'approved' | 'rejected' {
@@ -107,14 +108,14 @@ export function createComposeToolRunner(deps: ComposeToolDeps) {
         let guarded: GuardedRun
         try {
           guarded = await found.engine.runSeededStep('compose:game', { specHash }, async (_rng, seed) => {
-            const result = composeGame({ spec: found.spec, seed, specHash })
+            const result = await composeGame({ spec: found.spec, seed, specHash })
             if (!result.ok) throw new ComposeFailure(result)
             const output = { composition: result.composition, assetManifest: result.assetManifest, files: result.files, summary: result.summary }
             await writeFiles(gameRoot, output.files)
             return output
           })
           if (guarded.cached) {
-            const output = guarded.output as { files: Array<{ path: string; text: string }> }
+            const output = guarded.output as { files: Array<{ path: string; text: string } | { path: string; base64: string }> }
             await writeFiles(gameRoot, output.files)
           }
         } catch (error) {
@@ -124,7 +125,7 @@ export function createComposeToolRunner(deps: ComposeToolDeps) {
           const finding = found.engine.session.findings.at(-1)
           return fail({ code: finding?.code ?? 'compose-failed', message: finding?.message })
         }
-        const output = guarded.output as { composition: CompositionManifest; files: Array<{ path: string; text: string }>; summary: { packIds: string[]; itemCount: number; assetIds: string[] } }
+        const output = guarded.output as { composition: CompositionManifest; files: Array<{ path: string; text: string } | { path: string; base64: string }>; summary: { packIds: string[]; itemCount: number; assetIds: string[] } }
         const { hash } = await deps.snapshotContent(gameId)
         await found.engine.noteContentHash(hash)
         await found.engine.autoResolve('compose')

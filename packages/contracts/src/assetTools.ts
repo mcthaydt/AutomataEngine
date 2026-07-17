@@ -3,7 +3,7 @@ import type { ToolDef } from './tools'
 import { gameSlugSchema } from './workspaceTools'
 
 /** Phase 5 tools: generate, inspect, and validate a game's asset manifest. */
-export type AssetToolName = 'listAssets' | 'validateAssets' | 'generateAssets'
+export type AssetToolName = 'listAssets' | 'validateAssets' | 'generateAssets' | 'regenerateAsset'
 
 export const assetToolArgSchemas = {
   listAssets: z.strictObject({ gameId: gameSlugSchema }),
@@ -19,13 +19,19 @@ export const assetToolArgSchemas = {
       .meta({ uniqueItems: true })
       .optional(),
     seed: z.number().int().min(0).optional()
+  }),
+  regenerateAsset: z.strictObject({
+    gameId: gameSlugSchema,
+    assetId: z.string().min(1).max(60),
+    seed: z.number().int().min(0).optional()
   })
 } as const satisfies Record<AssetToolName, z.ZodType>
 
 const DESCRIPTIONS: Record<AssetToolName, string> = {
   listAssets: 'List the asset manifest: id, kind, path, status, and full provenance per asset.',
   validateAssets: 'Run structural + media asset validation, flip generated to validated or failed statuses, persist findings, and record the check:assets gate step.',
-  generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed.'
+  generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed.',
+  regenerateAsset: 'Re-run exactly one asset\'s provider behind its stable logical id (hash-guarded, seeded). Resets it to status "generated" with fresh provenance; other assets are untouched. Follow with validateAssets.'
 }
 
 const NAMES = Object.keys(assetToolArgSchemas) as AssetToolName[]

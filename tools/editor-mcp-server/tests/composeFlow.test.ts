@@ -51,6 +51,7 @@ describe('Phase 3 exit criterion — spec → compose → evaluate → slice che
     await host.executeTool('renderDesignBrief', { gameId: 'probe' })
     await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'go' })
     expect(await host.executeTool('composeGame', { gameId: 'probe' })).toMatchObject({ ok: true, content: { cached: false, itemCount: 2 } })
+    expect(await host.executeTool('validateAssets', { gameId: 'probe' })).toMatchObject({ ok: true, content: { passed: true } })
     for (const tool of ['runBuild', 'runTests', 'runBrowserEval']) expect((await host.executeTool(tool, { gameId: 'probe' })).ok).toBe(true)
     const early = await host.executeTool('renderSliceReport', { gameId: 'probe' })
     expect((early.content as { gates: Array<{ status: string }> }).gates.some((gate) => gate.status === 'missing')).toBe(true)
@@ -78,7 +79,7 @@ describe('Phase 3 exit criterion — spec → compose → evaluate → slice che
     const spec = gameSpecSchema.parse(JSON.parse(await readFile(join(root, 'games/probe/gamespec.json'), 'utf8')))
     const specHash = hashJson(spec)
     const replay = await engine.replayStep(step.id, async (_rng, seed) => {
-      const result = composeGame({ spec, seed, specHash })
+      const result = await composeGame({ spec, seed, specHash })
       if (!result.ok) throw new Error('replay failed')
       return { composition: result.composition, assetManifest: result.assetManifest, files: result.files, summary: result.summary }
     })
@@ -92,6 +93,7 @@ describe('Phase 3 exit criterion — spec → compose → evaluate → slice che
     await host.executeTool('renderDesignBrief', { gameId: 'probe' })
     await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'v1' })
     await host.executeTool('composeGame', { gameId: 'probe' })
+    await host.executeTool('validateAssets', { gameId: 'probe' })
     const draft2 = sliceDraft('probe'); (draft2.identity as Record<string, unknown>).logline = 'Version two.'
     await host.executeTool('compileGameSpec', { gameId: 'probe', draft: draft2, prompt: 'slice', translations: [], changeReason: 'v2' })
     expect(await host.executeTool('renderSliceReport', { gameId: 'probe' })).toMatchObject({ ok: false })
@@ -112,7 +114,9 @@ describe('Phase 3 exit criterion — spec → compose → evaluate → slice che
     await host.executeTool('recordDesignDecision', { gameId: 'probe', decision: 'approve', reason: 'v2' })
     await host.executeTool('composeGame', { gameId: 'probe' })
     const report = await host.executeTool('renderSliceReport', { gameId: 'probe' })
-    expect((report.content as { gates: Array<{ status: string }> }).gates.every((gate) => gate.status === 'stale')).toBe(true)
+    const gates = (report.content as { gates: Array<{ kind: string; status: string }> }).gates
+    expect(gates.filter((gate) => gate.kind !== 'asset').every((gate) => gate.status === 'stale')).toBe(true)
+    expect(gates.find((gate) => gate.kind === 'asset')?.status).toBe('missing')
     await host.dispose()
   })
 

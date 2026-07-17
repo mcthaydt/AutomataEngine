@@ -107,6 +107,50 @@ function mergeManifest(existingText: string | null, entries: AssetManifestEntry[
 export function createAssetToolRunner(deps: AssetToolDeps) {
   return {
     async execute(name: string, raw: unknown): Promise<ToolResult> {
+      if (name === 'regenerateAsset') {
+        const args = parseAssetToolArgs(name, raw) as { gameId: string; assetId: string; seed?: number }
+        const spec = await readGameSpec(deps.repoRoot, args.gameId)
+        const requirement = spec.assets.find((entry) => entry.id === args.assetId)
+        if (!requirement) {
+          throw new Error(`Unknown asset id "${args.assetId}"; spec declares: ${spec.assets.map((entry) => entry.id).join(', ')}`)
+        }
+        const composition = await readComposition(deps.repoRoot, args.gameId)
+        const seed = args.seed ?? composition?.source?.seed
+        if (seed === undefined) {
+          throw new Error('No seed: pass an explicit seed or compose the game first (composition.json source.seed)')
+        }
+        const engine = await deps.ensureEngine(args.gameId)
+        const guarded = await engine.runGuarded(
+          'asset:regenerate',
+          { assetId: args.assetId, seed, specVersion: spec.specVersion },
+          async () => {
+            const [generated] = await generateGameAssets({
+              requirements: [requirement], direction: spec.direction, seed, specVersion: spec.specVersion
+            })
+            return {
+              ok: true,
+              output: {
+                path: generated!.path,
+                entry: generated!.entry,
+                bytesBase64: Buffer.from(generated!.bytes).toString('base64')
+              }
+            }
+          }
+        )
+        const output = guarded.output as { path: string; entry: AssetManifestEntry; bytesBase64: string }
+        const publicDir = join(deps.repoRoot, 'games', args.gameId, 'public')
+        await mkdir(dirname(join(publicDir, output.path)), { recursive: true })
+        await writeFile(join(publicDir, output.path), Buffer.from(output.bytesBase64, 'base64'))
+        const existingText = await readManifestText(deps.repoRoot, args.gameId)
+        const existing = existingText ? parseAssetManifest(existingText) : { formatVersion: 2 as const, assets: [] }
+        const previous = existing.assets.find((entry) => entry.id === args.assetId)
+        const entry = { ...output.entry, references: previous?.references ?? output.entry.references }
+        const manifest = mergeManifest(existingText, [entry])
+        await mkdir(join(publicDir, 'assets'), { recursive: true })
+        await writeFile(join(publicDir, 'assets', 'assets.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+        return ok({ id: entry.id, path: output.path, seed, status: entry.status, cached: guarded.cached })
+      }
+
       if (name === 'generateAssets') {
         const args = parseAssetToolArgs(name, raw) as {
           gameId: string
@@ -185,6 +229,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
       const engine = await deps.ensureEngine(gameId)
       if (!manifestText) {
         const { hash: contentHash } = await deps.snapshotContent(gameId)
+        await engine.noteContentHash(contentHash)
         await engine.runGuarded('check:assets', { contentHash }, async () => ({
           ok: true, output: { passed: false, contentHash }
         }))
@@ -201,6 +246,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           message: `Asset manifest schema validation failed: ${error instanceof Error ? error.message : String(error)}`.slice(0, 4000)
         }
         const { hash: contentHash } = await deps.snapshotContent(gameId)
+        await engine.noteContentHash(contentHash)
         await engine.runGuarded('check:assets', { contentHash }, async () => ({
           ok: true, output: { passed: false, contentHash }
         }))
@@ -241,6 +287,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
       const errors = allIssues.filter((issue) => issue.severity === 'error')
       const passed = errors.length === 0 && updatedManifest.assets.every((entry) => entry.status === 'validated')
       const { hash: contentHash } = await deps.snapshotContent(gameId)
+      await engine.noteContentHash(contentHash)
       await engine.runGuarded('check:assets', { contentHash }, async () => ({
         ok: true, output: { passed, contentHash }
       }))

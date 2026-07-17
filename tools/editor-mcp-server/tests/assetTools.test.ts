@@ -282,7 +282,8 @@ describe('validateAssets media gate', () => {
     const gameRoot = join(repoRoot, 'games', 'demo-game')
     const manifest = JSON.parse(await readFile(join(gameRoot, 'public/assets/assets.json'), 'utf8'))
     expect(manifest.assets.every((entry: { status: string }) => entry.status === 'validated')).toBe(true)
-    const step = engine.session.steps.findLast((candidate) => candidate.kind === 'check:assets')
+    // ES2022 has no Array.findLast; reverse a copy to inspect the latest check.
+    const step = [...engine.session.steps].reverse().find((candidate) => candidate.kind === 'check:assets')
     expect(step?.status).toBe('completed')
     expect((step?.result as { passed?: boolean }).passed).toBe(true)
   })
@@ -315,5 +316,44 @@ describe('validateAssets media gate', () => {
     await runner.execute('generateAssets', { gameId: 'demo-game', assetIds: [target.id], seed: 7 })
     const result = await runner.execute('validateAssets', { gameId: 'demo-game' })
     expect((result.content as { statuses: Record<string, string> }).statuses[target.id]).toBe('validated')
+  })
+})
+
+describe('regenerateAsset', () => {
+  it('regenerates exactly one asset behind its stable id, leaving every other byte untouched', async () => {
+    const { runner, repoRoot } = await setupWithSpec()
+    await setCompositionSeed(repoRoot, 7)
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7 })
+    await runner.execute('validateAssets', { gameId: 'demo-game' })
+    const gameRoot = join(repoRoot, 'games', 'demo-game')
+    const before = JSON.parse(await readFile(join(gameRoot, 'public/assets/assets.json'), 'utf8'))
+    const [target, ...others] = before.assets
+    const otherBytes = await Promise.all(others.map(async (entry: { path: string }) =>
+      Buffer.from(await readFile(join(gameRoot, 'public', entry.path))).toString('hex')))
+
+    const result = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: target.id, seed: 7 })
+    expect(result.ok).toBe(true)
+
+    const after = JSON.parse(await readFile(join(gameRoot, 'public/assets/assets.json'), 'utf8'))
+    const regenerated = after.assets.find((entry: { id: string }) => entry.id === target.id)
+    expect(regenerated.status).toBe('generated')
+    expect(regenerated.references).toEqual(target.references)
+    const untouched = after.assets.filter((entry: { id: string }) => entry.id !== target.id)
+    expect(untouched).toEqual(others)
+    const otherBytesAfter = await Promise.all(others.map(async (entry: { path: string }) =>
+      Buffer.from(await readFile(join(gameRoot, 'public', entry.path))).toString('hex')))
+    expect(otherBytesAfter).toEqual(otherBytes)
+    const targetBytes = await readFile(join(gameRoot, 'public', target.path))
+    await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: target.id, seed: 7 })
+    expect(await readFile(join(gameRoot, 'public', target.path))).toEqual(targetBytes)
+  })
+
+  it('rejects unknown asset ids and missing seeds with typed errors', async () => {
+    const withSpec = await setupWithSpec()
+    await expect(withSpec.runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'nope', seed: 7 }))
+      .rejects.toThrow(/Unknown asset id/)
+    const noComposition = await setupWithSpec()
+    await expect(noComposition.runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'relic-icon' }))
+      .rejects.toThrow(/No seed/)
   })
 })
