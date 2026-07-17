@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 42% (25/60 steps complete).
+**Implementation progress:** 48% (29/60 steps complete).
 
 ## Global Constraints
 
@@ -1007,7 +1007,7 @@ git commit -m "feat(pack-schedules-relationships): browser adapter with clock ch
 - Consumes: cores + config; `PackEvalHook`, `EvalSliceView` from `@automata/game-kit` (UNCHANGED — no game-kit edits).
 - Produces: `createSchedulesRelationshipsEvalHook(config: SchedulesRelationshipsPackConfig): PackEvalHook`. Behavior contract (the matrix relies on it): `nextTarget` is always `null` (the pack asks nothing of the walk and yields); `step` advances clock/walkers by a fixed internal tick and applies `questCompleted` derived from `questLog`-slice transitions to `'complete'`; `complete` is `relationshipsComplete` — it must never depend on clock or walker progress.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-schedules-relationships/tests/evalHook.test.ts`:
 
@@ -1055,12 +1055,12 @@ describe('schedules-relationships eval hook', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run --project pack-schedules-relationships -t 'eval hook'`
 Expected: FAIL — cannot resolve `../src/evalHook`.
 
-- [ ] **Step 3: Implement `src/evalHook.ts`**
+- [x] **Step 3: Implement `src/evalHook.ts`**
 
 ```ts
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
@@ -1133,7 +1133,7 @@ export function createSchedulesRelationshipsEvalHook(config: SchedulesRelationsh
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-schedules-relationships`
 Expected: PASS.
