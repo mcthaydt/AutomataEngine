@@ -10,6 +10,15 @@ import { detSin } from './deterministicSine'
 export const hsl = (hue: number, saturation: number, lightness: number): string =>
   `hsl(${hue} ${Math.round(saturation * 100)}% ${Math.round(lightness * 100)}%)`
 
+/** Every literal color the procedural SVG provider may emit for this style. */
+export function svgPaletteColors(style: StyleParams): string[] {
+  const { baseHue, accentHues, saturation, lightness } = style.palette
+  return [
+    hsl(baseHue, saturation, lightness),
+    ...accentHues.map((hue) => hsl(hue, saturation, lightness))
+  ]
+}
+
 const fixed = (value: number): string => value.toFixed(2)
 const encode = (text: string): Uint8Array => new TextEncoder().encode(text)
 
