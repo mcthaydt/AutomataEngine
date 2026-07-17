@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { generateGameAssets } from '@automata/asset-providers'
+import { deriveStyleParams, generateGameAssets, validateAssetMedia } from '@automata/asset-providers'
 import { hashJson, type SessionEngine } from '@automata/build-session'
 import {
   assetManifestSchema,
@@ -12,6 +12,7 @@ import {
   type AssetManifest,
   type AssetManifestEntry,
   type AssetIssue,
+  type AssetStatus,
   type CompositionManifest,
   type ToolResult
 } from '@automata/contracts'
@@ -19,6 +20,7 @@ import {
 export interface AssetToolDeps {
   repoRoot: string
   ensureEngine(gameId: string): Promise<SessionEngine>
+  snapshotContent(gameId: string): Promise<{ hash: string }>
 }
 
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
@@ -72,6 +74,17 @@ async function readGameSpec(repoRoot: string, gameId: string) {
         `Game "${gameId}" has no gamespec.json — generateAssets needs spec asset requirements`
       )
     }
+    throw error
+  }
+}
+
+/** Validation can still report structural results for legacy games without a spec. */
+async function readGameSpecOptional(repoRoot: string, gameId: string) {
+  const path = join(repoRoot, 'games', gameId, 'gamespec.json')
+  try {
+    return gameSpecSchema.parse(JSON.parse(await readFile(path, 'utf8')))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
     throw error
   }
 }
@@ -171,7 +184,11 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
       // validateAssets
       const engine = await deps.ensureEngine(gameId)
       if (!manifestText) {
-        return ok({ issues: [], errorCount: 0, warningCount: 0, missing: true })
+        const { hash: contentHash } = await deps.snapshotContent(gameId)
+        await engine.runGuarded('check:assets', { contentHash }, async () => ({
+          ok: true, output: { passed: false, contentHash }
+        }))
+        return ok({ issues: [], errorCount: 0, warningCount: 0, missing: true, passed: false, statuses: {} })
       }
       let manifest: AssetManifest
       try {
@@ -183,18 +200,58 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           assetId: null,
           message: `Asset manifest schema validation failed: ${error instanceof Error ? error.message : String(error)}`.slice(0, 4000)
         }
+        const { hash: contentHash } = await deps.snapshotContent(gameId)
+        await engine.runGuarded('check:assets', { contentHash }, async () => ({
+          ok: true, output: { passed: false, contentHash }
+        }))
         await reconcileAssetFindings(engine, [issue], hashJson({ manifestText }))
-        return ok({ issues: [issue], errorCount: 1, warningCount: 0 })
+        return ok({ issues: [issue], errorCount: 1, warningCount: 0, passed: false, statuses: {} })
       }
       const composition = await readComposition(deps.repoRoot, gameId)
       const issues = validateAssetManifest(manifest, composition)
-      const inputHash = hashJson({ manifest, composition })
-      const errors = issues.filter((issue) => issue.severity === 'error')
+      const spec = await readGameSpecOptional(deps.repoRoot, gameId)
+      const style = spec ? deriveStyleParams(spec.direction, composition?.source?.seed ?? 0) : null
+      const publicDir = join(deps.repoRoot, 'games', gameId, 'public')
+      const evaluated = await Promise.all(manifest.assets.map(async (entry) => {
+        let bytes: Uint8Array | null = null
+        try {
+          bytes = new Uint8Array(await readFile(join(publicDir, entry.path)))
+        } catch {
+          bytes = null
+        }
+        const entryIssues: AssetIssue[] = bytes === null
+          ? [{ severity: 'error', code: 'asset-media-invalid', assetId: entry.id, message: `Asset file missing: ${entry.path}` }]
+          : style ? validateAssetMedia(entry, bytes, style) : []
+        const status: AssetStatus = entryIssues.length > 0
+          ? 'failed'
+          : entry.status === 'generated' || entry.status === 'failed' ? 'validated'
+          : entry.status
+        return { entry: { ...entry, status }, issues: entryIssues }
+      }))
+      const updatedManifest = assetManifestSchema.parse({
+        formatVersion: 2,
+        assets: evaluated.map(({ entry }) => entry)
+      })
+      const statuses = Object.fromEntries(updatedManifest.assets.map((entry) => [entry.id, entry.status]))
+      await writeFile(
+        join(publicDir, 'assets', 'assets.json'),
+        `${JSON.stringify(updatedManifest, null, 2)}\n`
+      )
+      const allIssues = [...issues, ...evaluated.flatMap(({ issues: entryIssues }) => entryIssues)]
+      const errors = allIssues.filter((issue) => issue.severity === 'error')
+      const passed = errors.length === 0 && updatedManifest.assets.every((entry) => entry.status === 'validated')
+      const { hash: contentHash } = await deps.snapshotContent(gameId)
+      await engine.runGuarded('check:assets', { contentHash }, async () => ({
+        ok: true, output: { passed, contentHash }
+      }))
+      const inputHash = hashJson({ manifest: updatedManifest, composition })
       await reconcileAssetFindings(engine, errors, inputHash)
       return ok({
-        issues,
+        issues: allIssues,
+        passed,
+        statuses,
         errorCount: errors.length,
-        warningCount: issues.length - errors.length
+        warningCount: allIssues.length - errors.length
       })
     }
   }

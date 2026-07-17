@@ -42,6 +42,7 @@ async function setup(manifest: unknown | null) {
   await mkdir(join(gameDir, 'assets'), { recursive: true })
   await mkdir(join(gameDir, 'project'), { recursive: true })
   if (manifest) await writeFile(manifestPath, JSON.stringify(manifest))
+  await writeFile(join(gameDir, 'assets', 'item-icon.svg'), '<svg></svg>')
   await writeFile(join(gameDir, 'project', 'composition.json'), JSON.stringify(COMPOSITION))
   const { engine } = await createSessionEngine({
     sessionsRoot: join(repoRoot, '.automata', 'sessions'),
@@ -51,7 +52,11 @@ async function setup(manifest: unknown | null) {
     lock: false
   })
   engines.push(engine)
-  const runner = createAssetToolRunner({ repoRoot, ensureEngine: async () => engine })
+  const runner = createAssetToolRunner({
+    repoRoot,
+    ensureEngine: async () => engine,
+    snapshotContent: async () => ({ hash: await readFile(manifestPath, 'utf8') })
+  })
   return { runner, engine, manifestPath, repoRoot }
 }
 
@@ -75,6 +80,13 @@ async function setupWithSpec(assets: unknown[] = [
     JSON.stringify(spec)
   )
   return context
+}
+
+async function setCompositionSeed(repoRoot: string, seed: number): Promise<void> {
+  await writeFile(
+    join(repoRoot, 'games', 'demo-game', 'public', 'project', 'composition.json'),
+    JSON.stringify({ ...COMPOSITION, assets: [], source: { specVersion: 1, specHash: 'spec-hash', seed } })
+  )
 }
 
 describe('asset MCP tools', () => {
@@ -146,8 +158,8 @@ describe('asset MCP tools', () => {
     await runner.execute('validateAssets', { gameId: 'demo-game' })
     await runner.execute('validateAssets', { gameId: 'demo-game' })
     expect(engine.summary().openFindings.map((finding) => finding.code).sort()).toEqual([
+      'asset-media-invalid',
       'asset-path-mismatch',
-      'asset-status-invalid'
     ])
 
     await writeFile(manifestPath, JSON.stringify({ ...V2_MANIFEST, assets: [statusError] }))
@@ -250,5 +262,58 @@ describe('generateAssets', () => {
     const bare = await setup(V2_MANIFEST)
     await expect(bare.runner.execute('generateAssets', { gameId: 'demo-game', seed: 1 }))
       .rejects.toThrow(/gamespec/)
+  })
+})
+
+describe('validateAssets media gate', () => {
+  it('validates media, flips generated to validated, and records a passing check:assets step', async () => {
+    const { runner, repoRoot, engine } = await setupWithSpec([
+      { id: 'icon-a', kind: 'ui', description: 'Icon.' },
+      { id: 'crate-a', kind: 'model', description: 'Crate.' },
+      { id: 'blip-a', kind: 'audio', description: 'Blip.' }
+    ])
+    await setCompositionSeed(repoRoot, 7)
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7 })
+    const result = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect(result.ok).toBe(true)
+    const content = result.content as { passed: boolean; statuses: Record<string, string> }
+    expect(content.passed).toBe(true)
+    expect(Object.values(content.statuses).every((status) => status === 'validated')).toBe(true)
+    const gameRoot = join(repoRoot, 'games', 'demo-game')
+    const manifest = JSON.parse(await readFile(join(gameRoot, 'public/assets/assets.json'), 'utf8'))
+    expect(manifest.assets.every((entry: { status: string }) => entry.status === 'validated')).toBe(true)
+    const step = engine.session.steps.findLast((candidate) => candidate.kind === 'check:assets')
+    expect(step?.status).toBe('completed')
+    expect((step?.result as { passed?: boolean }).passed).toBe(true)
+  })
+
+  it('flips a corrupted asset to failed, records a finding, and fails the gate', async () => {
+    const { runner, repoRoot, engine } = await setupWithSpec()
+    await setCompositionSeed(repoRoot, 7)
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7 })
+    const gameRoot = join(repoRoot, 'games', 'demo-game')
+    const manifest = JSON.parse(await readFile(join(gameRoot, 'public/assets/assets.json'), 'utf8'))
+    const target = manifest.assets[0]
+    await writeFile(join(gameRoot, 'public', target.path), 'corrupted')
+    const result = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    const content = result.content as { passed: boolean; statuses: Record<string, string> }
+    expect(content.passed).toBe(false)
+    expect(content.statuses[target.id]).toBe('failed')
+    const open = engine.session.findings.filter((finding) => finding.source === 'asset' && finding.resolvedAt === undefined)
+    expect(open.some((finding) => finding.code === 'asset-media-invalid')).toBe(true)
+  })
+
+  it('regenerating and revalidating a failed asset returns it to validated', async () => {
+    const { runner, repoRoot } = await setupWithSpec()
+    await setCompositionSeed(repoRoot, 7)
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7 })
+    const gameRoot = join(repoRoot, 'games', 'demo-game')
+    const manifest = JSON.parse(await readFile(join(gameRoot, 'public/assets/assets.json'), 'utf8'))
+    const target = manifest.assets[0]
+    await writeFile(join(gameRoot, 'public', target.path), 'corrupted')
+    await runner.execute('validateAssets', { gameId: 'demo-game' })
+    await runner.execute('generateAssets', { gameId: 'demo-game', assetIds: [target.id], seed: 7 })
+    const result = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect((result.content as { statuses: Record<string, string> }).statuses[target.id]).toBe('validated')
   })
 })

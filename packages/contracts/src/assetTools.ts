@@ -24,7 +24,7 @@ export const assetToolArgSchemas = {
 
 const DESCRIPTIONS: Record<AssetToolName, string> = {
   listAssets: 'List the asset manifest: id, kind, path, status, and full provenance per asset.',
-  validateAssets: 'Run structural asset validation (ids, paths, references, status rules) and persist findings.',
+  validateAssets: 'Run structural + media asset validation, flip generated to validated or failed statuses, persist findings, and record the check:assets gate step.',
   generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed.'
 }
 

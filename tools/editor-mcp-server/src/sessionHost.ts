@@ -45,7 +45,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
       } catch { return null }
     }
   })
-  const assetTools = createAssetToolRunner({ repoRoot, ensureEngine })
+  const assetTools = createAssetToolRunner({ repoRoot, ensureEngine, snapshotContent: contentSnapshot })
   const handleOpen = async (gameId: string): Promise<ToolResult> => {
     const available = await discoverGames(repoRoot); if (!available.includes(gameId)) return fail(`Unknown game "${gameId}". Available: ${available.join(', ')}`)
     const projectDir = projectDirFor(gameId); const engine = await ensureEngine(gameId); const headless = await openHeadless(projectDir); open = { gameId, projectDir, headless, engine }
