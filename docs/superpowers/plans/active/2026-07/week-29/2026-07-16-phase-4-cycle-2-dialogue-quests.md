@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod via `@automata/project` re-export, vitest (+ happy-dom for the adapter), existing `@automata/game-kit` contract v2 seams.
 
-**Implementation progress:** 78% (51/65 steps complete; Task 10 complete; Task 11 next).
+**Implementation progress:** 86% (56/65 steps complete; Task 11 complete; Task 12 next).
 
 ## Global Constraints
 
@@ -1763,15 +1763,18 @@ Task 10 fixed only the test twin. The real self-check path is `evaluateProject` 
 **Files:**
 - Modify: `tools/scaffold/src/templates/projectFiles.ts` (the walker loop inside `evaluateProject` in the template string)
 - Modify: `games/first-light/src/project/evaluation.ts` (checked-in template copy)
-- Modify: `games/monkey-ball/src/project/evaluation.ts` (same)
-- Modify: `games/pulsebreak/src/project/evaluation.ts` (same)
 - Test: `games/first-light/tests/project/evaluation.test.ts` (create)
+
+Live-repo correction: Monkey Ball and Pulsebreak have intentionally custom,
+non-template evaluators with different APIs and no composition walker. They are
+not template copies and remain untouched; `verify:new-game` proves the template
+while first-light proves its checked-in production copy.
 
 **Interfaces:**
 - Consumes: `PackEvalHook.publishSlices` (Task 5); `PACK_FIXTURES`, `resolveEvalHooks` from `@automata/pack-registry` (Task 10).
 - Produces: `evaluateProject` merges every hook's published slices each tick and passes the view to every `nextTarget`/`step` call. Public signature unchanged; hook-less and single-pack games behave identically.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `games/first-light/tests/project/evaluation.test.ts` — mirror the snapshot/composition fixture patterns already used in `tests/project/editor.test.ts` and `tests/project/composition.test.ts` (read both first; reuse their helpers rather than inventing new ones):
 
@@ -1795,12 +1798,12 @@ describe('evaluateProject cross-pack slices', () => {
 
 (`compositionWith`/`loadSnapshot` are stand-ins for whatever those files actually export — match them exactly.)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run --project first-light -t 'cross-pack slices'`
 Expected: FAIL — `objectivesComplete` is `false`: without slices the dialogue hook sees an empty inventory, its fetch quest never satisfies, and `nextTarget` yields null until `maxSteps`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `tools/scaffold/src/templates/projectFiles.ts`, replace the walker loop inside `evaluateProject` with:
 
@@ -1825,17 +1828,20 @@ In `tools/scaffold/src/templates/projectFiles.ts`, replace the walker loop insid
   }
 ```
 
-Apply the identical change to the three checked-in copies (`games/{first-light,monkey-ball,pulsebreak}/src/project/evaluation.ts`) — they must stay in lockstep with the template; diff each against the template body after editing. (Editing `games/first-light/src/project` is fine: the freeze covers compose output under `public/project`, not scaffold sources.)
+Apply the identical change to the checked-in first-light copy. Its walker must
+stay in lockstep with the template body. (Editing `games/first-light/src/project`
+is fine: the freeze covers compose output under `public/project`, not scaffold
+sources.)
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run --project first-light && npm run verify:new-game`
 Expected: PASS — new test green, existing first-light project tests untouched, and `verify:new-game` green (AGENTS.md requires it after any scaffold-template change).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add tools/scaffold games/first-light games/monkey-ball games/pulsebreak
+git add tools/scaffold games/first-light
 git commit -m "feat(scaffold): thread eval slices through evaluateProject (template + game copies)"
 ```
 

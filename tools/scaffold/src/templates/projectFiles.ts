@@ -212,16 +212,20 @@ export async function evaluateProject(
   let state = createInitialState(compiled.spawn)
   let steps = 0
   while (steps < maxSteps && state.status === 'running') {
+    const slices: Record<string, unknown> = {}
+    for (let index = 0; index < hooks.length; index += 1) {
+      Object.assign(slices, hooks[index]!.publishSlices?.(hookStates[index]) ?? {})
+    }
     let target: { x: number; z: number } | null = null
     for (let index = 0; index < hooks.length && target === null; index += 1) {
-      target = hooks[index]!.nextTarget(hookStates[index], state.position)
+      target = hooks[index]!.nextTarget(hookStates[index], state.position, slices)
     }
     const control = target ? seekPoint(state, target) : seekGoal(state, compiled.tuning)
     let next = step(state, control, dt, compiled.tuning)
     if (next.status === 'succeeded' && !hooksComplete()) next = { ...next, status: 'running' }
     state = next
     for (let index = 0; index < hooks.length; index += 1) {
-      hookStates[index] = hooks[index]!.step(hookStates[index], state.position)
+      hookStates[index] = hooks[index]!.step(hookStates[index], state.position, slices)
     }
     steps += 1
   }
