@@ -1,8 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { buildGeneratedAsset, deriveStyleParams, generateGameAssets, validateAssetMedia } from '@automata/asset-providers'
+import { buildGeneratedAsset, deriveStyleParams, generateGameAssets, hashStringToSeed, validateAssetMedia } from '@automata/asset-providers'
 import { hashJson, type SessionEngine } from '@automata/build-session'
-import { hashStringToSeed } from '@automata/engine'
 import {
   assetManifestSchema,
   gameSpecSchema,
