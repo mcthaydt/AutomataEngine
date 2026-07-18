@@ -9,5 +9,8 @@ playwright-report/
 # Brainstorm visual companion
 .superpowers/
 
+# Agent-created linked worktrees stay inside the writable repo workspace.
+.worktrees/
+
 # MCP build sessions (durable, machine-local)
 .automata/
