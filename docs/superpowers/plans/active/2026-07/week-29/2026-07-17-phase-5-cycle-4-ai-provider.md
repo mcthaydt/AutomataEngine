@@ -1045,15 +1045,21 @@ Expected: empty output.
 
 - [ ] **Step 2: Update the roadmap**
 
-In `docs/ROADMAP.md`, Phase 5 section: keep the phase heading `Shipped` and append a cycle 4 line after cycle 3, matching the existing link style:
+In `docs/ROADMAP.md`, Phase 5 section: flip the phase heading from
+`In progress (extension cycle)` back to `Shipped`, and replace cycle 4's
+entry (currently a multi-line `Next` item carrying spec + plan links) with
+a `Shipped` line keeping the plan link:
 
 ```markdown
   - Cycle 4 — first AI provider adapter (claude-svg, pinned-hash
-    determinism) — `Shipped` (2026-07-17, plan:
+    determinism; extension beyond the original three-cycle scope) —
+    `Shipped` (<ship date>, plan:
     [`2026-07-17-phase-5-cycle-4-ai-provider.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-4-ai-provider.md)).
 ```
 
-(Adjust the date if shipping lands later.) In the week-28 phase-map table, change the Phase 5 row's status cell from `3 completed (2026-07-17)` to `4 completed (<ship date>)`.
+In the week-28 phase-map table, replace the Phase 5 row's status cell
+(currently `4 (3 completed 2026-07-17; extension cycle 4 specced + planned 2026-07-17)`)
+with `4 completed (<ship date>)`.
 
 - [ ] **Step 3: Commit**
 

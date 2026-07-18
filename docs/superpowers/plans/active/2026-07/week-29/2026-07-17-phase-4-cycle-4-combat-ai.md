@@ -1811,7 +1811,7 @@ Expected: empty output (first-light untouched).
 
 - [ ] **Step 6: Update the roadmap**
 
-In `docs/ROADMAP.md` Phase 4 cycles list, change cycle 4's line to `Shipped` with today's date and this plan's path, and set cycle 5 to `Next`:
+In `docs/ROADMAP.md` Phase 4 cycles list, replace cycle 4's entry (currently a multi-line `Next` item carrying spec + plan links) with a `Shipped` line keeping the plan link, and set cycle 5 to `Next`:
 
 ```markdown
   - Cycle 4 — combat & enemy AI pack — `Shipped` (2026-07-17, plan:
@@ -1821,10 +1821,12 @@ In `docs/ROADMAP.md` Phase 4 cycles list, change cycle 4's line to `Shipped` wit
 
 (Match the exact link style of the cycle 2/3 lines above it; adjust the date if shipping lands on a later day.)
 
-Also bump the Phase 4 row of the phase-map table in
+Also update the Phase 4 row's status cell in the phase-map table in
 `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`
-(line ~90) from `3 of 7 completed (2026-07-17)` to `4 of 7 completed (<ship date>)` —
-a prior commit (`f69c9b5`) established that this table is kept in sync with cycle status.
+(line ~90): replace the whole cell (currently
+`7 (one per pack); 3 of 7 completed (2026-07-17); cycle 4 specced + planned (2026-07-17)`)
+with `7 (one per pack); 4 of 7 completed (<ship date>)` — a prior commit
+(`f69c9b5`) established that this table is kept in sync with cycle status.
 
 - [ ] **Step 7: Commit**
 
