@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AssetRequirement } from '@automata/contracts'
 import { generateGameAssets } from '../src/generate'
+import { sha256Hex } from '../src/hash'
 import { deriveStyleParams } from '../src/styleParams'
 import { MEDIA_BUDGETS, readWavInfo, validateAssetMedia } from '../src/validateMedia'
 
@@ -71,5 +72,41 @@ describe('validateAssetMedia', () => {
     new DataView(altered.buffer).setUint16(20, 3, true)
     expect(validateAssetMedia(wav.entry, altered, style))
       .toEqual(expect.arrayContaining([expect.objectContaining({ code: 'asset-media-invalid' })]))
+  })
+})
+
+describe('pinned-hash verification', () => {
+  const SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" fill="none"/></svg>\n'
+  const bytes = new TextEncoder().encode(SVG)
+  const pinnedEntry = (contentHash: string) => ({
+    id: 'pin-icon',
+    requirement: { id: 'pin-icon', kind: 'ui' as const, description: 'Pinned icon.' },
+    path: 'assets/pin-icon.svg',
+    provenance: {
+      provider: 'claude-svg', providerVersion: '1.0.0', generator: 'claude-opus-4-8',
+      sourceParams: {}, seed: 1, specVersion: 1,
+      determinism: { kind: 'pinned' as const, contentHash },
+      license: { kind: 'generated' as const, notes: 'test' }
+    },
+    transformations: [],
+    status: 'generated' as const,
+    references: ['public/project/composition.json']
+  })
+  const style = deriveStyleParams({ visualStyle: 'test', audioStyle: 'test' }, 1)
+
+  it('passes when bytes match the pinned contentHash', () => {
+    const issues = validateAssetMedia(pinnedEntry(sha256Hex(bytes)), bytes, style)
+    expect(issues.filter((issue) => issue.code === 'asset-hash-mismatch')).toEqual([])
+  })
+
+  it('fails with asset-hash-mismatch when bytes are tampered or stale', () => {
+    const issues = validateAssetMedia(pinnedEntry(sha256Hex(new TextEncoder().encode('other'))), bytes, style)
+    expect(issues.some((issue) => issue.code === 'asset-hash-mismatch' && issue.severity === 'error')).toBe(true)
+  })
+
+  it('never hash-checks seeded entries', () => {
+    const entry = { ...pinnedEntry(''), provenance: { ...pinnedEntry('').provenance, determinism: { kind: 'seeded' as const } } }
+    const issues = validateAssetMedia(entry, bytes, style)
+    expect(issues.some((issue) => issue.code === 'asset-hash-mismatch')).toBe(false)
   })
 })

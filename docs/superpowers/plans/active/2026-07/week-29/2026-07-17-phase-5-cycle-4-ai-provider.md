@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 25% (10/40 task and verification steps complete)
+**Implementation progress:** 38% (15/40 task and verification steps complete)
 
 ## Global Constraints
 
@@ -305,7 +305,7 @@ git commit -m "feat(asset-providers): sha256Hex + buildGeneratedAsset with pinne
 - Consumes: Task 1's `'asset-hash-mismatch'` code; Task 2's `sha256Hex`.
 - Produces: `validateAssetMedia` reports `asset-hash-mismatch` for pinned entries whose bytes don't hash to `contentHash` (exercised end-to-end in Task 6).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/asset-providers/tests/validateMedia.test.ts` (reuse the file's existing entry-fixture helper if one exists — read the file first; otherwise this self-contained block works, matching the manifest-entry shape from cycle 1):
 
@@ -349,12 +349,12 @@ describe('pinned-hash verification', () => {
 
 (If `deriveStyleParams` / `sha256Hex` / `validateAssetMedia` are not yet imported at the top of the test file, add them to the existing `../src/...` import lines.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/asset-providers/tests/validateMedia.test.ts`
 Expected: FAIL — the mismatch case reports no `asset-hash-mismatch` issue.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/asset-providers/src/validateMedia.ts`, add the import:
 
@@ -374,12 +374,12 @@ and insert at the top of `validateAssetMedia` (immediately after the `issues` / 
   }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/asset-providers`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/asset-providers

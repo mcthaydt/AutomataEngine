@@ -1,4 +1,5 @@
 import type { AssetIssue, AssetManifestEntry, StyleParams } from '@automata/contracts'
+import { sha256Hex } from './hash'
 import { propRecipeSchema, recipeToRenderables } from './propRecipe'
 import { svgPaletteColors } from './svgProvider'
 
@@ -96,6 +97,14 @@ export function validateAssetMedia(
   const invalid = (message: string): void => { issues.push(issueFor(entry, 'asset-media-invalid', message)) }
   const budget = (message: string): void => { issues.push(issueFor(entry, 'asset-media-budget', message)) }
   const { kind } = entry.requirement
+
+  if (entry.provenance.determinism.kind === 'pinned') {
+    const hash = sha256Hex(bytes)
+    if (hash !== entry.provenance.determinism.contentHash) {
+      issues.push(issueFor(entry, 'asset-hash-mismatch',
+        `Asset "${entry.id}" bytes (sha256 ${hash.slice(0, 12)}…) do not match the pinned contentHash — regenerate or restore the pinned bytes`))
+    }
+  }
 
   if (kind === 'ui' || kind === 'texture') {
     if (bytes.length > MEDIA_BUDGETS.svgMaxBytes) {
