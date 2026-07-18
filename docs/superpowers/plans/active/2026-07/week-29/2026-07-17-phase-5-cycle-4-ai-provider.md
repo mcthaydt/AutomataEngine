@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 53% (21/40 task and verification steps complete)
+**Implementation progress:** 63% (25/40 task and verification steps complete)
 
 ## Global Constraints
 
@@ -715,7 +715,7 @@ git commit -m "feat(asset-providers-ai): claude-svg provider with pinned-hash pr
 **Interfaces:**
 - Consumes: Task 4's `createClaudeSvgProvider` (real default client); `validateAssetMedia`, `deriveStyleParams`, `sha256Hex` from `@automata/asset-providers`.
 
-- [ ] **Step 1: Write the test (it must pass immediately by being skipped)**
+- [x] **Step 1: Write the test (it must pass immediately by being skipped)**
 
 `packages/asset-providers-ai/tests/live.test.ts`:
 
@@ -757,17 +757,17 @@ describe.skipIf(!process.env.ANTHROPIC_API_KEY)('claude-svg live smoke', () => {
 })
 ```
 
-- [ ] **Step 2: Verify the skip path (no key)**
+- [x] **Step 2: Verify the skip path (no key)**
 
 Run: `env -u ANTHROPIC_API_KEY npx vitest run packages/asset-providers-ai/tests/live.test.ts`
 Expected: the suite reports **skipped**, exit code 0.
 
-- [ ] **Step 3: Run the live path if a key is available (optional, not a gate)**
+- [x] **Step 3: Run the live path if a key is available (optional, not a gate)**
 
 Run: `npx vitest run packages/asset-providers-ai/tests/live.test.ts`
 Expected: PASS when `ANTHROPIC_API_KEY` is set; skipped otherwise. Do not wire this into any CI script.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/asset-providers-ai
