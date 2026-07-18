@@ -36,22 +36,22 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Append inside the existing describe block of `packages/contracts/tests/assetTools.test.ts` (match its import style — it already imports `parseAssetToolArgs`):
+Append inside the existing describe block of `packages/contracts/tests/assetTools.test.ts` — the file imports `assetToolArgSchemas` and `assetToolDefs` (not `parseAssetToolArgs`); keep that convention:
 
 ```ts
   it('generateAssets and regenerateAsset accept an optional provider id', () => {
-    expect(parseAssetToolArgs('generateAssets', { gameId: 'demo-game', provider: 'claude-svg' }))
+    expect(assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game', provider: 'claude-svg' }))
       .toMatchObject({ provider: 'claude-svg' })
-    expect(parseAssetToolArgs('regenerateAsset', { gameId: 'demo-game', assetId: 'item-icon', provider: 'claude-svg' }))
+    expect(assetToolArgSchemas.regenerateAsset.parse({ gameId: 'demo-game', assetId: 'relic-icon', provider: 'claude-svg' }))
       .toMatchObject({ provider: 'claude-svg' })
     // provider stays optional — existing callers unchanged
-    expect(parseAssetToolArgs('generateAssets', { gameId: 'demo-game' }))
+    expect(assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game' }))
       .not.toHaveProperty('provider')
   })
 
   it('rejects empty and oversized provider ids', () => {
-    expect(() => parseAssetToolArgs('generateAssets', { gameId: 'demo-game', provider: '' })).toThrow()
-    expect(() => parseAssetToolArgs('regenerateAsset', { gameId: 'demo-game', assetId: 'a', provider: 'x'.repeat(61) })).toThrow()
+    expect(() => assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game', provider: '' })).toThrow()
+    expect(() => assetToolArgSchemas.regenerateAsset.parse({ gameId: 'demo-game', assetId: 'a', provider: 'x'.repeat(61) })).toThrow()
   })
 ```
 
@@ -116,7 +116,7 @@ git commit -m "feat(contracts): asset-hash-mismatch issue code and provider arg 
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `packages/asset-providers/tests/generate.test.ts` (match its existing imports; add `buildGeneratedAsset`, `sha256Hex` to the `../src/...` imports and `AssetProvider` type from `@automata/contracts`):
+Append to `packages/asset-providers/tests/generate.test.ts` (match its existing imports; add `buildGeneratedAsset` to the `../src/generate` import, new imports for `sha256Hex` from `../src/hash` and `deriveStyleParams` from `../src/styleParams`, and the `AssetProvider` type from `@automata/contracts`):
 
 ```ts
 describe('sha256Hex', () => {
@@ -418,6 +418,8 @@ git commit -m "feat(asset-providers): verify pinned contentHash in media validat
   }
 }
 ```
+
+(If npm cannot resolve `^0.110.0`, use the current latest `@anthropic-ai/sdk` 0.x instead — the provider touches only `messages.create` and `AuthenticationError`, both stable across recent releases.)
 
 `packages/asset-providers-ai/tsconfig.json`:
 
@@ -786,7 +788,33 @@ git commit -m "test(asset-providers-ai): opt-in live smoke gated on ANTHROPIC_AP
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `tools/editor-mcp-server/tests/assetTools.test.ts`. The file already has a spec-writing fixture used by the existing regenerate tests (search the file for `gamespec.json` and reuse that helper verbatim to create the game with a `ui` requirement — referred to as `withSpec()` below; adapt the name to what the file actually calls it). Add these imports at the top: `sha256Hex` from `@automata/asset-providers`, `type AssetProvider` from `@automata/contracts`. Then:
+Append to `tools/editor-mcp-server/tests/assetTools.test.ts`. The file's fixtures are `setup(manifest)` (builds the runner via `createAssetToolRunner`) and `setupWithSpec(assets = [{ id: 'relic-icon', kind: 'ui', ... }, { id: 'pickup-blip', kind: 'audio', ... }])` (writes `gamespec.json` from `minimalGameSpecDraft('demo-game')` and returns `setup(null)`'s context). Thread the provider map through both — one optional trailing parameter each, forwarded into `createAssetToolRunner`:
+
+```ts
+async function setup(manifest: unknown | null, namedProviders?: Record<string, AssetProvider>) {
+  // ...existing body unchanged, except the runner construction gains the field:
+  const runner = createAssetToolRunner({
+    repoRoot,
+    ensureEngine: async () => engine,
+    snapshotContent: async () => ({ hash: await readFile(manifestPath, 'utf8') }),
+    namedProviders
+  })
+  // ...
+}
+
+async function setupWithSpec(
+  assets: unknown[] = [
+    { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
+    { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
+  ],
+  namedProviders?: Record<string, AssetProvider>
+) {
+  const context = await setup(null, namedProviders)
+  // ...existing spec-writing body unchanged
+}
+```
+
+Add these imports at the top: `sha256Hex` from `@automata/asset-providers`, `type AssetProvider` from `@automata/contracts`. Note the default spec declares **`relic-icon` (ui) and `pickup-blip` (audio)** — the AI-path tests below pass an explicit ui-only assets array (or explicit `assetIds`) because the fake AI provider supports only `ui`/`texture`, and the audio requirement is exactly what the kind-mismatch test exploits. Then:
 
 ```ts
 const FAKE_AI_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" fill="none"/></svg>\n'
@@ -807,60 +835,62 @@ const fakeAiProvider: AssetProvider = {
   }
 }
 
+const UI_ONLY_ASSETS = [{ id: 'relic-icon', kind: 'ui', description: 'Icon.' }]
+
 describe('provider override', () => {
   it('generateAssets with provider routes through the injected provider and pins the entry', async () => {
-    const { runner, manifestPath } = await withSpec({ namedProviders: { 'ai-fake': fakeAiProvider } })
+    const { runner, manifestPath } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
     const result = await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' })
     expect(result.ok).toBe(true)
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-    const entry = manifest.assets.find((candidate: { id: string }) => candidate.id === 'item-icon')
+    const entry = manifest.assets.find((candidate: { id: string }) => candidate.id === 'relic-icon')
     expect(entry.provenance.provider).toBe('ai-fake')
     expect(entry.provenance.determinism.kind).toBe('pinned')
     expect(entry.status).toBe('generated')
   })
 
-  it('regenerateAsset with provider preserves references and re-guards under the provider key', async () => {
-    const { runner } = await withSpec({ namedProviders: { 'ai-fake': fakeAiProvider } })
-    const procedural = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'item-icon', seed: 7 })
-    const viaAi = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'item-icon', seed: 7, provider: 'ai-fake' })
+  it('regenerateAsset with provider preserves the flow and re-guards under the provider key', async () => {
+    const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    const procedural = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'relic-icon', seed: 7 })
+    const viaAi = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'relic-icon', seed: 7, provider: 'ai-fake' })
     // Different guarded-step inputs: the AI regeneration must NOT be served
     // from the procedural step's cache.
     expect(viaAi.ok).toBe(true)
     expect((viaAi.content as { cached: boolean }).cached).toBe(false)
-    expect((procedural.content as { id: string }).id).toBe('item-icon')
+    expect((procedural.content as { id: string }).id).toBe('relic-icon')
   })
 
   it('rejects an unknown provider id, listing known providers', async () => {
-    const { runner } = await withSpec({ namedProviders: { 'ai-fake': fakeAiProvider } })
+    const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
     await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'nope' }))
       .rejects.toThrow(/Unknown provider "nope".*ai-fake/)
   })
 
-  it('rejects a provider that does not support the requirement kind', async () => {
-    const uiOnly: AssetProvider = { ...fakeAiProvider, id: 'ui-only', kinds: ['music'] }
-    const { runner } = await withSpec({ namedProviders: { 'ui-only': uiOnly } })
-    await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ui-only' }))
-      .rejects.toThrow(/does not support kind/)
+  it('rejects a provider that does not support a requirement kind', async () => {
+    // Default spec assets include pickup-blip (audio); the fake provider is ui/texture only.
+    const { runner } = await setupWithSpec(undefined, { 'ai-fake': fakeAiProvider })
+    await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' }))
+      .rejects.toThrow(/does not support kind "audio"/)
   })
 
   it('validateAssets flips a matching pinned entry to validated and a tampered one to failed', async () => {
-    const { runner, manifestPath, repoRoot } = await withSpec({ namedProviders: { 'ai-fake': fakeAiProvider } })
+    const { runner, repoRoot } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
     await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' })
     const clean = await runner.execute('validateAssets', { gameId: 'demo-game' })
-    expect((clean.content as { statuses: Record<string, string> }).statuses['item-icon']).toBe('validated')
+    expect((clean.content as { statuses: Record<string, string> }).statuses['relic-icon']).toBe('validated')
 
-    // Tamper with the pinned bytes on disk (keep it valid SVG so only the hash trips)
-    await writeFile(join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'item-icon.svg'),
+    // Tamper with the pinned bytes on disk (keep it valid on-palette SVG so only the hash trips)
+    await writeFile(join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'relic-icon.svg'),
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" fill="none"/></svg>\n')
     const tampered = await runner.execute('validateAssets', { gameId: 'demo-game' })
     const content = tampered.content as { statuses: Record<string, string>; issues: Array<{ code: string }> }
-    expect(content.statuses['item-icon']).toBe('failed')
+    expect(content.statuses['relic-icon']).toBe('failed')
     expect(content.issues.some((issue) => issue.code === 'asset-hash-mismatch')).toBe(true)
   })
 })
 ```
 
-The `withSpec(...)` helper must be extended to accept and forward `namedProviders` into `createAssetToolRunner` (one added optional parameter threaded through — if the file's helper has a different shape, keep its conventions and just thread the field). The spec fixture must declare the `item-icon` requirement with kind `ui` (the existing regenerate tests already do).
+Note the validate tests assert per-entry `statuses` and issue codes, **not** the overall `passed` flag — the fixture's composition still references `item-icon`, so structural `asset-missing`/`asset-orphaned` findings are expected alongside and don't affect per-entry status flips.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
