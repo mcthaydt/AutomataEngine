@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk'
 import { describe, expect, it } from 'vitest'
 import { sha256Hex, deriveStyleParams, svgPaletteColors } from '@automata/asset-providers'
 import type { AssetRequirement } from '@automata/contracts'
@@ -84,6 +85,13 @@ describe('createClaudeSvgProvider', () => {
   it('throws ai-refusal on a refusal stop reason', async () => {
     const provider = createClaudeSvgProvider({ client: clientReturning('', 'refusal') })
     await expect(provider.generate(requirement, ctx)).rejects.toMatchObject({ code: 'ai-refusal' })
+  })
+
+  it('maps the SDK missing-credentials error to ai-auth-missing', async () => {
+    const client = new Anthropic({ apiKey: null, authToken: null }) as unknown as MessagesClient
+    const provider = createClaudeSvgProvider({ client })
+
+    await expect(provider.generate(requirement, ctx)).rejects.toMatchObject({ code: 'ai-auth-missing' })
   })
 
   it('throws ai-malformed-output when the response exceeds the byte cap', async () => {

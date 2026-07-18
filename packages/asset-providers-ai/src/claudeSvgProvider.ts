@@ -33,6 +33,12 @@ export interface MessagesClient {
   }
 }
 
+/** The SDK uses AuthenticationError for rejected credentials, but a plain Error when none resolve. */
+function isAuthenticationError(error: unknown): boolean {
+  return error instanceof Anthropic.AuthenticationError ||
+    (error instanceof Error && error.message.startsWith('Could not resolve authentication method.'))
+}
+
 export function buildSvgPrompt(
   requirement: AssetRequirement,
   allowedColors: readonly string[]
@@ -94,7 +100,7 @@ export function createClaudeSvgProvider(
           messages: [{ role: 'user', content: prompt.user }]
         })
       } catch (error) {
-        if (error instanceof Anthropic.AuthenticationError) {
+        if (isAuthenticationError(error)) {
           throw new AiProviderError('ai-auth-missing',
             'Anthropic authentication failed - set ANTHROPIC_API_KEY (or run `ant auth login`) and retry')
         }
