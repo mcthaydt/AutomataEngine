@@ -1846,9 +1846,9 @@ While implementing, record in the escape-hatch/capability-gap log (wherever cycl
 
 ## Verification checklist (all must be true before calling the cycle done)
 
-- [ ] `npx vitest run packages/pack-combat-ai` — all green
-- [ ] `npx vitest run packages/pack-registry` — matrix runs the combat single, the inventory+combat pair, and the two new scenarios
-- [ ] `npx vitest run packages/game-compose` — no snapshot diffs for non-combat specs
-- [ ] `npm run ci` green; `npm run verify:new-game` green
-- [ ] `git status --porcelain games/first-light` empty
-- [ ] ROADMAP cycle 4 marked shipped; capability gap logged
+- [x] `npx vitest run packages/pack-combat-ai` — all green
+- [x] `npx vitest run packages/pack-registry` — matrix runs the combat single, the inventory+combat pair, and the two new scenarios
+- [x] `npx vitest run packages/game-compose` — no snapshot diffs for non-combat specs
+- [x] `npm run ci` green; `npm run verify:new-game` green
+- [x] `git status --porcelain games/first-light` empty
+- [x] ROADMAP cycle 4 marked shipped; capability gap logged
