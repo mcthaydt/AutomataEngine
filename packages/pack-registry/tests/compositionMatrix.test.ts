@@ -89,7 +89,11 @@ function runSet(set: GamePack[]): void {
 describe('composition matrix (standard packs)', () => {
   /** Named 3+-pack scenario suites: same compose/boot/headless machinery as pairs. */
   const SCENARIOS: ReadonlyArray<readonly string[]> = [
-    ['interaction-inventory', 'dialogue-quests', 'schedules-relationships']
+    ['interaction-inventory', 'dialogue-quests', 'schedules-relationships'],
+    // combat-ai standalone: proves graceful degradation (weapon never held)
+    ['combat-ai'],
+    // the full 4-pack set — the phase's largest composition to date
+    ['interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai']
   ]
 
   it('every standard pack has a deterministic fixture', () => {

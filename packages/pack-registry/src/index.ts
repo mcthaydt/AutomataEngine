@@ -2,6 +2,10 @@ import type { CompositionManifest } from '@automata/contracts'
 import { createSeededRng } from '@automata/engine'
 import type { GamePack, PackEditorContribution, PackEvalHook } from '@automata/game-kit'
 import {
+  combatAiEditorContribution, combatAiPack, composeCombatSection,
+  createCombatAiEvalHook, packConfigSchema as combatConfigSchema
+} from '@automata/pack-combat-ai'
+import {
   composeDialogueSection, createDialogueQuestsEvalHook, dialogueQuestsEditorContribution,
   dialogueQuestsPack, packConfigSchema as dialogueConfigSchema
 } from '@automata/pack-dialogue-quests'
@@ -22,7 +26,8 @@ import {
 export const STANDARD_PACKS: Record<string, GamePack> = {
   [interactionInventoryPack.id]: interactionInventoryPack as GamePack,
   [dialogueQuestsPack.id]: dialogueQuestsPack as GamePack,
-  [schedulesRelationshipsPack.id]: schedulesRelationshipsPack as GamePack
+  [schedulesRelationshipsPack.id]: schedulesRelationshipsPack as GamePack,
+  [combatAiPack.id]: combatAiPack as GamePack
 }
 
 /**
@@ -80,16 +85,33 @@ PACK_FIXTURES[schedulesRelationshipsPack.id] = () => {
   }, createSeededRng(43))
 }
 
+PACK_FIXTURES[combatAiPack.id] = () => composeCombatSection({
+  specConfig: {},
+  cast: [
+    { id: 'c-brute', name: 'Brute', role: 'antagonist' },
+    { id: 'c-stalker', name: 'Stalker', role: 'antagonist' }
+  ],
+  arena: { half: 12, spawn: { x: -8, z: -8 }, goal: { x: 6, z: 6 } },
+  inventory: {
+    items: (PACK_FIXTURES[interactionInventoryPack.id]!() as {
+      items: Array<{ id: string; position: { x: number; z: number } }>
+    }).items
+  },
+  occupied: []
+}, createSeededRng(44))
+
 const EVAL_HOOK_BUILDERS: Record<string, (config: unknown) => PackEvalHook> = {
   [interactionInventoryPack.id]: (config) => createInventoryEvalHook(packConfigSchema.parse(config)),
   [dialogueQuestsPack.id]: (config) => createDialogueQuestsEvalHook(dialogueConfigSchema.parse(config)),
-  [schedulesRelationshipsPack.id]: (config) => createSchedulesRelationshipsEvalHook(schedulesConfigSchema.parse(config))
+  [schedulesRelationshipsPack.id]: (config) => createSchedulesRelationshipsEvalHook(schedulesConfigSchema.parse(config)),
+  [combatAiPack.id]: (config) => createCombatAiEvalHook(combatConfigSchema.parse(config))
 }
 
 const EDITOR_CONTRIBUTIONS: Record<string, PackEditorContribution> = {
   [inventoryEditorContribution.packId]: inventoryEditorContribution,
   [dialogueQuestsEditorContribution.packId]: dialogueQuestsEditorContribution,
-  [schedulesRelationshipsEditorContribution.packId]: schedulesRelationshipsEditorContribution
+  [schedulesRelationshipsEditorContribution.packId]: schedulesRelationshipsEditorContribution,
+  [combatAiEditorContribution.packId]: combatAiEditorContribution
 }
 
 export function resolvePacks(ids: readonly string[]): GamePack[] {

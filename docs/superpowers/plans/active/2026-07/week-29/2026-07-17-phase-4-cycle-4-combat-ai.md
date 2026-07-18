@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 78% (42/54 task steps complete)
+**Implementation progress:** 87% (47/54 task steps complete)
 
 ## Global Constraints
 
@@ -1587,7 +1587,7 @@ git commit -m "feat(pack-combat-ai): headless eval hook with weapon-boost parity
 - Consumes: `combatAiPack`, `combatAiEditorContribution`, `composeCombatSection`, `createCombatAiEvalHook`, `packConfigSchema` from `@automata/pack-combat-ai`.
 - Produces: `STANDARD_PACKS['combat-ai']`, `PACK_FIXTURES['combat-ai']`, eval-hook and editor-contribution entries; matrix now runs the `combat-ai` single, the `interaction-inventory+combat-ai` pair, and two new scenario rows.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `packages/pack-registry/tests/registry.test.ts`, update the exact-set test and add a combat registration test:
 
@@ -1627,12 +1627,12 @@ In `packages/pack-registry/tests/compositionMatrix.test.ts`, extend `SCENARIOS`:
   ]
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-registry`
 Expected: FAIL — `combat-ai` missing from `STANDARD_PACKS` / fixtures.
 
-- [ ] **Step 3: Register the pack**
+- [x] **Step 3: Register the pack**
 
 In `packages/pack-registry/package.json` dependencies add:
 
@@ -1686,12 +1686,12 @@ Add to `EDITOR_CONTRIBUTIONS`:
   [combatAiEditorContribution.packId]: combatAiEditorContribution
 ```
 
-- [ ] **Step 4: Run the registry suite**
+- [x] **Step 4: Run the registry suite**
 
 Run: `npx vitest run packages/pack-registry`
 Expected: PASS — including the automatic new rows: the `combat-ai` single (satisfiable, `requires: []`) and the `interaction-inventory+combat-ai` pair, plus both new scenarios. If `driveToCompletion` hits `maxSteps`, diagnose with the combat fixture distances (spawn `(-8,-8)`, stride 0.5/tick) before touching the harness — the walk policy must stay untouched (spec §4.2).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-registry package-lock.json
