@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 20% (11/54 task steps complete)
+**Implementation progress:** 30% (16/54 task steps complete)
 
 ## Global Constraints
 
@@ -307,7 +307,7 @@ git commit -m "feat(pack-combat-ai): package scaffold and cross-validated config
 - Consumes: `PlayerCombatConfig` from Task 2.
 - Produces: `HealthState { hp: number; invulnSeconds: number }`; `createHealth(player: PlayerCombatConfig): HealthState`; `applyPlayerDamage(state, amount, player): { state: HealthState; defeated: boolean }`; `tickInvuln(state, dt): HealthState`. Used by Task 5's `combatCore`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/healthCore.test.ts`:
 
@@ -357,12 +357,12 @@ describe('healthCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/healthCore.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/healthCore.ts`**
+- [x] **Step 3: Implement `src/healthCore.ts`**
 
 ```ts
 import type { PlayerCombatConfig } from './config'
@@ -399,12 +399,12 @@ export function tickInvuln(state: HealthState, dt: number): HealthState {
 
 Add to `src/index.ts`: `export * from './healthCore'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/healthCore.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
