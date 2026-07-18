@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 57% (31/54 task steps complete)
+**Implementation progress:** 67% (36/54 task steps complete)
 
 ## Global Constraints
 
@@ -1104,7 +1104,7 @@ git commit -m "feat(pack-combat-ai): seeded composeSection with spawn-aggro keep
 - Consumes: everything from Tasks 2–5; `GamePack`, `PackRuntimeHandle`, `packCompatibility`, `PackEditorContribution` from `@automata/game-kit`.
 - Produces: `combatAiPack: GamePack<CombatPackConfig>` (id `'combat-ai'`, version `'1.0.0'`) and `combatAiEditorContribution: PackEditorContribution`. Used by Task 9's registry.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/pack.test.ts` — mirror the harness style of `packages/pack-schedules-relationships/tests/pack.test.ts` (read it first; reuse its host/render/boot helpers verbatim, adapting names). The cases to cover:
 
@@ -1242,12 +1242,12 @@ describe('combatAiEditorContribution', () => {
 
 The schedules pack's `tests/pack.test.ts` may use different host/boot helper names — read it before writing this file and keep whichever setup idioms it uses (the cases above are complete as logic; only the boot plumbing may need aligning).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/pack.test.ts`
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Implement `src/pack.ts`**
+- [x] **Step 3: Implement `src/pack.ts`**
 
 ```ts
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
@@ -1398,12 +1398,12 @@ export * from './pack'
 export * from './editorContribution'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/pack.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
