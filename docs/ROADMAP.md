@@ -244,7 +244,7 @@ Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/spe
   - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
   - Cycle 7 — save/load integration pack — `Planned`.
 
-### Phase 5 — Asset pipeline · `In progress` (extension cycle)
+### Phase 5 — Asset pipeline · `Shipped`
 
 Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md).
 
@@ -263,10 +263,8 @@ Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs
     regeneration — `Shipped` (2026-07-17, plan:
     [`2026-07-17-phase-5-cycle-3-asset-validation-regeneration.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-3-asset-validation-regeneration.md)).
   - Cycle 4 — first AI provider adapter (claude-svg, pinned-hash
-    determinism; extension beyond the original three-cycle scope) — `Next`
-    (specced + planned 2026-07-17; spec:
-    [`2026-07-17-phase-5-cycle-4-ai-provider-design.md`](superpowers/specs/active/2026-07/week-29/2026-07-17-phase-5-cycle-4-ai-provider-design.md),
-    plan:
+    determinism; extension beyond the original three-cycle scope) —
+    `Shipped` (2026-07-18, plan:
     [`2026-07-17-phase-5-cycle-4-ai-provider.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-4-ai-provider.md)).
 
 ### Phase 6 — Content compiler · `Planned`

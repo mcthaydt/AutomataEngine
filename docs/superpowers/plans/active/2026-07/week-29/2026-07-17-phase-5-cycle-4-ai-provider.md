@@ -9,13 +9,13 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 78% (31/40 task and verification steps complete)
+**Implementation progress:** 100% (41/41 task and verification steps complete)
 
 ## Global Constraints
 
 - Model: `claude-opus-4-8` (default; recorded per asset in `provenance.generator`). Credentials from the environment (`ANTHROPIC_API_KEY` or `ant auth login` profile) — never hardcoded, never stored.
 - Network only inside the AI provider's `generate()`, reached only via explicit MCP tool calls with `provider` set. Nothing in `composeGame`, CI, or validation ever calls the network.
-- `@anthropic-ai/sdk` is a dependency of `@automata/asset-providers-ai` and nothing else.
+- The asset pipeline's `@anthropic-ai/sdk` dependency is owned by `@automata/asset-providers-ai`; procedural `@automata/asset-providers`, `@automata/game-compose`, and the MCP server do not depend on the SDK directly. (`@automata/agent-core` retains its pre-existing independent SDK dependency.)
 - `generateGameAssets` output must stay **byte-identical** (existing snapshot tests must pass with no snapshot updates); `games/first-light` stays untouched.
 - Pinned `contentHash` always covers the **final written bytes** (post-optimization).
 - AI SVG byte-size cap: 65 536 bytes (`CLAUDE_SVG_MAX_BYTES`); prompt targets the existing 32 KB media budget.
@@ -1034,7 +1034,7 @@ git commit -m "feat(editor-mcp-server): provider override on asset tools; wire c
 - Modify: `docs/ROADMAP.md` (Phase 5 section)
 - Modify: `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md` (phase-map row, line ~91)
 
-- [ ] **Step 1: Full gates**
+- [x] **Step 1: Full gates**
 
 Run: `npm run ci`
 Expected: lint, typecheck, and all workspace tests PASS (live smoke skipped — verify the output shows it as skipped, not failed).
@@ -1045,7 +1045,7 @@ Expected: PASS.
 Run: `git status --porcelain games/first-light`
 Expected: empty output.
 
-- [ ] **Step 2: Update the roadmap**
+- [x] **Step 2: Update the roadmap**
 
 In `docs/ROADMAP.md`, Phase 5 section: flip the phase heading from
 `In progress (extension cycle)` back to `Shipped`, and replace cycle 4's
@@ -1063,7 +1063,7 @@ In the week-28 phase-map table, replace the Phase 5 row's status cell
 (currently `4 (3 completed 2026-07-17; extension cycle 4 specced + planned 2026-07-17)`)
 with `4 completed (<ship date>)`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/ROADMAP.md \
@@ -1075,10 +1075,10 @@ git commit -m "docs: Phase 5 cycle 4 shipped - first AI provider adapter"
 
 ## Verification checklist (all must be true before calling the cycle done)
 
-- [ ] `npx vitest run packages/asset-providers-ai` — unit tests green, live smoke skipped without a key
-- [ ] `npx vitest run packages/asset-providers packages/game-compose` — green with zero snapshot updates (procedural path byte-identical)
-- [ ] `npx vitest run tools/editor-mcp-server` — provider override + pinned validation round-trip green
-- [ ] `npm run ci` green offline; `npm run verify:new-game` green
-- [ ] `git status --porcelain games/first-light` empty
-- [ ] `@anthropic-ai/sdk` appears only in `packages/asset-providers-ai/package.json`
-- [ ] ROADMAP cycle 4 line + phase-map row updated
+- [x] `npx vitest run packages/asset-providers-ai` — unit tests green, live smoke skipped without a key
+- [x] `npx vitest run packages/asset-providers packages/game-compose` — green with zero snapshot updates (procedural path byte-identical)
+- [x] `npx vitest run tools/editor-mcp-server` — provider override + pinned validation round-trip green
+- [x] `npm run ci` green offline; `npm run verify:new-game` green
+- [x] `git status --porcelain games/first-light` empty
+- [x] Asset-pipeline SDK boundary: `@automata/asset-providers-ai` owns SDK 0.110.x; procedural providers, compose, and MCP server have no direct SDK dependency (pre-existing `@automata/agent-core` 0.69.x unchanged)
+- [x] ROADMAP cycle 4 line + phase-map row updated
