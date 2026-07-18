@@ -33,4 +33,19 @@ describe('generateAssets tool contract', () => {
       seed: 7
     })).toThrow(/duplicate/i)
   })
+
+  it('generateAssets and regenerateAsset accept an optional provider id', () => {
+    expect(assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game', provider: 'claude-svg' }))
+      .toMatchObject({ provider: 'claude-svg' })
+    expect(assetToolArgSchemas.regenerateAsset.parse({ gameId: 'demo-game', assetId: 'relic-icon', provider: 'claude-svg' }))
+      .toMatchObject({ provider: 'claude-svg' })
+    // provider stays optional — existing callers unchanged
+    expect(assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game' }))
+      .not.toHaveProperty('provider')
+  })
+
+  it('rejects empty and oversized provider ids', () => {
+    expect(() => assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game', provider: '' })).toThrow()
+    expect(() => assetToolArgSchemas.regenerateAsset.parse({ gameId: 'demo-game', assetId: 'a', provider: 'x'.repeat(61) })).toThrow()
+  })
 })

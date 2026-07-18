@@ -18,20 +18,22 @@ export const assetToolArgSchemas = {
       })
       .meta({ uniqueItems: true })
       .optional(),
-    seed: z.number().int().min(0).optional()
+    seed: z.number().int().min(0).optional(),
+    provider: z.string().min(1).max(60).optional()
   }),
   regenerateAsset: z.strictObject({
     gameId: gameSlugSchema,
     assetId: z.string().min(1).max(60),
-    seed: z.number().int().min(0).optional()
+    seed: z.number().int().min(0).optional(),
+    provider: z.string().min(1).max(60).optional()
   })
 } as const satisfies Record<AssetToolName, z.ZodType>
 
 const DESCRIPTIONS: Record<AssetToolName, string> = {
   listAssets: 'List the asset manifest: id, kind, path, status, and full provenance per asset.',
   validateAssets: 'Run structural + media asset validation, flip generated to validated or failed statuses, persist findings, and record the check:assets gate step.',
-  generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed.',
-  regenerateAsset: 'Re-run exactly one asset\'s provider behind its stable logical id (hash-guarded, seeded). Resets it to status "generated" with fresh provenance; other assets are untouched. Follow with validateAssets.'
+  generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed. Pass provider to route through a named non-default provider (e.g. the AI provider "claude-svg"; result is pinned by content hash and needs network + credentials).',
+  regenerateAsset: 'Re-run exactly one asset\'s provider behind its stable logical id (hash-guarded, seeded). Resets it to status "generated" with fresh provenance; other assets are untouched. Pass provider to route through a named non-default provider (e.g. "claude-svg"). Follow with validateAssets.'
 }
 
 const NAMES = Object.keys(assetToolArgSchemas) as AssetToolName[]

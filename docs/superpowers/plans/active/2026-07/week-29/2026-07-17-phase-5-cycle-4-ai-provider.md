@@ -9,6 +9,8 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
+**Implementation progress:** 13% (5/40 task and verification steps complete)
+
 ## Global Constraints
 
 - Model: `claude-opus-4-8` (default; recorded per asset in `provenance.generator`). Credentials from the environment (`ANTHROPIC_API_KEY` or `ant auth login` profile) — never hardcoded, never stored.
@@ -34,7 +36,7 @@
 **Interfaces:**
 - Produces: `AssetIssue` accepts `code: 'asset-hash-mismatch'` (used by Task 3). `assetToolArgSchemas.generateAssets` / `.regenerateAsset` accept optional `provider: string` (1–60 chars; used by Task 6).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append inside the existing describe block of `packages/contracts/tests/assetTools.test.ts` — the file imports `assetToolArgSchemas` and `assetToolDefs` (not `parseAssetToolArgs`); keep that convention:
 
@@ -55,12 +57,12 @@ Append inside the existing describe block of `packages/contracts/tests/assetTool
   })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/contracts/tests/assetTools.test.ts`
 Expected: FAIL — `provider` is rejected by the strict object schemas.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/assetValidation.ts`, extend the `AssetIssue` code union (after `'asset-media-budget'`):
 
@@ -88,12 +90,12 @@ Update the two descriptions in `DESCRIPTIONS`:
   regenerateAsset: 'Re-run exactly one asset\'s provider behind its stable logical id (hash-guarded, seeded). Resets it to status "generated" with fresh provenance; other assets are untouched. Pass provider to route through a named non-default provider (e.g. "claude-svg"). Follow with validateAssets.'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/contracts`
 Expected: PASS (all — including untouched existing tool tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts

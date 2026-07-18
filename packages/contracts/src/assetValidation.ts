@@ -19,6 +19,7 @@ export interface AssetIssue {
     | 'asset-status-invalid'
     | 'asset-media-invalid'
     | 'asset-media-budget'
+    | 'asset-hash-mismatch'
   assetId: string | null
   message: string
 }
