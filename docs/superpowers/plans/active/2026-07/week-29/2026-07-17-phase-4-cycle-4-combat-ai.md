@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 48% (26/54 task steps complete)
+**Implementation progress:** 57% (31/54 task steps complete)
 
 ## Global Constraints
 
@@ -918,7 +918,7 @@ git commit -m "feat(pack-combat-ai): combatCore engagement resolution, gate, per
 - Consumes: `packConfigSchema`, `CombatPackConfig`, `EnemyDef` (Task 2); `SeededRng` from `@automata/engine`.
 - Produces (used by Tasks 9 and 10): `COMBAT_DEFAULTS`; `CombatComposeInput { specConfig: { playerMaxHealth?: number }; cast; arena: { half; spawn; goal }; inventory: { items } | null; occupied: ReadonlyArray<{x,z}> }`; `composeCombatSection(input, rng): CombatPackConfig`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/composeSection.test.ts`:
 
@@ -1000,12 +1000,12 @@ describe('composeCombatSection', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/composeSection.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/composeSection.ts`**
+- [x] **Step 3: Implement `src/composeSection.ts`**
 
 ```ts
 import type { SeededRng } from '@automata/engine'
@@ -1078,12 +1078,12 @@ export function composeCombatSection(input: CombatComposeInput, rng: SeededRng):
 
 Add to `src/index.ts`: `export * from './composeSection'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/composeSection.test.ts`
 Expected: PASS. The cramped-arena case is guaranteed to throw by geometry (extent 3 vs spawn keepout 5) — if it doesn't, the keepout logic is wrong; fix the core, not the test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
