@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 39% (21/54 task steps complete)
+**Implementation progress:** 48% (26/54 task steps complete)
 
 ## Global Constraints
 
@@ -575,7 +575,7 @@ git commit -m "feat(pack-combat-ai): enemyAiCore idle/chase/return state machine
 - Consumes: Task 2 config types; Task 3 `HealthState`/`createHealth`/`applyPlayerDamage`/`tickInvuln`; Task 4 `EnemyAiState`/`createEnemyAi`/`stepEnemyAi`.
 - Produces (used by Tasks 7 and 8): `CombatState { player: HealthState; playerCooldown: number; enemies: Record<string, EnemyCombatState> }`; `EnemyCombatState { hp: number; cooldown: number; ai: EnemyAiState }`; `createCombatState(config)`; `stepCombat(state, player, config, dt, weaponHeld): { state; defeatedEnemyIds: readonly string[]; playerDefeated: boolean }`; `enemiesDefeated(state, config): boolean`; `isWeaponHeld(config, collected: readonly string[]): boolean`; `playerDamage(config, weaponHeld): number`; `combatSliceValue(state, config): CombatSliceValue`; `serializeCombatState(state): unknown`; `deserializeCombatState(raw, config): CombatState`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/combatCore.test.ts`:
 
@@ -724,12 +724,12 @@ describe('combatCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/combatCore.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/combatCore.ts`**
+- [x] **Step 3: Implement `src/combatCore.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -893,12 +893,12 @@ Add to `src/index.ts`: `export * from './combatCore'`
 
 Note: the player-hp bound check message must contain `hp 20 above maxHealth` — the test regexes match `/unknown enemy "ghost"/`, `/missing enemy "enemy-2"/`, `/hp 20 above maxHealth/`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/combatCore.test.ts`
 Expected: PASS. If the "second wind" test is flaky in timing, the bug is real (cooldown or invuln arithmetic) — fix the core, not the test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
