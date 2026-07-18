@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 67% (36/54 task steps complete)
+**Implementation progress:** 78% (42/54 task steps complete)
 
 ## Global Constraints
 
@@ -1423,7 +1423,7 @@ git commit -m "feat(pack-combat-ai): browser adapter with combat slice, HUD, edi
 - Consumes: Tasks 2 and 5; `PackEvalHook`, `EvalSliceView` from `@automata/game-kit`.
 - Produces: `createCombatAiEvalHook(config: CombatPackConfig): PackEvalHook` and `EVAL_TICK_DT = 1 / 60`. Used by Task 9's `EVAL_HOOK_BUILDERS`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/evalHook.test.ts`:
 
@@ -1499,12 +1499,12 @@ describe('combat-ai eval hook', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/evalHook.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/evalHook.ts`**
+- [x] **Step 3: Implement `src/evalHook.ts`**
 
 ```ts
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
@@ -1556,17 +1556,17 @@ export function createCombatAiEvalHook(config: CombatPackConfig): PackEvalHook {
 
 Add to `src/index.ts`: `export * from './evalHook'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/evalHook.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Run the whole package suite**
+- [x] **Step 5: Run the whole package suite**
 
 Run: `npx vitest run packages/pack-combat-ai`
 Expected: PASS (config, healthCore, enemyAiCore, combatCore, composeSection, pack, evalHook).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-combat-ai
