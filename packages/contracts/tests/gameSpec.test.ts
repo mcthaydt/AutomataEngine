@@ -123,3 +123,21 @@ describe('schedules-relationships capability config', () => {
     expect(() => capabilityConfigSchemas['schedules-relationships'].parse({ walkerCount: 3 })).toThrow()
   })
 })
+
+describe('combat-ai capability config', () => {
+  it('parses empty (hash rule: no defaults applied by the schema)', () => {
+    expect(capabilityConfigSchemas['combat-ai'].parse({})).toEqual({})
+  })
+
+  it('accepts playerMaxHealth within bounds', () => {
+    expect(capabilityConfigSchemas['combat-ai'].parse({ playerMaxHealth: 8 }))
+      .toEqual({ playerMaxHealth: 8 })
+  })
+
+  it('rejects out-of-range and unknown fields', () => {
+    expect(() => capabilityConfigSchemas['combat-ai'].parse({ playerMaxHealth: 0 })).toThrow()
+    expect(() => capabilityConfigSchemas['combat-ai'].parse({ playerMaxHealth: 21 })).toThrow()
+    expect(() => capabilityConfigSchemas['combat-ai'].parse({ playerMaxHealth: 5.5 })).toThrow()
+    expect(() => capabilityConfigSchemas['combat-ai'].parse({ enemyCount: 3 })).toThrow()
+  })
+})

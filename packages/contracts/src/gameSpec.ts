@@ -91,7 +91,9 @@ export const capabilityConfigSchemas = {
   'schedules-relationships': z.strictObject({
     slotSeconds: z.number().min(5).max(120).optional()
   }),
-  'combat-ai': z.strictObject({}),
+  'combat-ai': z.strictObject({
+    playerMaxHealth: z.number().int().min(1).max(20).optional()
+  }),
   'economy-progression': z.strictObject({}),
   'hub-navigation-vehicle': z.strictObject({}),
   'save-load': z.strictObject({})

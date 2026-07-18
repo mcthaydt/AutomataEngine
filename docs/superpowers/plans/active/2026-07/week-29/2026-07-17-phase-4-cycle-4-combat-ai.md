@@ -9,6 +9,8 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
+**Implementation progress:** 9% (5/54 task steps complete)
+
 ## Global Constraints
 
 - Pack ids/slices/events are string literals per pack; **pack-to-pack imports are forbidden** — copy `'inventory'` as a local constant, never import from `pack-interaction-inventory`.
@@ -32,7 +34,7 @@
 **Interfaces:**
 - Produces: `capabilityConfigSchemas['combat-ai']` accepting `{ playerMaxHealth?: number }` (int, 1–20). Consumed by Task 10's `composeGame` cast.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append inside the existing `describe('gameSpec schemas', ...)` block of `packages/contracts/tests/gameSpec.test.ts`, next to the `schedules-relationships` cases (~line 122):
 
@@ -54,12 +56,12 @@ Append inside the existing `describe('gameSpec schemas', ...)` block of `package
   })
 ```
 
-- [ ] **Step 2: Run tests to verify the new ones fail**
+- [x] **Step 2: Run tests to verify the new ones fail**
 
 Run: `npx vitest run packages/contracts/tests/gameSpec.test.ts`
 Expected: FAIL — `parse({ playerMaxHealth: 8 })` throws because the stub is `z.strictObject({})`.
 
-- [ ] **Step 3: Replace the stub**
+- [x] **Step 3: Replace the stub**
 
 In `packages/contracts/src/gameSpec.ts` change line 94 from:
 
@@ -75,12 +77,12 @@ to:
   }),
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/contracts/tests/gameSpec.test.ts`
 Expected: PASS (all).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/contracts/src/gameSpec.ts packages/contracts/tests/gameSpec.test.ts
