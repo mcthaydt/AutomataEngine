@@ -2,6 +2,7 @@ import { createSeededRng, type SeededRng } from '@automata/engine'
 import type { AssetManifest, CompositionManifest, GameSpec } from '@automata/contracts'
 import { generateGameAssets } from '@automata/asset-providers'
 import { validatePackSet, type GamePack } from '@automata/game-kit'
+import { combatAiPack, composeCombatSection } from '@automata/pack-combat-ai'
 import { composeDialogueSection, dialogueQuestsPack } from '@automata/pack-dialogue-quests'
 import { composeInventorySection, interactionInventoryPack } from '@automata/pack-interaction-inventory'
 import { composeSchedulesSection, schedulesRelationshipsPack } from '@automata/pack-schedules-relationships'
@@ -26,26 +27,30 @@ const drawGoal = (rng: SeededRng): { x: number; z: number } =>
 /** Pure spec→artifacts compose. Provider child seeds never perturb section RNG state. */
 export async function composeGame(args: { spec: GameSpec; seed: number; specHash: string }): Promise<ComposeResult> {
   const { spec, seed, specHash } = args
-  const supported = new Set<string>([interactionInventoryPack.id, dialogueQuestsPack.id, schedulesRelationshipsPack.id])
+  const supported = new Set<string>([
+    interactionInventoryPack.id, dialogueQuestsPack.id, schedulesRelationshipsPack.id, combatAiPack.id
+  ])
   const unsupported = spec.capabilities.filter((entry) => !supported.has(entry.id))
   if (unsupported.length > 0) {
     return {
       ok: false,
       issues: unsupported.map((entry) => ({
         code: 'compose-unsupported-capability',
-        message: `Phase 4 cycle 3 composes only [${[...supported].join(', ')}]; spec selects "${entry.id}"`
+        message: `Phase 4 cycle 4 composes only [${[...supported].join(', ')}]; spec selects "${entry.id}"`
       }))
     }
   }
 
   const wantsDialogue = spec.capabilities.some((entry) => entry.id === dialogueQuestsPack.id)
   const wantsSchedules = spec.capabilities.some((entry) => entry.id === schedulesRelationshipsPack.id)
+  const wantsCombat = spec.capabilities.some((entry) => entry.id === combatAiPack.id)
   // Validate the set the spec actually selected. Adding inventory implicitly
   // hid dialogue's declared requirement and later dereferenced it unsafely.
   const selectedPacks = spec.capabilities.flatMap((entry): GamePack[] => {
     if (entry.id === interactionInventoryPack.id) return [interactionInventoryPack]
     if (entry.id === dialogueQuestsPack.id) return [dialogueQuestsPack]
     if (entry.id === schedulesRelationshipsPack.id) return [schedulesRelationshipsPack]
+    if (entry.id === combatAiPack.id) return [combatAiPack]
     return []
   })
   const packIssues = validatePackSet(selectedPacks).filter((issue) => issue.severity === 'error')
@@ -110,9 +115,10 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       config: dialogueConfig as unknown as Record<string, unknown>
     })
   }
+  let schedulesConfig: ReturnType<typeof composeSchedulesSection> | undefined
   if (wantsSchedules) {
     const schedulesSelection = spec.capabilities.find((entry) => entry.id === schedulesRelationshipsPack.id)!
-    const schedulesConfig = composeSchedulesSection({
+    schedulesConfig = composeSchedulesSection({
       specConfig: schedulesSelection.config as { slotSeconds?: number },
       cast: spec.cast,
       arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
@@ -126,6 +132,24 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       id: schedulesRelationshipsPack.id,
       version: schedulesRelationshipsPack.version,
       config: schedulesConfig as unknown as Record<string, unknown>
+    })
+  }
+  if (wantsCombat) {
+    const combatSelection = spec.capabilities.find((entry) => entry.id === combatAiPack.id)!
+    const combatConfig = composeCombatSection({
+      specConfig: combatSelection.config as { playerMaxHealth?: number },
+      cast: spec.cast,
+      arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
+      inventory: { items: packConfig.items },
+      occupied: [
+        ...(dialogueConfig?.npcs.map((npc) => npc.position) ?? []),
+        ...(schedulesConfig?.walkers.flatMap((walker) => walker.stations) ?? [])
+      ]
+    }, rng)
+    packs.push({
+      id: combatAiPack.id,
+      version: combatAiPack.version,
+      config: combatConfig as unknown as Record<string, unknown>
     })
   }
 

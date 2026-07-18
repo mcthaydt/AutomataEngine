@@ -44,10 +44,26 @@ describe('pack registry', () => {
     }
   })
 
-  it('exposes exactly the packs that exist (three, as of Phase 4 cycle 3)', () => {
+  it('exposes exactly the packs that exist (four, as of Phase 4 cycle 4)', () => {
     expect(Object.keys(STANDARD_PACKS)).toEqual([
-      'interaction-inventory', 'dialogue-quests', 'schedules-relationships'
+      'interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai'
     ])
+  })
+
+  it('registers combat-ai with a deterministic fixture whose weapon references the inventory fixture', () => {
+    const fixture = PACK_FIXTURES['combat-ai']!() as { weapon: { itemId: string | null }; enemies: unknown[] }
+    expect(PACK_FIXTURES['combat-ai']!()).toEqual(fixture)
+    expect(fixture.enemies.length).toBeGreaterThan(0)
+    const inventoryItems = (PACK_FIXTURES['interaction-inventory']!() as { items: Array<{ id: string }> })
+      .items.map((item) => item.id)
+    expect(inventoryItems).toContain(fixture.weapon.itemId)
+    const probe = {
+      formatVersion: 1 as const, gameId: 'registry-test', source: null,
+      packs: [{ id: 'combat-ai', version: '1.0.0', config: fixture as unknown as Record<string, unknown> }],
+      assets: []
+    }
+    expect(resolveEvalHooks(probe)).toHaveLength(1)
+    expect(resolveEditorContributions(probe)).toHaveLength(1)
   })
 
   it('dialogue-quests fixture is deterministic, schema-valid, and references the inventory fixture items', () => {

@@ -187,3 +187,13 @@ A pack cycle is complete when all seven items land and `npm run ci`,
   scenario.
 - **Editor prefab scope creep.** Mitigation: §1 non-goal is binding; prefab
   templates + visibility only.
+
+## 9. Capability-gap log
+
+- **Cycle 2 — inventory-owned item consumption.** Dialogue fetch turn-ins can
+  verify possession but cannot consume items without an inventory-owned API.
+- **Cycle 3 — shared quest-giver movement.** Moving dialogue-owned quest givers
+  needs shared NPC-position ownership rather than a second pack mutating them.
+- **Cycle 4 — pack-initiated player teleport.** Real respawn-at-spawn needs an
+  additive world-effect seam in game-kit and the eval harness; second wind in
+  place is the deterministic interim behavior.

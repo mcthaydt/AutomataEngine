@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 20% (11/54 task steps complete)
+**Implementation progress:** 100% (54/54 task steps complete)
 
 ## Global Constraints
 
@@ -307,7 +307,7 @@ git commit -m "feat(pack-combat-ai): package scaffold and cross-validated config
 - Consumes: `PlayerCombatConfig` from Task 2.
 - Produces: `HealthState { hp: number; invulnSeconds: number }`; `createHealth(player: PlayerCombatConfig): HealthState`; `applyPlayerDamage(state, amount, player): { state: HealthState; defeated: boolean }`; `tickInvuln(state, dt): HealthState`. Used by Task 5's `combatCore`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/healthCore.test.ts`:
 
@@ -357,12 +357,12 @@ describe('healthCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/healthCore.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/healthCore.ts`**
+- [x] **Step 3: Implement `src/healthCore.ts`**
 
 ```ts
 import type { PlayerCombatConfig } from './config'
@@ -399,12 +399,12 @@ export function tickInvuln(state: HealthState, dt: number): HealthState {
 
 Add to `src/index.ts`: `export * from './healthCore'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/healthCore.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
@@ -424,7 +424,7 @@ git commit -m "feat(pack-combat-ai): healthCore with second-wind recovery"
 - Consumes: `EnemyDef` from Task 2.
 - Produces: `EnemyMode = 'idle' | 'chase' | 'return'`; `EnemyAiState { position: { x, z }; mode: EnemyMode }`; `createEnemyAi(enemy: EnemyDef): EnemyAiState`; `stepEnemyAi(state, enemy, player, dt): EnemyAiState`; `stepToward(position, target, speed, dt)`. Used by Task 5. Callers must not step defeated enemies.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/enemyAiCore.test.ts`:
 
@@ -490,12 +490,12 @@ describe('enemyAiCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/enemyAiCore.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/enemyAiCore.ts`**
+- [x] **Step 3: Implement `src/enemyAiCore.ts`**
 
 ```ts
 import type { EnemyDef } from './config'
@@ -550,12 +550,12 @@ export function stepEnemyAi(
 
 Add to `src/index.ts`: `export * from './enemyAiCore'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/enemyAiCore.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
@@ -575,7 +575,7 @@ git commit -m "feat(pack-combat-ai): enemyAiCore idle/chase/return state machine
 - Consumes: Task 2 config types; Task 3 `HealthState`/`createHealth`/`applyPlayerDamage`/`tickInvuln`; Task 4 `EnemyAiState`/`createEnemyAi`/`stepEnemyAi`.
 - Produces (used by Tasks 7 and 8): `CombatState { player: HealthState; playerCooldown: number; enemies: Record<string, EnemyCombatState> }`; `EnemyCombatState { hp: number; cooldown: number; ai: EnemyAiState }`; `createCombatState(config)`; `stepCombat(state, player, config, dt, weaponHeld): { state; defeatedEnemyIds: readonly string[]; playerDefeated: boolean }`; `enemiesDefeated(state, config): boolean`; `isWeaponHeld(config, collected: readonly string[]): boolean`; `playerDamage(config, weaponHeld): number`; `combatSliceValue(state, config): CombatSliceValue`; `serializeCombatState(state): unknown`; `deserializeCombatState(raw, config): CombatState`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/combatCore.test.ts`:
 
@@ -724,12 +724,12 @@ describe('combatCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/combatCore.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/combatCore.ts`**
+- [x] **Step 3: Implement `src/combatCore.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -893,12 +893,12 @@ Add to `src/index.ts`: `export * from './combatCore'`
 
 Note: the player-hp bound check message must contain `hp 20 above maxHealth` — the test regexes match `/unknown enemy "ghost"/`, `/missing enemy "enemy-2"/`, `/hp 20 above maxHealth/`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/combatCore.test.ts`
 Expected: PASS. If the "second wind" test is flaky in timing, the bug is real (cooldown or invuln arithmetic) — fix the core, not the test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
@@ -918,7 +918,7 @@ git commit -m "feat(pack-combat-ai): combatCore engagement resolution, gate, per
 - Consumes: `packConfigSchema`, `CombatPackConfig`, `EnemyDef` (Task 2); `SeededRng` from `@automata/engine`.
 - Produces (used by Tasks 9 and 10): `COMBAT_DEFAULTS`; `CombatComposeInput { specConfig: { playerMaxHealth?: number }; cast; arena: { half; spawn; goal }; inventory: { items } | null; occupied: ReadonlyArray<{x,z}> }`; `composeCombatSection(input, rng): CombatPackConfig`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/composeSection.test.ts`:
 
@@ -1000,12 +1000,12 @@ describe('composeCombatSection', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/composeSection.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/composeSection.ts`**
+- [x] **Step 3: Implement `src/composeSection.ts`**
 
 ```ts
 import type { SeededRng } from '@automata/engine'
@@ -1078,12 +1078,12 @@ export function composeCombatSection(input: CombatComposeInput, rng: SeededRng):
 
 Add to `src/index.ts`: `export * from './composeSection'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/composeSection.test.ts`
 Expected: PASS. The cramped-arena case is guaranteed to throw by geometry (extent 3 vs spawn keepout 5) — if it doesn't, the keepout logic is wrong; fix the core, not the test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
@@ -1104,7 +1104,7 @@ git commit -m "feat(pack-combat-ai): seeded composeSection with spawn-aggro keep
 - Consumes: everything from Tasks 2–5; `GamePack`, `PackRuntimeHandle`, `packCompatibility`, `PackEditorContribution` from `@automata/game-kit`.
 - Produces: `combatAiPack: GamePack<CombatPackConfig>` (id `'combat-ai'`, version `'1.0.0'`) and `combatAiEditorContribution: PackEditorContribution`. Used by Task 9's registry.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/pack.test.ts` — mirror the harness style of `packages/pack-schedules-relationships/tests/pack.test.ts` (read it first; reuse its host/render/boot helpers verbatim, adapting names). The cases to cover:
 
@@ -1242,12 +1242,12 @@ describe('combatAiEditorContribution', () => {
 
 The schedules pack's `tests/pack.test.ts` may use different host/boot helper names — read it before writing this file and keep whichever setup idioms it uses (the cases above are complete as logic; only the boot plumbing may need aligning).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/pack.test.ts`
 Expected: FAIL — modules not found.
 
-- [ ] **Step 3: Implement `src/pack.ts`**
+- [x] **Step 3: Implement `src/pack.ts`**
 
 ```ts
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
@@ -1398,12 +1398,12 @@ export * from './pack'
 export * from './editorContribution'
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/pack.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
@@ -1423,7 +1423,7 @@ git commit -m "feat(pack-combat-ai): browser adapter with combat slice, HUD, edi
 - Consumes: Tasks 2 and 5; `PackEvalHook`, `EvalSliceView` from `@automata/game-kit`.
 - Produces: `createCombatAiEvalHook(config: CombatPackConfig): PackEvalHook` and `EVAL_TICK_DT = 1 / 60`. Used by Task 9's `EVAL_HOOK_BUILDERS`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/evalHook.test.ts`:
 
@@ -1499,12 +1499,12 @@ describe('combat-ai eval hook', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/evalHook.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/evalHook.ts`**
+- [x] **Step 3: Implement `src/evalHook.ts`**
 
 ```ts
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
@@ -1556,17 +1556,17 @@ export function createCombatAiEvalHook(config: CombatPackConfig): PackEvalHook {
 
 Add to `src/index.ts`: `export * from './evalHook'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/evalHook.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Run the whole package suite**
+- [x] **Step 5: Run the whole package suite**
 
 Run: `npx vitest run packages/pack-combat-ai`
 Expected: PASS (config, healthCore, enemyAiCore, combatCore, composeSection, pack, evalHook).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-combat-ai
@@ -1587,7 +1587,7 @@ git commit -m "feat(pack-combat-ai): headless eval hook with weapon-boost parity
 - Consumes: `combatAiPack`, `combatAiEditorContribution`, `composeCombatSection`, `createCombatAiEvalHook`, `packConfigSchema` from `@automata/pack-combat-ai`.
 - Produces: `STANDARD_PACKS['combat-ai']`, `PACK_FIXTURES['combat-ai']`, eval-hook and editor-contribution entries; matrix now runs the `combat-ai` single, the `interaction-inventory+combat-ai` pair, and two new scenario rows.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `packages/pack-registry/tests/registry.test.ts`, update the exact-set test and add a combat registration test:
 
@@ -1627,12 +1627,12 @@ In `packages/pack-registry/tests/compositionMatrix.test.ts`, extend `SCENARIOS`:
   ]
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-registry`
 Expected: FAIL — `combat-ai` missing from `STANDARD_PACKS` / fixtures.
 
-- [ ] **Step 3: Register the pack**
+- [x] **Step 3: Register the pack**
 
 In `packages/pack-registry/package.json` dependencies add:
 
@@ -1686,12 +1686,12 @@ Add to `EDITOR_CONTRIBUTIONS`:
   [combatAiEditorContribution.packId]: combatAiEditorContribution
 ```
 
-- [ ] **Step 4: Run the registry suite**
+- [x] **Step 4: Run the registry suite**
 
 Run: `npx vitest run packages/pack-registry`
 Expected: PASS — including the automatic new rows: the `combat-ai` single (satisfiable, `requires: []`) and the `interaction-inventory+combat-ai` pair, plus both new scenarios. If `driveToCompletion` hits `maxSteps`, diagnose with the combat fixture distances (spawn `(-8,-8)`, stride 0.5/tick) before touching the harness — the walk policy must stay untouched (spec §4.2).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-registry package-lock.json
@@ -1712,7 +1712,7 @@ git commit -m "feat(pack-registry): register combat-ai; matrix pair + solo and 4
 - Consumes: `combatAiPack`, `composeCombatSection` from `@automata/pack-combat-ai`; existing `packConfig` (inventory section), `dialogueConfig`, and the schedules config inside `composeGame`.
 - Produces: `composeGame` supports specs selecting `combat-ai` (ordered last, after schedules); unsupported-capability message now names cycle 4.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `packages/game-compose/tests/compose.test.ts`:
 
@@ -1757,12 +1757,12 @@ In `packages/game-compose/tests/compose.test.ts`:
 
 (Adjust the `cast` construction to the actual `specWithCapabilities` helper shape in the file — read it first; character objects need every field its schema requires. If the fixture cast already contains an antagonist, filter antagonists out of the cast in the zero-enemies test instead of relying on the default.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/game-compose/tests/compose.test.ts`
 Expected: FAIL — `combat-ai` is rejected as unsupported.
 
-- [ ] **Step 3: Extend `composeGame`**
+- [x] **Step 3: Extend `composeGame`**
 
 In `packages/game-compose/package.json` dependencies add `"@automata/pack-combat-ai": "*",` then `npm install`.
 
@@ -1795,12 +1795,12 @@ In `packages/game-compose/src/compose.ts`:
   }
 ```
 
-- [ ] **Step 4: Run the game-compose suite (snapshots prove first-light frozen)**
+- [x] **Step 4: Run the game-compose suite (snapshots prove first-light frozen)**
 
 Run: `npx vitest run packages/game-compose`
 Expected: PASS with **no snapshot changes** — specs that do not select combat must compose bit-identically (the combat block draws from `rng` only when `wantsCombat`).
 
-- [ ] **Step 5: Full gates**
+- [x] **Step 5: Full gates**
 
 Run: `npm run ci`
 Expected: lint, typecheck, and all workspace tests PASS.
@@ -1811,7 +1811,7 @@ Expected: PASS (script completes without error).
 Run: `git status --porcelain games/first-light`
 Expected: empty output (first-light untouched).
 
-- [ ] **Step 6: Update the roadmap**
+- [x] **Step 6: Update the roadmap**
 
 In `docs/ROADMAP.md` Phase 4 cycles list, replace cycle 4's entry (currently a multi-line `Next` item carrying spec + plan links) with a `Shipped` line keeping the plan link, and set cycle 5 to `Next`:
 
@@ -1830,7 +1830,7 @@ Also update the Phase 4 row's status cell in the phase-map table in
 with `7 (one per pack); 4 of 7 completed (<ship date>)` — a prior commit
 (`f69c9b5`) established that this table is kept in sync with cycle status.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/game-compose package-lock.json docs/ROADMAP.md \
@@ -1846,9 +1846,9 @@ While implementing, record in the escape-hatch/capability-gap log (wherever cycl
 
 ## Verification checklist (all must be true before calling the cycle done)
 
-- [ ] `npx vitest run packages/pack-combat-ai` — all green
-- [ ] `npx vitest run packages/pack-registry` — matrix runs the combat single, the inventory+combat pair, and the two new scenarios
-- [ ] `npx vitest run packages/game-compose` — no snapshot diffs for non-combat specs
-- [ ] `npm run ci` green; `npm run verify:new-game` green
-- [ ] `git status --porcelain games/first-light` empty
-- [ ] ROADMAP cycle 4 marked shipped; capability gap logged
+- [x] `npx vitest run packages/pack-combat-ai` — all green
+- [x] `npx vitest run packages/pack-registry` — matrix runs the combat single, the inventory+combat pair, and the two new scenarios
+- [x] `npx vitest run packages/game-compose` — no snapshot diffs for non-combat specs
+- [x] `npm run ci` green; `npm run verify:new-game` green
+- [x] `git status --porcelain games/first-light` empty
+- [x] ROADMAP cycle 4 marked shipped; capability gap logged

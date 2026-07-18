@@ -184,7 +184,7 @@ describe('composeGame', () => {
   it('still rejects capabilities without a composed pack', async () => {
     const spec = specWithCapabilities([
       { id: 'interaction-inventory', config: {}, requirements: [] },
-      { id: 'combat-ai', config: {}, requirements: [] }
+      { id: 'economy-progression', config: {}, requirements: [] }
     ])
     const result = await composeGame({ spec, seed: 11, specHash: 'h' })
     expect(result.ok).toBe(false)
@@ -214,6 +214,47 @@ describe('composeGame', () => {
     const giverIds = new Set(dialogue.quests.filter((quest) => quest.kind === 'main').map((quest) => quest.giverNpcId))
     expect(schedules.walkers).toHaveLength(1)
     expect(schedules.relationships.tracked.map((entry) => entry.npcId).sort()).toEqual([...giverIds].sort())
+  })
+
+  it('composes the combat section with cast-derived enemies and a weapon from the inventory section', async () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'combat-ai', config: {}, requirements: [] }
+    ])
+    const withAntagonist = {
+      ...spec,
+      cast: [...spec.cast, {
+        id: 'c-raider', name: 'Raider', role: 'antagonist' as const,
+        description: 'A prowling raider.'
+      }]
+    }
+    const result = await composeGame({ spec: withAntagonist as GameSpec, seed: 11, specHash: 'h' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.composition.packs.map((entry) => entry.id)).toEqual(['interaction-inventory', 'combat-ai'])
+    const combat = result.composition.packs[1]!.config as {
+      weapon: { itemId: string | null }
+      enemies: Array<{ id: string; name: string }>
+    }
+    const itemIds = (result.composition.packs[0]!.config as { items: Array<{ id: string }> })
+      .items.map((item) => item.id)
+    expect(itemIds).toContain(combat.weapon.itemId)
+    expect(combat.enemies.map((enemy) => enemy.name)).toContain('Raider')
+  })
+
+  it('combat composes to zero enemies when the cast has no antagonists', async () => {
+    const spec = specWithCapabilities([
+      { id: 'interaction-inventory', config: {}, requirements: [] },
+      { id: 'combat-ai', config: {}, requirements: [] }
+    ])
+    const withoutAntagonists = {
+      ...spec,
+      cast: spec.cast.filter((member) => member.role !== 'antagonist')
+    }
+    const result = await composeGame({ spec: withoutAntagonists, seed: 11, specHash: 'h' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect((result.composition.packs[1]!.config as { enemies: unknown[] }).enemies).toEqual([])
   })
 
   it('rejects schedules-relationships without dialogue-quests via pack-set validation', async () => {

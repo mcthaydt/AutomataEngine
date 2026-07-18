@@ -17,6 +17,10 @@ root unless a task explicitly says otherwise.
   off in that document as soon as it is completed.
 - If a plan or doc step tells you to commit, make the commit after completing
   and verifying that step. Do not skip documented commit checkpoints.
+- Create agent-managed linked worktrees only under the repository-local
+  `.worktrees/` directory. Never place them in `/tmp`, `/private/tmp`, or
+  outside the writable workspace; external worktrees cause repeated sandbox
+  approval prompts. `.worktrees/` is intentionally gitignored.
 - Run `npm run ci` before claiming a change is ready. Run `npm run coverage`
   when touching engine code or coverage-sensitive tests.
 - The approved v1 spec is
