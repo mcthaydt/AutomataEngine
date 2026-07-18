@@ -66,4 +66,23 @@ describe('sessionHost', () => {
     expect(await host.executeTool('listGames', {})).toMatchObject({ ok: true, content: { games: expect.arrayContaining(['beacon-run', 'probe']) } })
     await host.dispose()
   })
+
+  it('dispatches regenerateAsset through the durable asset runner without opening a project', async () => {
+    const root = await makeRepo()
+    const host = createSessionHost({
+      repoRoot: root,
+      sessionsRoot: join(root, '.automata/sessions'),
+      lock: false
+    })
+
+    const result = await host.executeTool('regenerateAsset', {
+      gameId: 'probe',
+      assetId: 'missing',
+      seed: 7
+    })
+
+    expect(result).toMatchObject({ ok: false, isError: true })
+    expect(result.content).toMatch(/gamespec\.json/)
+    await host.dispose()
+  })
 })

@@ -2,8 +2,9 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
+import { sha256Hex } from '@automata/asset-providers'
 import { createSessionEngine, type SessionEngine } from '@automata/build-session'
-import { gameSpecSchema, minimalGameSpecDraft } from '@automata/contracts'
+import { gameSpecSchema, minimalGameSpecDraft, type AssetProvider } from '@automata/contracts'
 import { createAssetToolRunner } from '../src/assetTools'
 
 const V2_MANIFEST = {
@@ -34,7 +35,7 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-async function setup(manifest: unknown | null) {
+async function setup(manifest: unknown | null, namedProviders?: Record<string, AssetProvider>) {
   const repoRoot = await mkdtemp(join(tmpdir(), 'asset-tools-'))
   roots.push(repoRoot)
   const gameDir = join(repoRoot, 'games', 'demo-game', 'public')
@@ -55,7 +56,8 @@ async function setup(manifest: unknown | null) {
   const runner = createAssetToolRunner({
     repoRoot,
     ensureEngine: async () => engine,
-    snapshotContent: async () => ({ hash: await readFile(manifestPath, 'utf8') })
+    snapshotContent: async () => ({ hash: await readFile(manifestPath, 'utf8') }),
+    namedProviders
   })
   return { runner, engine, manifestPath, repoRoot }
 }
@@ -63,8 +65,8 @@ async function setup(manifest: unknown | null) {
 async function setupWithSpec(assets: unknown[] = [
   { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
   { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
-]) {
-  const context = await setup(null)
+], namedProviders?: Record<string, AssetProvider>) {
+  const context = await setup(null, namedProviders)
   const spec = gameSpecSchema.parse({
     specVersion: 1,
     provenance: {
@@ -355,5 +357,77 @@ describe('regenerateAsset', () => {
     const noComposition = await setupWithSpec()
     await expect(noComposition.runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'relic-icon' }))
       .rejects.toThrow(/No seed/)
+  })
+})
+
+const FAKE_AI_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" fill="none"/></svg>\n'
+const fakeAiProvider: AssetProvider = {
+  id: 'ai-fake', version: '1.0.0', kinds: ['ui', 'texture'],
+  fileExtension: () => 'svg',
+  async generate(requirement, ctx) {
+    const bytes = new TextEncoder().encode(FAKE_AI_SVG)
+    return {
+      bytes,
+      provenance: {
+        provider: 'ai-fake', providerVersion: '1.0.0', generator: 'fake-model',
+        sourceParams: { prompt: 'fake' }, seed: ctx.seed, specVersion: ctx.specVersion,
+        determinism: { kind: 'pinned', contentHash: sha256Hex(bytes) },
+        license: { kind: 'generated', notes: 'test' }
+      }
+    }
+  }
+}
+
+const UI_ONLY_ASSETS = [{ id: 'relic-icon', kind: 'ui', description: 'Icon.' }]
+
+describe('provider override', () => {
+  it('generateAssets with provider routes through the injected provider and pins the entry', async () => {
+    const { runner, manifestPath } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    const result = await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' })
+    expect(result.ok).toBe(true)
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    const entry = manifest.assets.find((candidate: { id: string }) => candidate.id === 'relic-icon')
+    expect(entry.provenance.provider).toBe('ai-fake')
+    expect(entry.provenance.determinism.kind).toBe('pinned')
+    expect(entry.status).toBe('generated')
+  })
+
+  it('regenerateAsset with provider preserves the flow and re-guards under the provider key', async () => {
+    const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    const procedural = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'relic-icon', seed: 7 })
+    const viaAi = await runner.execute('regenerateAsset', { gameId: 'demo-game', assetId: 'relic-icon', seed: 7, provider: 'ai-fake' })
+    // Different guarded-step inputs: the AI regeneration must NOT be served
+    // from the procedural step's cache.
+    expect(viaAi.ok).toBe(true)
+    expect((viaAi.content as { cached: boolean }).cached).toBe(false)
+    expect((procedural.content as { id: string }).id).toBe('relic-icon')
+  })
+
+  it('rejects an unknown provider id, listing known providers', async () => {
+    const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'nope' }))
+      .rejects.toThrow(/Unknown provider "nope".*ai-fake/)
+  })
+
+  it('rejects a provider that does not support a requirement kind', async () => {
+    // Default spec assets include pickup-blip (audio); the fake provider is ui/texture only.
+    const { runner } = await setupWithSpec(undefined, { 'ai-fake': fakeAiProvider })
+    await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' }))
+      .rejects.toThrow(/does not support kind "audio"/)
+  })
+
+  it('validateAssets flips a matching pinned entry to validated and a tampered one to failed', async () => {
+    const { runner, repoRoot } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    await runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' })
+    const clean = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect((clean.content as { statuses: Record<string, string> }).statuses['relic-icon']).toBe('validated')
+
+    // Tamper with the pinned bytes on disk (keep it valid on-palette SVG so only the hash trips)
+    await writeFile(join(repoRoot, 'games', 'demo-game', 'public', 'assets', 'relic-icon.svg'),
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" fill="none"/></svg>\n')
+    const tampered = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    const content = tampered.content as { statuses: Record<string, string>; issues: Array<{ code: string }> }
+    expect(content.statuses['relic-icon']).toBe('failed')
+    expect(content.issues.some((issue) => issue.code === 'asset-hash-mismatch')).toBe(true)
   })
 })

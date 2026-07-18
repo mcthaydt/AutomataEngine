@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@automata/asset-providers": "*",
+    "@automata/asset-providers-ai": "*",
     "@automata/build-session": "*",
     "@automata/contracts": "*",
     "@automata/game-spec": "*",

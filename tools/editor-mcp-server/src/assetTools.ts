@@ -1,7 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { deriveStyleParams, generateGameAssets, validateAssetMedia } from '@automata/asset-providers'
+import { buildGeneratedAsset, deriveStyleParams, generateGameAssets, validateAssetMedia } from '@automata/asset-providers'
 import { hashJson, type SessionEngine } from '@automata/build-session'
+import { hashStringToSeed } from '@automata/engine'
 import {
   assetManifestSchema,
   gameSpecSchema,
@@ -14,6 +15,8 @@ import {
   type AssetIssue,
   type AssetStatus,
   type CompositionManifest,
+  type AssetProvider,
+  type GameSpec,
   type ToolResult
 } from '@automata/contracts'
 
@@ -21,6 +24,8 @@ export interface AssetToolDeps {
   repoRoot: string
   ensureEngine(gameId: string): Promise<SessionEngine>
   snapshotContent(gameId: string): Promise<{ hash: string }>
+  /** Non-default providers addressable via the tools' optional `provider` arg. */
+  namedProviders?: Record<string, AssetProvider>
 }
 
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
@@ -104,11 +109,39 @@ function mergeManifest(existingText: string | null, entries: AssetManifestEntry[
   })
 }
 
+/** Route requirements through a named injected provider (the AI path). */
+async function generateWithNamedProvider(
+  deps: AssetToolDeps,
+  spec: GameSpec,
+  requirements: readonly GameSpec['assets'][number][],
+  seed: number,
+  providerId: string
+) {
+  const provider = deps.namedProviders?.[providerId]
+  if (!provider) {
+    const known = Object.keys(deps.namedProviders ?? {}).join(', ') || '(none)'
+    throw new Error(`Unknown provider "${providerId}"; known providers: ${known}`)
+  }
+  const style = deriveStyleParams(spec.direction, seed)
+  const generated = []
+  for (const requirement of requirements) {
+    if (!provider.kinds.includes(requirement.kind)) {
+      throw new Error(`Provider "${providerId}" does not support kind "${requirement.kind}" (supports: ${provider.kinds.join(', ')})`)
+    }
+    generated.push(await buildGeneratedAsset(requirement, provider, {
+      seed: hashStringToSeed(`${seed}:${requirement.id}`),
+      style,
+      specVersion: spec.specVersion
+    }))
+  }
+  return generated
+}
+
 export function createAssetToolRunner(deps: AssetToolDeps) {
   return {
     async execute(name: string, raw: unknown): Promise<ToolResult> {
       if (name === 'regenerateAsset') {
-        const args = parseAssetToolArgs(name, raw) as { gameId: string; assetId: string; seed?: number }
+        const args = parseAssetToolArgs(name, raw) as { gameId: string; assetId: string; seed?: number; provider?: string }
         const spec = await readGameSpec(deps.repoRoot, args.gameId)
         const requirement = spec.assets.find((entry) => entry.id === args.assetId)
         if (!requirement) {
@@ -122,11 +155,13 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         const engine = await deps.ensureEngine(args.gameId)
         const guarded = await engine.runGuarded(
           'asset:regenerate',
-          { assetId: args.assetId, seed, specVersion: spec.specVersion },
+          { assetId: args.assetId, seed, specVersion: spec.specVersion, provider: args.provider ?? null },
           async () => {
-            const [generated] = await generateGameAssets({
-              requirements: [requirement], direction: spec.direction, seed, specVersion: spec.specVersion
-            })
+            const [generated] = args.provider
+              ? await generateWithNamedProvider(deps, spec, [requirement], seed, args.provider)
+              : await generateGameAssets({
+                  requirements: [requirement], direction: spec.direction, seed, specVersion: spec.specVersion
+                })
             return {
               ok: true,
               output: {
@@ -156,6 +191,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           gameId: string
           assetIds?: string[]
           seed?: number
+          provider?: string
         }
         const spec = await readGameSpec(deps.repoRoot, args.gameId)
         const known = new Map(spec.assets.map((requirement) => [requirement.id, requirement]))
@@ -176,12 +212,14 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
             'No seed: pass an explicit seed or compose the game first (composition.json source.seed)'
           )
         }
-        const generated = await generateGameAssets({
-          requirements,
-          direction: spec.direction,
-          seed,
-          specVersion: spec.specVersion
-        })
+        const generated = args.provider
+          ? await generateWithNamedProvider(deps, spec, requirements, seed, args.provider)
+          : await generateGameAssets({
+              requirements,
+              direction: spec.direction,
+              seed,
+              specVersion: spec.specVersion
+            })
         const publicDir = join(deps.repoRoot, 'games', args.gameId, 'public')
         for (const asset of generated) {
           const filePath = join(publicDir, asset.path)

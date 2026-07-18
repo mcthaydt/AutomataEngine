@@ -1,5 +1,6 @@
 import { access, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { createClaudeSvgProvider } from '@automata/asset-providers-ai'
 import { ENGINE_VERSION } from '@automata/engine/data'
 import { createSessionEngine, diffFiles, hashJson, nodeSpawner, runCheck, snapshotFiles, type CommandSpawner, type SessionEngine } from '@automata/build-session'
 import { assetToolDefs, composeToolDefs, sessionToolDefs, specToolDefs, splitClientStepId, workspaceToolDefs, writeToolNames, type McpToolHost, type ToolResult } from '@automata/contracts'
@@ -45,7 +46,12 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
       } catch { return null }
     }
   })
-  const assetTools = createAssetToolRunner({ repoRoot, ensureEngine, snapshotContent: contentSnapshot })
+  const assetTools = createAssetToolRunner({
+    repoRoot,
+    ensureEngine,
+    snapshotContent: contentSnapshot,
+    namedProviders: { 'claude-svg': createClaudeSvgProvider() }
+  })
   const handleOpen = async (gameId: string): Promise<ToolResult> => {
     const available = await discoverGames(repoRoot); if (!available.includes(gameId)) return fail(`Unknown game "${gameId}". Available: ${available.join(', ')}`)
     const projectDir = projectDirFor(gameId); const engine = await ensureEngine(gameId); const headless = await openHeadless(projectDir); open = { gameId, projectDir, headless, engine }
@@ -114,8 +120,8 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
         if (name === 'runBuild' || name === 'runTests' || name === 'runBrowserEval' || name === 'changedFiles') return executeCheckTool(name, args)
         if (name === 'compileGameSpec' || name === 'getGameSpec' || name === 'renderDesignBrief' || name === 'recordDesignDecision') return specTools.execute(name, args)
         if (name === 'composeGame' || name === 'renderSliceReport' || name === 'recordSliceDecision') return composeTools.execute(name, args)
-        if (name === 'listAssets' || name === 'validateAssets' || name === 'generateAssets') {
-          return assetTools.execute(name, args)
+        if (name === 'listAssets' || name === 'validateAssets' || name === 'generateAssets' || name === 'regenerateAsset') {
+          return await assetTools.execute(name, args)
         }
         if (!open) return fail('no project open — call openProject first')
         if (WRITE_TOOLS.has(name)) return handleWrite(open, name, args)

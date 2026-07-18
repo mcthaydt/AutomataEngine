@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 63% (25/40 task and verification steps complete)
+**Implementation progress:** 78% (31/40 task and verification steps complete)
 
 ## Global Constraints
 
@@ -788,7 +788,7 @@ git commit -m "test(asset-providers-ai): opt-in live smoke gated on ANTHROPIC_AP
 - Consumes: Task 1's `provider` args; Task 2's `buildGeneratedAsset`; Task 4's `createClaudeSvgProvider`; existing `deriveStyleParams`, `hashStringToSeed`.
 - Produces: `AssetToolDeps.namedProviders?: Record<string, AssetProvider>`; `generateAssets`/`regenerateAsset` route through a named provider when `provider` is passed; the regenerate guarded-step input includes the provider id.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tools/editor-mcp-server/tests/assetTools.test.ts`. The file's fixtures are `setup(manifest)` (builds the runner via `createAssetToolRunner`) and `setupWithSpec(assets = [{ id: 'relic-icon', kind: 'ui', ... }, { id: 'pickup-blip', kind: 'audio', ... }])` (writes `gamespec.json` from `minimalGameSpecDraft('demo-game')` and returns `setup(null)`'s context). Thread the provider map through both — one optional trailing parameter each, forwarded into `createAssetToolRunner`:
 
@@ -894,12 +894,12 @@ describe('provider override', () => {
 
 Note the validate tests assert per-entry `statuses` and issue codes, **not** the overall `passed` flag — the fixture's composition still references `item-icon`, so structural `asset-missing`/`asset-orphaned` findings are expected alongside and don't affect per-entry status flips.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tools/editor-mcp-server/tests/assetTools.test.ts`
 Expected: FAIL — `namedProviders` is not an accepted dep and `provider` is unused.
 
-- [ ] **Step 3: Implement the override in `assetTools.ts`**
+- [x] **Step 3: Implement the override in `assetTools.ts`**
 
 Add imports:
 
@@ -995,7 +995,7 @@ In the `generateAssets` branch: widen the args cast to include `provider?: strin
 
 Everything downstream (file writes, manifest merge, reference preservation, result shape) is unchanged.
 
-- [ ] **Step 4: Wire the real provider in `sessionHost.ts`**
+- [x] **Step 4: Wire the real provider in `sessionHost.ts`**
 
 Add `"@automata/asset-providers-ai": "*",` to `tools/editor-mcp-server/package.json` dependencies and run `npm install`. In `sessionHost.ts`, add the import and thread the provider map:
 
@@ -1014,12 +1014,12 @@ import { createClaudeSvgProvider } from '@automata/asset-providers-ai'
 
 (`createClaudeSvgProvider` constructs its SDK client lazily — server startup needs no key.)
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run tools/editor-mcp-server`
 Expected: PASS — new provider-override tests green, all existing assetTools tests untouched and green (the no-`provider` path is byte-identical).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tools/editor-mcp-server package-lock.json
