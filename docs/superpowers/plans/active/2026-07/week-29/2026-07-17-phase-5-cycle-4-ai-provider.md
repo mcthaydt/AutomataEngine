@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 13% (5/40 task and verification steps complete)
+**Implementation progress:** 25% (10/40 task and verification steps complete)
 
 ## Global Constraints
 
@@ -116,7 +116,7 @@ git commit -m "feat(contracts): asset-hash-mismatch issue code and provider arg 
 - Consumes: existing `optimizeAssetBytes`, `deriveStyleParams`, `resolveProvider`, `hashStringToSeed`.
 - Produces (used by Tasks 3, 4, 6): `sha256Hex(bytes: Uint8Array): string`; `buildGeneratedAsset(requirement: AssetRequirement, provider: AssetProvider, input: { seed: number; style: StyleParams; specVersion: number }): Promise<GeneratedAsset>`. `generateGameAssets` behavior unchanged.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/asset-providers/tests/generate.test.ts` (match its existing imports; add `buildGeneratedAsset` to the `../src/generate` import, new imports for `sha256Hex` from `../src/hash` and `deriveStyleParams` from `../src/styleParams`, and the `AssetProvider` type from `@automata/contracts`):
 
@@ -172,12 +172,12 @@ describe('buildGeneratedAsset pinned-hash recompute', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/asset-providers/tests/generate.test.ts`
 Expected: FAIL — `sha256Hex` / `buildGeneratedAsset` not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/asset-providers/src/hash.ts`:
 
@@ -281,12 +281,12 @@ export async function generateGameAssets(
 
 Add to `packages/asset-providers/src/index.ts`: `export * from './hash'`
 
-- [ ] **Step 4: Run the full package suite — the regression pin**
+- [x] **Step 4: Run the full package suite — the regression pin**
 
 Run: `npx vitest run packages/asset-providers && npx vitest run packages/game-compose`
 Expected: PASS with **zero snapshot updates** — `generateGameAssets` output is byte-identical to before the refactor. If a snapshot changes, the refactor altered behavior; fix the code, never the snapshot.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/asset-providers

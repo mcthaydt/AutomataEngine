@@ -1,8 +1,9 @@
-import type { AssetManifestEntry, AssetRequirement } from '@automata/contracts'
+import type { AssetManifestEntry, AssetProvider, AssetRequirement, StyleParams } from '@automata/contracts'
 import { hashStringToSeed } from '@automata/engine'
 import { resolveProvider } from './registry'
 import { deriveStyleParams } from './styleParams'
 import { optimizeAssetBytes } from './optimize'
+import { sha256Hex } from './hash'
 
 export interface GenerateAssetsInput {
   requirements: readonly AssetRequirement[]
@@ -15,6 +16,49 @@ export interface GeneratedAsset {
   entry: AssetManifestEntry
   path: string
   bytes: Uint8Array
+}
+
+export interface BuildAssetInput {
+  seed: number
+  style: StyleParams
+  specVersion: number
+}
+
+/**
+ * One requirement through one provider: generate, optimize, build the entry.
+ * Pinned contentHash always covers the FINAL written bytes — optimization can
+ * rewrite provider output, so a provider-computed hash is recomputed here.
+ */
+export async function buildGeneratedAsset(
+  requirement: AssetRequirement,
+  provider: AssetProvider,
+  input: BuildAssetInput
+): Promise<GeneratedAsset> {
+  const { bytes, provenance } = await provider.generate(requirement, {
+    seed: input.seed,
+    style: input.style,
+    specVersion: input.specVersion
+  })
+  const optimized = optimizeAssetBytes(requirement.kind, bytes)
+  const finalBytes = optimized?.bytes ?? bytes
+  const transformations = optimized ? [optimized.transformation] : []
+  const finalProvenance = provenance.determinism.kind === 'pinned'
+    ? { ...provenance, determinism: { kind: 'pinned' as const, contentHash: sha256Hex(finalBytes) } }
+    : provenance
+  const path = `assets/${requirement.id}.${provider.fileExtension(requirement)}`
+  return {
+    path,
+    bytes: finalBytes,
+    entry: {
+      id: requirement.id,
+      requirement,
+      path,
+      provenance: finalProvenance,
+      transformations,
+      status: 'generated',
+      references: []
+    }
+  }
 }
 
 /**
@@ -30,28 +74,11 @@ export async function generateGameAssets(
   for (const requirement of input.requirements) {
     const provider = resolveProvider(requirement.kind)
     const childSeed = hashStringToSeed(`${input.seed}:${requirement.id}`)
-    const { bytes, provenance } = await provider.generate(requirement, {
+    generated.push(await buildGeneratedAsset(requirement, provider, {
       seed: childSeed,
       style,
       specVersion: input.specVersion
-    })
-    const optimized = optimizeAssetBytes(requirement.kind, bytes)
-    const finalBytes = optimized?.bytes ?? bytes
-    const transformations = optimized ? [optimized.transformation] : []
-    const path = `assets/${requirement.id}.${provider.fileExtension(requirement)}`
-    generated.push({
-      path,
-      bytes: finalBytes,
-      entry: {
-        id: requirement.id,
-        requirement,
-        path,
-        provenance,
-        transformations,
-        status: 'generated',
-        references: []
-      }
-    })
+    }))
   }
   return generated
 }

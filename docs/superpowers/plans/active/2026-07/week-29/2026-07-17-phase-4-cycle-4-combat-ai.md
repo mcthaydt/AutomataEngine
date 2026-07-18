@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 9% (5/54 task steps complete)
+**Implementation progress:** 20% (11/54 task steps complete)
 
 ## Global Constraints
 
@@ -104,7 +104,7 @@ git commit -m "feat(contracts): real combat-ai capability config schema"
 **Interfaces:**
 - Produces (used by every later task): constants `COMBAT_SLICE_ID = 'combat'`, `INVENTORY_SLICE_ID = 'inventory'`, `ENEMY_DEFEATED_EVENT = 'enemyDefeated'`, `PLAYER_DEFEATED_EVENT = 'playerDefeated'`; types `CombatPackConfig`, `EnemyDef`, `PlayerCombatConfig`, `CombatSliceValue`; schema `packConfigSchema`.
 
-- [ ] **Step 1: Scaffold the package**
+- [x] **Step 1: Scaffold the package**
 
 `packages/pack-combat-ai/package.json`:
 
@@ -152,7 +152,7 @@ export * from './config'
 
 Then run `npm install` at the repo root so the workspace links.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/pack-combat-ai/tests/config.test.ts`:
 
@@ -204,12 +204,12 @@ describe('combat pack config schema', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/config.test.ts`
 Expected: FAIL — `../src/config` does not exist.
 
-- [ ] **Step 4: Implement `src/config.ts`**
+- [x] **Step 4: Implement `src/config.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -282,12 +282,12 @@ export const packConfigSchema: z.ZodType<CombatPackConfig> = baseConfigSchema.su
 })
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/config.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/pack-combat-ai package-lock.json
