@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 87% (47/54 task steps complete)
+**Implementation progress:** 100% (54/54 task steps complete)
 
 ## Global Constraints
 
@@ -1712,7 +1712,7 @@ git commit -m "feat(pack-registry): register combat-ai; matrix pair + solo and 4
 - Consumes: `combatAiPack`, `composeCombatSection` from `@automata/pack-combat-ai`; existing `packConfig` (inventory section), `dialogueConfig`, and the schedules config inside `composeGame`.
 - Produces: `composeGame` supports specs selecting `combat-ai` (ordered last, after schedules); unsupported-capability message now names cycle 4.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `packages/game-compose/tests/compose.test.ts`:
 
@@ -1757,12 +1757,12 @@ In `packages/game-compose/tests/compose.test.ts`:
 
 (Adjust the `cast` construction to the actual `specWithCapabilities` helper shape in the file — read it first; character objects need every field its schema requires. If the fixture cast already contains an antagonist, filter antagonists out of the cast in the zero-enemies test instead of relying on the default.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/game-compose/tests/compose.test.ts`
 Expected: FAIL — `combat-ai` is rejected as unsupported.
 
-- [ ] **Step 3: Extend `composeGame`**
+- [x] **Step 3: Extend `composeGame`**
 
 In `packages/game-compose/package.json` dependencies add `"@automata/pack-combat-ai": "*",` then `npm install`.
 
@@ -1795,12 +1795,12 @@ In `packages/game-compose/src/compose.ts`:
   }
 ```
 
-- [ ] **Step 4: Run the game-compose suite (snapshots prove first-light frozen)**
+- [x] **Step 4: Run the game-compose suite (snapshots prove first-light frozen)**
 
 Run: `npx vitest run packages/game-compose`
 Expected: PASS with **no snapshot changes** — specs that do not select combat must compose bit-identically (the combat block draws from `rng` only when `wantsCombat`).
 
-- [ ] **Step 5: Full gates**
+- [x] **Step 5: Full gates**
 
 Run: `npm run ci`
 Expected: lint, typecheck, and all workspace tests PASS.
@@ -1811,7 +1811,7 @@ Expected: PASS (script completes without error).
 Run: `git status --porcelain games/first-light`
 Expected: empty output (first-light untouched).
 
-- [ ] **Step 6: Update the roadmap**
+- [x] **Step 6: Update the roadmap**
 
 In `docs/ROADMAP.md` Phase 4 cycles list, replace cycle 4's entry (currently a multi-line `Next` item carrying spec + plan links) with a `Shipped` line keeping the plan link, and set cycle 5 to `Next`:
 
@@ -1830,7 +1830,7 @@ Also update the Phase 4 row's status cell in the phase-map table in
 with `7 (one per pack); 4 of 7 completed (<ship date>)` — a prior commit
 (`f69c9b5`) established that this table is kept in sync with cycle status.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/game-compose package-lock.json docs/ROADMAP.md \
