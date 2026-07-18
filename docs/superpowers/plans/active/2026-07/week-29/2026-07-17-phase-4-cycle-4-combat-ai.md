@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, zod (via `@automata/project` re-export), vitest (happy-dom), seeded RNG from `@automata/engine`.
 
-**Implementation progress:** 30% (16/54 task steps complete)
+**Implementation progress:** 39% (21/54 task steps complete)
 
 ## Global Constraints
 
@@ -424,7 +424,7 @@ git commit -m "feat(pack-combat-ai): healthCore with second-wind recovery"
 - Consumes: `EnemyDef` from Task 2.
 - Produces: `EnemyMode = 'idle' | 'chase' | 'return'`; `EnemyAiState { position: { x, z }; mode: EnemyMode }`; `createEnemyAi(enemy: EnemyDef): EnemyAiState`; `stepEnemyAi(state, enemy, player, dt): EnemyAiState`; `stepToward(position, target, speed, dt)`. Used by Task 5. Callers must not step defeated enemies.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/pack-combat-ai/tests/enemyAiCore.test.ts`:
 
@@ -490,12 +490,12 @@ describe('enemyAiCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/enemyAiCore.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `src/enemyAiCore.ts`**
+- [x] **Step 3: Implement `src/enemyAiCore.ts`**
 
 ```ts
 import type { EnemyDef } from './config'
@@ -550,12 +550,12 @@ export function stepEnemyAi(
 
 Add to `src/index.ts`: `export * from './enemyAiCore'`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run packages/pack-combat-ai/tests/enemyAiCore.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/pack-combat-ai
