@@ -1,0 +1,12 @@
+{
+  "name": "@automata/asset-providers-ai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "@automata/asset-providers": "*",
+    "@automata/contracts": "*"
+  }
+}

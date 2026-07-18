@@ -9,7 +9,7 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 38% (15/40 task and verification steps complete)
+**Implementation progress:** 53% (21/40 task and verification steps complete)
 
 ## Global Constraints
 
@@ -402,7 +402,7 @@ git commit -m "feat(asset-providers): verify pinned contentHash in media validat
 - Consumes: `AssetProvider`, `AssetRequirement`, `ProviderContext` from `@automata/contracts`; `sha256Hex`, `svgPaletteColors` from `@automata/asset-providers`.
 - Produces (used by Tasks 5, 6): `createClaudeSvgProvider(options?: { client?: MessagesClient; model?: string }): AssetProvider` (id `'claude-svg'`); `MessagesClient` interface; `AiProviderError` with `code: 'ai-auth-missing' | 'ai-refusal' | 'ai-malformed-output'`; `buildSvgPrompt`; `extractSvg`; `CLAUDE_SVG_MAX_BYTES = 65_536`.
 
-- [ ] **Step 1: Scaffold the package**
+- [x] **Step 1: Scaffold the package**
 
 `packages/asset-providers-ai/package.json`:
 
@@ -451,7 +451,7 @@ export * from './claudeSvgProvider'
 
 Then run `npm install` at the repo root (links the workspace and fetches the SDK).
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/asset-providers-ai/tests/claudeSvgProvider.test.ts`:
 
@@ -552,12 +552,12 @@ describe('createClaudeSvgProvider', () => {
 })
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `npx vitest run packages/asset-providers-ai`
 Expected: FAIL — `../src/claudeSvgProvider` does not exist.
 
-- [ ] **Step 4: Implement `src/claudeSvgProvider.ts`**
+- [x] **Step 4: Implement `src/claudeSvgProvider.ts`**
 
 ```ts
 import Anthropic from '@anthropic-ai/sdk'
@@ -693,12 +693,12 @@ export function createClaudeSvgProvider(
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run packages/asset-providers-ai`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/asset-providers-ai package-lock.json
