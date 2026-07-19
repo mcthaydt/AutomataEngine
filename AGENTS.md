@@ -5,6 +5,7 @@ root unless a task explicitly says otherwise.
 
 ## Ground Rules
 
+- Do not use git worktrees
 - Keep the engine boundary intact: `games/*` and `tools/*` import engine APIs
   from `@automata/engine`; third-party engine dependencies stay wrapped behind
   `packages/engine` ports/adapters.
