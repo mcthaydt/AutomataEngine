@@ -1,11 +1,13 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import * as fs from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { sha256Hex, svgPaletteColors } from '@automata/asset-providers'
 import { createSessionEngine, type SessionEngine } from '@automata/build-session'
 import { gameSpecSchema, minimalGameSpecDraft, type AssetProvider } from '@automata/contracts'
 import { createAssetToolRunner } from '../src/assetTools'
+import { writeComposedFiles, type ComposedFile, type ComposedWriterFs } from '../src/composedWriter'
 
 const V2_MANIFEST = {
   formatVersion: 2,
@@ -35,7 +37,13 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-async function setup(manifest: unknown | null, namedProviders?: Record<string, AssetProvider>) {
+type AssetWriter = (root: string, files: readonly ComposedFile[]) => Promise<void>
+
+async function setup(
+  manifest: unknown | null,
+  namedProviders?: Record<string, AssetProvider>,
+  writeFiles?: AssetWriter
+) {
   const repoRoot = await mkdtemp(join(tmpdir(), 'asset-tools-'))
   roots.push(repoRoot)
   const gameDir = join(repoRoot, 'games', 'demo-game', 'public')
@@ -57,7 +65,8 @@ async function setup(manifest: unknown | null, namedProviders?: Record<string, A
     repoRoot,
     ensureEngine: async () => engine,
     snapshotContent: async () => ({ hash: await readFile(manifestPath, 'utf8') }),
-    namedProviders
+    namedProviders,
+    writeFiles
   })
   return { runner, engine, manifestPath, repoRoot }
 }
@@ -65,8 +74,8 @@ async function setup(manifest: unknown | null, namedProviders?: Record<string, A
 async function setupWithSpec(assets: unknown[] = [
   { id: 'relic-icon', kind: 'ui', description: 'Icon.' },
   { id: 'pickup-blip', kind: 'audio', description: 'Blip.' }
-], namedProviders?: Record<string, AssetProvider>) {
-  const context = await setup(null, namedProviders)
+], namedProviders?: Record<string, AssetProvider>, writeFiles?: AssetWriter) {
+  const context = await setup(null, namedProviders, writeFiles)
   const spec = gameSpecSchema.parse({
     specVersion: 1,
     provenance: {
@@ -514,6 +523,68 @@ describe('provider override', () => {
     expect(calls).toBe(0)
     expect(await readFile(assetPath, 'utf8')).toBe('original-bytes')
     expect(await readFile(manifestPath, 'utf8')).toBe('not-json')
+  })
+
+  it('stages assets before the manifest and rolls every file back on commit failure', async () => {
+    const context = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    await context.runner.execute('generateAssets', {
+      gameId: 'demo-game', seed: 7, provider: 'ai-fake'
+    })
+    const assetPath = join(context.repoRoot, 'games', 'demo-game', 'public', 'assets', 'relic-icon.svg')
+    const originalAsset = await readFile(assetPath)
+    const originalManifest = await readFile(context.manifestPath)
+    let renames = 0
+    let paths: string[] = []
+    const injected: ComposedWriterFs = {
+      ...fs,
+      async rename(from, to) {
+        renames += 1
+        if (renames === 4) throw new Error('injected asset commit failure')
+        await fs.rename(from, to)
+      }
+    }
+    const writeFiles: AssetWriter = async (root, files) => {
+      paths = files.map((file) => file.path)
+      await writeComposedFiles(root, files, injected)
+    }
+    const runner = createAssetToolRunner({
+      repoRoot: context.repoRoot,
+      ensureEngine: async () => context.engine,
+      snapshotContent: async () => ({ hash: await readFile(context.manifestPath, 'utf8') }),
+      namedProviders: { 'ai-fake': fakeAiProvider },
+      writeFiles
+    })
+
+    await expect(runner.execute('generateAssets', {
+      gameId: 'demo-game', seed: 8, provider: 'ai-fake'
+    })).rejects.toThrow('injected asset commit failure')
+    expect(paths.at(-1)).toBe('public/assets/assets.json')
+    expect(await readFile(assetPath)).toEqual(originalAsset)
+    expect(await readFile(context.manifestPath)).toEqual(originalManifest)
+    expect((await readdir(dirname(assetPath))).filter((name) => name.includes('.tmp-') || name.includes('.bak-'))).toEqual([])
+  })
+
+  it('serializes concurrent same-game generation so disjoint manifest entries are retained', async () => {
+    const assets = [
+      { id: 'icon-a', kind: 'ui', description: 'A.' },
+      { id: 'icon-b', kind: 'ui', description: 'B.' }
+    ]
+    const yieldingProvider: AssetProvider = {
+      ...fakeAiProvider,
+      async generate(requirement, ctx) {
+        await Promise.resolve()
+        return fakeAiProvider.generate(requirement, ctx)
+      }
+    }
+    const { runner, manifestPath } = await setupWithSpec(assets, { 'ai-fake': yieldingProvider })
+
+    await Promise.all([
+      runner.execute('generateAssets', { gameId: 'demo-game', assetIds: ['icon-a'], seed: 7, provider: 'ai-fake' }),
+      runner.execute('generateAssets', { gameId: 'demo-game', assetIds: ['icon-b'], seed: 7, provider: 'ai-fake' })
+    ])
+
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    expect(manifest.assets.map((entry: { id: string }) => entry.id).sort()).toEqual(['icon-a', 'icon-b'])
   })
 
   it('validateAssets flips a matching pinned entry to validated and a tampered one to failed', async () => {

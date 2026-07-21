@@ -9,9 +9,9 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 77% (51/66 task and verification steps complete)
+**Implementation progress:** 85% (56/66 task and verification steps complete)
 
-**Review-hardening progress:** 40% (10/25 steps complete)
+**Review-hardening progress:** 60% (15/25 steps complete)
 
 ## Global Constraints
 
@@ -1156,13 +1156,13 @@ error, and concurrency regressions below are green.
 - Serialize `generateAssets`, `regenerateAsset`, and `validateAssets` per game and
   acquire the durable session engine before mutation.
 
-- [ ] **Step 1:** Add regressions for rollback/temporary-file cleanup, manifest-last
+- [x] **Step 1:** Add regressions for rollback/temporary-file cleanup, manifest-last
   ordering, and concurrent disjoint generation retaining both entries.
-- [ ] **Step 2:** Run the focused asset-tool tests; verify the new persistence and concurrency cases fail.
-- [ ] **Step 3:** Route both generation paths through staged transactional writes and
+- [x] **Step 2:** Run the focused asset-tool tests; verify the new persistence and concurrency cases fail.
+- [x] **Step 3:** Route both generation paths through staged transactional writes and
   add a per-game mutation queue that continues after failed operations.
-- [ ] **Step 4:** Re-run `npx vitest run tools/editor-mcp-server`; verify green with no staging debris.
-- [ ] **Step 5:** Commit atomic persistence and serialization.
+- [x] **Step 4:** Re-run `npx vitest run tools/editor-mcp-server`; verify green with no staging debris.
+- [x] **Step 5:** Commit atomic persistence and serialization.
 
 ### Task 11: Provider fingerprint, typed errors, and replay descriptions
 

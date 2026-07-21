@@ -1,5 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { buildGeneratedAsset, deriveStyleParams, generateGameAssets, hashStringToSeed, validateAssetMedia } from '@automata/asset-providers'
 import { hashJson, type SessionEngine } from '@automata/build-session'
 import {
@@ -18,6 +18,7 @@ import {
   type GameSpec,
   type ToolResult
 } from '@automata/contracts'
+import { writeComposedFiles, type ComposedFile } from './composedWriter'
 
 export interface AssetToolDeps {
   repoRoot: string
@@ -25,6 +26,8 @@ export interface AssetToolDeps {
   snapshotContent(gameId: string): Promise<{ hash: string }>
   /** Non-default providers addressable via the tools' optional `provider` arg. */
   namedProviders?: Record<string, AssetProvider>
+  /** Transactional game-file writer; injectable for persistence failure tests. */
+  writeFiles?: (root: string, files: readonly ComposedFile[]) => Promise<void>
 }
 
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
@@ -143,8 +146,20 @@ async function generateWithNamedProvider(
 }
 
 export function createAssetToolRunner(deps: AssetToolDeps) {
-  return {
-    async execute(name: string, raw: unknown): Promise<ToolResult> {
+  const writeFiles = deps.writeFiles ?? writeComposedFiles
+  const mutationTails = new Map<string, Promise<unknown>>()
+  const serializeMutation = async <T>(gameId: string, task: () => Promise<T>): Promise<T> => {
+    const previous = mutationTails.get(gameId) ?? Promise.resolve()
+    const current = previous.catch(() => undefined).then(task)
+    mutationTails.set(gameId, current)
+    try {
+      return await current
+    } finally {
+      if (mutationTails.get(gameId) === current) mutationTails.delete(gameId)
+    }
+  }
+
+  const executeUnlocked = async (name: string, raw: unknown): Promise<ToolResult> => {
       if (name === 'regenerateAsset') {
         const args = parseAssetToolArgs(name, raw) as { gameId: string; assetId: string; seed?: number; provider?: string }
         const spec = await readGameSpec(deps.repoRoot, args.gameId)
@@ -180,14 +195,13 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           }
         )
         const output = guarded.output as { path: string; entry: AssetManifestEntry; bytesBase64: string }
-        const publicDir = join(deps.repoRoot, 'games', args.gameId, 'public')
-        await mkdir(dirname(join(publicDir, output.path)), { recursive: true })
-        await writeFile(join(publicDir, output.path), Buffer.from(output.bytesBase64, 'base64'))
         const previous = existing.assets.find((entry) => entry.id === args.assetId)
         const entry = { ...output.entry, references: previous?.references ?? output.entry.references }
         const manifest = mergeManifest(existingText, [entry])
-        await mkdir(join(publicDir, 'assets'), { recursive: true })
-        await writeFile(join(publicDir, 'assets', 'assets.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+        await writeFiles(join(deps.repoRoot, 'games', args.gameId), [
+          { path: `public/${output.path}`, base64: output.bytesBase64 },
+          { path: 'public/assets/assets.json', text: `${JSON.stringify(manifest, null, 2)}\n` }
+        ])
         return ok({ id: entry.id, path: output.path, seed, status: entry.status, cached: guarded.cached })
       }
 
@@ -227,24 +241,21 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
               seed,
               specVersion: spec.specVersion
             })
-        const publicDir = join(deps.repoRoot, 'games', args.gameId, 'public')
-        for (const asset of generated) {
-          const filePath = join(publicDir, asset.path)
-          await mkdir(dirname(filePath), { recursive: true })
-          await writeFile(filePath, asset.bytes)
-        }
+        const uniqueGenerated = [...new Map(generated.map((asset) => [asset.entry.id, asset])).values()]
         const manifest = mergeManifest(
           existingText,
-          generated.map((asset) => asset.entry)
+          uniqueGenerated.map((asset) => asset.entry)
         )
-        await mkdir(join(publicDir, 'assets'), { recursive: true })
-        await writeFile(
-          join(publicDir, 'assets', 'assets.json'),
-          `${JSON.stringify(manifest, null, 2)}\n`
-        )
+        await writeFiles(join(deps.repoRoot, 'games', args.gameId), [
+          ...uniqueGenerated.map((asset) => ({
+            path: `public/${asset.path}`,
+            base64: Buffer.from(asset.bytes).toString('base64')
+          })),
+          { path: 'public/assets/assets.json', text: `${JSON.stringify(manifest, null, 2)}\n` }
+        ])
         return ok({
           seed,
-          assets: generated.map((asset) => ({
+          assets: uniqueGenerated.map((asset) => ({
             id: asset.entry.id,
             path: asset.path,
             provider: asset.entry.provenance.provider,
@@ -328,10 +339,9 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         assets: evaluated.map(({ entry }) => entry)
       })
       const statuses = Object.fromEntries(updatedManifest.assets.map((entry) => [entry.id, entry.status]))
-      await writeFile(
-        join(publicDir, 'assets', 'assets.json'),
-        `${JSON.stringify(updatedManifest, null, 2)}\n`
-      )
+      await writeFiles(join(deps.repoRoot, 'games', gameId), [
+        { path: 'public/assets/assets.json', text: `${JSON.stringify(updatedManifest, null, 2)}\n` }
+      ])
       const allIssues = [...issues, ...evaluated.flatMap(({ issues: entryIssues }) => entryIssues)]
       const errors = allIssues.filter((issue) => issue.severity === 'error')
       const passed = errors.length === 0 && updatedManifest.assets.every((entry) => entry.status === 'validated')
@@ -348,6 +358,17 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         statuses,
         errorCount: errors.length,
         warningCount: allIssues.length - errors.length
+      })
+  }
+
+  const MUTATING_TOOLS = new Set(['generateAssets', 'regenerateAsset', 'validateAssets'])
+  return {
+    async execute(name: string, raw: unknown): Promise<ToolResult> {
+      if (!MUTATING_TOOLS.has(name)) return executeUnlocked(name, raw)
+      const { gameId } = parseAssetToolArgs(name, raw) as { gameId: string }
+      return serializeMutation(gameId, async () => {
+        await deps.ensureEngine(gameId)
+        return executeUnlocked(name, raw)
       })
     }
   }

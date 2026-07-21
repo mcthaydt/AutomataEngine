@@ -10,12 +10,13 @@ import { discoverGames } from './projectCatalog'
 import { writeProjectFiles } from './projectWriter'
 import { createSpecToolRunner } from './specTools'
 import { createComposeToolRunner, type ComposeToolDeps } from './composeTools'
-import { createAssetToolRunner } from './assetTools'
+import { createAssetToolRunner, type AssetToolDeps } from './assetTools'
 
 export interface SessionHostOptions {
   repoRoot: string; fs?: ScaffoldFs; spawner?: CommandSpawner; sessionsRoot?: string
   projectDirFor?: (gameId: string) => string; openHeadless?: (projectDir: string) => Promise<HeadlessHost>
   now?: () => string; seedSource?: () => number; lock?: boolean; writeFiles?: ComposeToolDeps['writeFiles']
+  writeAssetFiles?: AssetToolDeps['writeFiles']
 }
 export interface SessionMcpHost extends McpToolHost { dispose(): Promise<void> }
 interface OpenState { gameId: string; projectDir: string; headless: HeadlessHost; engine: SessionEngine }
@@ -50,7 +51,8 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     repoRoot,
     ensureEngine,
     snapshotContent: contentSnapshot,
-    namedProviders: { 'claude-svg': createClaudeSvgProvider() }
+    namedProviders: { 'claude-svg': createClaudeSvgProvider() },
+    ...(options.writeAssetFiles ? { writeFiles: options.writeAssetFiles } : {})
   })
   const handleOpen = async (gameId: string): Promise<ToolResult> => {
     const available = await discoverGames(repoRoot); if (!available.includes(gameId)) return fail(`Unknown game "${gameId}". Available: ${available.join(', ')}`)
