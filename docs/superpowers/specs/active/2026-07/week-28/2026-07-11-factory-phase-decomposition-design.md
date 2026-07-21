@@ -88,7 +88,7 @@ design.
 | 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 completed (2026-07-13) |
 | 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 completed (2026-07-14) |
 | 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack); 4 of 7 completed (2026-07-18) |
-| 5 — Asset pipeline | Normalized, versioned asset manifest with providers, provenance, validation | — | Phase 3 (parallel with 4) | 4 cycles; Cycle 4 review hardening in progress (2026-07-20) |
+| 5 — Asset pipeline | Normalized, versioned asset manifest with providers, provenance, validation | — | Phase 3 (parallel with 4) | 4 cycles completed (2026-07-20) |
 | 6 — Content compiler | Generate full world/cast/quest/dialogue/economy/progression from `GameSpec` | — | Phases 4, 5 | 5 (per domain) |
 | 7 — Closed-loop repair | Wire existing evaluators into bounded repair jobs | — | Phases 2–6 evaluators | 2 |
 | 8 — Golden validation game | Generate the golden hub game from a fresh prompt, 3 clean runs | all 3 | Phases 1–7 | 1 (validation) |
@@ -335,10 +335,12 @@ implementation plan:
 - **Cross-cutting slice.**
   - *Evaluator:* **asset validation** (type, dimensions, budgets, provenance,
     visual-family consistency) wired into the release gate.
-  - *Determinism/runtime:* asset generation keyed by stable ID + recorded source
-    prompt/seed → independent, reproducible regeneration.
+  - *Determinism/runtime:* procedural generation keyed by stable ID + recorded
+    source prompt/seed supports reproducible regeneration; named-provider output
+    is preserved by content hash and cache identity.
 - **Sub-cycles it spawns.** (1) manifest + provenance model; (2) provider-adapter
-  interface + first adapters; (3) validation + optimization + regeneration.
+  interface + first adapters; (3) validation + optimization + regeneration;
+  (4) first pinned-output AI provider adapter.
 - **Contracts introduced.** The **asset manifest schema** and provider-adapter
   interface — consumed by Phase 6 content (references) and Phase 7 repair
   (regenerate-by-ID).
@@ -477,11 +479,12 @@ the current best decomposition, revised each cycle.
 6. Compact-hub navigation + one vehicle pack
 7. Save/load integration pack
 
-**Phase 5 (completed 2026-07-17; ran in parallel with Phase 4):**
+**Phase 5 (completed 2026-07-20; ran in parallel with Phase 4):**
 
 1. Asset manifest + provenance model — completed
 2. Provider-adapter interface + first adapters — completed
 3. Asset validation + optimization + independent regeneration — completed
+4. First AI provider adapter + review hardening — completed
 
 **Phase 6 (five domain peers):**
 

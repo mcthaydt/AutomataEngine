@@ -9,9 +9,9 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 91% (60/66 task and verification steps complete)
+**Implementation progress:** 100% (66/66 task and verification steps complete)
 
-**Review-hardening progress:** 76% (19/25 steps complete)
+**Review-hardening progress:** 100% (25/25 steps complete)
 
 ## Global Constraints
 
@@ -1190,7 +1190,7 @@ error, and concurrency regressions below are green.
 - [x] **Step 3:** Implement cache fingerprints, own-property provider lookup, typed
   provider errors, coded host error preservation, and accurate descriptions.
 - [x] **Step 4:** Re-run the affected package suites and verify green.
-- [ ] **Step 5:** Commit provider cache and error contracts.
+- [x] **Step 5:** Commit provider cache and error contracts.
 
 ### Task 12: Full gates and shipped-state restoration
 
@@ -1199,8 +1199,8 @@ error, and concurrency regressions below are green.
 - Modify: `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`
 - Modify: this plan
 
-- [ ] **Step 1:** Run `npx vitest run packages/contracts packages/asset-providers packages/asset-providers-ai tools/editor-mcp-server` and verify the live smoke is skipped without `ANTHROPIC_API_KEY`.
-- [ ] **Step 2:** Run `npm run ci`; verify lint, typecheck, and every offline workspace test pass.
-- [ ] **Step 3:** Run `npm run verify:new-game` and `git status --porcelain games/first-light`; verify scaffold acceptance passes and first-light is untouched.
-- [ ] **Step 4:** Restore Phase 5/Cycle 4 to `Shipped`, set review-hardening and overall progress to 100%, and check every appendix step.
-- [ ] **Step 5:** Commit the verified documentation closeout.
+- [x] **Step 1:** Run `npx vitest run packages/contracts packages/asset-providers packages/asset-providers-ai tools/editor-mcp-server` and verify the live smoke is skipped without `ANTHROPIC_API_KEY`.
+- [x] **Step 2:** Run `npm run ci`; verify lint, typecheck, and every offline workspace test pass.
+- [x] **Step 3:** Run `npm run verify:new-game` and `git status --porcelain games/first-light`; verify scaffold acceptance passes and first-light is untouched.
+- [x] **Step 4:** Restore Phase 5/Cycle 4 to `Shipped`, set review-hardening and overall progress to 100%, and check every appendix step.
+- [x] **Step 5:** Commit the verified documentation closeout.
