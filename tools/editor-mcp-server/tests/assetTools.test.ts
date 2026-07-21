@@ -479,14 +479,96 @@ describe('provider override', () => {
   it('rejects an unknown provider id, listing known providers', async () => {
     const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
     await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'nope' }))
-      .rejects.toThrow(/Unknown provider "nope".*ai-fake/)
+      .rejects.toMatchObject({
+        code: 'asset-provider-unknown',
+        message: expect.stringMatching(/Unknown provider "nope".*ai-fake/)
+      })
+  })
+
+  it('does not resolve prototype-looking provider ids through inherited properties', async () => {
+    const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
+    await expect(runner.execute('generateAssets', {
+      gameId: 'demo-game', seed: 7, provider: 'constructor'
+    })).rejects.toMatchObject({ code: 'asset-provider-unknown' })
   })
 
   it('rejects a provider that does not support a requirement kind', async () => {
     // Default spec assets include pickup-blip (audio); the fake provider is ui/texture only.
     const { runner } = await setupWithSpec(undefined, { 'ai-fake': fakeAiProvider })
     await expect(runner.execute('generateAssets', { gameId: 'demo-game', seed: 7, provider: 'ai-fake' }))
-      .rejects.toThrow(/does not support kind "audio"/)
+      .rejects.toMatchObject({
+        code: 'asset-provider-kind-unsupported',
+        message: expect.stringMatching(/does not support kind "audio"/)
+      })
+  })
+
+  it('invalidates regeneration cache when a provider cacheKey changes', async () => {
+    let firstCalls = 0
+    let secondCalls = 0
+    const firstProvider: AssetProvider = {
+      ...fakeAiProvider,
+      cacheKey: 'ai-fake@1.0.0:model=first',
+      async generate(requirement, ctx) {
+        firstCalls += 1
+        return fakeAiProvider.generate(requirement, ctx)
+      }
+    }
+    const context = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': firstProvider })
+    const first = await context.runner.execute('regenerateAsset', {
+      gameId: 'demo-game', assetId: 'relic-icon', seed: 7, provider: 'ai-fake'
+    })
+    const secondProvider: AssetProvider = {
+      ...fakeAiProvider,
+      cacheKey: 'ai-fake@1.0.0:model=second',
+      async generate(requirement, ctx) {
+        secondCalls += 1
+        return fakeAiProvider.generate(requirement, ctx)
+      }
+    }
+    const secondRunner = createAssetToolRunner({
+      repoRoot: context.repoRoot,
+      ensureEngine: async () => context.engine,
+      snapshotContent: async () => ({ hash: await readFile(context.manifestPath, 'utf8') }),
+      namedProviders: { 'ai-fake': secondProvider }
+    })
+    const second = await secondRunner.execute('regenerateAsset', {
+      gameId: 'demo-game', assetId: 'relic-icon', seed: 7, provider: 'ai-fake'
+    })
+
+    expect(first.content).toMatchObject({ cached: false })
+    expect(second.content).toMatchObject({ cached: false })
+    expect({ firstCalls, secondCalls }).toEqual({ firstCalls: 1, secondCalls: 1 })
+  })
+
+  it('falls back to provider id and version for regeneration cache identity', async () => {
+    let secondCalls = 0
+    const context = await setupWithSpec(UI_ONLY_ASSETS, {
+      'ai-fake': { ...fakeAiProvider, version: '1.0.0' }
+    })
+    await context.runner.execute('regenerateAsset', {
+      gameId: 'demo-game', assetId: 'relic-icon', seed: 7, provider: 'ai-fake'
+    })
+    const secondRunner = createAssetToolRunner({
+      repoRoot: context.repoRoot,
+      ensureEngine: async () => context.engine,
+      snapshotContent: async () => ({ hash: await readFile(context.manifestPath, 'utf8') }),
+      namedProviders: {
+        'ai-fake': {
+          ...fakeAiProvider,
+          version: '2.0.0',
+          async generate(requirement, ctx) {
+            secondCalls += 1
+            return fakeAiProvider.generate(requirement, ctx)
+          }
+        }
+      }
+    })
+    const second = await secondRunner.execute('regenerateAsset', {
+      gameId: 'demo-game', assetId: 'relic-icon', seed: 7, provider: 'ai-fake'
+    })
+
+    expect(second.content).toMatchObject({ cached: false })
+    expect(secondCalls).toBe(1)
   })
 
   it('preflights every requirement kind before calling the provider', async () => {

@@ -48,4 +48,15 @@ describe('generateAssets tool contract', () => {
     expect(() => assetToolArgSchemas.generateAssets.parse({ gameId: 'demo-game', provider: '' })).toThrow()
     expect(() => assetToolArgSchemas.regenerateAsset.parse({ gameId: 'demo-game', assetId: 'a', provider: 'x'.repeat(61) })).toThrow()
   })
+
+  it('describes procedural replay separately from named pinned generation', () => {
+    const definitions = Object.fromEntries(
+      assetToolDefs().map((definition) => [definition.name, definition.description])
+    )
+
+    expect(definitions.generateAssets).toMatch(/procedural[^.]*seeded[^.]*replay/i)
+    expect(definitions.generateAssets).toMatch(/named[^.]*pinned[^.]*network/i)
+    expect(definitions.regenerateAsset).toMatch(/procedural[^.]*seeded[^.]*replay/i)
+    expect(definitions.regenerateAsset).toMatch(/named[^.]*pinned[^.]*network/i)
+  })
 })

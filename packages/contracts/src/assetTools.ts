@@ -32,8 +32,8 @@ export const assetToolArgSchemas = {
 const DESCRIPTIONS: Record<AssetToolName, string> = {
   listAssets: 'List the asset manifest: id, kind, path, status, and full provenance per asset.',
   validateAssets: 'Run structural + media asset validation, flip generated to validated or failed statuses, persist findings, and record the check:assets gate step.',
-  generateAssets: 'Generate spec asset requirements through the procedural provider registry: writes files under public/, merges manifest entries (status "generated"). Idempotent for a given seed. Pass provider to route through a named non-default provider (e.g. the AI provider "claude-svg"; result is pinned by content hash and needs network + credentials).',
-  regenerateAsset: 'Re-run exactly one asset\'s provider behind its stable logical id (hash-guarded, seeded). Resets it to status "generated" with fresh provenance; other assets are untouched. Pass provider to route through a named non-default provider (e.g. "claude-svg"). Follow with validateAssets.'
+  generateAssets: 'Generate spec asset requirements and write files under public/, merging manifest entries with status "generated". Procedural generation is seeded for deterministic replay. Named providers produce pinned output and may require network access and credentials; their returned bytes are preserved by content hash.',
+  regenerateAsset: 'Re-run exactly one asset provider behind its stable logical id and reset it to status "generated" with fresh provenance; other assets are untouched. Procedural regeneration is seeded for deterministic replay. Named providers produce pinned output and may require network access and credentials. Follow with validateAssets.'
 }
 
 const NAMES = Object.keys(assetToolArgSchemas) as AssetToolName[]

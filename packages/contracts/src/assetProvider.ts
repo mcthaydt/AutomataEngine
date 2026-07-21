@@ -35,6 +35,8 @@ export interface GeneratedBytes {
 export interface AssetProvider {
   id: string
   version: string
+  /** Stable identity for output-affecting configuration used by guarded caches. */
+  cacheKey?: string
   kinds: readonly AssetKind[]
   fileExtension(requirement: AssetRequirement): string
   generate(requirement: AssetRequirement, ctx: ProviderContext): Promise<GeneratedBytes>

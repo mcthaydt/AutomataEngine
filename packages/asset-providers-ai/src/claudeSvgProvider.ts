@@ -87,6 +87,7 @@ export function createClaudeSvgProvider(
   return {
     id: 'claude-svg',
     version: '1.0.0',
+    cacheKey: `claude-svg@1.0.0:model=${model}`,
     kinds: ['ui', 'texture'],
     fileExtension: () => 'svg',
     async generate(requirement, ctx) {

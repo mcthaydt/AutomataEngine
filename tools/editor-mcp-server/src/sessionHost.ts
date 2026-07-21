@@ -22,7 +22,15 @@ export interface SessionMcpHost extends McpToolHost { dispose(): Promise<void> }
 interface OpenState { gameId: string; projectDir: string; headless: HeadlessHost; engine: SessionEngine }
 const WRITE_TOOLS = new Set<string>(writeToolNames)
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
-const fail = (content: string): ToolResult => ({ ok: false, isError: true, content })
+const fail = (content: unknown): ToolResult => ({ ok: false, isError: true, content })
+
+const toolErrorContent = (error: unknown): unknown => {
+  if (error instanceof Error) {
+    const code = (error as Error & { code?: unknown }).code
+    return typeof code === 'string' ? { code, message: error.message } : error.message
+  }
+  return String(error)
+}
 
 export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
   const repoRoot = options.repoRoot; const sessionsRoot = options.sessionsRoot ?? join(repoRoot, '.automata', 'sessions')
@@ -130,7 +138,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
         if (name === 'evaluate') return handleEvaluate(open, args)
         if (name === 'validate') { const result = await open.headless.host.executeTool('validate', {}); if (result.ok) { const errors = (result.content as Array<{ severity: string }>).filter((issue) => issue.severity === 'error'); if (errors.length) await open.engine.addFinding({ source: 'validate', severity: 'error', code: 'validation-errors', message: JSON.stringify(errors).slice(0, 4000), inputHash: open.engine.session.lastKnownContentHash ?? '' }); else await open.engine.autoResolve('validate') }; return result }
         return open.headless.host.executeTool(name as never, args)
-      } catch (error) { return fail(error instanceof Error ? error.message : String(error)) }
+      } catch (error) { return fail(toolErrorContent(error)) }
     },
     async executeCheckTool(name, args) { return executeCheckTool(name, args) },
     async readResource(uri) { if (!open) throw new Error(`No project open (requested ${uri})`); return open.headless.host.readResource(uri as never) },

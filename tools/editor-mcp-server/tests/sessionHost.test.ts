@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { ToolResult } from '@automata/contracts'
+import { gameSpecSchema, minimalGameSpecDraft, type ToolResult } from '@automata/contracts'
 import { createSessionHost } from '../src/sessionHost'
 import type { HeadlessHost } from '../src/headlessHost'
 
@@ -83,6 +83,40 @@ describe('sessionHost', () => {
 
     expect(result).toMatchObject({ ok: false, isError: true })
     expect(result.content).toMatch(/gamespec\.json/)
+    await host.dispose()
+  })
+
+  it('preserves coded provider errors in MCP tool results', async () => {
+    const root = await makeRepo()
+    const spec = gameSpecSchema.parse({
+      specVersion: 1,
+      provenance: {
+        prompt: 'probe prompt',
+        translations: [],
+        history: [{ version: 1, reason: 'initial draft' }]
+      },
+      ...minimalGameSpecDraft('probe'),
+      assets: [{ id: 'probe-icon', kind: 'ui', description: 'Probe icon.' }]
+    })
+    await writeFile(join(root, 'games/probe/gamespec.json'), JSON.stringify(spec))
+    const host = createSessionHost({
+      repoRoot: root,
+      sessionsRoot: join(root, '.automata/sessions'),
+      lock: false
+    })
+
+    const result = await host.executeTool('generateAssets', {
+      gameId: 'probe', seed: 7, provider: 'missing-provider'
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      isError: true,
+      content: {
+        code: 'asset-provider-unknown',
+        message: expect.stringMatching(/missing-provider/)
+      }
+    })
     await host.dispose()
   })
 })

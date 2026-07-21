@@ -59,8 +59,20 @@ describe('createClaudeSvgProvider', () => {
   it('declares the provider contract', () => {
     const provider = createClaudeSvgProvider({ client: clientReturning(GOOD_SVG) })
     expect(provider.id).toBe('claude-svg')
+    expect(provider.cacheKey).toBe('claude-svg@1.0.0:model=claude-opus-4-8')
     expect(provider.kinds).toEqual(['ui', 'texture'])
     expect(provider.fileExtension(requirement)).toBe('svg')
+  })
+
+  it('includes the configured model in its cache identity', () => {
+    const opus = createClaudeSvgProvider({ client: clientReturning(GOOD_SVG) })
+    const sonnet = createClaudeSvgProvider({
+      client: clientReturning(GOOD_SVG),
+      model: 'claude-sonnet-5'
+    })
+
+    expect(sonnet.cacheKey).toBe('claude-svg@1.0.0:model=claude-sonnet-5')
+    expect(sonnet.cacheKey).not.toBe(opus.cacheKey)
   })
 
   it('generates bytes with pinned provenance whose hash matches the bytes', async () => {

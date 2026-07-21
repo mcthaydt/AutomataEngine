@@ -33,6 +33,20 @@ export interface AssetToolDeps {
 const ok = (content: unknown): ToolResult => ({ ok: true, content })
 const issueKey = (issue: { code: string; message: string }): string => `${issue.code}\0${issue.message}`
 
+export type AssetProviderErrorCode =
+  | 'asset-provider-unknown'
+  | 'asset-provider-kind-unsupported'
+
+export class AssetProviderError extends Error {
+  readonly code: AssetProviderErrorCode
+
+  constructor(code: AssetProviderErrorCode, message: string) {
+    super(message)
+    this.name = 'AssetProviderError'
+    this.code = code
+  }
+}
+
 /** Keep the open finding set equal to the current validation result. */
 async function reconcileAssetFindings(engine: SessionEngine, errors: AssetIssue[], inputHash: string): Promise<void> {
   const open = engine.session.findings.filter((finding) => finding.source === 'asset' && finding.resolvedAt === undefined)
@@ -114,24 +128,41 @@ function mergeManifest(existingText: string | null, entries: AssetManifestEntry[
   })
 }
 
-/** Route requirements through a named injected provider (the AI path). */
-async function generateWithNamedProvider(
+function resolveNamedProvider(
   deps: AssetToolDeps,
-  spec: GameSpec,
   requirements: readonly GameSpec['assets'][number][],
-  seed: number,
   providerId: string
-) {
-  const provider = deps.namedProviders?.[providerId]
+): AssetProvider {
+  const providers = deps.namedProviders ?? {}
+  const provider = Object.hasOwn(providers, providerId) ? providers[providerId] : undefined
   if (!provider) {
-    const known = Object.keys(deps.namedProviders ?? {}).join(', ') || '(none)'
-    throw new Error(`Unknown provider "${providerId}"; known providers: ${known}`)
+    const known = Object.keys(providers).join(', ') || '(none)'
+    throw new AssetProviderError(
+      'asset-provider-unknown',
+      `Unknown provider "${providerId}"; known providers: ${known}`
+    )
   }
   for (const requirement of requirements) {
     if (!provider.kinds.includes(requirement.kind)) {
-      throw new Error(`Provider "${providerId}" does not support kind "${requirement.kind}" (supports: ${provider.kinds.join(', ')})`)
+      throw new AssetProviderError(
+        'asset-provider-kind-unsupported',
+        `Provider "${providerId}" does not support kind "${requirement.kind}" (supports: ${provider.kinds.join(', ')})`
+      )
     }
   }
+  return provider
+}
+
+const providerCacheKey = (provider: AssetProvider): string =>
+  provider.cacheKey ?? `${provider.id}@${provider.version}`
+
+/** Route requirements through a resolved named provider (the AI path). */
+async function generateWithNamedProvider(
+  spec: GameSpec,
+  requirements: readonly GameSpec['assets'][number][],
+  seed: number,
+  provider: AssetProvider
+) {
   const style = deriveStyleParams(spec.direction, seed)
   const generated = []
   for (const requirement of requirements) {
@@ -172,15 +203,23 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         if (seed === undefined) {
           throw new Error('No seed: pass an explicit seed or compose the game first (composition.json source.seed)')
         }
+        const namedProvider = args.provider
+          ? resolveNamedProvider(deps, [requirement], args.provider)
+          : null
         const engine = await deps.ensureEngine(args.gameId)
         const existingText = await readManifestText(deps.repoRoot, args.gameId)
         const existing = existingText ? parseAssetManifest(existingText) : { formatVersion: 2 as const, assets: [] }
         const guarded = await engine.runGuarded(
           'asset:regenerate',
-          { assetId: args.assetId, seed, specVersion: spec.specVersion, provider: args.provider ?? null },
+          {
+            assetId: args.assetId,
+            seed,
+            specVersion: spec.specVersion,
+            provider: namedProvider ? providerCacheKey(namedProvider) : null
+          },
           async () => {
-            const [generated] = args.provider
-              ? await generateWithNamedProvider(deps, spec, [requirement], seed, args.provider)
+            const [generated] = namedProvider
+              ? await generateWithNamedProvider(spec, [requirement], seed, namedProvider)
               : await generateGameAssets({
                   requirements: [requirement], direction: spec.direction, seed, specVersion: spec.specVersion
                 })
@@ -233,8 +272,11 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         }
         const existingText = await readManifestText(deps.repoRoot, args.gameId)
         if (existingText) parseAssetManifest(existingText)
-        const generated = args.provider
-          ? await generateWithNamedProvider(deps, spec, requirements, seed, args.provider)
+        const namedProvider = args.provider
+          ? resolveNamedProvider(deps, requirements, args.provider)
+          : null
+        const generated = namedProvider
+          ? await generateWithNamedProvider(spec, requirements, seed, namedProvider)
           : await generateGameAssets({
               requirements,
               direction: spec.direction,

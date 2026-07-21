@@ -9,9 +9,9 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 85% (56/66 task and verification steps complete)
+**Implementation progress:** 91% (60/66 task and verification steps complete)
 
-**Review-hardening progress:** 60% (15/25 steps complete)
+**Review-hardening progress:** 76% (19/25 steps complete)
 
 ## Global Constraints
 
@@ -1184,12 +1184,12 @@ error, and concurrency regressions below are green.
   `asset-provider-kind-unsupported`; session results preserve `{ code, message }`.
 - Descriptions explicitly separate seeded procedural replay from pinned named output.
 
-- [ ] **Step 1:** Add regressions for model/version cache invalidation, typed host
+- [x] **Step 1:** Add regressions for model/version cache invalidation, typed host
   content, prototype-looking provider ids, and corrected tool descriptions.
-- [ ] **Step 2:** Run the focused contracts, AI-provider, asset-tool, and session-host tests; verify red.
-- [ ] **Step 3:** Implement cache fingerprints, own-property provider lookup, typed
+- [x] **Step 2:** Run the focused contracts, AI-provider, asset-tool, and session-host tests; verify red.
+- [x] **Step 3:** Implement cache fingerprints, own-property provider lookup, typed
   provider errors, coded host error preservation, and accurate descriptions.
-- [ ] **Step 4:** Re-run the affected package suites and verify green.
+- [x] **Step 4:** Re-run the affected package suites and verify green.
 - [ ] **Step 5:** Commit provider cache and error contracts.
 
 ### Task 12: Full gates and shipped-state restoration
