@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { AssetProvider, AssetRequirement } from '@automata/contracts'
-import { sha256Hex, svgPaletteColors } from '@automata/asset-providers'
+import { sha256Hex, svgPaletteColors, validateSvgDocument } from '@automata/asset-providers'
 
 /**
  * The first AI provider adapter (Phase 5 cycle 4): Claude text→SVG behind the
@@ -90,7 +90,8 @@ export function createClaudeSvgProvider(
     kinds: ['ui', 'texture'],
     fileExtension: () => 'svg',
     async generate(requirement, ctx) {
-      const prompt = buildSvgPrompt(requirement, svgPaletteColors(ctx.style))
+      const allowedColors = svgPaletteColors(ctx.style)
+      const prompt = buildSvgPrompt(requirement, allowedColors)
       let response: Awaited<ReturnType<MessagesClient['messages']['create']>>
       try {
         response = await resolveClient().messages.create({
@@ -118,6 +119,10 @@ export function createClaudeSvgProvider(
       if (bytes.length > CLAUDE_SVG_MAX_BYTES) {
         throw new AiProviderError('ai-malformed-output',
           `generated SVG is ${bytes.length} bytes (max ${CLAUDE_SVG_MAX_BYTES})`)
+      }
+      const validationErrors = validateSvgDocument(svg, allowedColors)
+      if (validationErrors.length > 0) {
+        throw new AiProviderError('ai-malformed-output', `generated SVG is unsafe or invalid: ${validationErrors[0]}`)
       }
       return {
         bytes,

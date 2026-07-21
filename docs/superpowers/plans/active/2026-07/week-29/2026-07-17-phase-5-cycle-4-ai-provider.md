@@ -9,9 +9,9 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 62% (41/66 task and verification steps complete)
+**Implementation progress:** 70% (46/66 task and verification steps complete)
 
-**Review-hardening progress:** 0% (0/25 steps complete)
+**Review-hardening progress:** 20% (5/25 steps complete)
 
 ## Global Constraints
 
@@ -1111,12 +1111,12 @@ error, and concurrency regressions below are green.
 - Accept only the approved element/attribute subset, local fragment references,
   and `none`, literal palette colors, or local paint references.
 
-- [ ] **Step 1:** Add regressions for scripts, handlers, declarations, unknown markup,
+- [x] **Step 1:** Add regressions for scripts, handlers, declarations, unknown markup,
   external references, multiple roots, and single-quoted off-palette paint.
-- [ ] **Step 2:** Run `npx vitest run packages/asset-providers/tests/validateMedia.test.ts packages/asset-providers-ai/tests/claudeSvgProvider.test.ts`; verify the new cases fail for the unsafe behavior.
-- [ ] **Step 3:** Install `saxes`, implement/export `validateSvgDocument`, route disk validation through it, and map Claude-side failures to `ai-malformed-output` before bytes return.
-- [ ] **Step 4:** Re-run the two focused files and `npx vitest run packages/asset-providers packages/asset-providers-ai`; verify green with the live smoke skipped when no key is present.
-- [ ] **Step 5:** Commit the strict SVG boundary.
+- [x] **Step 2:** Run `npx vitest run packages/asset-providers/tests/validateMedia.test.ts packages/asset-providers-ai/tests/claudeSvgProvider.test.ts`; verify the new cases fail for the unsafe behavior.
+- [x] **Step 3:** Install `saxes`, implement/export `validateSvgDocument`, route disk validation through it, and map Claude-side failures to `ai-malformed-output` before bytes return.
+- [x] **Step 4:** Re-run the two focused files and `npx vitest run packages/asset-providers packages/asset-providers-ai`; verify green with the live smoke skipped when no key is present.
+- [x] **Step 5:** Commit the strict SVG boundary.
 
 ### Task 9: Integrity, style seed, preflight, and manifest merge
 

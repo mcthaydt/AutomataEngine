@@ -47,6 +47,30 @@ describe('validateAssetMedia', () => {
     expect(issues.some((issue) => issue.code === 'asset-media-invalid' && /palette/i.test(issue.message))).toBe(true)
   })
 
+  it.each([
+    ['script elements', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'],
+    ['event handler attributes', '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><rect fill="none"/></svg>'],
+    ['unknown elements', '<svg xmlns="http://www.w3.org/2000/svg"><image href="#local"/></svg>'],
+    ['unknown attributes', '<svg xmlns="http://www.w3.org/2000/svg"><rect data-probe="x" fill="none"/></svg>'],
+    ['external paint references', '<svg xmlns="http://www.w3.org/2000/svg"><rect fill="url(https://example.com/a.svg#p)"/></svg>'],
+    ['document declarations', '<!DOCTYPE svg><svg xmlns="http://www.w3.org/2000/svg"><rect fill="none"/></svg>'],
+    ['processing instructions', '<?probe unsafe?><svg xmlns="http://www.w3.org/2000/svg"><rect fill="none"/></svg>'],
+    ['multiple roots', '<svg xmlns="http://www.w3.org/2000/svg"></svg><svg xmlns="http://www.w3.org/2000/svg"></svg>']
+  ])('rejects unsafe SVG %s', async (_label, text) => {
+    const [svg] = await generated()
+    const issues = validateAssetMedia(svg!.entry, new TextEncoder().encode(text), style)
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'asset-media-invalid', severity: 'error' })
+    ]))
+  })
+
+  it('checks single-quoted paint against the palette', async () => {
+    const [svg] = await generated()
+    const text = '<svg xmlns="http://www.w3.org/2000/svg"><rect fill=\'#123456\'/></svg>'
+    const issues = validateAssetMedia(svg!.entry, new TextEncoder().encode(text), style)
+    expect(issues.some((issue) => issue.code === 'asset-media-invalid' && /palette/i.test(issue.message))).toBe(true)
+  })
+
   it('flags budget breaches as asset-media-budget', async () => {
     const [svg] = await generated()
     const padded = new Uint8Array(MEDIA_BUDGETS.svgMaxBytes + 1)

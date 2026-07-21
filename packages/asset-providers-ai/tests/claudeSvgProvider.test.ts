@@ -99,4 +99,13 @@ describe('createClaudeSvgProvider', () => {
     const provider = createClaudeSvgProvider({ client: clientReturning(huge) })
     await expect(provider.generate(requirement, ctx)).rejects.toMatchObject({ code: 'ai-malformed-output' })
   })
+
+  it.each([
+    ['script', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'],
+    ['event handler', '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><rect fill="none"/></svg>'],
+    ['external reference', '<svg xmlns="http://www.w3.org/2000/svg"><rect fill="url(https://example.com/p.svg#x)"/></svg>']
+  ])('rejects unsafe %s output before returning bytes', async (_label, text) => {
+    const provider = createClaudeSvgProvider({ client: clientReturning(text) })
+    await expect(provider.generate(requirement, ctx)).rejects.toMatchObject({ code: 'ai-malformed-output' })
+  })
 })

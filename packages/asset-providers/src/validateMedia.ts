@@ -2,6 +2,7 @@ import type { AssetIssue, AssetManifestEntry, StyleParams } from '@automata/cont
 import { sha256Hex } from './hash'
 import { propRecipeSchema, recipeToRenderables } from './propRecipe'
 import { svgPaletteColors } from './svgProvider'
+import { validateSvgDocument } from './validateSvg'
 
 /** Stable byte and playback limits for assets that can reach a release gate. */
 export const MEDIA_BUDGETS = {
@@ -67,23 +68,6 @@ const issueFor = (entry: AssetManifestEntry, code: AssetIssue['code'], message: 
   severity: 'error', code, assetId: entry.id, message
 })
 
-const SVG_COLOR_ATTR = /(?:fill|stroke)="([^"]+)"/g
-
-/** Minimal well-formedness check for the provider's element-only SVG subset. */
-function isWellFormedSvg(text: string): boolean {
-  const stack: string[] = []
-  for (const match of text.matchAll(/<\/?([A-Za-z][\w:.-]*)(?:\s[^<>]*)?\/?>/g)) {
-    const tag = match[0]!
-    const name = match[1]!
-    if (tag.startsWith('</')) {
-      if (stack.pop() !== name) return false
-    } else if (!tag.endsWith('/>')) {
-      stack.push(name)
-    }
-  }
-  return stack.length === 0
-}
-
 /**
  * Validate media bytes after structural manifest validation. The result is
  * deliberately pure: callers own persistence, status transitions, and gates.
@@ -111,16 +95,8 @@ export function validateAssetMedia(
       budget(`SVG "${entry.id}" is ${bytes.length} bytes (max ${MEDIA_BUDGETS.svgMaxBytes})`)
     }
     const text = new TextDecoder().decode(bytes)
-    if (!text.trimStart().startsWith('<svg') || !isWellFormedSvg(text)) {
-      invalid(`SVG "${entry.id}" does not parse as an <svg> document`)
-      return issues
-    }
-    const allowed = new Set(svgPaletteColors(style))
-    for (const match of text.matchAll(SVG_COLOR_ATTR)) {
-      const color = match[1]!
-      if (color !== 'none' && !color.startsWith('url(') && !allowed.has(color)) {
-        invalid(`SVG "${entry.id}" uses off-palette color "${color}"`)
-      }
+    for (const message of validateSvgDocument(text, svgPaletteColors(style))) {
+      invalid(`SVG "${entry.id}" invalid: ${message}`)
     }
     return issues
   }
