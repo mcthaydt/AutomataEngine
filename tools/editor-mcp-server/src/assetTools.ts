@@ -99,12 +99,15 @@ function mergeManifest(existingText: string | null, entries: AssetManifestEntry[
     ? parseAssetManifest(existingText)
     : { formatVersion: 2 as const, assets: [] }
   const generatedById = new Map(entries.map((entry) => [entry.id, entry]))
+  const retained = existing.assets.map((entry) => {
+    const replacement = generatedById.get(entry.id)
+    if (!replacement) return entry
+    generatedById.delete(entry.id)
+    return { ...replacement, references: entry.references }
+  })
   return assetManifestSchema.parse({
     formatVersion: 2,
-    assets: [
-      ...existing.assets.filter((entry) => !generatedById.has(entry.id)),
-      ...generatedById.values()
-    ]
+    assets: [...retained, ...generatedById.values()]
   })
 }
 
@@ -121,15 +124,18 @@ async function generateWithNamedProvider(
     const known = Object.keys(deps.namedProviders ?? {}).join(', ') || '(none)'
     throw new Error(`Unknown provider "${providerId}"; known providers: ${known}`)
   }
-  const style = deriveStyleParams(spec.direction, seed)
-  const generated = []
   for (const requirement of requirements) {
     if (!provider.kinds.includes(requirement.kind)) {
       throw new Error(`Provider "${providerId}" does not support kind "${requirement.kind}" (supports: ${provider.kinds.join(', ')})`)
     }
+  }
+  const style = deriveStyleParams(spec.direction, seed)
+  const generated = []
+  for (const requirement of requirements) {
     generated.push(await buildGeneratedAsset(requirement, provider, {
       seed: hashStringToSeed(`${seed}:${requirement.id}`),
       style,
+      styleSeed: seed,
       specVersion: spec.specVersion
     }))
   }
@@ -152,6 +158,8 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           throw new Error('No seed: pass an explicit seed or compose the game first (composition.json source.seed)')
         }
         const engine = await deps.ensureEngine(args.gameId)
+        const existingText = await readManifestText(deps.repoRoot, args.gameId)
+        const existing = existingText ? parseAssetManifest(existingText) : { formatVersion: 2 as const, assets: [] }
         const guarded = await engine.runGuarded(
           'asset:regenerate',
           { assetId: args.assetId, seed, specVersion: spec.specVersion, provider: args.provider ?? null },
@@ -175,8 +183,6 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         const publicDir = join(deps.repoRoot, 'games', args.gameId, 'public')
         await mkdir(dirname(join(publicDir, output.path)), { recursive: true })
         await writeFile(join(publicDir, output.path), Buffer.from(output.bytesBase64, 'base64'))
-        const existingText = await readManifestText(deps.repoRoot, args.gameId)
-        const existing = existingText ? parseAssetManifest(existingText) : { formatVersion: 2 as const, assets: [] }
         const previous = existing.assets.find((entry) => entry.id === args.assetId)
         const entry = { ...output.entry, references: previous?.references ?? output.entry.references }
         const manifest = mergeManifest(existingText, [entry])
@@ -211,6 +217,8 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
             'No seed: pass an explicit seed or compose the game first (composition.json source.seed)'
           )
         }
+        const existingText = await readManifestText(deps.repoRoot, args.gameId)
+        if (existingText) parseAssetManifest(existingText)
         const generated = args.provider
           ? await generateWithNamedProvider(deps, spec, requirements, seed, args.provider)
           : await generateGameAssets({
@@ -226,7 +234,7 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
           await writeFile(filePath, asset.bytes)
         }
         const manifest = mergeManifest(
-          await readManifestText(deps.repoRoot, args.gameId),
+          existingText,
           generated.map((asset) => asset.entry)
         )
         await mkdir(join(publicDir, 'assets'), { recursive: true })
@@ -293,7 +301,6 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
       const composition = await readComposition(deps.repoRoot, gameId)
       const issues = validateAssetManifest(manifest, composition)
       const spec = await readGameSpecOptional(deps.repoRoot, gameId)
-      const style = spec ? deriveStyleParams(spec.direction, composition?.source?.seed ?? 0) : null
       const publicDir = join(deps.repoRoot, 'games', gameId, 'public')
       const evaluated = await Promise.all(manifest.assets.map(async (entry) => {
         let bytes: Uint8Array | null = null
@@ -302,9 +309,14 @@ export function createAssetToolRunner(deps: AssetToolDeps) {
         } catch {
           bytes = null
         }
+        const recordedStyleSeed = entry.provenance.sourceParams.styleSeed
+        const styleSeed = typeof recordedStyleSeed === 'number' && Number.isFinite(recordedStyleSeed)
+          ? recordedStyleSeed
+          : composition?.source?.seed ?? (spec ? 0 : null)
+        const style = spec && styleSeed !== null ? deriveStyleParams(spec.direction, styleSeed) : null
         const entryIssues: AssetIssue[] = bytes === null
           ? [{ severity: 'error', code: 'asset-media-invalid', assetId: entry.id, message: `Asset file missing: ${entry.path}` }]
-          : style ? validateAssetMedia(entry, bytes, style) : []
+          : validateAssetMedia(entry, bytes, style)
         const status: AssetStatus = entryIssues.length > 0
           ? 'failed'
           : entry.status === 'generated' || entry.status === 'failed' ? 'validated'

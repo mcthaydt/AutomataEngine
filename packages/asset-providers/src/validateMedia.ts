@@ -75,7 +75,7 @@ const issueFor = (entry: AssetManifestEntry, code: AssetIssue['code'], message: 
 export function validateAssetMedia(
   entry: AssetManifestEntry,
   bytes: Uint8Array,
-  style: StyleParams
+  style: StyleParams | null
 ): AssetIssue[] {
   const issues: AssetIssue[] = []
   const invalid = (message: string): void => { issues.push(issueFor(entry, 'asset-media-invalid', message)) }
@@ -95,7 +95,7 @@ export function validateAssetMedia(
       budget(`SVG "${entry.id}" is ${bytes.length} bytes (max ${MEDIA_BUDGETS.svgMaxBytes})`)
     }
     const text = new TextDecoder().decode(bytes)
-    for (const message of validateSvgDocument(text, svgPaletteColors(style))) {
+    for (const message of validateSvgDocument(text, style ? svgPaletteColors(style) : undefined)) {
       invalid(`SVG "${entry.id}" invalid: ${message}`)
     }
     return issues

@@ -117,6 +117,16 @@ describe('buildGeneratedAsset pinned-hash recompute', () => {
     }
   })
 
+  it('records an optional root style seed without replacing provider source params', async () => {
+    const asset = await buildGeneratedAsset(requirement, pinnedProvider, {
+      seed: 7,
+      style,
+      styleSeed: 42,
+      specVersion: 1
+    })
+    expect(asset.entry.provenance.sourceParams).toEqual({ styleSeed: 42 })
+  })
+
   it('leaves seeded provenance untouched and keeps the entry shape', async () => {
     const asset = await buildGeneratedAsset(requirement, pinnedProvider, { seed: 7, style, specVersion: 1 })
     expect(asset.path).toBe('assets/pin-icon.svg')

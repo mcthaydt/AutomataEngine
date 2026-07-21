@@ -21,6 +21,7 @@ export interface GeneratedAsset {
 export interface BuildAssetInput {
   seed: number
   style: StyleParams
+  styleSeed?: number
   specVersion: number
 }
 
@@ -42,9 +43,12 @@ export async function buildGeneratedAsset(
   const optimized = optimizeAssetBytes(requirement.kind, bytes)
   const finalBytes = optimized?.bytes ?? bytes
   const transformations = optimized ? [optimized.transformation] : []
-  const finalProvenance = provenance.determinism.kind === 'pinned'
-    ? { ...provenance, determinism: { kind: 'pinned' as const, contentHash: sha256Hex(finalBytes) } }
-    : provenance
+  const attributedProvenance = input.styleSeed === undefined
+    ? provenance
+    : { ...provenance, sourceParams: { ...provenance.sourceParams, styleSeed: input.styleSeed } }
+  const finalProvenance = attributedProvenance.determinism.kind === 'pinned'
+    ? { ...attributedProvenance, determinism: { kind: 'pinned' as const, contentHash: sha256Hex(finalBytes) } }
+    : attributedProvenance
   const path = `assets/${requirement.id}.${provider.fileExtension(requirement)}`
   return {
     path,

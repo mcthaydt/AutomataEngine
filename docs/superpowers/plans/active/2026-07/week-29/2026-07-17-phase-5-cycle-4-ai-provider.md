@@ -9,9 +9,9 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 70% (46/66 task and verification steps complete)
+**Implementation progress:** 77% (51/66 task and verification steps complete)
 
-**Review-hardening progress:** 20% (5/25 steps complete)
+**Review-hardening progress:** 40% (10/25 steps complete)
 
 ## Global Constraints
 
@@ -1134,13 +1134,13 @@ error, and concurrency regressions below are green.
 - Parse existing manifests and preflight all selected kinds before provider work.
 - Replace entries in place while preserving their manifest-owned `references`.
 
-- [ ] **Step 1:** Add regressions for no-spec pinned tampering, explicit style seed,
+- [x] **Step 1:** Add regressions for no-spec pinned tampering, explicit style seed,
   retained references, zero calls on unsupported kinds, and zero calls/mutations for malformed manifests.
-- [ ] **Step 2:** Run the focused generate and asset-tool tests; verify each new regression fails for the observed reason.
-- [ ] **Step 3:** Implement optional `styleSeed`, unconditional integrity/media validation,
+- [x] **Step 2:** Run the focused generate and asset-tool tests; verify each new regression fails for the observed reason.
+- [x] **Step 3:** Implement optional `styleSeed`, unconditional integrity/media validation,
   preflight-before-generation, and stable reference-preserving manifest merge.
-- [ ] **Step 4:** Re-run `npx vitest run packages/asset-providers tools/editor-mcp-server/tests/assetTools.test.ts`; verify green and procedural golden hashes unchanged.
-- [ ] **Step 5:** Commit integrity and preflight hardening.
+- [x] **Step 4:** Re-run `npx vitest run packages/asset-providers tools/editor-mcp-server/tests/assetTools.test.ts`; verify green and procedural golden hashes unchanged.
+- [x] **Step 5:** Commit integrity and preflight hardening.
 
 ### Task 10: Atomic asset persistence and same-game serialization
 
