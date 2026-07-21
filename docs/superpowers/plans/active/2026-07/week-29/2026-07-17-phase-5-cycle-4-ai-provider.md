@@ -9,7 +9,9 @@
 
 **Tech Stack:** TypeScript ESM workspaces, `@anthropic-ai/sdk` (TypeScript SDK), zod, vitest (happy-dom), `node:crypto` sha256.
 
-**Implementation progress:** 100% (41/41 task and verification steps complete)
+**Implementation progress:** 62% (41/66 task and verification steps complete)
+
+**Review-hardening progress:** 0% (0/25 steps complete)
 
 ## Global Constraints
 
@@ -1082,3 +1084,123 @@ git commit -m "docs: Phase 5 cycle 4 shipped - first AI provider adapter"
 - [x] `git status --porcelain games/first-light` empty
 - [x] Asset-pipeline SDK boundary: `@automata/asset-providers-ai` owns SDK 0.110.x; procedural providers, compose, and MCP server have no direct SDK dependency (pre-existing `@automata/agent-core` 0.69.x unchanged)
 - [x] ROADMAP cycle 4 line + phase-map row updated
+
+---
+
+## Review-hardening appendix (2026-07-20)
+
+Approved remediation design:
+[`2026-07-18-phase-5-cycle-4-ai-provider-review-hardening-design.md`](../../../../specs/active/2026-07/week-29/2026-07-18-phase-5-cycle-4-ai-provider-review-hardening-design.md).
+This appendix reopens Cycle 4 until the security, integrity, persistence, cache,
+error, and concurrency regressions below are green.
+
+### Task 8: Strict shared SVG safety boundary
+
+**Files:**
+- Create: `packages/asset-providers/src/validateSvg.ts`
+- Modify: `packages/asset-providers/src/validateMedia.ts`
+- Modify: `packages/asset-providers/src/index.ts`
+- Modify: `packages/asset-providers/package.json`
+- Modify: `packages/asset-providers-ai/src/claudeSvgProvider.ts`
+- Test: `packages/asset-providers/tests/validateMedia.test.ts`
+- Test: `packages/asset-providers-ai/tests/claudeSvgProvider.test.ts`
+
+**Interfaces:**
+- Produce `validateSvgDocument(text: string, allowedColors?: readonly string[]): string[]`.
+- Use `saxes@^6.0.0` for XML well-formedness and event parsing.
+- Accept only the approved element/attribute subset, local fragment references,
+  and `none`, literal palette colors, or local paint references.
+
+- [ ] **Step 1:** Add regressions for scripts, handlers, declarations, unknown markup,
+  external references, multiple roots, and single-quoted off-palette paint.
+- [ ] **Step 2:** Run `npx vitest run packages/asset-providers/tests/validateMedia.test.ts packages/asset-providers-ai/tests/claudeSvgProvider.test.ts`; verify the new cases fail for the unsafe behavior.
+- [ ] **Step 3:** Install `saxes`, implement/export `validateSvgDocument`, route disk validation through it, and map Claude-side failures to `ai-malformed-output` before bytes return.
+- [ ] **Step 4:** Re-run the two focused files and `npx vitest run packages/asset-providers packages/asset-providers-ai`; verify green with the live smoke skipped when no key is present.
+- [ ] **Step 5:** Commit the strict SVG boundary.
+
+### Task 9: Integrity, style seed, preflight, and manifest merge
+
+**Files:**
+- Modify: `packages/asset-providers/src/generate.ts`
+- Modify: `tools/editor-mcp-server/src/assetTools.ts`
+- Test: `packages/asset-providers/tests/generate.test.ts`
+- Test: `tools/editor-mcp-server/tests/assetTools.test.ts`
+
+**Interfaces:**
+- Extend `BuildAssetInput` with `styleSeed?: number`; when supplied, merge it into
+  `provenance.sourceParams` without changing procedural output.
+- Always call `validateAssetMedia`; pass per-entry style reconstructed from
+  `sourceParams.styleSeed`, composition seed, or zero only when a spec exists.
+- Parse existing manifests and preflight all selected kinds before provider work.
+- Replace entries in place while preserving their manifest-owned `references`.
+
+- [ ] **Step 1:** Add regressions for no-spec pinned tampering, explicit style seed,
+  retained references, zero calls on unsupported kinds, and zero calls/mutations for malformed manifests.
+- [ ] **Step 2:** Run the focused generate and asset-tool tests; verify each new regression fails for the observed reason.
+- [ ] **Step 3:** Implement optional `styleSeed`, unconditional integrity/media validation,
+  preflight-before-generation, and stable reference-preserving manifest merge.
+- [ ] **Step 4:** Re-run `npx vitest run packages/asset-providers tools/editor-mcp-server/tests/assetTools.test.ts`; verify green and procedural golden hashes unchanged.
+- [ ] **Step 5:** Commit integrity and preflight hardening.
+
+### Task 10: Atomic asset persistence and same-game serialization
+
+**Files:**
+- Modify: `tools/editor-mcp-server/src/assetTools.ts`
+- Modify: `tools/editor-mcp-server/src/sessionHost.ts`
+- Test: `tools/editor-mcp-server/tests/assetTools.test.ts`
+
+**Interfaces:**
+- Add `AssetToolDeps.writeFiles?: typeof writeComposedFiles`; default to the existing
+  contained transactional writer.
+- Persist asset binaries first and `public/assets/assets.json` last in one staged operation.
+- Serialize `generateAssets`, `regenerateAsset`, and `validateAssets` per game and
+  acquire the durable session engine before mutation.
+
+- [ ] **Step 1:** Add regressions for rollback/temporary-file cleanup, manifest-last
+  ordering, and concurrent disjoint generation retaining both entries.
+- [ ] **Step 2:** Run the focused asset-tool tests; verify the new persistence and concurrency cases fail.
+- [ ] **Step 3:** Route both generation paths through staged transactional writes and
+  add a per-game mutation queue that continues after failed operations.
+- [ ] **Step 4:** Re-run `npx vitest run tools/editor-mcp-server`; verify green with no staging debris.
+- [ ] **Step 5:** Commit atomic persistence and serialization.
+
+### Task 11: Provider fingerprint, typed errors, and replay descriptions
+
+**Files:**
+- Modify: `packages/contracts/src/assetProvider.ts`
+- Modify: `packages/contracts/src/assetTools.ts`
+- Modify: `packages/contracts/tests/assetTools.test.ts`
+- Modify: `packages/asset-providers-ai/src/claudeSvgProvider.ts`
+- Modify: `packages/asset-providers-ai/tests/claudeSvgProvider.test.ts`
+- Modify: `tools/editor-mcp-server/src/assetTools.ts`
+- Modify: `tools/editor-mcp-server/src/sessionHost.ts`
+- Test: `tools/editor-mcp-server/tests/assetTools.test.ts`
+- Test: `tools/editor-mcp-server/tests/sessionHost.test.ts`
+
+**Interfaces:**
+- Add optional `AssetProvider.cacheKey`; Claude uses
+  `claude-svg@1.0.0:model=<model>`, other named providers fall back to `id@version`.
+- Provider-selection errors expose `asset-provider-unknown` and
+  `asset-provider-kind-unsupported`; session results preserve `{ code, message }`.
+- Descriptions explicitly separate seeded procedural replay from pinned named output.
+
+- [ ] **Step 1:** Add regressions for model/version cache invalidation, typed host
+  content, prototype-looking provider ids, and corrected tool descriptions.
+- [ ] **Step 2:** Run the focused contracts, AI-provider, asset-tool, and session-host tests; verify red.
+- [ ] **Step 3:** Implement cache fingerprints, own-property provider lookup, typed
+  provider errors, coded host error preservation, and accurate descriptions.
+- [ ] **Step 4:** Re-run the affected package suites and verify green.
+- [ ] **Step 5:** Commit provider cache and error contracts.
+
+### Task 12: Full gates and shipped-state restoration
+
+**Files:**
+- Modify: `docs/ROADMAP.md`
+- Modify: `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`
+- Modify: this plan
+
+- [ ] **Step 1:** Run `npx vitest run packages/contracts packages/asset-providers packages/asset-providers-ai tools/editor-mcp-server` and verify the live smoke is skipped without `ANTHROPIC_API_KEY`.
+- [ ] **Step 2:** Run `npm run ci`; verify lint, typecheck, and every offline workspace test pass.
+- [ ] **Step 3:** Run `npm run verify:new-game` and `git status --porcelain games/first-light`; verify scaffold acceptance passes and first-light is untouched.
+- [ ] **Step 4:** Restore Phase 5/Cycle 4 to `Shipped`, set review-hardening and overall progress to 100%, and check every appendix step.
+- [ ] **Step 5:** Commit the verified documentation closeout.
