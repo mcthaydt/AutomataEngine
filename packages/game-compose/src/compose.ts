@@ -78,27 +78,20 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
   // Preserve the frozen section RNG stream after replacing the former stub icon.
   for (const asset of spec.assets) if (asset.kind === 'ui') rng.next()
   const inventorySelection = spec.capabilities.find((entry) => entry.id === interactionInventoryPack.id)
-  if (!inventorySelection) {
-    return {
-      ok: false,
-      issues: [{
-        code: 'pack-missing-requirement',
-        message: `Pack "${dialogueQuestsPack.id}" requires missing pack "${interactionInventoryPack.id}"`
-      }]
-    }
-  }
-  const packConfig = composeInventorySection({
-    specConfig: inventorySelection.config as { requiredItems?: number; interactRadius?: number },
-    arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
-    iconPath
-  }, rng)
-  const packs: CompositionManifest['packs'] = [
-    {
+  let packConfig: ReturnType<typeof composeInventorySection> | undefined
+  const packs: CompositionManifest['packs'] = []
+  if (inventorySelection) {
+    packConfig = composeInventorySection({
+      specConfig: inventorySelection.config as { requiredItems?: number; interactRadius?: number },
+      arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
+      iconPath
+    }, rng)
+    packs.push({
       id: interactionInventoryPack.id,
       version: interactionInventoryPack.version,
       config: packConfig as unknown as Record<string, unknown>
-    }
-  ]
+    })
+  }
   let dialogueConfig: ReturnType<typeof composeDialogueSection> | undefined
   if (wantsDialogue) {
     const dialogueSelection = spec.capabilities.find((entry) => entry.id === dialogueQuestsPack.id)!
@@ -107,7 +100,7 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       quests: spec.story.quests,
       cast: spec.cast,
       arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
-      inventory: { items: packConfig.items }
+      inventory: { items: packConfig!.items }
     }, rng)
     packs.push({
       id: dialogueQuestsPack.id,
@@ -122,7 +115,7 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       specConfig: schedulesSelection.config as { slotSeconds?: number },
       cast: spec.cast,
       arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
-      inventory: { items: packConfig.items },
+      inventory: { items: packConfig!.items },
       dialogue: {
         npcs: dialogueConfig!.npcs,
         quests: dialogueConfig!.quests.map((quest) => ({ id: quest.id, kind: quest.kind, giverNpcId: quest.giverNpcId }))
@@ -140,7 +133,7 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       specConfig: combatSelection.config as { playerMaxHealth?: number },
       cast: spec.cast,
       arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
-      inventory: { items: packConfig.items },
+      inventory: packConfig ? { items: packConfig.items } : null,
       occupied: [
         ...(dialogueConfig?.npcs.map((npc) => npc.position) ?? []),
         ...(schedulesConfig?.walkers.flatMap((walker) => walker.stations) ?? [])
@@ -172,6 +165,10 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
   ]
   return {
     ok: true, composition, assetManifest, files,
-    summary: { packIds: composition.packs.map((entry) => entry.id), itemCount: packConfig.items.length, assetIds: assetManifest.assets.map((entry) => entry.id) }
+    summary: {
+      packIds: composition.packs.map((entry) => entry.id),
+      itemCount: packConfig?.items.length ?? 0,
+      assetIds: assetManifest.assets.map((entry) => entry.id)
+    }
   }
 }

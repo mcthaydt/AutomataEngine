@@ -242,6 +242,25 @@ describe('composeGame', () => {
     expect(combat.enemies.map((enemy) => enemy.name)).toContain('Raider')
   })
 
+  it('composes combat standalone without inventing an inventory pack or weapon', async () => {
+    const spec = specWithCapabilities([{ id: 'combat-ai', config: {}, requirements: [] }])
+    const withAntagonist = {
+      ...spec,
+      cast: [...spec.cast, {
+        id: 'c-raider', name: 'Raider', role: 'antagonist' as const,
+        description: 'A prowling raider.'
+      }]
+    }
+
+    const result = await composeGame({ spec: withAntagonist as GameSpec, seed: 11, specHash: 'h' })
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.composition.packs.map((entry) => entry.id)).toEqual(['combat-ai'])
+    expect(result.composition.packs[0]!.config).toMatchObject({ weapon: { itemId: null } })
+    expect(result.summary.itemCount).toBe(0)
+  })
+
   it('combat composes to zero enemies when the cast has no antagonists', async () => {
     const spec = specWithCapabilities([
       { id: 'interaction-inventory', config: {}, requirements: [] },

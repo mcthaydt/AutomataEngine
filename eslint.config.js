@@ -10,8 +10,7 @@ export default tseslint.config(
       'tools/**/*.ts',
       'packages/editor/**/*.ts',
       'packages/editor-agent/**/*.ts',
-      'packages/pack-interaction-inventory/**/*.ts',
-      'packages/pack-registry/**/*.ts',
+      'packages/pack-*/**/*.ts',
       'packages/game-compose/**/*.ts'
     ],
     rules: {
@@ -28,8 +27,7 @@ export default tseslint.config(
     // @automata/engine, and must not depend on any game or the editor.
     files: [
       'packages/game-kit/**/*.ts',
-      'packages/pack-interaction-inventory/**/*.ts',
-      'packages/pack-registry/**/*.ts',
+      'packages/pack-*/**/*.ts',
       'packages/game-compose/**/*.ts'
     ],
     rules: {

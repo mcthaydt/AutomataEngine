@@ -41,8 +41,7 @@ const distance = (a: { x: number; z: number }, b: { x: number; z: number }): num
 
 /**
  * Fixed step order (spec §3.4): enemy AI movement, player auto-attack, enemy
- * attacks, invulnerability drain. Nearest-target ties break by config order,
- * which is enemy id order as composed.
+ * attacks, invulnerability drain. Nearest-target ties break by enemy id.
  */
 export function stepCombat(
   state: CombatState, player: { x: number; z: number }, config: CombatPackConfig,
@@ -65,7 +64,11 @@ export function stepCombat(
       const entry = enemies[enemy.id]!
       if (entry.hp <= 0) continue
       const dist = distance(entry.ai.position, player)
-      if (dist <= config.player.attackRadius && dist < best) { best = dist; targetId = enemy.id }
+      const winsTie = dist === best && (targetId === null || enemy.id < targetId)
+      if (dist <= config.player.attackRadius && (dist < best || winsTie)) {
+        best = dist
+        targetId = enemy.id
+      }
     }
     if (targetId) {
       const entry = enemies[targetId]!
@@ -82,6 +85,7 @@ export function stepCombat(
     const entry = enemies[enemy.id]!
     if (entry.hp <= 0 || entry.cooldown > 0) continue
     if (distance(entry.ai.position, player) > enemy.attackRadius) continue
+    if (health.invulnSeconds > 0) continue
     const hit = applyPlayerDamage(health, enemy.attackDamage, config.player)
     health = hit.state
     playerDefeated = playerDefeated || hit.defeated
@@ -110,10 +114,10 @@ export function combatSliceValue(state: CombatState, config: CombatPackConfig): 
 }
 
 const savedStateSchema = z.strictObject({
-  player: z.strictObject({ hp: z.number().int().min(1).max(20) }),
+  player: z.strictObject({ hp: z.number().min(1).max(20) }),
   enemies: z.array(z.strictObject({
     id: z.string().min(1).max(60),
-    hp: z.number().int().min(0).max(30)
+    hp: z.number().min(0).max(30)
   })).max(12)
 })
 
@@ -134,14 +138,17 @@ export function deserializeCombatState(raw: unknown, config: CombatPackConfig): 
   if (parsed.player.hp > config.player.maxHealth) {
     throw new Error(`Saved combat state player hp ${parsed.player.hp} above maxHealth`)
   }
-  const byId = new Map(parsed.enemies.map((entry) => [entry.id, entry.hp]))
   const expected = new Map(config.enemies.map((enemy) => [enemy.id, enemy]))
+  const seen = new Set<string>()
   for (const entry of parsed.enemies) {
+    if (seen.has(entry.id)) throw new Error(`Saved combat state has duplicate enemy "${entry.id}"`)
+    seen.add(entry.id)
     if (!expected.has(entry.id)) throw new Error(`Saved combat state has unknown enemy "${entry.id}"`)
     if (entry.hp > expected.get(entry.id)!.maxHealth) {
       throw new Error(`Saved combat state enemy "${entry.id}" hp ${entry.hp} above maxHealth`)
     }
   }
+  const byId = new Map(parsed.enemies.map((entry) => [entry.id, entry.hp]))
   for (const enemy of config.enemies) {
     if (!byId.has(enemy.id)) throw new Error(`Saved combat state missing enemy "${enemy.id}"`)
   }

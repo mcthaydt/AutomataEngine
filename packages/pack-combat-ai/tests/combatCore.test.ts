@@ -53,6 +53,19 @@ describe('combatCore', () => {
     expect(second.state.enemies['enemy-1']!.hp).toBe(2)
   })
 
+  it('breaks equal-distance target ties by enemy id instead of config order', () => {
+    const cfg = config()
+    cfg.enemies = [
+      { ...cfg.enemies[0]!, id: 'zeta', post: { x: -1, z: 0 } },
+      { ...cfg.enemies[1]!, id: 'alpha', post: { x: 1, z: 0 } }
+    ]
+
+    const result = stepCombat(createCombatState(cfg), { x: 0, z: 0 }, cfg, DT, false)
+
+    expect(result.state.enemies.alpha!.hp).toBe(2)
+    expect(result.state.enemies.zeta!.hp).toBe(3)
+  })
+
   it('defeats an engaged enemy over time and reports it exactly once', () => {
     const outcome = drive(120)
     expect(outcome.state.enemies['enemy-1']!.hp).toBe(0)
@@ -95,6 +108,19 @@ describe('combatCore', () => {
     expect(result.state.player.invulnSeconds).toBeGreaterThan(0)
   })
 
+  it('does not consume an enemy attack cooldown while the player is invulnerable', () => {
+    const cfg = config()
+    cfg.player.attackRadius = 0.5
+    cfg.enemies = [{ ...cfg.enemies[0]!, attackRadius: 1.2 }]
+    const state = createCombatState(cfg)
+    state.player.invulnSeconds = 1
+
+    const result = stepCombat(state, { x: 0, z: 0 }, cfg, DT, false)
+
+    expect(result.state.player.hp).toBe(5)
+    expect(result.state.enemies['enemy-1']!.cooldown).toBe(0)
+  })
+
   it('completion gate: all enemies at zero, vacuously true with no enemies', () => {
     const cfg = config()
     expect(enemiesDefeated(createCombatState(cfg), cfg)).toBe(false)
@@ -120,6 +146,30 @@ describe('combatCore', () => {
     expect(restored.enemies['enemy-2']).toEqual({
       hp: 3, cooldown: 0, ai: { position: { x: 9, z: 9 }, mode: 'idle' }
     })
+  })
+
+  it('persistence round-trips fractional hp produced by schema-valid damage', () => {
+    const cfg = config()
+    cfg.player.attackDamage = 1.5
+    cfg.enemies = [{ ...cfg.enemies[0]!, attackDamage: 1.5 }]
+    const fought = stepCombat(createCombatState(cfg), { x: 0, z: 0 }, cfg, DT, false).state
+
+    const restored = deserializeCombatState(serializeCombatState(fought), cfg)
+
+    expect(restored.player.hp).toBe(3.5)
+    expect(restored.enemies['enemy-1']!.hp).toBe(1.5)
+  })
+
+  it('rejects duplicate enemy ids in saved state instead of taking the last value', () => {
+    const cfg = config()
+    expect(() => deserializeCombatState({
+      player: { hp: 5 },
+      enemies: [
+        { id: 'enemy-1', hp: 2 },
+        { id: 'enemy-1', hp: 1 },
+        { id: 'enemy-2', hp: 3 }
+      ]
+    }, cfg)).toThrow(/duplicate enemy "enemy-1"/)
   })
 
   it('rejects malformed and mismatched saved state', () => {
