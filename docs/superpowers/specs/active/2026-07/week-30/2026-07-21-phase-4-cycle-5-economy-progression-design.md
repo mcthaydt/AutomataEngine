@@ -33,7 +33,8 @@ Settled in brainstorming, binding for this cycle:
   `progression` slice tracking which of the spec's `progression.milestones` are
   achieved; milestones flip **in ascending threshold order** as `totalEarned`
   (monotonic — spending never reduces it) crosses seeded thresholds.
-  `objectivesComplete` is "all milestones achieved."
+  `objectivesComplete` is "all milestones achieved **and** all shop stock
+  purchased." Requiring both halves keeps the purchase→grant loop load-bearing.
 - **Synergy edges, both graceful-degrade.**
   `integratesWith: ['combat-ai', 'dialogue-quests']`: `enemyDefeated` awards a
   seeded bounty when combat is present; `questCompleted` awards a seeded reward
@@ -178,11 +179,12 @@ Serialize/deserialize with a strict zod schema for persistence.
 
 ### 3.2 `shopCore.ts`
 
-Buy-only selection over stock. `nextPurchase(shop, wallet, ownedItemIds)`:
+Buy-only selection over stock. `nextPurchase(shop, balance, ownedItemIds)`:
 returns the first stock item (by `itemId` order) that is **unowned and
 affordable**, or `null`. One purchase resolved per tick when the player is inside
 `shop.radius`; the adapter/eval hook drives the throttle. Pure — no wall clock,
-no side effects; the caller performs `walletCore.spend` and the emit.
+no side effects; taking a plain balance keeps this core independent of the
+wallet state shape. The caller performs `walletCore.spend` and the emit.
 
 ### 3.3 `progressionCore.ts`
 
@@ -195,11 +197,13 @@ terminating: `totalEarned` never decreases, so milestones only ever flip on.
 
 ### 3.4 Persistence (contract v2 slot)
 
-Economy saves `{ wallet: { balance, totalEarned }, progression: { achieved } }`
-with a strict zod schema over the saved shape; pickup-collected and shop-visited
-bookkeeping are recomputable and not persisted. Purchased items round-trip
-through **inventory's** `collected` (inventory owns them), not economy — clean
-ownership. `loadState` parses-or-throws (inventory precedent).
+Economy saves `{ wallet: { balance, totalEarned }, progression: { achieved },
+collectedPickups, purchased }` with a strict zod schema. `collectedPickups`
+prevents reloads from re-earning currency; `purchased` is load-bearing for the
+shop-clearance completion gate. Purchased items also round-trip through
+**inventory's** `collected` because inventory owns them; economy's local
+`purchased` set records the transaction/completion fact without writing the
+inventory slice. `loadState` parses-or-throws (inventory precedent).
 
 ### 3.5 `pack.ts` (browser adapter)
 
@@ -218,6 +222,8 @@ ownership. `loadState` parses-or-throws (inventory precedent).
   `questCompleted` → `walletCore.earn(questReward.perQuest)`.
 - Writes the `wallet` and `progression` slices (sole writer), reads the
   `inventory` slice to compute unowned stock.
+- `objectivesComplete` requires both `progressionComplete` and every shop stock
+  item to appear in economy's persisted `purchased` set.
 
 ## 4. Seeded composeSection and matrix rows
 
@@ -227,25 +233,32 @@ Input: spec config (`startingBalance?`), the spec's `cast` (vendor role →
 shops), the spec's `progression.milestones` (milestone ids), arena geometry, and
 **the composed inventory section** (ordered after it via the cycle-2 sections
 threading; economy requires inventory, so the inventory section is always
-present). Generation, all seeded and deterministic:
+present). Placement is seeded and all generated output is deterministic.
+Pickup count/amount, stock size, and catalog prices are fixed
+`ECONOMY_DEFAULTS` constants in this cycle rather than independent random
+draws:
 
 - **Wallet:** `startingBalance` from config or `ECONOMY_DEFAULTS`.
-- **Pickups:** a seeded count placed with the shared keepout pattern (wall
+- **Pickups:** a fixed default count placed through seeded draws with the shared
+  keepout pattern (wall
   margin, spawn/goal keepout, separation from items, dialogue NPCs, walker
   stations, enemy posts, and each other; bounded draw budget with a typed
-  exhaustion error). Amounts seeded within bounds.
+  exhaustion error). Amounts use the fixed default.
 - **Shops:** one per cast member with role `vendor` (**zero is legal** — the
   fixture set guarantees the shopping path is always exercised in the matrix).
-  Each shop is placed at a keepout post; stock is a seeded set of **catalog-only
-  item ids** (new ids, not the inventory section's placed ids) with seeded
-  prices, bounded so `placed + purchasable ≤ 8`.
+  Each shop is placed at a keepout post; stock uses deterministic
+  **catalog-only item ids** (new ids, not the inventory section's placed ids)
+  and a fixed default price, bounded so `placed + purchasable ≤ 8`.
 - **Progression:** every spec `progression.milestones` id gets an ascending
   seeded threshold, enforcing the **reachability invariant: the top threshold
   ≤ startingBalance + Σ pickup amounts** so the loop always completes from base
   earning alone (bounties/rewards only accelerate). A violated invariant is a
   typed compose error.
-- `ECONOMY_DEFAULTS` (starting balance, pickup count/amounts, prices,
-  bounty/reward amounts, threshold spacing) is applied here, never in the schema;
+- **Affordability:** `Σ stock prices ≤ startingBalance + Σ pickup amounts`, so
+  every required purchase is achievable from base earning without relying on
+  optional bounty/reward integrations.
+- `ECONOMY_DEFAULTS` (starting balance, pickup count/amounts, catalog price, shop
+  radius, and bounty/reward amounts) is applied here, never in the schema;
   `startingBalance` from the spec overrides the one default it names.
 
 ### 4.2 Eval hook — event bus, no walk-policy changes
@@ -255,12 +268,14 @@ present). Generation, all seeded and deterministic:
   emitter, handler never runs).
 - `nextTarget`: nearest uncollected currency pickup; then nearest shop with
   affordable, unowned stock (reading the `inventory` slice from the
-  `EvalSliceView`); `null` once all milestones are achieved.
+  `EvalSliceView`); `null` once progression and shop clearance are both
+  complete.
 - `step`: collect pickups in range; resolve one shop purchase in range and
   `emit('itemPurchased', …)` (inventory's connected handler grants it);
   `progressionCore.advance` and `emit('milestoneReached', …)`.
-- `complete`: `progressionComplete` (all milestones achieved) — always reachable
-  from pickups by the §4.1 invariant, so the composed drive terminates.
+- `complete`: `progressionComplete` **and** `allStockPurchased` — both are
+  reachable from base earning by the §4.1 reachability and affordability
+  invariants, so the composed drive terminates after proving the full loop.
 - `publishSlices`: exposes `wallet` and `progression`.
 
 The harness walk policy is untouched; only the additive event channel (§2.5) is

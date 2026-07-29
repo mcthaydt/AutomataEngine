@@ -87,7 +87,7 @@ design.
 | 1 — Persistent MCP build sessions (P5) | Create/reopen/modify/evaluate/repair a game across resets | — (internal enabler) | Phase 0 | 2 completed (2026-07-13) |
 | 2 — Versioned `GameSpec` | Prompt → valid, bounded, reviewable `GameSpec` + design checkpoint | Design | Phase 1 | 3 completed (2026-07-13) |
 | 3 — Vertical slice | Drive one minimal `GameSpec` through every layer into a playable artifact | Vertical-slice | Phase 2 | 1 completed (2026-07-14) |
-| 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack); 4 of 7 completed (2026-07-18) |
+| 4 — Capability packs | Widen the slice's pack to the initial 7 reusable packs | — (widens slice) | Phase 3 | 7 (one per pack); 5 of 7 completed (2026-07-28) |
 | 5 — Asset pipeline | Normalized, versioned asset manifest with providers, provenance, validation | — | Phase 3 (parallel with 4) | 5 cycles completed (2026-07-28) |
 | 6 — Content compiler | Generate full world/cast/quest/dialogue/economy/progression from `GameSpec` | — | Phases 4, 5 | 5 (per domain) |
 | 7 — Closed-loop repair | Wire existing evaluators into bounded repair jobs | — | Phases 2–6 evaluators | 2 |
@@ -469,13 +469,13 @@ the current best decomposition, revised each cycle.
 
 1. Vertical-slice integration (one pack + minimal content + one asset + composition + browser/critical-path smoke)
 
-**Phase 4 (seven peers; cycles 1–4 completed — see roadmap for live status):**
+**Phase 4 (seven peers; cycles 1–5 completed — see roadmap for live status):**
 
 1. Interaction & inventory pack — contract v2 + widening completed
 2. Branching dialogue & quests pack — completed
 3. Schedules & relationships pack — completed
 4. Combat & enemy AI pack — completed
-5. Economy, shops & progression pack
+5. Economy, shops & progression pack — completed
 6. Compact-hub navigation + one vehicle pack
 7. Save/load integration pack
 

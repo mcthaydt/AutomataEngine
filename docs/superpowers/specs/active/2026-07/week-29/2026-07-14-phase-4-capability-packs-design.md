@@ -197,3 +197,12 @@ A pack cycle is complete when all seven items land and `npm run ci`,
 - **Cycle 4 — pack-initiated player teleport.** Real respawn-at-spawn needs an
   additive world-effect seam in game-kit and the eval harness; second wind in
   place is the deterministic interim behavior.
+- **Cycle 5 — item selling / two-way trade.** Selling requires the inventory pack
+  to *remove* an owned item on an economy-emitted event (an `itemSold` consume
+  path); buy-only avoids the removal seam this cycle.
+- **Cycle 5 — purchasable-only catalog content.** Shop stock uses seeded catalog
+  ids with no world entity or downstream reference; real purchasable goods are
+  Phase-6 content.
+- **Cycle 5 — spec-authored milestone thresholds.** Thresholds are pack-derived
+  under the reachability invariant; letting a spec author set per-milestone
+  thresholds would be a `progression.milestones` schema extension.

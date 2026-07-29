@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 87% (69/79 steps; 14/16 tasks complete)
+**Implementation progress:** 99% (78/79 steps; 15/16 tasks complete)
 
 ## Global Constraints
 
@@ -2302,12 +2302,12 @@ git commit -m "feat(game-compose): thread economy-progression section into compo
 
 ### Task 15: Full gates + first-light bit-identical proof
 
-- [ ] **Step 1: Run the full CI suite**
+- [x] **Step 1: Run the full CI suite**
 
 Run: `npm run ci`
 Expected: PASS (typecheck + lint + all package tests). Fix any cross-package type or lint fallout inline (most likely: a missing `import type` or an `any` the lint rejects).
 
-- [ ] **Step 1b: Run coverage**
+- [x] **Step 1b: Run coverage**
 
 Run: `npm run coverage`
 Expected: PASS. This cycle adds a whole package under `packages/*/src/**`, which
@@ -2316,7 +2316,7 @@ many branches (purchase, insufficient funds, bounty, reward, marker reconcile on
 load, dispose). Task 9's test list is sized for this; if coverage still falls
 short, add the missing adapter cases rather than lowering the threshold.
 
-- [ ] **Step 2: Prove first-light recomposes bit-identically**
+- [x] **Step 2: Prove first-light recomposes bit-identically**
 
 Run: `npm run verify:new-game`
 Expected: PASS. Additionally confirm `games/first-light` output is unchanged:
@@ -2327,7 +2327,7 @@ git status --porcelain games/first-light
 
 Expected: no output (first-light files unchanged).
 
-- [ ] **Step 3: Commit any gate fixes**
+- [x] **Step 3: Commit any gate fixes**
 
 ```bash
 git add -A
@@ -2336,11 +2336,14 @@ git commit -m "chore(pack-economy-progression): satisfy full ci + verify gates"
 
 (Skip if there was nothing to fix.)
 
+> **Implementation note (2026-07-28):** All full gates passed without code or
+> test fixes, so the optional gate-fix commit was skipped.
+
 ---
 
 ### Task 16: Documentation — roadmap, umbrella gap log, decomposition status
 
-- [ ] **Step 1: Update the umbrella capability-gap log**
+- [x] **Step 1: Update the umbrella capability-gap log**
 
 In `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md` §9, append:
 
@@ -2356,7 +2359,7 @@ In `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-
   thresholds would be a `progression.milestones` schema extension.
 ```
 
-- [ ] **Step 2: Update the roadmap**
+- [x] **Step 2: Update the roadmap**
 
 In `docs/ROADMAP.md:241`, change the cycle 5 line from `Next` to `Shipped`:
 
@@ -2367,14 +2370,14 @@ In `docs/ROADMAP.md:241`, change the cycle 5 line from `Next` to `Shipped`:
 
 And promote cycle 6 (`compact-hub navigation + one vehicle pack`) from `Planned` to `Next`.
 
-- [ ] **Step 3: Update the decomposition status counters**
+- [x] **Step 3: Update the decomposition status counters**
 
 In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`:
 - §3 Phase-map Phase 4 row (line ~90): change `4 of 7 completed (2026-07-18)` to `5 of 7 completed (2026-07-28)`.
 - §5 Phase 4 section header (line ~472): change `**Phase 4 (seven peers; cycles 1–4 completed — see roadmap for live status):**` to `cycles 1–5 completed`.
 - §5 Phase 4 list: mark item 5 (`Economy, shops & progression pack — completed`).
 
-- [ ] **Step 3b: Fold this cycle's spec corrections back into the design spec**
+- [x] **Step 3b: Fold this cycle's spec corrections back into the design spec**
 
 Three findings in this plan contradict the approved spec. Amend
 `docs/superpowers/specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md`
@@ -2393,7 +2396,7 @@ Also note the two intentional simplifications: pickup count/amount, stock size,
 and prices are `ECONOMY_DEFAULTS` constants rather than seeded draws (§4.1 says
 "seeded"); and `nextPurchase` takes a `balance` number, not a wallet (§3.2).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/ROADMAP.md docs/superpowers/specs

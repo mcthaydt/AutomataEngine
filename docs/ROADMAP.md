@@ -238,8 +238,9 @@ Umbrella spec: [`2026-07-14-phase-4-capability-packs-design.md`](superpowers/spe
     [`2026-07-17-phase-4-cycle-3-schedules-relationships.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-4-cycle-3-schedules-relationships.md)).
   - Cycle 4 — combat & enemy AI pack — `Shipped` (2026-07-18, plan:
     [`2026-07-17-phase-4-cycle-4-combat-ai.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-4-cycle-4-combat-ai.md)).
-  - Cycle 5 — economy, shops & progression pack — `Next`.
-  - Cycle 6 — compact-hub navigation + one vehicle pack — `Planned`.
+  - Cycle 5 — economy, shops & progression pack — `Shipped` (2026-07-28, plan:
+    [`2026-07-21-phase-4-cycle-5-economy-progression.md`](superpowers/plans/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression.md)).
+  - Cycle 6 — compact-hub navigation + one vehicle pack — `Next`.
   - Cycle 7 — save/load integration pack — `Planned`.
 
 ### Phase 5 — Asset pipeline · `Shipped`
