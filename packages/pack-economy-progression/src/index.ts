@@ -1,3 +1,4 @@
 export * from './walletCore'
 export * from './shopCore'
 export * from './progressionCore'
+export * from './config'

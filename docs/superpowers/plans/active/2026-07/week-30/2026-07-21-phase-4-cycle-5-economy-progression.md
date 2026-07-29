@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 39% (31/79 steps; 6/16 tasks complete)
+**Implementation progress:** 44% (35/79 steps; 7/16 tasks complete)
 
 ## Global Constraints
 
@@ -792,7 +792,7 @@ The strict zod schema over the three cores, plus the slice ids and event names (
 **Interfaces:**
 - Produces: `WALLET_SLICE_ID`, `PROGRESSION_SLICE_ID`, `INVENTORY_SLICE_ID`, `ITEM_PURCHASED_EVENT`, `MILESTONE_REACHED_EVENT`, `ENEMY_DEFEATED_EVENT`, `QUEST_COMPLETED_EVENT`, `WalletSliceValue`, `ProgressionSliceValue`, `EconomyPackConfig`, `packConfigSchema`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/config.test.ts`:
 
@@ -840,12 +840,12 @@ describe('packConfigSchema', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- config`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `config.ts`**
+- [x] **Step 3: Implement `config.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -927,7 +927,7 @@ export type SavedEconomy = z.infer<typeof savedEconomySchema>
 
 Add `export * from './config'` to `src/index.ts`.
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- config`
 Expected: PASS
