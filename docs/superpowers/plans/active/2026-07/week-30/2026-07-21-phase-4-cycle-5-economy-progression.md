@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 44% (35/79 steps; 7/16 tasks complete)
+**Implementation progress:** 49% (39/79 steps; 8/16 tasks complete)
 
 ## Global Constraints
 
@@ -952,7 +952,7 @@ Deterministic pickup/shop placement, catalog stock bounded by inventory's 8-item
 - Consumes: `SeededRng` from `@automata/engine`, `packConfigSchema`/`EconomyPackConfig` from `./config`.
 - Produces: `ECONOMY_DEFAULTS`, `EconomyComposeInput`, `composeEconomySection(input, rng) → EconomyPackConfig`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/composeSection.test.ts`:
 
@@ -1025,12 +1025,12 @@ describe('composeEconomySection', () => {
 
 > Add `totalStockPrice` to the `../src/shopCore` imports at the top of this file.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- composeSection`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `composeSection.ts`**
+- [x] **Step 3: Implement `composeSection.ts`**
 
 ```ts
 import type { SeededRng } from '@automata/engine'
@@ -1152,7 +1152,7 @@ export function composeEconomySection(input: EconomyComposeInput, rng: SeededRng
 
 Add `export * from './composeSection'` to `src/index.ts`.
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- composeSection`
 Expected: PASS
