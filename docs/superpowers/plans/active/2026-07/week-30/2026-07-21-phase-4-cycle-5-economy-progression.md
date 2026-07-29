@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 23% (18/79 steps; 3/16 tasks complete)
+**Implementation progress:** 29% (23/79 steps; 4/16 tasks complete)
 
 ## Global Constraints
 
@@ -418,7 +418,7 @@ Scaffold `@automata/pack-economy-progression` and its first pure core.
 **Interfaces:**
 - Produces: `WalletState`, `createWalletState`, `earn`, `spend` (`{ ok, state }`), `serializeWallet`, `deserializeWallet`.
 
-- [ ] **Step 1: Scaffold the package**
+- [x] **Step 1: Scaffold the package**
 
 `packages/pack-economy-progression/package.json`:
 
@@ -474,7 +474,7 @@ Then install the workspace so the new package resolves:
 npm install
 ```
 
-- [ ] **Step 2: Write the failing walletCore test**
+- [x] **Step 2: Write the failing walletCore test**
 
 `packages/pack-economy-progression/tests/walletCore.test.ts`:
 
@@ -506,12 +506,12 @@ describe('walletCore', () => {
 })
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- walletCore`
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: Implement `walletCore.ts`**
+- [x] **Step 4: Implement `walletCore.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -544,7 +544,7 @@ export function serializeWallet(state: WalletState): unknown { return { balance:
 export function deserializeWallet(raw: unknown): WalletState { return savedWalletSchema.parse(raw) }
 ```
 
-- [ ] **Step 5: Run test to verify it passes + commit**
+- [x] **Step 5: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- walletCore`
 Expected: PASS

@@ -1,0 +1,17 @@
+{
+  "name": "@automata/pack-economy-progression",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@automata/contracts": "*",
+    "@automata/engine": "*",
+    "@automata/game-kit": "*",
+    "@automata/project": "*"
+  }
+}
