@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { deriveStyleParams, sha256Hex, validateAssetMedia } from '@automata/asset-providers'
+import {
+  deriveStyleParams,
+  propRecipePaletteErrors,
+  propRecipeSchema,
+  sha256Hex,
+  svgPaletteColors,
+  validateAssetMedia
+} from '@automata/asset-providers'
 import type { AssetManifestEntry, AssetRequirement } from '@automata/contracts'
+import { createClaudePropProvider } from '../src/claudePropProvider'
 import { createClaudeSvgProvider } from '../src/claudeSvgProvider'
 
 /**
@@ -31,5 +39,19 @@ describe.skipIf(!process.env.ANTHROPIC_API_KEY)('claude-svg live smoke', () => {
     expect(issues.filter((issue) => issue.code === 'asset-hash-mismatch')).toEqual([])
     expect(issues.filter((issue) => issue.code === 'asset-media-invalid' && issue.message.includes('does not parse'))).toEqual([])
     if (issues.length > 0) console.warn('live smoke: non-structural findings', issues)
+  })
+})
+
+describe.skipIf(!process.env.ANTHROPIC_API_KEY)('claude-prop live smoke', () => {
+  it('generates a schema-valid, palette-clean prop with a matching pinned hash', { timeout: 120_000 }, async () => {
+    const style = deriveStyleParams({ visualStyle: 'neon dusk', audioStyle: 'calm' }, 42)
+    const provider = createClaudePropProvider()
+    const { bytes, provenance } = await provider.generate(
+      { id: 'lamp-prop', kind: 'model', description: 'A stylized street lamp.' },
+      { seed: 7, style, specVersion: 1 }
+    )
+    const recipe = propRecipeSchema.parse(JSON.parse(new TextDecoder().decode(bytes)))
+    expect(propRecipePaletteErrors(recipe, svgPaletteColors(style))).toEqual([])
+    expect(provenance.determinism).toEqual({ kind: 'pinned', contentHash: sha256Hex(bytes) })
   })
 })

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (npm workspaces monorepo), `@anthropic-ai/sdk`, zod v4 via `@automata/project`, vitest.
 
-**Implementation progress:** 74% (20/27 steps).
+**Implementation progress:** 81% (22/27 steps).
 
 **Spec:** [`2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md`](../../specs/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md)
 **Umbrella:** [`2026-07-14-phase-5-asset-pipeline-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
@@ -601,7 +601,7 @@ One real generation, skipped unless `ANTHROPIC_API_KEY` is set.
 
 **Interfaces:** none (test-only).
 
-- [ ] **Step 1: Add the live smoke case**
+- [x] **Step 1: Add the live smoke case**
 
 Append to `packages/asset-providers-ai/tests/live.test.ts` (mirror the existing SVG live-smoke `describe.skipIf` block):
 
@@ -634,7 +634,7 @@ describe.skipIf(!process.env.ANTHROPIC_API_KEY)('claude-prop live smoke', () => 
 > The `{ timeout: 120_000 }` options form matches the shipped SVG live smoke;
 > a real generation regularly exceeds 30 s.
 
-- [ ] **Step 2: Verify it is skipped offline + commit**
+- [x] **Step 2: Verify it is skipped offline + commit**
 
 Run: `npx vitest run --project asset-providers-ai live`
 Expected: the new `claude-prop live smoke` is skipped (no `ANTHROPIC_API_KEY`).
