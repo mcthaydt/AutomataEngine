@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (npm workspaces monorepo), `@anthropic-ai/sdk`, zod v4 via `@automata/project`, vitest.
 
-**Implementation progress:** 81% (22/27 steps).
+**Implementation progress:** 100% (27/27 steps).
 
 **Spec:** [`2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md`](../../specs/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md)
 **Umbrella:** [`2026-07-14-phase-5-asset-pipeline-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
@@ -648,7 +648,7 @@ git commit -m "test(asset-providers-ai): opt-in claude-prop live smoke"
 
 ### Task 5: Full gates + documentation
 
-- [ ] **Step 1: Run the full CI suite**
+- [x] **Step 1: Run the full CI suite**
 
 Run: `npm run ci`
 Expected: PASS (typecheck + lint + all package tests, offline). Fix any cross-package type/lint fallout inline.
@@ -662,7 +662,7 @@ the `CLAUDE_PROP_MAX_BYTES` guard (unreachable — see Task 2 Step 4). If that o
 branch drops the package below threshold, do **not** invent a fake test for it;
 remove the guard instead and drop `CLAUDE_PROP_MAX_BYTES` from the exports.
 
-- [ ] **Step 2: Prove first-light is untouched**
+- [x] **Step 2: Prove first-light is untouched**
 
 Run: `npm run verify:new-game`
 Expected: PASS. Then confirm first-light is unchanged:
@@ -685,7 +685,7 @@ Expected: no output.
 > provider and then validated — see the note in Task 3 Step 2. Both must be green
 > before this cycle is claimed done.
 
-- [ ] **Step 3: Update the roadmap**
+- [x] **Step 3: Update the roadmap**
 
 In `docs/ROADMAP.md` §3 Phase 5, append a cycle 5 bullet to the cycle list (after
 the cycle 4 bullet):
@@ -707,14 +707,14 @@ and the §3 heading's status note.
 > cycle, so the heading stays `### Phase 5 — Asset pipeline · \`Shipped\`` and only
 > the dates move.
 
-- [ ] **Step 4: Update the decomposition status counters**
+- [x] **Step 4: Update the decomposition status counters**
 
 In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`:
 - §3 Phase-map Phase 5 row (line ~91): change `4 cycles completed (2026-07-20)` to `5 cycles completed (2026-07-28)`.
 - §5 Phase 5 section header (line ~482): change `**Phase 5 (completed 2026-07-20; ran in parallel with Phase 4):**` to `2026-07-28`.
 - §5 Phase 5 list: add item 5 (`Second AI provider adapter (claude-prop, model kind) — completed`).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/ROADMAP.md docs/superpowers/specs

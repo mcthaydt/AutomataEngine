@@ -27,12 +27,12 @@ this document is the living map of how we get there.
 
 Newest first. Each links to the spec/plan that defines it.
 
-- **Phase 5 — Asset pipeline** (completed 2026-07-20; review hardened through
-  `6b3f94a`). Completed manifest provenance, deterministic procedural providers,
-  strict media validation and optimization, isolated regeneration, the asset
-  release gate, and the first pinned-output AI adapter (`claude-svg`). Latest
-  plan:
-  [`2026-07-17-phase-5-cycle-4-ai-provider.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-4-ai-provider.md).
+- **Phase 5 — Asset pipeline** (completed 2026-07-28; Cycle 4 review hardened
+  through `6b3f94a`). Completed manifest provenance, deterministic procedural
+  providers, strict media validation and optimization, isolated regeneration,
+  the asset release gate, and pinned-output AI adapters for SVG and prop
+  recipes. Latest plan:
+  [`2026-07-22-phase-5-cycle-5-ai-prop-provider.md`](superpowers/plans/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider.md).
 
 - **Phase 3 — Vertical slice · first playable** (2026-07-14, merged to `main`
   @ `ccd2657`). Added the capability-pack and runtime
@@ -264,6 +264,10 @@ Umbrella spec: [`2026-07-14-phase-5-asset-pipeline-design.md`](superpowers/specs
     determinism; extension beyond the original three-cycle scope) —
     `Shipped` (review hardened 2026-07-20, plan:
     [`2026-07-17-phase-5-cycle-4-ai-provider.md`](superpowers/plans/active/2026-07/week-29/2026-07-17-phase-5-cycle-4-ai-provider.md)).
+  - Cycle 5 — second AI provider adapter (claude-prop, text→PropRecipe for the
+    `model` kind; pinned-hash determinism; model-palette validation) —
+    `Shipped` (2026-07-28, plan:
+    [`2026-07-22-phase-5-cycle-5-ai-prop-provider.md`](superpowers/plans/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider.md)).
 
 ### Phase 6 — Content compiler · `Planned`
 

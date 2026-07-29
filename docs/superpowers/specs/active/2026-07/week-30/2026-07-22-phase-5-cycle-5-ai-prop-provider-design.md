@@ -50,9 +50,10 @@ Settled in brainstorming, binding for this cycle:
   branch via a shared helper, used both at validation and at generation. The
   procedural `propProvider` already emits only palette colors (body = base
   hue, trim = an accent hue, all through `hsl(...)` at the shared saturation/
-  lightness), so it keeps passing — pinned by first-light's model-asset
-  regression. This makes visual-family consistency mechanical for the AI prop
-  path, the direct analogue of cycle 4's SVG palette gate.
+  lightness), so it keeps passing — pinned by the focused procedural-recipe
+  regression and the editor MCP suite's default model fixture. This makes
+  visual-family consistency mechanical for the AI prop path, the direct
+  analogue of cycle 4's SVG palette gate.
 - **Mocked SDK + opt-in live smoke.** Unit tests inject a fake client. One
   live smoke test runs only when `ANTHROPIC_API_KEY` is present (skipped
   otherwise, so `npm run ci` never needs the network).
@@ -146,7 +147,8 @@ for (const message of propRecipePaletteErrors(recipe, svgPaletteColors(style))) 
 SVG branch's `style ? svgPaletteColors(style) : undefined` conditionality —
 palette is enforced only when a style is in scope, so style-less callers are
 unaffected. The procedural `propProvider` complies by construction; the
-first-light regression (§6) pins that no shipped model asset newly fails.
+focused procedural-provider regression and editor MCP default model fixture
+(§6) pin that the seeded model path remains clean.
 
 ## 5. MCP tool integration
 
@@ -192,10 +194,11 @@ omitted stays byte-identical to today (procedural `propProvider`).
   generation asserting a schema-valid, palette-clean recipe and a matching
   pinned hash. Skipped in CI; runnable on demand.
 - Gates: `npm run ci` (offline, green), `npm run verify:new-game`, and
-  `games/first-light` untouched (zero compose-path changes; the model-palette
-  validation passes on its procedural assets — pinned by a first-light
-  validate-all regression). Docs on ship: ROADMAP Phase 5 cycle 5 line +
-  phase status; week-28 decomposition phase-map row bumped to `5 completed`.
+  `games/first-light` untouched (zero compose-path changes). Model-palette
+  validation is pinned by the focused procedural-provider regression and the
+  editor MCP suite's default `beacon-model` fixture. Docs on ship: ROADMAP
+  Phase 5 cycle 5 line + phase status; week-28 decomposition phase-map row
+  bumped to `5 completed`.
 
 ## 7. Risks
 
@@ -206,9 +209,10 @@ omitted stays byte-identical to today (procedural `propProvider`).
   findings.
 - **Adding model-palette validation could surface a latent off-palette
   procedural asset.** Mitigation: the procedural `propProvider` provably emits
-  only `svgPaletteColors` members, and the first-light validate-all regression
-  gates it before ship. If any shipped model asset did fail, that is a real
-  visual-family defect the gate is right to catch.
+  only `svgPaletteColors` members, and both the focused provider regression and
+  editor MCP default model fixture gate it before ship. If any shipped model
+  asset did fail, that is a real visual-family defect the gate is right to
+  catch.
 - **Recipe expressiveness ceiling.** `PropRecipe v1` is 1–12 primitives — the
   AI cannot exceed the engine's current model format, which is the point (the
   format, not the provider, bounds fidelity). A richer mesh boundary is a
