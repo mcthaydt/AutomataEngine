@@ -34,7 +34,7 @@ export interface MessagesClient {
 }
 
 /** The SDK uses AuthenticationError for rejected credentials, but a plain Error when none resolve. */
-function isAuthenticationError(error: unknown): boolean {
+export function isAuthenticationError(error: unknown): boolean {
   return error instanceof Anthropic.AuthenticationError ||
     (error instanceof Error && error.message.startsWith('Could not resolve authentication method.'))
 }

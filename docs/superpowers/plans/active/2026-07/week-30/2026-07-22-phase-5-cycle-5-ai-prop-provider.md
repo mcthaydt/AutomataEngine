@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (npm workspaces monorepo), `@anthropic-ai/sdk`, zod v4 via `@automata/project`, vitest.
 
-**Implementation progress:** 33% (9/27 steps).
+**Implementation progress:** 59% (16/27 steps).
 
 **Spec:** [`2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md`](../../specs/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md)
 **Umbrella:** [`2026-07-14-phase-5-asset-pipeline-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
@@ -208,7 +208,7 @@ New AI provider mirroring `claude-svg`, generating a `PropRecipe v1` JSON for th
 - Consumes: `AiProviderError`, `MessagesClient`, `isAuthenticationError` from `./claudeSvgProvider`; `sha256Hex`, `svgPaletteColors`, `propRecipeSchema`, `propRecipePaletteErrors`, `MEDIA_BUDGETS` from `@automata/asset-providers`.
 - Produces: `createClaudePropProvider(options?: { client?: MessagesClient; model?: string }): AssetProvider`, `buildPropPrompt`, `extractPropRecipe`, `CLAUDE_PROP_MAX_BYTES`.
 
-- [ ] **Step 1: Export the shared auth helper**
+- [x] **Step 1: Export the shared auth helper**
 
 In `packages/asset-providers-ai/src/claudeSvgProvider.ts`, change the `isAuthenticationError` declaration to be exported:
 
@@ -220,7 +220,7 @@ export function isAuthenticationError(error: unknown): boolean {
 }
 ```
 
-- [ ] **Step 2: Write the failing provider test**
+- [x] **Step 2: Write the failing provider test**
 
 Create `packages/asset-providers-ai/tests/claudePropProvider.test.ts`:
 
@@ -325,12 +325,12 @@ describe('createClaudePropProvider', () => {
 > 12 parts × ~400 bytes ≈ 5 KB against a 16 KB budget. See Step 4's note on
 > keeping it anyway as defense-in-depth.
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 Run: `npx vitest run --project asset-providers-ai claudePropProvider`
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: Implement `claudePropProvider.ts`**
+- [x] **Step 4: Implement `claudePropProvider.ts`**
 
 ```ts
 import Anthropic from '@anthropic-ai/sdk'
@@ -464,7 +464,7 @@ export function createClaudePropProvider(
 }
 ```
 
-- [ ] **Step 5: Export from the package index**
+- [x] **Step 5: Export from the package index**
 
 In `packages/asset-providers-ai/src/index.ts`:
 
@@ -473,12 +473,12 @@ export * from './claudeSvgProvider'
 export * from './claudePropProvider'
 ```
 
-- [ ] **Step 6: Run the provider tests + the SVG tests (frozen) to verify**
+- [x] **Step 6: Run the provider tests + the SVG tests (frozen) to verify**
 
 Run: `npx vitest run --project asset-providers-ai`
 Expected: PASS — new `claudePropProvider` tests green; existing `claudeSvgProvider` tests untouched and green.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/asset-providers-ai/src packages/asset-providers-ai/tests
