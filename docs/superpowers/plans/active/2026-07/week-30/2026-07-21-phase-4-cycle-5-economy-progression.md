@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 29% (23/79 steps; 4/16 tasks complete)
+**Implementation progress:** 34% (27/79 steps; 5/16 tasks complete)
 
 ## Global Constraints
 
@@ -583,7 +583,7 @@ Buy-only stock selection: the next unowned, affordable item and an in-radius tes
 > purchased", with a matching compose-time affordability invariant (Task 8).
 > Fold both back into the spec on ship.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/shopCore.test.ts`:
 
@@ -624,12 +624,12 @@ describe('shopCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- shopCore`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `shopCore.ts`**
+- [x] **Step 3: Implement `shopCore.ts`**
 
 ```ts
 /** Buy-only shop stock. Ids are catalog-only (not placed items) — see composeSection. */
@@ -668,7 +668,7 @@ export function totalStockPrice(shops: readonly ShopDef[]): number {
 
 Add `export * from './shopCore'` to `src/index.ts`.
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- shopCore`
 Expected: PASS
