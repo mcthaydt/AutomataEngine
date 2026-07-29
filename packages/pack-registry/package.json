@@ -9,6 +9,7 @@
     "@automata/game-kit": "*",
     "@automata/pack-combat-ai": "*",
     "@automata/pack-dialogue-quests": "*",
+    "@automata/pack-economy-progression": "*",
     "@automata/pack-interaction-inventory": "*",
     "@automata/pack-schedules-relationships": "*"
   },

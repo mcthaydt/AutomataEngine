@@ -100,10 +100,19 @@ describe('composition matrix (standard packs)', () => {
   /** Named 3+-pack scenario suites: same compose/boot/headless machinery as pairs. */
   const SCENARIOS: ReadonlyArray<readonly string[]> = [
     ['interaction-inventory', 'dialogue-quests', 'schedules-relationships'],
-    // combat-ai standalone: proves graceful degradation (weapon never held)
     ['combat-ai'],
-    // the full 4-pack set — the phase's largest composition to date
-    ['interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai']
+    ['interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai'],
+    // Cycle 5: the pair loop already covers inventory+economy. These rows
+    // prove its bounty/reward edges and the full five-pack composition.
+    ['interaction-inventory', 'economy-progression', 'combat-ai'],
+    ['interaction-inventory', 'dialogue-quests', 'economy-progression'],
+    [
+      'interaction-inventory',
+      'dialogue-quests',
+      'schedules-relationships',
+      'combat-ai',
+      'economy-progression'
+    ]
   ]
 
   it('every standard pack has a deterministic fixture', () => {

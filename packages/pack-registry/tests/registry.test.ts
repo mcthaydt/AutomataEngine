@@ -44,10 +44,26 @@ describe('pack registry', () => {
     }
   })
 
-  it('exposes exactly the packs that exist (four, as of Phase 4 cycle 4)', () => {
+  it('exposes exactly the packs that exist (five, as of Phase 4 cycle 5)', () => {
     expect(Object.keys(STANDARD_PACKS)).toEqual([
-      'interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai'
+      'interaction-inventory',
+      'dialogue-quests',
+      'schedules-relationships',
+      'combat-ai',
+      'economy-progression'
     ])
+  })
+
+  it('registers economy-progression with deterministic fixture, eval hook, and editor contribution', () => {
+    const fixture = PACK_FIXTURES['economy-progression']!()
+    expect(fixture).toEqual(PACK_FIXTURES['economy-progression']!())
+    const probe = composition([{
+      id: 'economy-progression',
+      version: '1.0.0',
+      config: fixture as Record<string, unknown>
+    }])
+    expect(resolveEvalHooks(probe)).toHaveLength(1)
+    expect(resolveEditorContributions(probe)).toHaveLength(1)
   })
 
   it('registers combat-ai with a deterministic fixture whose weapon references the inventory fixture', () => {

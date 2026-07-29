@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 72% (57/79 steps; 12/16 tasks complete)
+**Implementation progress:** 80% (63/79 steps; 13/16 tasks complete)
 
 ## Global Constraints
 
@@ -1967,7 +1967,7 @@ Register the pack, add its fixture, and widen the matrix. Add the runtime-vs-eva
 - Consumes: `economyProgressionPack`, `composeEconomySection`, `createEconomyProgressionEvalHook`, `economyProgressionEditorContribution`, `packConfigSchema as economyConfigSchema` from `@automata/pack-economy-progression`.
 - Produces: economy in `STANDARD_PACKS`, `PACK_FIXTURES`, `EVAL_HOOK_BUILDERS`, `EDITOR_CONTRIBUTIONS`; four new matrix scenarios.
 
-- [ ] **Step 1: Add the workspace dependency**
+- [x] **Step 1: Add the workspace dependency**
 
 In `packages/pack-registry/package.json`, add to `dependencies`:
 
@@ -1981,7 +1981,7 @@ Then:
 npm install
 ```
 
-- [ ] **Step 2: Register the pack in `pack-registry/src/index.ts`**
+- [x] **Step 2: Register the pack in `pack-registry/src/index.ts`**
 
 Add the import (alongside the other pack imports):
 
@@ -2027,7 +2027,11 @@ Add to `EDITOR_CONTRIBUTIONS`:
   [economyProgressionEditorContribution.packId]: economyProgressionEditorContribution
 ```
 
-- [ ] **Step 3: Add the matrix scenarios**
+> **Implementation note (2026-07-28):** `registry.test.ts` also pinned the
+> standard-pack set to four entries. Task 13 advanced that contract to five and
+> added a red/green fixture/eval/editor registration test for the new pack.
+
+- [x] **Step 3: Add the matrix scenarios**
 
 In `packages/pack-registry/tests/compositionMatrix.test.ts`, extend the `SCENARIOS` array:
 
@@ -2046,12 +2050,12 @@ In `packages/pack-registry/tests/compositionMatrix.test.ts`, extend the `SCENARI
   ]
 ```
 
-- [ ] **Step 4: Run the matrix to verify it stays green**
+- [x] **Step 4: Run the matrix to verify it stays green**
 
 Run: `npx vitest run --project pack-registry compositionMatrix`
 Expected: PASS — the economy+inventory pair, the two synergy scenarios (bounty/reward proven via the event bus), and the 5-pack set all compose, boot, and complete headlessly.
 
-- [ ] **Step 5: Write the parity test**
+- [x] **Step 5: Write the parity test**
 
 `packages/pack-registry/tests/economyParity.test.ts`:
 
@@ -2155,7 +2159,7 @@ describe('economy+inventory parity', () => {
 > push `{ ...player }` at the end of each loop iteration (after the move, before
 > the `step` fan-out), and return `{ result: { collected, totalEarned }, path }`.
 
-- [ ] **Step 6: Run the parity test + commit**
+- [x] **Step 6: Run the parity test + commit**
 
 Run: `npx vitest run --project pack-registry`
 Expected: PASS (matrix + parity).

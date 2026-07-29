@@ -10,6 +10,13 @@ import {
   dialogueQuestsPack, packConfigSchema as dialogueConfigSchema
 } from '@automata/pack-dialogue-quests'
 import {
+  composeEconomySection,
+  createEconomyProgressionEvalHook,
+  economyProgressionEditorContribution,
+  economyProgressionPack,
+  packConfigSchema as economyConfigSchema
+} from '@automata/pack-economy-progression'
+import {
   createInventoryEvalHook, interactionInventoryPack, inventoryEditorContribution, packConfigSchema
 } from '@automata/pack-interaction-inventory'
 import {
@@ -27,7 +34,8 @@ export const STANDARD_PACKS: Record<string, GamePack> = {
   [interactionInventoryPack.id]: interactionInventoryPack as GamePack,
   [dialogueQuestsPack.id]: dialogueQuestsPack as GamePack,
   [schedulesRelationshipsPack.id]: schedulesRelationshipsPack as GamePack,
-  [combatAiPack.id]: combatAiPack as GamePack
+  [combatAiPack.id]: combatAiPack as GamePack,
+  [economyProgressionPack.id]: economyProgressionPack as GamePack
 }
 
 /**
@@ -100,18 +108,42 @@ PACK_FIXTURES[combatAiPack.id] = () => composeCombatSection({
   occupied: []
 }, createSeededRng(44))
 
+PACK_FIXTURES[economyProgressionPack.id] = () => composeEconomySection({
+  specConfig: {},
+  cast: [{ id: 'c-trader', name: 'Trader', role: 'vendor' }],
+  milestones: [{ id: 'm-1' }, { id: 'm-2' }],
+  arena: {
+    half: 12,
+    spawn: { x: -8, z: -8 },
+    goal: { x: 6, z: 6 }
+  },
+  inventory: {
+    items: (PACK_FIXTURES[interactionInventoryPack.id]!() as {
+      items: Array<{
+        id: string
+        position: { x: number; z: number }
+      }>
+    }).items
+  },
+  occupied: []
+}, createSeededRng(45))
+
 const EVAL_HOOK_BUILDERS: Record<string, (config: unknown) => PackEvalHook> = {
   [interactionInventoryPack.id]: (config) => createInventoryEvalHook(packConfigSchema.parse(config)),
   [dialogueQuestsPack.id]: (config) => createDialogueQuestsEvalHook(dialogueConfigSchema.parse(config)),
   [schedulesRelationshipsPack.id]: (config) => createSchedulesRelationshipsEvalHook(schedulesConfigSchema.parse(config)),
-  [combatAiPack.id]: (config) => createCombatAiEvalHook(combatConfigSchema.parse(config))
+  [combatAiPack.id]: (config) => createCombatAiEvalHook(combatConfigSchema.parse(config)),
+  [economyProgressionPack.id]: (config) =>
+    createEconomyProgressionEvalHook(economyConfigSchema.parse(config))
 }
 
 const EDITOR_CONTRIBUTIONS: Record<string, PackEditorContribution> = {
   [inventoryEditorContribution.packId]: inventoryEditorContribution,
   [dialogueQuestsEditorContribution.packId]: dialogueQuestsEditorContribution,
   [schedulesRelationshipsEditorContribution.packId]: schedulesRelationshipsEditorContribution,
-  [combatAiEditorContribution.packId]: combatAiEditorContribution
+  [combatAiEditorContribution.packId]: combatAiEditorContribution,
+  [economyProgressionEditorContribution.packId]:
+    economyProgressionEditorContribution
 }
 
 export function resolvePacks(ids: readonly string[]): GamePack[] {
