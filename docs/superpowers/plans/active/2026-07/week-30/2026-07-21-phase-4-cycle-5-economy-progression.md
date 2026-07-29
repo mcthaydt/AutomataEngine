@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 49% (39/79 steps; 8/16 tasks complete)
+**Implementation progress:** 54% (43/79 steps; 9/16 tasks complete)
 
 ## Global Constraints
 
@@ -1177,7 +1177,7 @@ Owns `wallet` + `progression`; collects pickups, auto-buys in shop radius (emitt
 - Consumes: `GamePack`, `PackRuntimeHandle`, `packCompatibility` from `@automata/game-kit`; the three cores + `config.ts`.
 - Produces: `economyProgressionPack: GamePack<EconomyPackConfig>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/pack.test.ts`:
 
@@ -1329,12 +1329,12 @@ describe('economyProgressionPack', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- pack`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `pack.ts`**
+- [x] **Step 3: Implement `pack.ts`**
 
 ```ts
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
@@ -1502,7 +1502,7 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
 
 > Note: `requires: ['interaction-inventory']` is a deliberate string literal, not an import — the string-copy comment in `config.ts` documents why.
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- pack`
 Expected: PASS
