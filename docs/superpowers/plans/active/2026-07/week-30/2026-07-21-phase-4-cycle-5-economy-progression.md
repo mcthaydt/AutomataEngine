@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 54% (43/79 steps; 9/16 tasks complete)
+**Implementation progress:** 59% (47/79 steps; 10/16 tasks complete)
 
 ## Global Constraints
 
@@ -1527,7 +1527,7 @@ Mirrors the adapter: collect pickups, auto-buy (emit `itemPurchased`), advance p
 - Consumes: `PackEvalHook`, `EvalSliceView` from `@automata/game-kit`; the three cores + `config.ts`.
 - Produces: `createEconomyProgressionEvalHook(config) → PackEvalHook`, `EVAL_TICK_DT`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/evalHook.test.ts`:
 
@@ -1596,12 +1596,12 @@ describe('createEconomyProgressionEvalHook', () => {
 > with `complete` defined as `progressionComplete` alone, the shop branch has
 > gone dead again and Task 13's parity test will fail silently-then-loudly.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- evalHook`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `evalHook.ts`**
+- [x] **Step 3: Implement `evalHook.ts`**
 
 ```ts
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
@@ -1716,7 +1716,7 @@ export function createEconomyProgressionEvalHook(config: EconomyPackConfig): Pac
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- evalHook`
 Expected: PASS
