@@ -4,7 +4,7 @@
 
 **Goal:** Ship `@automata/pack-economy-progression` — a wallet, buy-only shops, and currency-threshold progression forming one closed economic loop — and make the contract-v2 event bus first-class in the headless evaluator so the pack's event-driven cross-pack effects are provable in both twins.
 
-**Architecture:** Follows the `pack-combat-ai` package template (three pure cores + browser adapter + eval hook + seeded composeSection + editor contribution). Purchases emit `itemPurchased`; the inventory pack consumes it and grants the item as sole writer (closing the cycle-2 gap). Progression flips the spec's `progression.milestones` as cumulative `totalEarned` crosses seeded ascending thresholds. Bounties (`enemyDefeated`) and quest rewards (`questCompleted`) are graceful-degrade `integratesWith` edges. Because the headless composition matrix has no event channel, this cycle additively threads the existing `PackEventBus` through `PackEvalHook`/the matrix driver.
+**Architecture:** Follows the `pack-combat-ai` package template (three pure cores + browser adapter + eval hook + seeded composeSection + editor contribution). Purchases emit `itemPurchased`; the inventory pack consumes it and grants the item as sole writer (closing the cycle-2 gap). Progression flips the spec's `progression.milestones` as cumulative `totalEarned` crosses seeded ascending thresholds, and the pack's objective is complete only once every milestone is achieved **and** every shop's stock is bought — see the spec-defect note in Task 5. Bounties (`enemyDefeated`) and quest rewards (`questCompleted`) are graceful-degrade `integratesWith` edges. Because the headless composition matrix has no event channel, this cycle additively threads the existing `PackEventBus` through `PackEvalHook`/the matrix driver.
 
 **Tech Stack:** TypeScript (npm workspaces monorepo), zod v4 via `@automata/project` re-export, vitest + happy-dom, `@automata/engine` `SeededRng`.
 
@@ -19,7 +19,16 @@
 - **Zod authoring rules:** roots are `z.strictObject`; use `.min()`/`.max()` (exclusive bounds are rejected); `.meta()` before `.optional()`.
 - **Determinism:** cores use no wall clock, no `Math.random`. Composition draws come only from the passed `SeededRng` (`rng.next()` → `[0, 1)`). One fixed eval tick = `1/60` s.
 - **first-light must recompose bit-identically.** Economy is not in its composition; verify at the end.
-- **Verification:** `npm run ci` and `npm run verify:new-game` must pass before the cycle is claimed done. Run tests per package with `npm test -w <package>`.
+- **Verification:** `npm run ci`, `npm run coverage`, and `npm run verify:new-game` must pass before the cycle is claimed done.
+- **Per-package test invocation.** Most packages this cycle touches declare **no
+  `test` script** — `npm test -w <package>` fails with "Missing script" for
+  `pack-registry`, `pack-interaction-inventory`, `pack-dialogue-quests`,
+  `game-compose`, and `contracts` (`contracts` and `game-kit` have `typecheck`
+  only; `pack-combat-ai` is the one pack with a `test` script). Use the root
+  vitest project names instead — `npx vitest run --project <name> <filter>` —
+  where the name is each package's `vitest.config.ts` `test.name`. The new
+  `pack-economy-progression` package.json declares `test`/`typecheck` (Task 4),
+  so `npm test -w @automata/pack-economy-progression` does work for it.
 
 ---
 
@@ -30,7 +39,11 @@ Thread the existing `PackEventBus` through the headless evaluator so hooks can e
 **Files:**
 - Modify: `packages/game-kit/src/packEval.ts`
 - Modify: `packages/pack-registry/tests/compositionMatrix.test.ts` (the `driveToCompletion` driver)
-- Test: `packages/pack-registry/tests/evalEventBus.test.ts` (new)
+- Test: `packages/game-kit/tests/evalEventBus.test.ts` (new)
+
+> The harness test lives in **game-kit**, not pack-registry: it exercises a
+> game-kit contract and imports nothing else. game-kit also has a `typecheck`
+> script, so the new `connect`/`emit` signatures are type-checked in CI.
 
 **Interfaces:**
 - Consumes: `PackEventBus`, `createPackEventBus` from `@automata/game-kit` (`packEvents.ts`).
@@ -38,7 +51,7 @@ Thread the existing `PackEventBus` through the headless evaluator so hooks can e
 
 - [ ] **Step 1: Write the failing harness test**
 
-Create `packages/pack-registry/tests/evalEventBus.test.ts`:
+Create `packages/game-kit/tests/evalEventBus.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -88,8 +101,12 @@ it('delivers an emitted event to a connected consumer synchronously', () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npm test -w @automata/pack-registry -- evalEventBus`
-Expected: FAIL — `connect` / 4th `emit` param are not yet on `PackEvalHook`, so TypeScript/compile errors or the assertion fails.
+Run: `npx vitest run --project game-kit evalEventBus`
+Expected: FAIL on the assertion (`total` is 0, not 7). Note vitest strips types
+rather than typechecking, so the missing `connect` is a silent no-op at runtime
+and the missing 4th param leaves `emit` undefined — the optional calls swallow
+both and the expectation is what actually fails. `npm run typecheck -w @automata/game-kit`
+is the step that surfaces the type errors.
 
 - [ ] **Step 3: Extend `PackEvalHook` in game-kit**
 
@@ -157,14 +174,14 @@ function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npm test -w @automata/pack-registry -- evalEventBus compositionMatrix`
+Run: `npx vitest run --project game-kit evalEventBus && npx vitest run --project pack-registry compositionMatrix`
 Expected: PASS (existing matrix rows unaffected; new event-bus test green).
 
 - [ ] **Step 6: Typecheck game-kit and commit**
 
 ```bash
 npm run typecheck -w @automata/game-kit
-git add packages/game-kit/src/packEval.ts packages/pack-registry/tests/compositionMatrix.test.ts packages/pack-registry/tests/evalEventBus.test.ts
+git add packages/game-kit/src/packEval.ts packages/game-kit/tests/evalEventBus.test.ts packages/pack-registry/tests/compositionMatrix.test.ts
 git commit -m "feat(game-kit): thread pack event bus through the headless eval harness"
 ```
 
@@ -202,7 +219,7 @@ it('grantItem appends an id and is idempotent', () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npm test -w @automata/pack-interaction-inventory -- core`
+Run: `npx vitest run --project pack-interaction-inventory core`
 Expected: FAIL — `grantItem` is not exported.
 
 - [ ] **Step 3: Implement `grantItem` + the event-name constant**
@@ -240,7 +257,7 @@ In `packages/pack-interaction-inventory/src/pack.ts`:
     }
 ```
 
-4. Inside `register`, after `ctx.state.register(...)` and before the `return`, subscribe to purchases:
+4. Inside `register`, **immediately before the `return`** (i.e. after the `applyState` declaration at `pack.ts:50` — the handler closes over it), subscribe to purchases:
 
 ```ts
     ctx.events.on(ITEM_PURCHASED_EVENT, (payload) => {
@@ -274,36 +291,48 @@ In `packages/pack-interaction-inventory/src/evalHook.ts`, add `grantItem`, `ITEM
 
 - [ ] **Step 6: Write the failing pack test (runtime grant + completion unaffected)**
 
-Add to `packages/pack-interaction-inventory/tests/pack.test.ts` (reuse the file's existing boot helper pattern; a minimal standalone version shown here):
+Add to `packages/pack-interaction-inventory/tests/pack.test.ts`, reusing the
+file's existing `boot()` helper (`pack.test.ts:7-17`). That helper builds a
+`PackBootContext` directly — `createGameHost` + `createNullRenderer` +
+`createPackEventBus` + `createPackStateRegistry` — and calls
+`interactionInventoryPack.register(ctx, config)`. **Do not use `composePacks`
+here**: it returns the bus privately, so the test could never emit onto it.
 
 ```ts
-import { createGameHost } from '@automata/game-kit'
-import { createNullRenderer } from '@automata/engine'
-import { composePacks } from '@automata/game-kit'
-import { interactionInventoryPack } from '../src/pack'
 import { ITEM_PURCHASED_EVENT } from '../src/core'
 
-it('grants a purchased catalog id without altering the fetch-completion gate', () => {
-  const app = document.createElement('div'); document.body.append(app)
-  const host = createGameHost(app); const render = createNullRenderer()
-  const config = { interactRadius: 1.5, items: [{ id: 'item-1', position: { x: 99, z: 99 } }], iconPath: null }
-  const runtime = composePacks([interactionInventoryPack as never], { 'interaction-inventory': config })
-    .boot({ host, render: render.port })
-  // Simulate a purchase by emitting on the shared bus the pack subscribed to at boot.
-  // (The composed runtime owns the bus; drive one fixedUpdate far from the item so no pickup occurs.)
-  runtime.fixedUpdate(1 / 60, { playerPosition: { x: 0, z: 0 } })
-  const saved = runtime.saveState()['interaction-inventory'] as { collected: string[] }
-  expect(saved.collected).toEqual([]) // no pickup, no purchase yet
-  host.dispose(); app.remove()
+it('grants a purchased catalog id on itemPurchased, idempotently', () => {
+  const { handle, events, state, app, ctx } = boot()
+  events.emit(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: 'catalog-1' })
+  expect((handle.saveState!() as { collected: string[] }).collected).toEqual(['catalog-1'])
+  // Idempotent: a duplicate purchase event must not grow the slice.
+  events.emit(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: 'catalog-1' })
+  expect((handle.saveState!() as { collected: string[] }).collected).toEqual(['catalog-1'])
+  // Sole-writer publication reached the slice registry.
+  expect((state.get('inventory') as { collected: string[] }).collected).toEqual(['catalog-1'])
+  // A purchased catalog id is NOT part of the fetch objective.
+  expect(handle.objectivesComplete!()).toBe(false)
+  ctx.host.dispose(); app.remove()
+})
+
+it('counts only placed items in the HUD when a catalog id is owned', () => {
+  const { handle, events, app, ctx } = boot()
+  events.emit(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: 'catalog-1' })
+  const hud = document.querySelector('.inventory-hud span')!
+  expect(hud.textContent).toBe(` 0/${fixtureConfig().items.length}`)
+  ctx.host.dispose(); app.remove()
 })
 ```
 
-> Note: a full purchase→grant integration is proven in Task 14 (economy+inventory matrix + parity test), where both packs share one bus. This task's pack test pins that the consume wiring, HUD, and completion gate stay correct in isolation.
+> These two tests are the **only** coverage of the runtime grant path — Task 13's
+> parity test proves the eval twin. Do not weaken them into a "nothing happened"
+> assertion; the whole point of this task is that an emitted `itemPurchased`
+> mutates the inventory slice.
 
 - [ ] **Step 7: Run tests to verify they pass**
 
-Run: `npm test -w @automata/pack-interaction-inventory`
-Expected: PASS (all existing inventory tests + the two new ones).
+Run: `npx vitest run --project pack-interaction-inventory`
+Expected: PASS (all existing inventory tests + the new core and pack tests).
 
 - [ ] **Step 8: Commit**
 
@@ -344,7 +373,7 @@ it('economy-progression config accepts an optional startingBalance and rejects e
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npm test -w @automata/contracts -- gameSpec`
+Run: `npx vitest run --project contracts gameSpec`
 Expected: FAIL — `{ startingBalance: 12 }` throws against the empty `z.strictObject({})`.
 
 - [ ] **Step 3: Implement**
@@ -359,7 +388,7 @@ In `packages/contracts/src/gameSpec.ts`, replace line 97:
 
 - [ ] **Step 4: Run test to verify it passes + commit**
 
-Run: `npm test -w @automata/contracts -- gameSpec`
+Run: `npx vitest run --project contracts gameSpec`
 Expected: PASS
 
 ```bash
@@ -529,7 +558,22 @@ Buy-only stock selection: the next unowned, affordable item and an in-radius tes
 - Test: `packages/pack-economy-progression/tests/shopCore.test.ts`
 
 **Interfaces:**
-- Produces: `ShopStockItem`, `ShopDef`, `nextPurchase(shop, balance, owned)`, `inRadius(shop, player)`.
+- Produces: `ShopStockItem`, `ShopDef`, `nextPurchase(shop, balance, owned)`, `inRadius(shop, player)`, `allStockPurchased(shops, purchased)`, `totalStockPrice(shops)`.
+
+> **Deviation from spec §3.2 (deliberate).** The spec writes
+> `nextPurchase(shop, wallet, ownedItemIds)`; this takes a plain `balance` number
+> so the core never depends on `walletCore`'s shape. Fold back into the spec on ship.
+
+> **`allStockPurchased` exists to fix a spec defect.** Spec §4.2 defines
+> `complete` as `progressionComplete` alone and `nextTarget` as "pickups, then
+> shops, `null` once all milestones are achieved" — while §4.1 sets the top
+> threshold at `≤ startingBalance + Σ pickups`. Those are contradictory: the last
+> pickup satisfies the top milestone, `complete` flips true, and the shop branch
+> of `nextTarget` is **unreachable dead code**, so the headless twin never buys
+> anything and the purchase→grant loop is unprovable. This cycle therefore makes
+> the economy objective "all milestones achieved **and** all shop stock
+> purchased", with a matching compose-time affordability invariant (Task 8).
+> Fold both back into the spec on ship.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -537,7 +581,7 @@ Buy-only stock selection: the next unowned, affordable item and an in-radius tes
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { nextPurchase, inRadius, type ShopDef } from '../src/shopCore'
+import { nextPurchase, inRadius, allStockPurchased, totalStockPrice, type ShopDef } from '../src/shopCore'
 
 const shop: ShopDef = {
   id: 's1', position: { x: 0, z: 0 }, radius: 1.5,
@@ -555,6 +599,19 @@ describe('shopCore', () => {
   it('inRadius respects the shop radius', () => {
     expect(inRadius(shop, { x: 1, z: 0 })).toBe(true)
     expect(inRadius(shop, { x: 5, z: 0 })).toBe(false)
+  })
+  it('allStockPurchased is true only when every stock id is owned', () => {
+    expect(allStockPurchased([shop], new Set())).toBe(false)
+    expect(allStockPurchased([shop], new Set(['catalog-1', 'catalog-2']))).toBe(false)
+    expect(allStockPurchased([shop], new Set(['catalog-1', 'catalog-2', 'catalog-3']))).toBe(true)
+  })
+  it('allStockPurchased is vacuously true with no shops or empty stock', () => {
+    expect(allStockPurchased([], new Set())).toBe(true)
+    expect(allStockPurchased([{ ...shop, stock: [] }], new Set())).toBe(true)
+  })
+  it('totalStockPrice sums every shop', () => {
+    expect(totalStockPrice([shop])).toBe(106)
+    expect(totalStockPrice([])).toBe(0)
   })
 })
 ```
@@ -588,6 +645,16 @@ export function nextPurchase(shop: ShopDef, balance: number, owned: ReadonlySet<
 
 export function inRadius(shop: ShopDef, player: { x: number; z: number }): boolean {
   return Math.hypot(shop.position.x - player.x, shop.position.z - player.z) <= shop.radius
+}
+
+/** Half of the economy objective: every shop's stock has been bought. */
+export function allStockPurchased(shops: readonly ShopDef[], purchased: ReadonlySet<string>): boolean {
+  return shops.every((shop) => shop.stock.every((entry) => purchased.has(entry.itemId)))
+}
+
+/** Compose-time affordability input: the currency needed to clear every shop. */
+export function totalStockPrice(shops: readonly ShopDef[]): number {
+  return shops.reduce((sum, shop) => sum + shop.stock.reduce((inner, entry) => inner + entry.price, 0), 0)
 }
 ```
 
@@ -742,9 +809,22 @@ describe('packConfigSchema', () => {
     const bad = base(); bad.progression.milestones = [{ id: 'm1', threshold: 12 }, { id: 'm2', threshold: 5 }]
     expect(() => packConfigSchema.parse(bad)).toThrow()
   })
-  it('rejects duplicate pickup and shop ids', () => {
-    const dupPickup = base(); dupPickup.pickups = [dupPickup.pickups[0]!, dupPickup.pickups[0]!]
-    expect(() => packConfigSchema.parse(dupPickup)).toThrow()
+  it('rejects duplicate pickup ids', () => {
+    const bad = base(); bad.pickups = [bad.pickups[0]!, { ...bad.pickups[0]!, position: { x: 9, z: 9 } }]
+    expect(() => packConfigSchema.parse(bad)).toThrow()
+  })
+  it('rejects duplicate shop ids', () => {
+    const bad = base(); bad.shops = [bad.shops[0]!, { ...bad.shops[0]!, position: { x: 9, z: 9 } }]
+    expect(() => packConfigSchema.parse(bad)).toThrow()
+  })
+  it('rejects duplicate milestone ids', () => {
+    const bad = base()
+    bad.progression.milestones = [{ id: 'm1', threshold: 5 }, { id: 'm1', threshold: 12 }]
+    expect(() => packConfigSchema.parse(bad)).toThrow()
+  })
+  it('rejects coincident pickup/shop positions (spec §2.4 "positions distinct")', () => {
+    const bad = base(); bad.shops[0]!.position = { ...bad.pickups[0]!.position }
+    expect(() => packConfigSchema.parse(bad)).toThrow()
   })
   it('rejects unknown keys (strict)', () => {
     expect(() => packConfigSchema.parse({ ...base(), extra: 1 })).toThrow()
@@ -761,6 +841,8 @@ Expected: FAIL — module not found.
 
 ```ts
 import { z } from '@automata/project'
+import { savedWalletSchema } from './walletCore'
+import { savedProgressionSchema } from './progressionCore'
 
 /**
  * Compiled economy config. Slice ids and consumed event names are deliberate
@@ -808,11 +890,31 @@ export const packConfigSchema: z.ZodType<EconomyPackConfig> = baseConfigSchema.s
   for (const dup of duplicates(config.pickups.map((p) => p.id))) issue(`duplicate pickup id "${dup}"`)
   for (const dup of duplicates(config.shops.map((s) => s.id))) issue(`duplicate shop id "${dup}"`)
   for (const dup of duplicates(config.progression.milestones.map((m) => m.id))) issue(`duplicate milestone id "${dup}"`)
+  // Spec §2.4: pickup and shop positions must all be distinct.
+  const points = [...config.pickups.map((p) => p.position), ...config.shops.map((s) => s.position)]
+  for (const dup of duplicates(points.map((point) => `${point.x},${point.z}`))) {
+    issue(`duplicate pickup/shop position "${dup}"`)
+  }
   const thresholds = config.progression.milestones.map((m) => m.threshold)
   for (let i = 1; i < thresholds.length; i += 1) {
     if (thresholds[i]! <= thresholds[i - 1]!) issue('milestone thresholds must be strictly ascending')
   }
 })
+
+/**
+ * Saved shape (contract-v2 persistence slot). `collectedPickups` and
+ * `purchased` ARE persisted — a deviation from spec §3.4, which assumed both
+ * were recomputable bookkeeping. Neither is: without `collectedPickups` a
+ * reload lets the player re-earn every pickup, and `purchased` is now
+ * load-bearing for `objectivesComplete` (Task 5). Fold back into the spec.
+ */
+export const savedEconomySchema = z.strictObject({
+  wallet: savedWalletSchema,
+  progression: savedProgressionSchema,
+  collectedPickups: z.array(idSchema).max(12),
+  purchased: z.array(idSchema).max(8)
+})
+export type SavedEconomy = z.infer<typeof savedEconomySchema>
 ```
 
 Add `export * from './config'` to `src/index.ts`.
@@ -885,8 +987,35 @@ describe('composeEconomySection', () => {
     const cfg = composeEconomySection(input({ cast: [] }), createSeededRng(7))
     expect(cfg.shops).toEqual([])
   })
+  it('keeps every stocked item affordable from base earning', () => {
+    // Completion now requires buying out every shop (Task 5), so the compose
+    // step must guarantee the currency exists.
+    const cast = Array.from({ length: 5 }, (_, i) => ({ id: `v${i}`, name: `V${i}`, role: 'vendor' }))
+    const cfg = composeEconomySection(input({ cast }), createSeededRng(7))
+    const base = cfg.wallet.startingBalance + cfg.pickups.reduce((sum, p) => sum + p.amount, 0)
+    expect(totalStockPrice(cfg.shops)).toBeLessThanOrEqual(base)
+  })
+  it('honours soft keepouts from other composed sections', () => {
+    const occupied = [{ x: 5, z: 5 }, { x: -4, z: 2 }]
+    const cfg = composeEconomySection(input({ occupied }), createSeededRng(7))
+    const placed = [...cfg.pickups.map((p) => p.position), ...cfg.shops.map((s) => s.position)]
+    for (const point of placed) {
+      for (const keepout of occupied) {
+        expect(Math.hypot(point.x - keepout.x, point.z - keepout.z)).toBeGreaterThanOrEqual(2)
+      }
+    }
+  })
+  it('throws a typed error when the placement budget is exhausted', () => {
+    // extent = half - WALL_MARGIN = 0.5, so no two draws can be 2 apart.
+    expect(() => composeEconomySection(
+      input({ arena: { half: 1.5, spawn: { x: -8, z: -8 }, goal: { x: 6, z: 6 } } }),
+      createSeededRng(7)
+    )).toThrow(/placement budget exhausted/)
+  })
 })
 ```
+
+> Add `totalStockPrice` to the `../src/shopCore` imports at the top of this file.
 
 - [ ] **Step 2: Run it to verify it fails**
 
@@ -898,6 +1027,7 @@ Expected: FAIL — module not found.
 ```ts
 import type { SeededRng } from '@automata/engine'
 import { packConfigSchema, type EconomyPackConfig } from './config'
+import { totalStockPrice } from './shopCore'
 
 export const ECONOMY_DEFAULTS = {
   startingBalance: 5,
@@ -958,9 +1088,15 @@ export function composeEconomySection(input: EconomyComposeInput, rng: SeededRng
     amount: ECONOMY_DEFAULTS.pickupAmount
   }))
 
+  const totalBase = startingBalance + pickups.reduce((sum, pickup) => sum + pickup.amount, 0)
+
   const vendors = input.cast.filter((member) => member.role === 'vendor')
-  // Catalog goods are new ids (never placed) and must fit under inventory's collected cap.
-  let catalogBudget = Math.max(0, INVENTORY_CAP - input.inventory.items.length)
+  // Catalog goods are new ids (never placed) and are bounded twice: by
+  // inventory's `collected` cap, and by the currency base earning can actually
+  // produce — economy's objective includes buying every stocked item, so
+  // unaffordable stock would make the composition uncompletable.
+  const affordBudget = Math.floor(totalBase / ECONOMY_DEFAULTS.catalogPrice)
+  let catalogBudget = Math.max(0, Math.min(INVENTORY_CAP - input.inventory.items.length, affordBudget))
   let catalogIndex = 0
   const shops = vendors.map((vendor, index) => {
     const stock = catalogBudget > 0
@@ -975,9 +1111,10 @@ export function composeEconomySection(input: EconomyComposeInput, rng: SeededRng
     }
   })
 
-  const totalBase = startingBalance + pickups.reduce((sum, pickup) => sum + pickup.amount, 0)
   const count = input.milestones.length
-  if (totalBase < count) {
+  // Defensive: unreachable with the current fixed constants (totalBase >= 20,
+  // count <= 12), but the two are independently tunable.
+  if (count === 0 || totalBase < count) {
     throw new Error(`Economy progression unreachable: totalBase ${totalBase} < ${count} milestones`)
   }
   let previous = 0
@@ -989,6 +1126,10 @@ export function composeEconomySection(input: EconomyComposeInput, rng: SeededRng
   })
   const top = milestones[milestones.length - 1]!.threshold
   if (top > totalBase) throw new Error(`Economy reachability invariant violated: top ${top} > base ${totalBase}`)
+  const stockCost = totalStockPrice(shops)
+  if (stockCost > totalBase) {
+    throw new Error(`Economy affordability invariant violated: stock ${stockCost} > base ${totalBase}`)
+  }
 
   return packConfigSchema.parse({
     wallet: { startingBalance },
@@ -1035,7 +1176,9 @@ Owns `wallet` + `progression`; collects pickups, auto-buys in shop radius (emitt
 ```ts
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer } from '@automata/engine'
-import { createGameHost, composePacks } from '@automata/game-kit'
+import {
+  createGameHost, createPackEventBus, createPackStateRegistry, type PackBootContext
+} from '@automata/game-kit'
 import { economyProgressionPack } from '../src/pack'
 
 const config = () => ({
@@ -1047,32 +1190,133 @@ const config = () => ({
   progression: { milestones: [{ id: 'm1', threshold: 5 }] }
 })
 
-function boot() {
-  const app = document.createElement('div'); document.body.append(app)
-  const host = createGameHost(app); const render = createNullRenderer()
-  const runtime = composePacks([economyProgressionPack as never], { 'economy-progression': config() })
-    .boot({ host, render: render.port })
-  return { app, host, runtime }
+const shopConfig = () => ({
+  ...config(),
+  wallet: { startingBalance: 10 },
+  pickups: [],
+  shops: [{ id: 'shop-1', position: { x: 0, z: 0 }, radius: 1.5, stock: [{ itemId: 'catalog-1', price: 8 }] }],
+  progression: { milestones: [{ id: 'm1', threshold: 10 }] }
+})
+
+/**
+ * Direct register, NOT composePacks: economy declares
+ * `requires: ['interaction-inventory']`, so composePacks on a single-pack set
+ * throws PackCompositionError (`game-kit/src/packs.ts:96,140`). Registering
+ * directly also hands the test the bus and slice registry, which composePacks
+ * keeps private. Mirrors `pack-interaction-inventory/tests/pack.test.ts:7-17`.
+ */
+function boot(cfg: unknown = config()) {
+  const app = document.createElement('div')
+  document.body.append(app)
+  const render = createNullRenderer()
+  const events = createPackEventBus()
+  const state = createPackStateRegistry()
+  // Stand in for the inventory pack, the real owner of this slice.
+  state.register('inventory', 'interaction-inventory', { collected: [] })
+  const ctx: PackBootContext = { host: createGameHost(app), render: render.port, events, state }
+  const handle = economyProgressionPack.register(ctx, economyProgressionPack.configSchema!.parse(cfg))
+  if (!handle) throw new Error('pack must return a runtime handle')
+  return { ctx, render, handle, app, events, state }
+}
+type Booted = ReturnType<typeof boot>
+const teardown = (h: Booted): void => { h.handle.dispose?.(); h.ctx.host.dispose(); h.app.remove() }
+const saved = (h: Booted) => h.handle.saveState!() as {
+  wallet: { balance: number; totalEarned: number }
+  progression: { achieved: string[] }
+  collectedPickups: string[]
+  purchased: string[]
 }
 
 describe('economyProgressionPack', () => {
-  it('collects a pickup, earns currency, and completes progression', () => {
-    const { app, host, runtime } = boot()
-    // Player stands on the pickup: one fixedUpdate collects it, totalEarned crosses m1.
-    runtime.fixedUpdate(1 / 60, { playerPosition: { x: 0, z: 0 } })
-    expect(runtime.objectivesComplete()).toBe(true)
-    const saved = runtime.saveState()['economy-progression'] as { wallet: { totalEarned: number } }
-    expect(saved.wallet.totalEarned).toBe(5)
-    host.dispose(); app.remove()
+  it('collects a pickup, earns currency, completes progression, and updates the HUD', () => {
+    const h = boot()
+    expect(h.ctx.host.overlays.querySelector('.economy-hud')!.textContent).toBe('¤ 0 · milestones 0/1')
+    h.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(saved(h).wallet.totalEarned).toBe(5)
+    expect(h.handle.objectivesComplete!()).toBe(true)
+    expect(h.ctx.host.overlays.querySelector('.economy-hud')!.textContent).toBe('¤ 5 · milestones 1/1')
+    teardown(h)
   })
-  it('round-trips wallet + progression through save/load', () => {
-    const { app, host, runtime } = boot()
-    runtime.fixedUpdate(1 / 60, { playerPosition: { x: 0, z: 0 } })
-    const saved = runtime.saveState()
-    const { runtime: fresh, host: host2, app: app2 } = boot()
-    fresh.loadState(saved)
-    expect(fresh.objectivesComplete()).toBe(true)
-    host.dispose(); app.remove(); host2.dispose(); app2.remove()
+
+  it('removes the pickup marker on collection and leaves nothing behind on dispose', () => {
+    const h = boot()
+    expect(h.render.port.objectCount).toBe(1)
+    h.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(h.render.port.objectCount).toBe(0)
+    teardown(h)
+    expect(h.render.port.objectCount).toBe(0)
+  })
+
+  it('writes the wallet and progression slices it owns', () => {
+    const h = boot()
+    h.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(h.state.get('wallet')).toEqual({ balance: 5, totalEarned: 5 })
+    expect(h.state.get('progression')).toEqual({ achieved: ['m1'] })
+    teardown(h)
+  })
+
+  it('auto-buys in shop radius, emits itemPurchased, and gates completion on stock', () => {
+    const h = boot(shopConfig())
+    const purchases: unknown[] = []
+    const milestones: unknown[] = []
+    h.events.on('itemPurchased', (payload) => purchases.push(payload))
+    h.events.on('milestoneReached', (payload) => milestones.push(payload))
+    // Progression is already satisfiable from the starting balance, but the
+    // objective is not complete until the stock is bought.
+    expect(h.handle.objectivesComplete!()).toBe(false)
+    h.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(purchases).toEqual([{ packId: 'economy-progression', itemId: 'catalog-1' }])
+    expect(milestones).toEqual([{ packId: 'economy-progression', milestoneId: 'm1' }])
+    expect(saved(h).wallet).toEqual({ balance: 2, totalEarned: 10 })
+    expect(h.handle.objectivesComplete!()).toBe(true)
+    // Second tick must not re-buy: `purchased` is folded into the owned set.
+    h.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(purchases).toHaveLength(1)
+    expect(saved(h).wallet.balance).toBe(2)
+    teardown(h)
+  })
+
+  it('does not buy what it cannot afford', () => {
+    const h = boot({ ...shopConfig(), wallet: { startingBalance: 3 } })
+    h.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(saved(h).purchased).toEqual([])
+    expect(saved(h).wallet.balance).toBe(3)
+    teardown(h)
+  })
+
+  it('earns a bounty and a quest reward from subscribed events', () => {
+    const h = boot()
+    h.events.emit('enemyDefeated', { packId: 'combat-ai', enemyId: 'e1' })
+    h.events.emit('questCompleted', { packId: 'dialogue-quests', questId: 'q1' })
+    expect(saved(h).wallet).toEqual({ balance: 9, totalEarned: 9 })
+    teardown(h)
+  })
+
+  it('round-trips wallet, progression, pickups, and purchases through save/load', () => {
+    const first = boot(shopConfig())
+    first.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    const snapshot = first.handle.saveState!()
+    teardown(first)
+
+    const fresh = boot(shopConfig())
+    fresh.handle.loadState!(snapshot)
+    expect(fresh.handle.objectivesComplete!()).toBe(true)
+    expect(saved(fresh)).toEqual(snapshot)
+    // A reload must not let the player re-earn a collected pickup.
+    const reloaded = boot()
+    reloaded.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    const afterPickup = reloaded.handle.saveState!()
+    const again = boot()
+    again.handle.loadState!(afterPickup)
+    again.handle.fixedUpdate!(1 / 60, { playerPosition: { x: 0, z: 0 } })
+    expect(saved(again).wallet.totalEarned).toBe(5)
+    teardown(fresh); teardown(reloaded); teardown(again)
+  })
+
+  it('rejects a malformed saved state', () => {
+    const h = boot()
+    expect(() => h.handle.loadState!({ wallet: { balance: -1, totalEarned: 0 } })).toThrow()
+    teardown(h)
   })
 })
 ```
@@ -1090,15 +1334,12 @@ import { packCompatibility } from '@automata/game-kit'
 import {
   WALLET_SLICE_ID, PROGRESSION_SLICE_ID, INVENTORY_SLICE_ID,
   ITEM_PURCHASED_EVENT, MILESTONE_REACHED_EVENT, ENEMY_DEFEATED_EVENT, QUEST_COMPLETED_EVENT,
-  packConfigSchema, type EconomyPackConfig
+  packConfigSchema, savedEconomySchema, type EconomyPackConfig
 } from './config'
+import { createWalletState, earn, spend, type WalletState } from './walletCore'
+import { allStockPurchased, inRadius, nextPurchase } from './shopCore'
 import {
-  createWalletState, earn, spend, serializeWallet, deserializeWallet, type WalletState
-} from './walletCore'
-import { inRadius, nextPurchase } from './shopCore'
-import {
-  advance, createProgressionState, progressionComplete, serializeProgression, deserializeProgression,
-  type MilestoneDef, type ProgressionState
+  advance, createProgressionState, progressionComplete, type MilestoneDef, type ProgressionState
 } from './progressionCore'
 
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 }
@@ -1125,7 +1366,11 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
     const milestones: MilestoneDef[] = config.progression.milestones.map((m) => ({ id: m.id, threshold: m.threshold }))
     let wallet: WalletState = createWalletState(config.wallet.startingBalance)
     let progression: ProgressionState = createProgressionState()
-    const collectedPickups = new Set<string>()
+    let collectedPickups = new Set<string>()
+    // Economy's own record of what it bought. Ownership still lives in the
+    // inventory slice (economy never writes it), but completion must be
+    // answerable from state alone — PackEvalHook.complete gets no slice view.
+    let purchased = new Set<string>()
 
     ctx.state.register(WALLET_SLICE_ID, economyProgressionPack.id, { balance: wallet.balance, totalEarned: wallet.totalEarned })
     ctx.state.register(PROGRESSION_SLICE_ID, economyProgressionPack.id, { achieved: [...progression.achieved] })
@@ -1162,10 +1407,18 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
       }
     }
 
+    /**
+     * Ownership = inventory's granted set ∪ economy's own purchases. The union
+     * matters twice: it keeps the pack correct when composed without a granting
+     * inventory (no re-buying every tick), and it makes the runtime agree with
+     * the eval twin, which reads a tick-start slice snapshot.
+     */
     const ownedItems = (): ReadonlySet<string> => {
-      if (!ctx.state.has(INVENTORY_SLICE_ID)) return new Set()
+      const owned = new Set(purchased)
+      if (!ctx.state.has(INVENTORY_SLICE_ID)) return owned
       const collected = (ctx.state.get(INVENTORY_SLICE_ID) as { collected?: readonly string[] }).collected ?? []
-      return new Set(collected)
+      for (const id of collected) owned.add(id)
+      return owned
     }
 
     // Bounty and reward: earn on subscribed events; progression catches up next fixedUpdate.
@@ -1191,18 +1444,40 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
           const result = spend(wallet, purchase.price)
           if (!result.ok) continue
           wallet = result.state
+          purchased.add(purchase.itemId)
           ctx.events.emit(ITEM_PURCHASED_EVENT, { packId: economyProgressionPack.id, itemId: purchase.itemId })
         }
         publishWallet()
         advanceProgression()
         updateHud()
       },
-      objectivesComplete: () => progressionComplete(progression, milestones),
-      saveState: () => ({ wallet: serializeWallet(wallet), progression: serializeProgression(progression) }),
+      // The objective is the whole loop: earn past every threshold AND clear
+      // every shop. Milestones alone would leave the shop unreachable — see the
+      // spec-defect note in Task 5.
+      objectivesComplete: () =>
+        progressionComplete(progression, milestones) && allStockPurchased(config.shops, purchased),
+      saveState: () => ({
+        wallet: { balance: wallet.balance, totalEarned: wallet.totalEarned },
+        progression: { achieved: [...progression.achieved] },
+        collectedPickups: [...collectedPickups],
+        purchased: [...purchased]
+      }),
       loadState(raw) {
-        const saved = raw as { wallet: unknown; progression: unknown }
-        wallet = deserializeWallet(saved.wallet)
-        progression = deserializeProgression(saved.progression)
+        const saved = savedEconomySchema.parse(raw)
+        wallet = saved.wallet
+        progression = { achieved: saved.progression.achieved }
+        collectedPickups = new Set(saved.collectedPickups)
+        purchased = new Set(saved.purchased)
+        // Reconcile markers to the restored state (inventory's applyState precedent).
+        for (const pickup of config.pickups) {
+          const key = `economy-pickup-${pickup.id}`
+          const entity = entities.get(key)
+          if (collectedPickups.has(pickup.id)) {
+            if (entity) { ctx.render.remove(entity); entities.delete(key) }
+          } else if (!entity) {
+            addMarker(key, pickup.position.x, pickup.position.z, PICKUP_RADIUS, PICKUP_COLOR)
+          }
+        }
         publishWallet()
         publishProgression()
         updateHud()
@@ -1288,8 +1563,30 @@ describe('createEconomyProgressionEvalHook', () => {
     state = hook.step(state, { x: 0, z: 0 }, {}, (n, p) => bus.emit(n, p)) // progression advances
     expect(hook.complete(state)).toBe(true)
   })
+  it('does not complete until the shop stock is bought, and targets the shop to do it', () => {
+    const cfg = { ...config(), wallet: { startingBalance: 10 }, pickups: [],
+      shops: [{ id: 'shop-1', position: { x: 4, z: 0 }, radius: 1.5, stock: [{ itemId: 'catalog-1', price: 8 }] }],
+      progression: { milestones: [{ id: 'm1', threshold: 10 }] } }
+    const hook = createEconomyProgressionEvalHook(cfg)
+    let state = hook.createState()
+    const emitted: Array<[string, unknown]> = []
+    const emit = (name: string, payload: unknown): void => { emitted.push([name, payload]) }
+    // Milestone m1 is satisfied by the starting balance alone…
+    state = hook.step(state, { x: 0, z: 0 }, {}, emit)
+    expect(hook.complete(state)).toBe(false)
+    // …and nextTarget must still route to the shop (the branch spec §4.2 left dead).
+    expect(hook.nextTarget(state, { x: 0, z: 0 }, {})).toEqual({ x: 4, z: 0 })
+    state = hook.step(state, { x: 4, z: 0 }, {}, emit)
+    expect(emitted.map(([name]) => name)).toContain('itemPurchased')
+    expect(hook.complete(state)).toBe(true)
+    expect(hook.nextTarget(state, { x: 4, z: 0 }, {})).toBeNull()
+  })
 })
 ```
+
+> This test is the regression pin for the reachability fix. If it ever passes
+> with `complete` defined as `progressionComplete` alone, the shop branch has
+> gone dead again and Task 13's parity test will fail silently-then-loudly.
 
 - [ ] **Step 2: Run it to verify it fails**
 
@@ -1306,30 +1603,45 @@ import {
   type EconomyPackConfig
 } from './config'
 import { createWalletState, earn, spend, type WalletState } from './walletCore'
-import { inRadius, nextPurchase } from './shopCore'
+import { allStockPurchased, inRadius, nextPurchase } from './shopCore'
 import { advance, createProgressionState, progressionComplete, type MilestoneDef, type ProgressionState } from './progressionCore'
 
 /** One harness tick equals one fixed simulation step. */
 export const EVAL_TICK_DT = 1 / 60
 
-interface EvalState { wallet: WalletState; progression: ProgressionState; collected: readonly string[] }
+interface EvalState {
+  wallet: WalletState
+  progression: ProgressionState
+  collected: readonly string[]
+  /** Mirrors the adapter: completion must be answerable without a slice view. */
+  purchased: readonly string[]
+}
 
-const ownedView = (slices?: EvalSliceView): ReadonlySet<string> =>
-  new Set(((slices?.[INVENTORY_SLICE_ID] as { collected?: readonly string[] } | undefined)?.collected) ?? [])
+/** Ownership = inventory's granted set ∪ own purchases, exactly as the adapter computes it. */
+const ownedView = (state: EvalState, slices?: EvalSliceView): ReadonlySet<string> => {
+  const owned = new Set(state.purchased)
+  const granted = (slices?.[INVENTORY_SLICE_ID] as { collected?: readonly string[] } | undefined)?.collected ?? []
+  for (const id of granted) owned.add(id)
+  return owned
+}
 
-const PICKUP_REACH = 0.5
+/** Must match the adapter's `PICKUP_RADIUS + 0.5`, or the twins disagree. */
+const PICKUP_REACH = 0.8
 
 /** Headless twin. Subscribes to bounty/reward events via connect; emits purchases/milestones via step. */
 export function createEconomyProgressionEvalHook(config: EconomyPackConfig): PackEvalHook {
   const milestones: MilestoneDef[] = config.progression.milestones.map((m) => ({ id: m.id, threshold: m.threshold }))
-  const complete = (state: EvalState): boolean => progressionComplete(state.progression, milestones)
+  const complete = (state: EvalState): boolean =>
+    progressionComplete(state.progression, milestones) &&
+    allStockPurchased(config.shops, new Set(state.purchased))
 
   return {
     packId: 'economy-progression',
     createState: (): EvalState => ({
       wallet: createWalletState(config.wallet.startingBalance),
       progression: createProgressionState(),
-      collected: []
+      collected: [],
+      purchased: []
     }),
     connect(bus, ref) {
       const bump = (amount: number): void => {
@@ -1351,9 +1663,10 @@ export function createEconomyProgressionEvalHook(config: EconomyPackConfig): Pac
         if (dist < bestDist) { bestDist = dist; best = pickup.position }
       }
       if (best) return { ...best }
-      const owned = ownedView(slices)
+      // Reachable because `complete` also requires the stock to be cleared.
+      const owned = ownedView(evalState, slices)
       for (const shop of config.shops) {
-        if (nextPurchase(shop, (state as EvalState).wallet.balance, owned)) { best = shop.position; break }
+        if (nextPurchase(shop, evalState.wallet.balance, owned)) { best = shop.position; break }
       }
       return best ? { ...best } : null
     },
@@ -1367,19 +1680,24 @@ export function createEconomyProgressionEvalHook(config: EconomyPackConfig): Pac
         collected.add(pickup.id)
         wallet = earn(wallet, pickup.amount)
       }
-      const owned = ownedView(slices)
+      const purchased = new Set(evalState.purchased)
       for (const shop of config.shops) {
         if (!inRadius(shop, player)) continue
-        const purchase = nextPurchase(shop, wallet.balance, owned)
+        // Recompute per shop so a second shop sees the first shop's purchase,
+        // matching the adapter's live slice re-read.
+        const purchase = nextPurchase(shop, wallet.balance, ownedView({ ...evalState, purchased: [...purchased] }, slices))
         if (!purchase) continue
         const result = spend(wallet, purchase.price)
         if (!result.ok) continue
         wallet = result.state
+        purchased.add(purchase.itemId)
         emit?.(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: purchase.itemId })
       }
       const advanced = advance(evalState.progression, wallet.totalEarned, milestones)
       for (const milestoneId of advanced.newlyAchieved) emit?.(MILESTONE_REACHED_EVENT, { packId: 'economy-progression', milestoneId })
-      return { wallet, progression: advanced.state, collected: [...collected] } satisfies EvalState
+      return {
+        wallet, progression: advanced.state, collected: [...collected], purchased: [...purchased]
+      } satisfies EvalState
     },
     complete: (state) => complete(state as EvalState),
     publishSlices: (state) => ({
@@ -1442,10 +1760,16 @@ describe('economyProgressionEditorContribution', () => {
       bounty: { perEnemy: 3 }, questReward: { perQuest: 6 },
       progression: { milestones: [{ id: 'm1', threshold: 5 }] }
     }
-    const preview = economyProgressionEditorContribution.createPreview(config, render as never)
+    // `createPreview` is optional on PackEditorContribution — the bang matches
+    // every existing pack's editorContribution test and is required under strict.
+    const preview = economyProgressionEditorContribution.createPreview!(config, render as never)
     expect(added.length).toBeGreaterThan(0)
     preview.dispose()
     expect(removed.length).toBe(added.length)
+  })
+  it('rejects a config that fails the pack schema', () => {
+    const render = { add: () => {}, setPose: () => {}, remove: () => {} }
+    expect(() => economyProgressionEditorContribution.createPreview!({ bogus: true }, render as never)).toThrow()
   })
 })
 ```
@@ -1611,7 +1935,7 @@ In `packages/pack-dialogue-quests/src/evalHook.ts`, add `QUEST_COMPLETED_EVENT` 
 
 - [ ] **Step 6: Run both packages' tests + commit**
 
-Run: `npm test -w @automata/pack-combat-ai -- evalHook && npm test -w @automata/pack-dialogue-quests -- evalHook`
+Run: `npm test -w @automata/pack-combat-ai -- evalHook && npx vitest run --project pack-dialogue-quests evalHook`
 Expected: PASS
 
 ```bash
@@ -1704,8 +2028,10 @@ In `packages/pack-registry/tests/compositionMatrix.test.ts`, extend the `SCENARI
     ['interaction-inventory', 'dialogue-quests', 'schedules-relationships'],
     ['combat-ai'],
     ['interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai'],
-    // Cycle 5: base loop, bounty edge, reward edge, and the full 5-pack set.
-    ['interaction-inventory', 'economy-progression'],
+    // Cycle 5: bounty edge, reward edge, and the full 5-pack set. The base
+    // [inventory, economy] pair is NOT listed — the `pairs` loop above already
+    // generates it automatically from STANDARD_PACKS (it is the only new
+    // requires-satisfiable pair), so listing it here would just run it twice.
     ['interaction-inventory', 'economy-progression', 'combat-ai'],
     ['interaction-inventory', 'dialogue-quests', 'economy-progression'],
     ['interaction-inventory', 'dialogue-quests', 'schedules-relationships', 'combat-ai', 'economy-progression']
@@ -1714,7 +2040,7 @@ In `packages/pack-registry/tests/compositionMatrix.test.ts`, extend the `SCENARI
 
 - [ ] **Step 4: Run the matrix to verify it stays green**
 
-Run: `npm test -w @automata/pack-registry -- compositionMatrix`
+Run: `npx vitest run --project pack-registry compositionMatrix`
 Expected: PASS — the economy+inventory pair, the two synergy scenarios (bounty/reward proven via the event bus), and the 5-pack set all compose, boot, and complete headlessly.
 
 - [ ] **Step 5: Write the parity test**
@@ -1734,14 +2060,15 @@ const composition = () => ({
   assets: []
 })
 
-/** Drive the eval twin to completion and return the inventory + wallet slices. */
-function runEval(): { collected: string[]; totalEarned: number } {
+/** Drive the eval twin to completion; return the outcome AND the path walked. */
+function runEval(): { result: { collected: string[]; totalEarned: number }; path: Array<{ x: number; z: number }> } {
   const hooks = resolveEvalHooks(composition() as never)
   const states = new Map(hooks.map((h) => [h.packId, h.createState()]))
   const bus = createPackEventBus()
   for (const h of hooks) h.connect?.(bus, { get: () => states.get(h.packId), set: (s) => states.set(h.packId, s) })
   const emit = (n: string, p: unknown): void => bus.emit(n, p)
   const player = { x: -8, z: -8 }
+  const path: Array<{ x: number; z: number }> = []
   for (let t = 0; t < 4000; t += 1) {
     const slices: Record<string, unknown> = {}
     for (const h of hooks) Object.assign(slices, h.publishSlices?.(states.get(h.packId)) ?? {})
@@ -1755,31 +2082,74 @@ function runEval(): { collected: string[]; totalEarned: number } {
       if (dist > 0) { player.x += (dx / dist) * stride; player.z += (dz / dist) * stride }
       break
     }
+    path.push({ ...player })
     for (const h of hooks) states.set(h.packId, h.step(states.get(h.packId), player, slices, emit))
   }
   const inv = states.get('interaction-inventory') as { collected: string[] }
   const eco = (hooks.find((h) => h.packId === 'economy-progression') as PackEvalHook)
     .publishSlices!(states.get('economy-progression')) as { wallet: { totalEarned: number } }
-  return { collected: [...inv.collected].sort(), totalEarned: eco.wallet.totalEarned }
+  return { result: { collected: [...inv.collected].sort(), totalEarned: eco.wallet.totalEarned }, path }
+}
+
+/**
+ * Drive the RUNTIME twin over the same fixture: compose both packs, boot against
+ * a null renderer, and replay the eval run's player path through fixedUpdate so
+ * the two paths see identical input. Returns the same shape as runEval.
+ */
+function runRuntime(path: ReadonlyArray<{ x: number; z: number }>): { collected: string[]; totalEarned: number } {
+  const comp = composition()
+  const configs = Object.fromEntries(comp.packs.map((entry) => [entry.id, entry.config]))
+  const app = document.createElement('div')
+  document.body.append(app)
+  const host = createGameHost(app)
+  const render = createNullRenderer()
+  try {
+    const runtime = composePacks(SET.map((id) => STANDARD_PACKS[id]!), configs).boot({ host, render: render.port })
+    for (const playerPosition of path) runtime.fixedUpdate(1 / 60, { playerPosition })
+    const state = runtime.saveState()
+    const inv = state['interaction-inventory'] as { collected: string[] }
+    const eco = state['economy-progression'] as { wallet: { totalEarned: number } }
+    return { collected: [...inv.collected].sort(), totalEarned: eco.wallet.totalEarned }
+  } finally {
+    host.dispose()
+    app.remove()
+  }
 }
 
 describe('economy+inventory parity', () => {
   it('the eval twin grants purchased catalog ids into inventory', () => {
-    const result = runEval()
+    const { result } = runEval()
     // Every catalog id in the economy fixture's shop stock ends up owned by inventory.
     const catalog = (PACK_FIXTURES['economy-progression']!() as {
       shops: Array<{ stock: Array<{ itemId: string }> }>
     }).shops.flatMap((s) => s.stock.map((e) => e.itemId))
+    expect(catalog.length).toBeGreaterThan(0) // guard: a vacuous assertion would pass silently
     for (const id of catalog) expect(result.collected).toContain(id)
+  })
+
+  it('the runtime slice-registry path and the eval event-bus path agree', () => {
+    const { result, path } = runEval()
+    expect(runRuntime(path)).toEqual(result)
   })
 })
 ```
 
-> This proves the event-driven purchase→grant loop end to end in the headless twin: economy emits `itemPurchased`, inventory's `connect` handler grants it, and the id appears in inventory's published `collected`.
+> Together these discharge spec §6's parity requirement: the first proves the
+> event-driven purchase→grant loop end to end in the headless twin (economy emits
+> `itemPurchased`, inventory's `connect` handler grants it, the id appears in
+> inventory's published `collected`); the second proves the runtime reaches the
+> same wallet and inventory outcome over the same player path through
+> `ctx.events` + the slice registry. The first test alone is **not** a parity
+> test — an earlier draft of this plan shipped only that one.
+
+> `runEval` must now also return the player path it walked. Accumulate it:
+> declare `const path: Array<{ x: number; z: number }> = []` next to `player`,
+> push `{ ...player }` at the end of each loop iteration (after the move, before
+> the `step` fan-out), and return `{ result: { collected, totalEarned }, path }`.
 
 - [ ] **Step 6: Run the parity test + commit**
 
-Run: `npm test -w @automata/pack-registry`
+Run: `npx vitest run --project pack-registry`
 Expected: PASS (matrix + parity).
 
 ```bash
@@ -1832,7 +2202,7 @@ it('threads an economy-progression pack config when selected', () => {
 
 - [ ] **Step 3: Run it to verify it fails**
 
-Run: `npm test -w @automata/game-compose -- compose`
+Run: `npx vitest run --project game-compose compose`
 Expected: FAIL — no economy pack entry (threading not wired).
 
 - [ ] **Step 4: Implement the threading**
@@ -1845,13 +2215,35 @@ In `packages/game-compose/src/compose.ts`:
 import { composeEconomySection, economyProgressionPack } from '@automata/pack-economy-progression'
 ```
 
-2. Add the `wantsEconomy` flag next to the others (~line 46):
+2. **Add economy to the `supported` gate (`compose.ts:30-32`)** — without this the
+function returns `ok: false` with `compose-unsupported-capability` before any of
+the work below runs, and Step 2's test cannot pass:
+
+```ts
+  const supported = new Set<string>([
+    interactionInventoryPack.id, dialogueQuestsPack.id, schedulesRelationshipsPack.id,
+    combatAiPack.id, economyProgressionPack.id
+  ])
+```
+
+Bump the message on the next line from `Phase 4 cycle 4 composes only` to
+`Phase 4 cycle 5 composes only`.
+
+3. **Add economy to the `selectedPacks` flatMap (`compose.ts:49-55`)** — this is
+what feeds `validatePackSet`, so without it the requires-inventory error is never
+raised and the `packConfig!` non-null assertion in Step 4 is unguarded:
+
+```ts
+    if (entry.id === economyProgressionPack.id) return [economyProgressionPack]
+```
+
+4. Add the `wantsEconomy` flag next to the others (~line 46):
 
 ```ts
   const wantsEconomy = spec.capabilities.some((entry) => entry.id === economyProgressionPack.id)
 ```
 
-3. After the `if (wantsCombat) { ... }` block (~line 147) and before `const composition`, add:
+5. After the `if (wantsCombat) { ... }` block (~line 147) and before `const composition`, add:
 
 ```ts
   if (wantsEconomy) {
@@ -1875,11 +2267,11 @@ import { composeEconomySection, economyProgressionPack } from '@automata/pack-ec
   }
 ```
 
-> Economy is threaded **last** so it consumes RNG only after the existing sections, preserving every prior section's stream — first-light (no economy) is bit-identical. Economy requires inventory, so `packConfig!` is always defined when `wantsEconomy` is true.
+> Economy is threaded **last** so it consumes RNG only after the existing sections, preserving every prior section's stream — first-light (no economy) is bit-identical. Economy requires inventory, and Step 3 puts it in `selectedPacks` so `validatePackSet` returns `pack-missing-requirement` before this line is reached — that is what makes `packConfig!` safe. Add a test that a spec selecting economy **without** inventory returns `ok: false` with that code.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npm test -w @automata/game-compose`
+Run: `npx vitest run --project game-compose`
 Expected: PASS — the economy selection test and the first-light frozen-baseline recompose both green.
 
 - [ ] **Step 6: Commit**
@@ -1897,6 +2289,15 @@ git commit -m "feat(game-compose): thread economy-progression section into compo
 
 Run: `npm run ci`
 Expected: PASS (typecheck + lint + all package tests). Fix any cross-package type or lint fallout inline (most likely: a missing `import type` or an `any` the lint rejects).
+
+- [ ] **Step 1b: Run coverage**
+
+Run: `npm run coverage`
+Expected: PASS. This cycle adds a whole package under `packages/*/src/**`, which
+the root config holds to **90% lines and branches** — `pack.ts` in particular has
+many branches (purchase, insufficient funds, bounty, reward, marker reconcile on
+load, dispose). Task 9's test list is sized for this; if coverage still falls
+short, add the missing adapter cases rather than lowering the threshold.
 
 - [ ] **Step 2: Prove first-light recomposes bit-identically**
 
@@ -1940,10 +2341,10 @@ In `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-4-capability-
 
 - [ ] **Step 2: Update the roadmap**
 
-In `docs/ROADMAP.md` §3 Phase 4, change the cycle 5 line from `Next` to `Shipped`:
+In `docs/ROADMAP.md:241`, change the cycle 5 line from `Next` to `Shipped`:
 
 ```markdown
-  - Cycle 5 — economy, shops & progression pack — `Shipped` (2026-07-22, plan:
+  - Cycle 5 — economy, shops & progression pack — `Shipped` (2026-07-28, plan:
     [`2026-07-21-phase-4-cycle-5-economy-progression.md`](superpowers/plans/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression.md)).
 ```
 
@@ -1952,8 +2353,28 @@ And promote cycle 6 (`compact-hub navigation + one vehicle pack`) from `Planned`
 - [ ] **Step 3: Update the decomposition status counters**
 
 In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`:
-- §3 Phase-map Phase 4 row: change `4 of 7 completed (2026-07-18)` to `5 of 7 completed (2026-07-22)`.
-- §5 Phase 4 list: mark item 5 (`Economy, shops & progression pack`) completed.
+- §3 Phase-map Phase 4 row (line ~90): change `4 of 7 completed (2026-07-18)` to `5 of 7 completed (2026-07-28)`.
+- §5 Phase 4 section header (line ~472): change `**Phase 4 (seven peers; cycles 1–4 completed — see roadmap for live status):**` to `cycles 1–5 completed`.
+- §5 Phase 4 list: mark item 5 (`Economy, shops & progression pack — completed`).
+
+- [ ] **Step 3b: Fold this cycle's spec corrections back into the design spec**
+
+Three findings in this plan contradict the approved spec. Amend
+`docs/superpowers/specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md`
+so the shipped spec matches the shipped code:
+
+- §4.2 / §3.5 — `complete` / `objectivesComplete` is "all milestones achieved
+  **and** all shop stock purchased". As written (`progressionComplete` alone,
+  with §4.1's top threshold `≤ start + Σ pickups`) the shop branch of
+  `nextTarget` is unreachable and the purchase loop is unprovable. See Task 5.
+- §4.1 — add the **affordability invariant**: `Σ stock prices ≤ startingBalance
+  + Σ pickup amounts`, alongside the existing reachability invariant. See Task 8.
+- §3.4 — `collectedPickups` and `purchased` **are** persisted; they are not
+  recomputable bookkeeping. See Task 7's `savedEconomySchema`.
+
+Also note the two intentional simplifications: pickup count/amount, stock size,
+and prices are `ECONOMY_DEFAULTS` constants rather than seeded draws (§4.1 says
+"seeded"); and `nextPurchase` takes a `balance` number, not a wallet (§3.2).
 
 - [ ] **Step 4: Commit**
 
@@ -1962,13 +2383,24 @@ git add docs/ROADMAP.md docs/superpowers/specs
 git commit -m "docs: mark Phase 4 cycle 5 (economy) shipped; log capability gaps"
 ```
 
+- [ ] **Step 5: Add the new gap discovered during this cycle**
+
+Append to the umbrella §9 list from Step 1:
+
+```markdown
+- **Cycle 5 — shop stock is bounded by base earning.** Stock size is capped at
+  `floor((startingBalance + Σ pickups) / catalogPrice)` because completion
+  requires buying it all. Decoupling "stock the vendor offers" from "stock the
+  objective requires" needs an optional-purchase concept the pack does not have.
+```
+
 ---
 
 ## Self-Review
 
 **Spec coverage:**
 - §1 scope (wallet + buy-only shops + threshold progression) → Tasks 4–10.
-- §1 event-driven grant / cycle-2 gap → Task 2 (inventory consume) + Task 13 (parity).
+- §1 event-driven grant / cycle-2 gap → Task 2 (inventory consume, runtime side) + Task 13 (eval side + runtime/eval parity).
 - §1 progression = currency thresholds → Task 6 + Task 8 (reachability).
 - §1 synergy edges (bounty/reward) → Task 9/10 (subscribe) + Task 12 (emitters) + Task 13 (scenarios).
 - §1 catalog-only stock + 8-cap → Task 8 (catalog budget) + Task 2 (grant unaffected by completion).
@@ -1988,3 +2420,20 @@ git commit -m "docs: mark Phase 4 cycle 5 (economy) shipped; log capability gaps
 **Placeholder scan:** none. Every code step carries complete, copy-paste-runnable code. Two tests (Task 12 dialogue, Task 14 compose) instruct the implementer to reuse an existing fixture/helper in the target test file rather than duplicating a large spec fixture — the assertion and setup shape are given explicitly, so this is a directed reuse, not a "write tests for the above" placeholder.
 
 **Type consistency:** `WalletState`/`ProgressionState`/`ShopDef`/`MilestoneDef`/`EconomyPackConfig` names are used identically across Tasks 4–10. Slice ids (`wallet`, `progression`, `inventory`) and event names (`itemPurchased`, `milestoneReached`, `enemyDefeated`, `questCompleted`) match between the emitter (Task 9/10/12) and consumer (Task 2/9/10) sides. `PackEvalHook.connect`/`emit` signatures from Task 1 are used consistently in Tasks 2, 10, 12, 13.
+
+**Twin parity audit:** the adapter (Task 9) and eval hook (Task 10) must agree on
+three things or the Task 13 parity test fails — pickup reach (`0.8` in both),
+the owned set (inventory's granted ids ∪ own `purchased`, recomputed per shop in
+both), and the completion predicate (`progressionComplete && allStockPurchased`).
+Each is called out at its definition site.
+
+**Command audit:** per-package runs use `npx vitest run --project <name>` except
+`pack-combat-ai` and the new `pack-economy-progression`, the only two packages
+with a `test` script. `npm test -w` fails elsewhere with "Missing script".
+
+**Spec deviations (all deliberate, all logged in Task 16 Step 3b):** completion
+includes clearing shop stock (§4.2/§3.5); a new compose-time affordability
+invariant (§4.1); `collectedPickups`/`purchased` are persisted (§3.4); pickups,
+stock size, and prices are constants rather than seeded draws (§4.1);
+`nextPurchase` takes a balance, not a wallet (§3.2). The first three are
+corrections to genuine spec defects, not shortcuts — see the note in Task 5.

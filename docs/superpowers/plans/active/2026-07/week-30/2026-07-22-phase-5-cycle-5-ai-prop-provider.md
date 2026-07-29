@@ -20,7 +20,15 @@
 - **`claude-svg` behavior is frozen.** The only edit to `claudeSvgProvider.ts` is adding `export` to `isAuthenticationError`. Its existing tests must stay green untouched.
 - **first-light frozen.** No compose-path change; the new model-palette validation passes on procedural prop assets (procedural colors are `svgPaletteColors` members by construction). Verify at the gate.
 - **Canonical recipe serialization.** Both providers write `${JSON.stringify(recipe, null, 2)}\n` so the on-disk model format is identical regardless of provider.
-- **Verification:** `npm run ci` and `npm run verify:new-game` must pass before the cycle is claimed done. Per-package: `npm test -w <package>`.
+- **Verification:** `npm run ci` and `npm run verify:new-game` must pass before the cycle is claimed done.
+- **Per-package test invocation.** `asset-providers`, `asset-providers-ai`, and
+  `editor-mcp-server` have **no `test` script** — `npm test -w <package>` fails with
+  "Missing script". (`tools/editor-mcp-server` is also named `editor-mcp-server`,
+  not `@automata/editor-mcp-server`.) Use the root vitest project names instead:
+  `npx vitest run --project asset-providers <filter>`,
+  `npx vitest run --project asset-providers-ai <filter>`,
+  `npx vitest run --project editor-mcp-server <filter>`.
+  Project names come from each package's `vitest.config.ts` `test.name`.
 
 ---
 
@@ -63,7 +71,7 @@ describe('propRecipePaletteErrors', () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npm test -w @automata/asset-providers -- propRecipe`
+Run: `npx vitest run --project asset-providers propRecipe`
 Expected: FAIL — `propRecipePaletteErrors` is not exported.
 
 - [ ] **Step 3: Implement the helper**
@@ -84,18 +92,25 @@ export function propRecipePaletteErrors(recipe: PropRecipe, allowed: readonly st
 
 - [ ] **Step 4: Run the helper test to verify it passes**
 
-Run: `npm test -w @automata/asset-providers -- propRecipe`
+Run: `npx vitest run --project asset-providers propRecipe`
 Expected: PASS
 
 - [ ] **Step 5: Write the failing validation test**
 
-Add to `packages/asset-providers/tests/validateMedia.test.ts`:
+Add to `packages/asset-providers/tests/validateMedia.test.ts`.
+
+> **Imports:** that file already imports `deriveStyleParams` (line 5) and
+> `validateAssetMedia` (line 6, alongside `MEDIA_BUDGETS`/`readWavInfo`), and
+> declares a top-level `const style = deriveStyleParams(direction, 7)`. Add only
+> the two genuinely new imports below and let the tests shadow `style` locally —
+> re-importing `deriveStyleParams`/`validateAssetMedia` is a duplicate-identifier
+> type error. `svgPaletteColors` is deliberately *not* imported here — neither
+> test names a palette color directly (the off-palette case uses `#ff0000`, the
+> clean case uses whatever the procedural provider emits), and an unused import
+> is a lint error.
 
 ```ts
 import { propProvider } from '../src/propProvider'
-import { deriveStyleParams } from '../src/styleParams'
-import { svgPaletteColors } from '../src/svgProvider'
-import { validateAssetMedia } from '../src/validateMedia'
 
 const modelEntry = (bytes: Uint8Array, provenance: unknown) => ({
   id: 'prop-1',
@@ -128,7 +143,7 @@ it('passes a procedurally generated prop recipe under the same style', async () 
 
 - [ ] **Step 6: Run it to verify it fails**
 
-Run: `npm test -w @automata/asset-providers -- validateMedia`
+Run: `npx vitest run --project asset-providers validateMedia`
 Expected: FAIL — the off-palette test finds no such issue (model branch has no palette check yet).
 
 - [ ] **Step 7: Wire the palette check into the model branch**
@@ -165,7 +180,7 @@ Then replace the `if (kind === 'model') { … }` block (lines ~104-114) with:
 
 - [ ] **Step 8: Run the validation tests + the full package to verify no regression**
 
-Run: `npm test -w @automata/asset-providers`
+Run: `npx vitest run --project asset-providers`
 Expected: PASS (new palette tests + all existing `asset-providers` tests, including `generate` byte-identical pins).
 
 - [ ] **Step 9: Commit**
@@ -212,9 +227,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { describe, expect, it } from 'vitest'
 import { sha256Hex, deriveStyleParams, svgPaletteColors } from '@automata/asset-providers'
 import type { AssetRequirement } from '@automata/contracts'
-import {
-  buildPropPrompt, createClaudePropProvider, extractPropRecipe, CLAUDE_PROP_MAX_BYTES
-} from '../src/claudePropProvider'
+import { buildPropPrompt, createClaudePropProvider, extractPropRecipe } from '../src/claudePropProvider'
 import { AiProviderError, type MessagesClient } from '../src/claudeSvgProvider'
 
 const style = deriveStyleParams({ visualStyle: 'neon dusk', audioStyle: 'calm' }, 42)
@@ -289,17 +302,30 @@ describe('createClaudePropProvider', () => {
     const provider = createClaudePropProvider({ client })
     await expect(provider.generate(requirement, ctx)).rejects.toMatchObject({ code: 'ai-auth-missing' })
   })
-  it('throws ai-malformed-output when the recipe exceeds the byte cap', async () => {
-    const huge = JSON.stringify({ formatVersion: 1, parts: Array.from({ length: 12 }, () => ({ primitive: 'box', size: { x: 1, y: 1, z: 1 }, offset: { x: 0, y: 0, z: 0 }, color: palette[0]! + ' '.repeat(CLAUDE_PROP_MAX_BYTES) })) }, null, 2)
-    const provider = createClaudePropProvider({ client: clientReturning(huge) })
+  it('throws ai-malformed-output for a recipe with too many parts', async () => {
+    const thirteen = JSON.stringify({
+      formatVersion: 1,
+      parts: Array.from({ length: 13 }, () => ({
+        primitive: 'box', size: { x: 1, y: 1, z: 1 }, offset: { x: 0, y: 0, z: 0 }, color: palette[0]!
+      }))
+    }, null, 2)
+    const provider = createClaudePropProvider({ client: clientReturning(thirteen) })
     await expect(provider.generate(requirement, ctx)).rejects.toMatchObject({ code: 'ai-malformed-output' })
   })
 })
 ```
 
+> **Do not write a byte-cap test.** An earlier draft of this plan asserted the
+> `CLAUDE_PROP_MAX_BYTES` branch by padding a part `color` with 16 KB of spaces.
+> That fixture is rejected by `propRecipe.ts:9` (`z.string().min(1).max(40)`)
+> long before `generate` measures bytes, so the assertion passed for the wrong
+> reason. The cap is in fact **unreachable through any schema-valid recipe**:
+> 12 parts × ~400 bytes ≈ 5 KB against a 16 KB budget. See Step 4's note on
+> keeping it anyway as defense-in-depth.
+
 - [ ] **Step 3: Run it to verify it fails**
 
-Run: `npm test -w @automata/asset-providers-ai -- claudePropProvider`
+Run: `npx vitest run --project asset-providers-ai claudePropProvider`
 Expected: FAIL — module not found.
 
 - [ ] **Step 4: Implement `claudePropProvider.ts`**
@@ -320,6 +346,8 @@ import { AiProviderError, isAuthenticationError, type MessagesClient } from './c
  * generation and again at validation.
  */
 export const CLAUDE_PROP_MAX_BYTES = MEDIA_BUDGETS.propMaxBytes
+// Mirrors claude-svg deliberately: both AI providers must move models together
+// so a cacheKey change is one reviewed decision, not a per-module drift.
 const DEFAULT_MODEL = 'claude-opus-4-8'
 
 export function buildPropPrompt(
@@ -408,6 +436,10 @@ export function createClaudePropProvider(
         .join('')
       const recipe = extractPropRecipe(text, allowedColors)
       const bytes = new TextEncoder().encode(recipe)
+      // Defense-in-depth only: PropRecipe v1 caps parts at 12 and colors at 40
+      // chars, so a schema-valid recipe cannot reach 16 KB. Kept so a future
+      // schema widening fails typed at generation rather than at validation;
+      // deliberately left without a unit test (it is unreachable today).
       if (bytes.length > CLAUDE_PROP_MAX_BYTES) {
         throw new AiProviderError('ai-malformed-output',
           `generated recipe is ${bytes.length} bytes (max ${CLAUDE_PROP_MAX_BYTES})`)
@@ -441,7 +473,7 @@ export * from './claudePropProvider'
 
 - [ ] **Step 6: Run the provider tests + the SVG tests (frozen) to verify**
 
-Run: `npm test -w @automata/asset-providers-ai`
+Run: `npx vitest run --project asset-providers-ai`
 Expected: PASS — new `claudePropProvider` tests green; existing `claudeSvgProvider` tests untouched and green.
 
 - [ ] **Step 7: Commit**
@@ -516,10 +548,21 @@ describe('model provider override', () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npm test -w @automata/editor-mcp-server -- assetTools`
+Run: `npx vitest run --project editor-mcp-server assetTools`
 Expected: PASS already for these two (they use an injected fake and the existing routing/kind-mismatch code from cycle 4). If both pass, the test is a regression pin for the routing this cycle relies on — proceed. If the kind-mismatch test does not throw, note the actual behavior and adjust the matcher to the real message before moving on.
 
 > This task's server change (Step 3) wires the *real* provider; the fake-provider tests above prove the model routing path independently of the network. There is no unit test that boots the real SDK — that is the opt-in live smoke (Task 4).
+
+> **Run this suite immediately after Task 1, before writing Task 2.** It is the
+> real regression pin for the new model-palette check (see Task 5 Step 2): the
+> default `setupWithSpec()` fixture is `minimalGameSpecDraft`, whose assets are
+> `[{ id: 'beacon-model', kind: 'model', … }]` (`contracts/src/gameSpecFixtures.ts:38`),
+> so several existing tests already generate a *procedural* prop and then run
+> `validateAssets` over it. That is the one place Task 1's change can newly fail —
+> if `validateAssets` reconstructs a different `StyleParams` than generation used,
+> the palette strings will not match and previously green tests go red. The
+> `styleSeed` mechanism that guards this for SVG is pinned by
+> `assetTools.test.ts:458`; confirm the model path benefits from the same seed.
 
 - [ ] **Step 3: Inject the real provider into the server**
 
@@ -537,7 +580,7 @@ and the injected map (line 62):
 
 - [ ] **Step 4: Run the server package tests + commit**
 
-Run: `npm test -w @automata/editor-mcp-server -- assetTools`
+Run: `npx vitest run --project editor-mcp-server assetTools`
 Expected: PASS
 
 ```bash
@@ -565,7 +608,7 @@ import { createClaudePropProvider } from '../src/claudePropProvider'
 import { propRecipeSchema, propRecipePaletteErrors, sha256Hex, svgPaletteColors, deriveStyleParams } from '@automata/asset-providers'
 
 describe.skipIf(!process.env.ANTHROPIC_API_KEY)('claude-prop live smoke', () => {
-  it('generates a schema-valid, palette-clean prop with a matching pinned hash', async () => {
+  it('generates a schema-valid, palette-clean prop with a matching pinned hash', { timeout: 120_000 }, async () => {
     const style = deriveStyleParams({ visualStyle: 'neon dusk', audioStyle: 'calm' }, 42)
     const provider = createClaudePropProvider()
     const { bytes, provenance } = await provider.generate(
@@ -575,15 +618,23 @@ describe.skipIf(!process.env.ANTHROPIC_API_KEY)('claude-prop live smoke', () => 
     const recipe = propRecipeSchema.parse(JSON.parse(new TextDecoder().decode(bytes)))
     expect(propRecipePaletteErrors(recipe, svgPaletteColors(style))).toEqual([])
     expect(provenance.determinism).toEqual({ kind: 'pinned', contentHash: sha256Hex(bytes) })
-  }, 30_000)
+  })
 })
 ```
 
-> If `live.test.ts` already imports some of these symbols at the top, fold the new imports into the existing import statements rather than duplicating them.
+> **Imports:** `live.test.ts` already imports `describe/expect/it` and
+> `deriveStyleParams, sha256Hex, validateAssetMedia` from `@automata/asset-providers`
+> (line 2). Fold `propRecipeSchema`, `propRecipePaletteErrors`, and
+> `svgPaletteColors` into that existing statement and add only the
+> `createClaudePropProvider` import — re-importing `deriveStyleParams`/`sha256Hex`
+> is a duplicate-identifier type error.
+>
+> The `{ timeout: 120_000 }` options form matches the shipped SVG live smoke;
+> a real generation regularly exceeds 30 s.
 
 - [ ] **Step 2: Verify it is skipped offline + commit**
 
-Run: `npm test -w @automata/asset-providers-ai -- live`
+Run: `npx vitest run --project asset-providers-ai live`
 Expected: the new `claude-prop live smoke` is skipped (no `ANTHROPIC_API_KEY`).
 
 ```bash
@@ -600,7 +651,16 @@ git commit -m "test(asset-providers-ai): opt-in claude-prop live smoke"
 Run: `npm run ci`
 Expected: PASS (typecheck + lint + all package tests, offline). Fix any cross-package type/lint fallout inline.
 
-- [ ] **Step 2: Prove first-light is untouched and its model assets still validate**
+Then run coverage, since this cycle adds a new source module to a
+coverage-included package (`packages/*/src/**` at 90% lines/branches):
+
+Run: `npm run coverage`
+Expected: PASS. `claudePropProvider.ts`'s only intentionally uncovered branch is
+the `CLAUDE_PROP_MAX_BYTES` guard (unreachable — see Task 2 Step 4). If that one
+branch drops the package below threshold, do **not** invent a fake test for it;
+remove the guard instead and drop `CLAUDE_PROP_MAX_BYTES` from the exports.
+
+- [ ] **Step 2: Prove first-light is untouched**
 
 Run: `npm run verify:new-game`
 Expected: PASS. Then confirm first-light is unchanged:
@@ -609,24 +669,48 @@ Expected: PASS. Then confirm first-light is unchanged:
 git status --porcelain games/first-light
 ```
 
-Expected: no output. (The new model-palette validation passes on first-light's procedural prop assets — their colors are `svgPaletteColors` members by construction, proven by Task 1's procedural-recipe test.)
+Expected: no output.
+
+> **Correction to the spec.** The spec (§1, §6, §7) says the model-palette change
+> is "pinned by first-light's model-asset regression." **first-light has no model
+> assets** — `games/first-light/public/assets/assets.json` contains exactly one
+> entry, `ui assets/item-icon.svg`. The first-light gate here proves only that
+> the compose path is untouched; it proves nothing about the model branch.
+>
+> The real regression pins for Task 1 are (a) Task 1 Step 5's procedural-recipe
+> test and (b) the `editor-mcp-server` assetTools suite, whose default fixture
+> spec carries a `model` requirement (`beacon-model`) generated by the procedural
+> provider and then validated — see the note in Task 3 Step 2. Both must be green
+> before this cycle is claimed done.
 
 - [ ] **Step 3: Update the roadmap**
 
-In `docs/ROADMAP.md` §3 Phase 5, add a cycle 5 bullet under the cycle list and flip the phase status note as cycle 4 did:
+In `docs/ROADMAP.md` §3 Phase 5, append a cycle 5 bullet to the cycle list (after
+the cycle 4 bullet):
 
 ```markdown
   - Cycle 5 — second AI provider adapter (claude-prop, text→PropRecipe for the
     `model` kind; pinned-hash determinism; model-palette validation) —
-    `Shipped` (2026-07-26, plan:
+    `Shipped` (2026-07-28, plan:
     [`2026-07-22-phase-5-cycle-5-ai-prop-provider.md`](superpowers/plans/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider.md)).
 ```
+
+Then bump the two Phase 5 completion dates from `2026-07-20` to `2026-07-28`:
+`docs/ROADMAP.md:30` (`**Phase 5 — Asset pipeline** (completed 2026-07-20; …`)
+and the §3 heading's status note.
+
+> **Do not flip Phase 5 to `In progress`.** The spec's header says "ROADMAP flips
+> Phase 5 back to `In progress` until this ships" — that was written for the
+> pre-implementation state. This task runs in the same commit that ships the
+> cycle, so the heading stays `### Phase 5 — Asset pipeline · \`Shipped\`` and only
+> the dates move.
 
 - [ ] **Step 4: Update the decomposition status counters**
 
 In `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`:
-- §3 Phase-map Phase 5 row: change `4 cycles completed (2026-07-20)` to `5 cycles completed (2026-07-26)`.
-- §5 Phase 5 list: add item 5 (`Second AI provider adapter (claude-prop, model kind)` — completed).
+- §3 Phase-map Phase 5 row (line ~91): change `4 cycles completed (2026-07-20)` to `5 cycles completed (2026-07-28)`.
+- §5 Phase 5 section header (line ~482): change `**Phase 5 (completed 2026-07-20; ran in parallel with Phase 4):**` to `2026-07-28`.
+- §5 Phase 5 list: add item 5 (`Second AI provider adapter (claude-prop, model kind) — completed`).
 
 - [ ] **Step 5: Commit**
 
@@ -651,8 +735,30 @@ git commit -m "docs: mark Phase 5 cycle 5 (claude-prop) shipped"
 - §4 model palette validation → Task 1 Step 7.
 - §5 MCP injection (sessionHost) → Task 3 Step 3.
 - §6 testing/gates → per-task tests + Task 5.
-- §7 first-light regression → Task 1 procedural test + Task 5 Step 2.
+- §7 first-light regression → Task 1 procedural test + the `editor-mcp-server`
+  `beacon-model` fixture (Task 3 Step 2 note). **Not** first-light, which has no
+  model assets — see the correction in Task 5 Step 2.
+
+**Known deviations from the spec (deliberate, corrected here):**
+- Spec §1/§6/§7 claim first-light's model assets pin the new palette rule.
+  first-light ships one `ui` SVG and zero model assets; the pin is retargeted to
+  the `editor-mcp-server` default fixture spec. Fold this back into the spec on
+  ship.
+- Spec §2 lists `CLAUDE_PROP_MAX_BYTES` as a generation-time gate. It is
+  unreachable through any schema-valid `PropRecipe v1` (12 parts, 40-char colors
+  ≈ 5 KB vs a 16 KB budget); kept as defense-in-depth, untested by design.
 
 **Placeholder scan:** none. Every code step carries complete, copy-paste-runnable code and matches the shipped `claude-svg` idioms (top-level `import Anthropic`, lazy `resolveClient`). Task 3 Step 2 flags that the routing tests may already pass against cycle-4 code (they pin the path this cycle depends on) and tells the implementer exactly how to react.
+
+**Command audit:** every per-package run command uses `npx vitest run --project <name>`.
+`npm test -w <package>` does **not** work here — `asset-providers`,
+`asset-providers-ai`, and `editor-mcp-server` declare no `test` script, and
+`tools/editor-mcp-server` is named `editor-mcp-server`, not
+`@automata/editor-mcp-server`.
+
+**Import audit:** Task 1 Step 5 and Task 4 Step 1 both append to existing test
+files that already import `deriveStyleParams`/`sha256Hex`/`validateAssetMedia`;
+each carries an explicit fold-the-imports note, and Task 1's snippet drops the
+unused `svgPaletteColors` import that would have failed lint.
 
 **Type consistency:** `MessagesClient`, `AiProviderError`, `isAuthenticationError` are defined in `claudeSvgProvider.ts` (Task 2 Step 1 exports the last) and imported identically in `claudePropProvider.ts` and its tests. `propRecipePaletteErrors(recipe, allowed): string[]` has the same signature in Task 1 (definition), Task 2 (generation call), and Task 4 (live smoke). `createClaudePropProvider` options `{ client?, model? }` match the `claude-svg` shape. The provider `id` `'claude-prop'`, `kinds: ['model']`, and `fileExtension` `'prop.json'` are consistent across Tasks 2, 3, and 5.
