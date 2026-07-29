@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer } from '@automata/engine'
 import {
-  composePacks, createGameHost, validatePackSet, PackCompositionError,
+  composePacks, createGameHost, createPackEventBus, validatePackSet, PackCompositionError,
   type GamePack, type PackEvalHook
 } from '@automata/game-kit'
 import { PACK_FIXTURES, STANDARD_PACKS, resolveEvalHooks } from '../src/index'
@@ -45,6 +45,14 @@ const fixtureComposition = (set: GamePack[]) => ({
 /** Seek the first incomplete hook with a target; null means blocked and yields to another pack. */
 function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
   const states = new Map(hooks.map((hook) => [hook.packId, hook.createState()]))
+  const bus = createPackEventBus()
+  for (const hook of hooks) {
+    hook.connect?.(bus, {
+      get: () => states.get(hook.packId),
+      set: (state) => states.set(hook.packId, state)
+    })
+  }
+  const emit = (name: string, payload: unknown): void => bus.emit(name, payload)
   const player = { x: -8, z: -8 }
   for (let step = 0; step < maxSteps; step += 1) {
     const slices: Record<string, unknown> = {}
@@ -61,7 +69,9 @@ function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
       if (dist > 0) { player.x += (dx / dist) * stride; player.z += (dz / dist) * stride }
       break
     }
-    for (const hook of hooks) states.set(hook.packId, hook.step(states.get(hook.packId), player, slices))
+    for (const hook of hooks) {
+      states.set(hook.packId, hook.step(states.get(hook.packId), player, slices, emit))
+    }
   }
   return hooks.every((hook) => hook.complete(states.get(hook.packId)))
 }

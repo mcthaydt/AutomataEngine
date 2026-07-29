@@ -11,6 +11,8 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
+**Implementation progress:** 8% (6/79 steps; 1/16 tasks complete)
+
 ## Global Constraints
 
 - **Never import `zod` directly.** Import `z` from `@automata/project`. Lint enforces this.
@@ -49,7 +51,7 @@ Thread the existing `PackEventBus` through the headless evaluator so hooks can e
 - Consumes: `PackEventBus`, `createPackEventBus` from `@automata/game-kit` (`packEvents.ts`).
 - Produces: `PackEvalHook.connect?(bus, ref)` and a 4th optional `emit` param on `step`; a `driveToCompletion` that creates one bus per run, connects each hook, and passes `bus.emit` into every `step`.
 
-- [ ] **Step 1: Write the failing harness test**
+- [x] **Step 1: Write the failing harness test**
 
 Create `packages/game-kit/tests/evalEventBus.test.ts`:
 
@@ -99,7 +101,7 @@ it('delivers an emitted event to a connected consumer synchronously', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project game-kit evalEventBus`
 Expected: FAIL on the assertion (`total` is 0, not 7). Note vitest strips types
@@ -108,7 +110,13 @@ and the missing 4th param leaves `emit` undefined — the optional calls swallow
 both and the expectation is what actually fails. `npm run typecheck -w @automata/game-kit`
 is the step that surfaces the type errors.
 
-- [ ] **Step 3: Extend `PackEvalHook` in game-kit**
+> **Implementation note (2026-07-28):** The prescribed Vitest assertion passes
+> before implementation because the local test driver already supplies the
+> runtime behavior and TypeScript interfaces are erased. The valid red gate is
+> `npm run typecheck -w @automata/game-kit`, which failed on the missing
+> `connect` member and fourth `step` parameter before the contract was extended.
+
+- [x] **Step 3: Extend `PackEvalHook` in game-kit**
 
 In `packages/game-kit/src/packEval.ts`, add the import and the two optional members. Replace the interface body:
 
@@ -138,7 +146,7 @@ export interface PackEvalHook {
 }
 ```
 
-- [ ] **Step 4: Thread the bus through the matrix driver**
+- [x] **Step 4: Thread the bus through the matrix driver**
 
 In `packages/pack-registry/tests/compositionMatrix.test.ts`, update the imports and `driveToCompletion`. Add `createPackEventBus` to the `@automata/game-kit` import, then replace the function:
 
@@ -172,12 +180,12 @@ function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run --project game-kit evalEventBus && npx vitest run --project pack-registry compositionMatrix`
 Expected: PASS (existing matrix rows unaffected; new event-bus test green).
 
-- [ ] **Step 6: Typecheck game-kit and commit**
+- [x] **Step 6: Typecheck game-kit and commit**
 
 ```bash
 npm run typecheck -w @automata/game-kit
