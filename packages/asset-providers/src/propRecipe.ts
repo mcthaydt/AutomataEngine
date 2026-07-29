@@ -64,3 +64,13 @@ export function recipeToRenderables(
     }
   })
 }
+
+/** One message per part whose color is not in the allowed palette (empty when all comply). */
+export function propRecipePaletteErrors(recipe: PropRecipe, allowed: readonly string[]): string[] {
+  const allowedSet = new Set(allowed)
+  const errors: string[] = []
+  recipe.parts.forEach((part, index) => {
+    if (!allowedSet.has(part.color)) errors.push(`part ${index + 1} uses off-palette color "${part.color}"`)
+  })
+  return errors
+}

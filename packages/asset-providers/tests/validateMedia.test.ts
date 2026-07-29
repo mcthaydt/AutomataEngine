@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AssetRequirement } from '@automata/contracts'
 import { generateGameAssets } from '../src/generate'
 import { sha256Hex } from '../src/hash'
+import { propProvider } from '../src/propProvider'
 import { deriveStyleParams } from '../src/styleParams'
 import { MEDIA_BUDGETS, readWavInfo, validateAssetMedia } from '../src/validateMedia'
 
@@ -16,6 +17,16 @@ const requirements: AssetRequirement[] = [
 async function generated() {
   return generateGameAssets({ requirements, direction, seed: 7, specVersion: 1 })
 }
+
+const modelEntry = (bytes: Uint8Array, provenance: unknown) => ({
+  id: 'prop-1',
+  requirement: { id: 'prop-1', kind: 'model' as const, description: 'A prop.' },
+  path: 'assets/prop-1.prop.json',
+  provenance: provenance as never,
+  transformations: [],
+  status: 'generated' as const,
+  references: []
+})
 
 describe('validateAssetMedia', () => {
   it('passes every provider-generated asset', async () => {
@@ -45,6 +56,24 @@ describe('validateAssetMedia', () => {
     const text = new TextDecoder().decode(svg!.bytes).replace(/fill="[^"]+"/, 'fill="#123456"')
     const issues = validateAssetMedia(svg!.entry, new TextEncoder().encode(text), style)
     expect(issues.some((issue) => issue.code === 'asset-media-invalid' && /palette/i.test(issue.message))).toBe(true)
+  })
+
+  it('flags an off-palette prop recipe under the model branch', () => {
+    const style = deriveStyleParams({ visualStyle: 'x', audioStyle: 'y' }, 5)
+    const bad = `${JSON.stringify({ formatVersion: 1, parts: [{ primitive: 'box', size: { x: 1, y: 1, z: 1 }, offset: { x: 0, y: 0.5, z: 0 }, color: '#ff0000' }] }, null, 2)}\n`
+    const bytes = new TextEncoder().encode(bad)
+    const issues = validateAssetMedia(modelEntry(bytes, { determinism: { kind: 'seeded' } }), bytes, style)
+    expect(issues.some((issue) => issue.message.includes('off-palette'))).toBe(true)
+  })
+
+  it('passes a procedurally generated prop recipe under the same style', async () => {
+    const style = deriveStyleParams({ visualStyle: 'x', audioStyle: 'y' }, 5)
+    const { bytes, provenance } = await propProvider.generate(
+      { id: 'prop-1', kind: 'model', description: 'A prop.' },
+      { seed: 3, style, specVersion: 1 }
+    )
+    const issues = validateAssetMedia(modelEntry(bytes, provenance), bytes, style)
+    expect(issues.some((issue) => issue.message.includes('off-palette'))).toBe(false)
   })
 
   it.each([

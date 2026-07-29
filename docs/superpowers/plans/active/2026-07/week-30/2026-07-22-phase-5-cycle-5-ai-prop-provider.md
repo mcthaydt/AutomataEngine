@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript (npm workspaces monorepo), `@anthropic-ai/sdk`, zod v4 via `@automata/project`, vitest.
 
+**Implementation progress:** 33% (9/27 steps).
+
 **Spec:** [`2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md`](../../specs/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md)
 **Umbrella:** [`2026-07-14-phase-5-asset-pipeline-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
 **Precedent:** [`2026-07-17-phase-5-cycle-4-ai-provider-design.md`](../../specs/active/2026-07/week-29/2026-07-17-phase-5-cycle-4-ai-provider-design.md)
@@ -44,7 +46,7 @@ Add the shared `propRecipePaletteErrors` rule and wire it into the `model` branc
 **Interfaces:**
 - Produces: `propRecipePaletteErrors(recipe: PropRecipe, allowed: readonly string[]): string[]` (exported from `@automata/asset-providers` via the existing `export * from './propRecipe'`).
 
-- [ ] **Step 1: Write the failing helper test**
+- [x] **Step 1: Write the failing helper test**
 
 Create `packages/asset-providers/tests/propRecipe.test.ts`:
 
@@ -69,12 +71,12 @@ describe('propRecipePaletteErrors', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project asset-providers propRecipe`
 Expected: FAIL — `propRecipePaletteErrors` is not exported.
 
-- [ ] **Step 3: Implement the helper**
+- [x] **Step 3: Implement the helper**
 
 In `packages/asset-providers/src/propRecipe.ts`, add at the end (after `recipeToRenderables`):
 
@@ -90,12 +92,12 @@ export function propRecipePaletteErrors(recipe: PropRecipe, allowed: readonly st
 }
 ```
 
-- [ ] **Step 4: Run the helper test to verify it passes**
+- [x] **Step 4: Run the helper test to verify it passes**
 
 Run: `npx vitest run --project asset-providers propRecipe`
 Expected: PASS
 
-- [ ] **Step 5: Write the failing validation test**
+- [x] **Step 5: Write the failing validation test**
 
 Add to `packages/asset-providers/tests/validateMedia.test.ts`.
 
@@ -141,12 +143,12 @@ it('passes a procedurally generated prop recipe under the same style', async () 
 })
 ```
 
-- [ ] **Step 6: Run it to verify it fails**
+- [x] **Step 6: Run it to verify it fails**
 
 Run: `npx vitest run --project asset-providers validateMedia`
 Expected: FAIL — the off-palette test finds no such issue (model branch has no palette check yet).
 
-- [ ] **Step 7: Wire the palette check into the model branch**
+- [x] **Step 7: Wire the palette check into the model branch**
 
 In `packages/asset-providers/src/validateMedia.ts`, add `propRecipePaletteErrors` to the `./propRecipe` import:
 
@@ -178,12 +180,12 @@ Then replace the `if (kind === 'model') { … }` block (lines ~104-114) with:
   }
 ```
 
-- [ ] **Step 8: Run the validation tests + the full package to verify no regression**
+- [x] **Step 8: Run the validation tests + the full package to verify no regression**
 
 Run: `npx vitest run --project asset-providers`
 Expected: PASS (new palette tests + all existing `asset-providers` tests, including `generate` byte-identical pins).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/asset-providers/src packages/asset-providers/tests

@@ -1,6 +1,6 @@
 import type { AssetIssue, AssetManifestEntry, StyleParams } from '@automata/contracts'
 import { sha256Hex } from './hash'
-import { propRecipeSchema, recipeToRenderables } from './propRecipe'
+import { propRecipePaletteErrors, propRecipeSchema, recipeToRenderables } from './propRecipe'
 import { svgPaletteColors } from './svgProvider'
 import { validateSvgDocument } from './validateSvg'
 
@@ -105,11 +105,18 @@ export function validateAssetMedia(
     if (bytes.length > MEDIA_BUDGETS.propMaxBytes) {
       budget(`Prop recipe "${entry.id}" is ${bytes.length} bytes (max ${MEDIA_BUDGETS.propMaxBytes})`)
     }
+    let recipe: ReturnType<typeof propRecipeSchema.parse> | null = null
     try {
-      recipeToRenderables(propRecipeSchema.parse(JSON.parse(new TextDecoder().decode(bytes))))
+      recipe = propRecipeSchema.parse(JSON.parse(new TextDecoder().decode(bytes)))
+      recipeToRenderables(recipe)
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error)
       invalid(`Prop recipe "${entry.id}" invalid: ${detail}`.slice(0, 400))
+    }
+    if (recipe && style) {
+      for (const message of propRecipePaletteErrors(recipe, svgPaletteColors(style))) {
+        invalid(`Prop recipe "${entry.id}" ${message}`)
+      }
     }
     return issues
   }
