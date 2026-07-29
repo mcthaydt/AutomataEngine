@@ -1,6 +1,6 @@
 import { access, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createClaudeSvgProvider } from '@automata/asset-providers-ai'
+import { createClaudePropProvider, createClaudeSvgProvider } from '@automata/asset-providers-ai'
 import { ENGINE_VERSION } from '@automata/engine/data'
 import { createSessionEngine, diffFiles, hashJson, nodeSpawner, runCheck, snapshotFiles, type CommandSpawner, type SessionEngine } from '@automata/build-session'
 import { assetToolDefs, composeToolDefs, sessionToolDefs, specToolDefs, splitClientStepId, workspaceToolDefs, writeToolNames, type McpToolHost, type ToolResult } from '@automata/contracts'
@@ -59,7 +59,7 @@ export function createSessionHost(options: SessionHostOptions): SessionMcpHost {
     repoRoot,
     ensureEngine,
     snapshotContent: contentSnapshot,
-    namedProviders: { 'claude-svg': createClaudeSvgProvider() },
+    namedProviders: { 'claude-svg': createClaudeSvgProvider(), 'claude-prop': createClaudePropProvider() },
     ...(options.writeAssetFiles ? { writeFiles: options.writeAssetFiles } : {})
   })
   const handleOpen = async (gameId: string): Promise<ToolResult> => {

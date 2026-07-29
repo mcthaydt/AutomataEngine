@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (npm workspaces monorepo), `@anthropic-ai/sdk`, zod v4 via `@automata/project`, vitest.
 
-**Implementation progress:** 59% (16/27 steps).
+**Implementation progress:** 74% (20/27 steps).
 
 **Spec:** [`2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md`](../../specs/active/2026-07/week-30/2026-07-22-phase-5-cycle-5-ai-prop-provider-design.md)
 **Umbrella:** [`2026-07-14-phase-5-asset-pipeline-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md)
@@ -499,7 +499,7 @@ Inject `claude-prop` into the server's `namedProviders` and prove `model` routin
 - Consumes: `createClaudePropProvider` from `@automata/asset-providers-ai`.
 - Produces: server injects `{ 'claude-svg': …, 'claude-prop': createClaudePropProvider() }`.
 
-- [ ] **Step 1: Write the failing routing test**
+- [x] **Step 1: Write the failing routing test**
 
 Add to `tools/editor-mcp-server/tests/assetTools.test.ts` (next to the existing `provider override` describe block; reuse its `setupWithSpec`, `svgPaletteColors`, `sha256Hex` imports and `UI_ONLY_ASSETS` pattern):
 
@@ -548,7 +548,7 @@ describe('model provider override', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project editor-mcp-server assetTools`
 Expected: PASS already for these two (they use an injected fake and the existing routing/kind-mismatch code from cycle 4). If both pass, the test is a regression pin for the routing this cycle relies on — proceed. If the kind-mismatch test does not throw, note the actual behavior and adjust the matcher to the real message before moving on.
@@ -566,7 +566,7 @@ Expected: PASS already for these two (they use an injected fake and the existing
 > `styleSeed` mechanism that guards this for SVG is pinned by
 > `assetTools.test.ts:458`; confirm the model path benefits from the same seed.
 
-- [ ] **Step 3: Inject the real provider into the server**
+- [x] **Step 3: Inject the real provider into the server**
 
 In `tools/editor-mcp-server/src/sessionHost.ts`, extend the import (line 3):
 
@@ -580,7 +580,7 @@ and the injected map (line 62):
     namedProviders: { 'claude-svg': createClaudeSvgProvider(), 'claude-prop': createClaudePropProvider() },
 ```
 
-- [ ] **Step 4: Run the server package tests + commit**
+- [x] **Step 4: Run the server package tests + commit**
 
 Run: `npx vitest run --project editor-mcp-server assetTools`
 Expected: PASS

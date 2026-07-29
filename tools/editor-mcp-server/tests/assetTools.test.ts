@@ -428,6 +428,29 @@ const paletteAiProvider: AssetProvider = {
 }
 
 const UI_ONLY_ASSETS = [{ id: 'relic-icon', kind: 'ui', description: 'Icon.' }]
+const MODEL_ONLY_ASSETS = [{ id: 'lamp-prop', kind: 'model', description: 'A street lamp.' }]
+
+const fakePropProvider: AssetProvider = {
+  id: 'fake-prop',
+  version: '1.0.0',
+  kinds: ['model'],
+  fileExtension: () => 'prop.json',
+  async generate(requirement, ctx) {
+    const color = svgPaletteColors(ctx.style)[0]!
+    const bytes = new TextEncoder().encode(
+      `${JSON.stringify({ formatVersion: 1, parts: [{ primitive: 'box', size: { x: 1, y: 1, z: 1 }, offset: { x: 0, y: 0.5, z: 0 }, color }] }, null, 2)}\n`
+    )
+    return {
+      bytes,
+      provenance: {
+        provider: 'fake-prop', providerVersion: '1.0.0', generator: 'fake-model',
+        sourceParams: { prompt: 'fake' }, seed: ctx.seed, specVersion: ctx.specVersion,
+        determinism: { kind: 'pinned', contentHash: sha256Hex(bytes) },
+        license: { kind: 'generated', notes: 'test' }
+      }
+    }
+  }
+}
 
 describe('provider override', () => {
   it('generateAssets with provider routes through the injected provider and pins the entry', async () => {
@@ -482,8 +505,36 @@ describe('provider override', () => {
       .rejects.toMatchObject({
         code: 'asset-provider-unknown',
         message: expect.stringMatching(/Unknown provider "nope".*ai-fake/)
-      })
   })
+})
+
+describe('model provider override', () => {
+  it('routes a model requirement through the injected prop provider and validates', async () => {
+    const { runner, manifestPath } = await setupWithSpec(MODEL_ONLY_ASSETS, { 'fake-prop': fakePropProvider })
+    const result = await runner.execute('generateAssets', {
+      gameId: 'demo-game',
+      seed: 7,
+      provider: 'fake-prop'
+    })
+    expect(result.ok).toBe(true)
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    const entry = manifest.assets.find((candidate: { id: string }) => candidate.id === 'lamp-prop')
+    expect(entry.provenance.provider).toBe('fake-prop')
+    expect(entry.path.endsWith('.prop.json')).toBe(true)
+    expect(entry.provenance.determinism.kind).toBe('pinned')
+    const validated = await runner.execute('validateAssets', { gameId: 'demo-game' })
+    expect((validated.content as { statuses: Record<string, string> }).statuses['lamp-prop']).toBe('validated')
+  })
+
+  it('rejects a non-model requirement routed to a model-only provider', async () => {
+    const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'fake-prop': fakePropProvider })
+    await expect(runner.execute('generateAssets', {
+      gameId: 'demo-game',
+      seed: 7,
+      provider: 'fake-prop'
+    })).rejects.toThrow(/kind|model/i)
+  })
+})
 
   it('does not resolve prototype-looking provider ids through inherited properties', async () => {
     const { runner } = await setupWithSpec(UI_ONLY_ASSETS, { 'ai-fake': fakeAiProvider })
