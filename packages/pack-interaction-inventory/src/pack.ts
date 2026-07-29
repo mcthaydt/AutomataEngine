@@ -65,7 +65,7 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
       updateHud()
     }
 
-    ctx.events.on(ITEM_PURCHASED_EVENT, (payload) => {
+    const offItemPurchased = ctx.events.on(ITEM_PURCHASED_EVENT, (payload) => {
       const itemId = (payload as { itemId: string }).itemId
       applyState(grantItem(state, itemId))
     })
@@ -84,6 +84,7 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
       saveState: () => serializeInventory(state),
       loadState(raw) { applyState(deserializeInventory(raw)) },
       dispose() {
+        offItemPurchased()
         for (const entity of entities.values()) ctx.render.remove(entity)
         entities.clear()
         hud.remove()

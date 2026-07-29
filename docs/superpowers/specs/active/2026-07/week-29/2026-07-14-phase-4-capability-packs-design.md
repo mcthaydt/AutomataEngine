@@ -210,3 +210,7 @@ A pack cycle is complete when all seven items land and `npm run ci`,
   `floor((startingBalance + Σ pickups) / catalogPrice)` because completion
   requires buying it all. Decoupling "stock the vendor offers" from "stock the
   objective requires" needs an optional-purchase concept the pack does not have.
+- **Cycle 5 — six-shop presentation cap.** Specs may contain up to twelve
+  vendors, but the economy config and thin editor/runtime presentation support
+  the first six in stable cast order. Richer vendor coverage needs pagination,
+  districts, or another bounded presentation rule.

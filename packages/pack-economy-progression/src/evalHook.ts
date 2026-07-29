@@ -138,8 +138,6 @@ export function createEconomyProgressionEvalHook(
       const purchased = new Set(evalState.purchased)
       for (const shop of config.shops) {
         if (!inRadius(shop, player)) continue
-        // Recompute after each purchase so later shops see the same live union
-        // as the browser adapter's slice read.
         const purchase = nextPurchase(
           shop,
           wallet.balance,
@@ -154,6 +152,7 @@ export function createEconomyProgressionEvalHook(
           packId: 'economy-progression',
           itemId: purchase.itemId
         })
+        break
       }
 
       const advanced = advance(

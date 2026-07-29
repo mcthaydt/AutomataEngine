@@ -34,6 +34,27 @@ const shopConfig = () => ({
   progression: { milestones: [{ id: 'm1', threshold: 10 }] }
 })
 
+const overlappingShopsConfig = () => ({
+  ...config(),
+  wallet: { startingBalance: 20 },
+  pickups: [],
+  shops: [
+    {
+      id: 'shop-1',
+      position: { x: 0, z: 0 },
+      radius: 1.5,
+      stock: [{ itemId: 'catalog-1', price: 8 }]
+    },
+    {
+      id: 'shop-2',
+      position: { x: 0, z: 0.5 },
+      radius: 1.5,
+      stock: [{ itemId: 'catalog-2', price: 8 }]
+    }
+  ],
+  progression: { milestones: [{ id: 'm1', threshold: 20 }] }
+})
+
 /**
  * Register directly so the test controls the shared event bus and slice
  * registry. `composePacks` would also reject this required pack in isolation.
@@ -162,6 +183,23 @@ describe('economyProgressionPack', () => {
     teardown(booted)
   })
 
+  it('buys at most one item globally per fixed step', () => {
+    const booted = boot(overlappingShopsConfig())
+
+    booted.handle.fixedUpdate!(1 / 60, {
+      playerPosition: { x: 0, z: 0 }
+    })
+    expect(saved(booted).purchased).toEqual(['catalog-1'])
+    expect(booted.handle.objectivesComplete!()).toBe(false)
+
+    booted.handle.fixedUpdate!(1 / 60, {
+      playerPosition: { x: 0, z: 0 }
+    })
+    expect(saved(booted).purchased).toEqual(['catalog-1', 'catalog-2'])
+    expect(booted.handle.objectivesComplete!()).toBe(true)
+    teardown(booted)
+  })
+
   it('earns bounty and quest rewards from subscribed events', () => {
     const booted = boot()
     booted.events.emit('enemyDefeated', {
@@ -177,6 +215,27 @@ describe('economyProgressionPack', () => {
       totalEarned: 9
     })
     teardown(booted)
+  })
+
+  it('unsubscribes from economy reward events on dispose', () => {
+    const booted = boot()
+    booted.handle.dispose!()
+
+    booted.events.emit('enemyDefeated', {
+      packId: 'combat-ai',
+      enemyId: 'e1'
+    })
+    booted.events.emit('questCompleted', {
+      packId: 'dialogue-quests',
+      questId: 'q1'
+    })
+
+    expect(saved(booted).wallet).toEqual({
+      balance: 0,
+      totalEarned: 0
+    })
+    booted.ctx.host.dispose()
+    booted.app.remove()
   })
 
   it('round-trips all load-bearing economy state', () => {
@@ -214,6 +273,125 @@ describe('economyProgressionPack', () => {
     expect(() => booted.handle.loadState!({
       wallet: { balance: -1, totalEarned: 0 }
     })).toThrow()
+    teardown(booted)
+  })
+
+  it.each([
+    {
+      name: 'unknown pickup id',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 0, totalEarned: 0 },
+        progression: { achieved: [] },
+        collectedPickups: ['missing'],
+        purchased: []
+      }
+    },
+    {
+      name: 'duplicate pickup id',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 5, totalEarned: 5 },
+        progression: { achieved: ['m1'] },
+        collectedPickups: ['currency-1', 'currency-1'],
+        purchased: []
+      }
+    },
+    {
+      name: 'unknown purchased item id',
+      rawConfig: shopConfig(),
+      snapshot: {
+        wallet: { balance: 2, totalEarned: 10 },
+        progression: { achieved: ['m1'] },
+        collectedPickups: [],
+        purchased: ['missing']
+      }
+    },
+    {
+      name: 'duplicate purchased item id',
+      rawConfig: shopConfig(),
+      snapshot: {
+        wallet: { balance: 2, totalEarned: 10 },
+        progression: { achieved: ['m1'] },
+        collectedPickups: [],
+        purchased: ['catalog-1', 'catalog-1']
+      }
+    },
+    {
+      name: 'unknown achieved milestone id',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 5, totalEarned: 5 },
+        progression: { achieved: ['missing'] },
+        collectedPickups: ['currency-1'],
+        purchased: []
+      }
+    },
+    {
+      name: 'duplicate achieved milestone id',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 5, totalEarned: 5 },
+        progression: { achieved: ['m1', 'm1'] },
+        collectedPickups: ['currency-1'],
+        purchased: []
+      }
+    },
+    {
+      name: 'milestone achieved before its threshold',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 0, totalEarned: 0 },
+        progression: { achieved: ['m1'] },
+        collectedPickups: [],
+        purchased: []
+      }
+    },
+    {
+      name: 'balance greater than total earned',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 1, totalEarned: 0 },
+        progression: { achieved: [] },
+        collectedPickups: [],
+        purchased: []
+      }
+    },
+    {
+      name: 'purchase cost inconsistent with balance',
+      rawConfig: shopConfig(),
+      snapshot: {
+        wallet: { balance: 3, totalEarned: 10 },
+        progression: { achieved: ['m1'] },
+        collectedPickups: [],
+        purchased: ['catalog-1']
+      }
+    },
+    {
+      name: 'total earned below starting balance',
+      rawConfig: shopConfig(),
+      snapshot: {
+        wallet: { balance: 5, totalEarned: 5 },
+        progression: { achieved: [] },
+        collectedPickups: [],
+        purchased: []
+      }
+    },
+    {
+      name: 'earnings not produced by pickups or event rewards',
+      rawConfig: config(),
+      snapshot: {
+        wallet: { balance: 2, totalEarned: 2 },
+        progression: { achieved: [] },
+        collectedPickups: [],
+        purchased: []
+      }
+    }
+  ])('rejects $name without mutating live state', ({ rawConfig, snapshot }) => {
+    const booted = boot(rawConfig)
+    const before = saved(booted)
+    expect(() => booted.handle.loadState!(snapshot)).toThrow()
+    expect(saved(booted)).toEqual(before)
     teardown(booted)
   })
 })

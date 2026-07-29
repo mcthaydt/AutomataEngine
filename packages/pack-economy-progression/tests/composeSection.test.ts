@@ -69,6 +69,19 @@ describe('composeEconomySection', () => {
     expect(config.shops).toEqual([])
   })
 
+  it('deterministically bounds large vendor casts to six shops', () => {
+    const cast = Array.from({ length: 12 }, (_, index) => ({
+      id: `vendor-${index + 1}`,
+      name: `Vendor ${index + 1}`,
+      role: 'vendor'
+    }))
+    const first = composeEconomySection(input({ cast }), createSeededRng(7))
+    const second = composeEconomySection(input({ cast }), createSeededRng(7))
+
+    expect(first.shops).toHaveLength(6)
+    expect(first.shops).toEqual(second.shops)
+  })
+
   it('keeps every stocked item affordable from base earning', () => {
     const cast = Array.from({ length: 5 }, (_, index) => ({
       id: `v${index}`,

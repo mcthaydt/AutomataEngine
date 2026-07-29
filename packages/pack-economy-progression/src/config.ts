@@ -81,6 +81,13 @@ export const packConfigSchema: z.ZodType<EconomyPackConfig> =
       issue(`duplicate shop id "${id}"`)
     }
     for (const id of duplicates(
+      config.shops.flatMap((shop) =>
+        shop.stock.map((entry) => entry.itemId)
+      )
+    )) {
+      issue(`duplicate stock item id "${id}"`)
+    }
+    for (const id of duplicates(
       config.progression.milestones.map((milestone) => milestone.id)
     )) {
       issue(`duplicate milestone id "${id}"`)
@@ -118,3 +125,124 @@ export const savedEconomySchema = z.strictObject({
 })
 
 export type SavedEconomy = z.infer<typeof savedEconomySchema>
+
+const assertKnownUnique = (
+  label: string,
+  ids: readonly string[],
+  known: ReadonlySet<string>
+): void => {
+  if (new Set(ids).size !== ids.length) {
+    throw new Error(`Saved economy contains duplicate ${label}`)
+  }
+  for (const id of ids) {
+    if (!known.has(id)) {
+      throw new Error(`Saved economy references unknown ${label} "${id}"`)
+    }
+  }
+}
+
+const gcd = (left: number, right: number): number => {
+  let a = Math.abs(left)
+  let b = Math.abs(right)
+  while (b !== 0) [a, b] = [b, a % b]
+  return a
+}
+
+/** Whether fixed bounty and quest increments can account for the surplus. */
+const rewardsCanProduce = (
+  amount: number,
+  bounty: number,
+  questReward: number
+): boolean => {
+  if (amount === 0) return true
+  if (bounty === 0) return questReward > 0 && amount % questReward === 0
+  if (questReward === 0) return amount % bounty === 0
+  const divisor = gcd(bounty, questReward)
+  if (amount % divisor !== 0) return false
+
+  // Counts repeat modulo questReward/gcd, so this bounded search is exact.
+  const countLimit = questReward / divisor
+  for (
+    let bountyCount = 0;
+    bountyCount < countLimit && bountyCount * bounty <= amount;
+    bountyCount += 1
+  ) {
+    if ((amount - bountyCount * bounty) % questReward === 0) return true
+  }
+  return false
+}
+
+/**
+ * Parse a persistence payload against both its structural schema and the
+ * compiled economy that owns it. Validation finishes before runtime mutation.
+ */
+export function parseSavedEconomy(
+  raw: unknown,
+  config: EconomyPackConfig
+): SavedEconomy {
+  const saved = savedEconomySchema.parse(raw)
+  const pickups = new Map(
+    config.pickups.map((pickup) => [pickup.id, pickup] as const)
+  )
+  const stock = new Map(
+    config.shops.flatMap((shop) =>
+      shop.stock.map((entry) => [entry.itemId, entry] as const)
+    )
+  )
+  const milestones = new Map(
+    config.progression.milestones.map((milestone) =>
+      [milestone.id, milestone] as const
+    )
+  )
+
+  assertKnownUnique(
+    'pickup id',
+    saved.collectedPickups,
+    new Set(pickups.keys())
+  )
+  assertKnownUnique(
+    'purchased item id',
+    saved.purchased,
+    new Set(stock.keys())
+  )
+  assertKnownUnique(
+    'milestone id',
+    saved.progression.achieved,
+    new Set(milestones.keys())
+  )
+
+  if (saved.wallet.balance > saved.wallet.totalEarned) {
+    throw new Error('Saved wallet balance exceeds total earned')
+  }
+  const earnedFromBaseAndPickups = config.wallet.startingBalance +
+    saved.collectedPickups.reduce(
+      (sum, id) => sum + pickups.get(id)!.amount,
+      0
+    )
+  if (saved.wallet.totalEarned < earnedFromBaseAndPickups) {
+    throw new Error('Saved total earned omits starting balance or pickups')
+  }
+  const rewardSurplus =
+    saved.wallet.totalEarned - earnedFromBaseAndPickups
+  if (!rewardsCanProduce(
+    rewardSurplus,
+    config.bounty.perEnemy,
+    config.questReward.perQuest
+  )) {
+    throw new Error('Saved total earned cannot be produced by economy rewards')
+  }
+
+  const spent = saved.purchased.reduce(
+    (sum, id) => sum + stock.get(id)!.price,
+    0
+  )
+  if (saved.wallet.totalEarned - saved.wallet.balance !== spent) {
+    throw new Error('Saved wallet balance does not match purchased stock')
+  }
+  for (const id of saved.progression.achieved) {
+    if (milestones.get(id)!.threshold > saved.wallet.totalEarned) {
+      throw new Error(`Saved milestone "${id}" precedes its threshold`)
+    }
+  }
+  return saved
+}

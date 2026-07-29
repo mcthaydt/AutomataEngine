@@ -38,6 +38,7 @@ const KEEPOUT = 3
 const SEPARATION = 2
 const DRAW_BUDGET = 200
 const INVENTORY_CAP = 8
+const SHOP_CAP = 6
 
 const round2 = (value: number): number => Math.round(value * 100) / 100
 const far = (
@@ -93,7 +94,11 @@ export function composeEconomySection(
   const totalBase = startingBalance +
     pickups.reduce((sum, pickup) => sum + pickup.amount, 0)
 
-  const vendors = input.cast.filter((member) => member.role === 'vendor')
+  // The compiled config intentionally caps shops at six. Cast order is stable,
+  // so selecting the first six vendors is deterministic and replayable.
+  const vendors = input.cast
+    .filter((member) => member.role === 'vendor')
+    .slice(0, SHOP_CAP)
   // Catalog goods are new IDs and are capped by both inventory capacity and
   // base earning, because completion requires clearing every stocked item.
   const affordabilityBudget = Math.floor(

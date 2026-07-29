@@ -42,8 +42,16 @@ const fixtureComposition = (set: GamePack[]) => ({
   assets: []
 })
 
+interface DriveResult {
+  complete: boolean
+  states: Map<string, unknown>
+}
+
 /** Seek the first incomplete hook with a target; null means blocked and yields to another pack. */
-function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
+function driveToCompletion(
+  hooks: PackEvalHook[],
+  maxSteps = 2000
+): DriveResult {
   const states = new Map(hooks.map((hook) => [hook.packId, hook.createState()]))
   const bus = createPackEventBus()
   for (const hook of hooks) {
@@ -58,7 +66,7 @@ function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
     const slices: Record<string, unknown> = {}
     for (const hook of hooks) Object.assign(slices, hook.publishSlices?.(states.get(hook.packId)) ?? {})
     const incomplete = hooks.filter((hook) => !hook.complete(states.get(hook.packId)))
-    if (incomplete.length === 0) return true
+    if (incomplete.length === 0) return { complete: true, states }
     for (const hook of incomplete) {
       const target = hook.nextTarget(states.get(hook.packId), player, slices)
       if (!target) continue
@@ -73,7 +81,12 @@ function driveToCompletion(hooks: PackEvalHook[], maxSteps = 2000): boolean {
       states.set(hook.packId, hook.step(states.get(hook.packId), player, slices, emit))
     }
   }
-  return hooks.every((hook) => hook.complete(states.get(hook.packId)))
+  return {
+    complete: hooks.every((hook) =>
+      hook.complete(states.get(hook.packId))
+    ),
+    states
+  }
 }
 
 /** Compose, boot, and headlessly complete one pack set. */
@@ -88,7 +101,10 @@ function runSet(set: GamePack[]): void {
   try {
     const runtime = composePacks(set, configs).boot({ host, render: render.port })
     expect(runtime.packIds, label).toEqual(set.map((pack) => pack.id))
-    expect(driveToCompletion(resolveEvalHooks(composition)), label).toBe(true)
+    expect(
+      driveToCompletion(resolveEvalHooks(composition)).complete,
+      label
+    ).toBe(true)
   } finally {
     host.dispose()
     app.remove()
@@ -145,6 +161,64 @@ describe('composition matrix (standard packs)', () => {
       })
       runSet(set)
     }
+  })
+
+  it.each([
+    {
+      name: 'combat bounties',
+      ids: ['interaction-inventory', 'economy-progression', 'combat-ai'],
+      source: 'combat-ai',
+      countKey: 'enemies',
+      rewardKey: 'bounty'
+    },
+    {
+      name: 'quest rewards',
+      ids: [
+        'interaction-inventory',
+        'dialogue-quests',
+        'economy-progression'
+      ],
+      source: 'dialogue-quests',
+      countKey: 'quests',
+      rewardKey: 'questReward'
+    }
+  ])('applies exact $name to total earned', ({
+    ids: scenarioIds,
+    source,
+    countKey,
+    rewardKey
+  }) => {
+    const set = scenarioIds.map((id) => STANDARD_PACKS[id]!)
+    const composition = fixtureComposition(set)
+    const hooks = resolveEvalHooks(composition)
+    const result = driveToCompletion(hooks)
+    const economyHook = hooks.find(
+      (hook) => hook.packId === 'economy-progression'
+    )!
+    const wallet = economyHook.publishSlices!(
+      result.states.get('economy-progression')
+    ).wallet as { totalEarned: number }
+    const economy = composition.packs.find(
+      (entry) => entry.id === 'economy-progression'
+    )!.config as {
+      wallet: { startingBalance: number }
+      pickups: Array<{ amount: number }>
+      bounty: { perEnemy: number }
+      questReward: { perQuest: number }
+    }
+    const sourceConfig = composition.packs.find(
+      (entry) => entry.id === source
+    )!.config as Record<string, unknown[]>
+    const base = economy.wallet.startingBalance +
+      economy.pickups.reduce((sum, pickup) => sum + pickup.amount, 0)
+    const reward = rewardKey === 'bounty'
+      ? economy.bounty.perEnemy
+      : economy.questReward.perQuest
+
+    expect(result.complete).toBe(true)
+    expect(wallet.totalEarned).toBe(
+      base + reward * sourceConfig[countKey]!.length
+    )
   })
 
   it('every declared conflict fails with PackCompositionError', () => {

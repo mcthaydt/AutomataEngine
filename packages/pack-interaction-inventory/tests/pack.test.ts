@@ -135,4 +135,18 @@ describe('interaction-inventory pack (browser adapter)', () => {
     expect(render.port.objectCount).toBe(0)
     expect(app.querySelector('.inventory-hud')).toBeNull()
   })
+
+  it('unsubscribes from purchased-item events on dispose', () => {
+    const { handle, events, app, ctx } = boot()
+    handle.dispose!()
+
+    events.emit(ITEM_PURCHASED_EVENT, {
+      packId: 'economy-progression',
+      itemId: 'catalog-1'
+    })
+
+    expect(handle.saveState!()).toEqual({ collected: [] })
+    ctx.host.dispose()
+    app.remove()
+  })
 })

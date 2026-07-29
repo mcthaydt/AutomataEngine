@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 100% (79/79 steps; 16/16 tasks complete)
+**Implementation progress:** 99% (85/86 steps; 16/17 tasks complete)
 
 ## Global Constraints
 
@@ -2413,6 +2413,21 @@ Append to the umbrella §9 list from Step 1:
   requires buying it all. Decoupling "stock the vendor offers" from "stock the
   objective requires" needs an optional-purchase concept the pack does not have.
 ```
+
+---
+
+### Task 17: Independent-review hardening
+
+Close the edge cases found by final independent review. Every behavioral fix
+follows the same focused red/green workflow as the original implementation.
+
+- [x] **Step 1: Bound seven-to-twelve vendors to six deterministic shops**
+- [x] **Step 2: Enforce one global purchase per tick in both twins**
+- [x] **Step 3: Reject duplicate stock item ids across the whole config**
+- [x] **Step 4: Validate loaded state against config and economic invariants**
+- [x] **Step 5: Assert exact bounty and quest-reward deltas in the matrix**
+- [x] **Step 6: Unsubscribe inventory and economy event handlers on dispose**
+- [ ] **Step 7: Re-run all release gates and commit the hardening**
 
 ---
 

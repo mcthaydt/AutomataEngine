@@ -9,7 +9,7 @@ import {
   QUEST_COMPLETED_EVENT,
   WALLET_SLICE_ID,
   packConfigSchema,
-  savedEconomySchema,
+  parseSavedEconomy,
   type EconomyPackConfig
 } from './config'
 import {
@@ -153,12 +153,12 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
       return owned
     }
 
-    ctx.events.on(ENEMY_DEFEATED_EVENT, () => {
+    const offEnemyDefeated = ctx.events.on(ENEMY_DEFEATED_EVENT, () => {
       wallet = earn(wallet, config.bounty.perEnemy)
       publishWallet()
       updateHud()
     })
-    ctx.events.on(QUEST_COMPLETED_EVENT, () => {
+    const offQuestCompleted = ctx.events.on(QUEST_COMPLETED_EVENT, () => {
       wallet = earn(wallet, config.questReward.perQuest)
       publishWallet()
       updateHud()
@@ -184,7 +184,7 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
           }
         }
 
-        // Auto-buy at most one item from each in-range shop per fixed step.
+        // A fixed step may commit only one purchase across all shops.
         for (const shop of config.shops) {
           if (!inRadius(shop, world.playerPosition)) continue
           const purchase = nextPurchase(
@@ -201,6 +201,7 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
             packId: economyProgressionPack.id,
             itemId: purchase.itemId
           })
+          break
         }
 
         publishWallet()
@@ -223,7 +224,7 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
       }),
 
       loadState(raw) {
-        const saved = savedEconomySchema.parse(raw)
+        const saved = parseSavedEconomy(raw, config)
         wallet = saved.wallet
         progression = { achieved: saved.progression.achieved }
         collectedPickups = new Set(saved.collectedPickups)
@@ -254,6 +255,8 @@ export const economyProgressionPack: GamePack<EconomyPackConfig> = {
       },
 
       dispose() {
+        offEnemyDefeated()
+        offQuestCompleted()
         for (const entity of entities.values()) ctx.render.remove(entity)
         entities.clear()
         hud.remove()

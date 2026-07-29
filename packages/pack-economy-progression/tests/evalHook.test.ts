@@ -95,4 +95,42 @@ describe('createEconomyProgressionEvalHook', () => {
     expect(hook.complete(state)).toBe(true)
     expect(hook.nextTarget(state, { x: 4, z: 0 }, {})).toBeNull()
   })
+
+  it('buys at most one item globally per eval step', () => {
+    const hook = createEconomyProgressionEvalHook({
+      ...config(),
+      wallet: { startingBalance: 20 },
+      pickups: [],
+      shops: [
+        {
+          id: 'shop-1',
+          position: { x: 0, z: 0 },
+          radius: 1.5,
+          stock: [{ itemId: 'catalog-1', price: 8 }]
+        },
+        {
+          id: 'shop-2',
+          position: { x: 0, z: 0.5 },
+          radius: 1.5,
+          stock: [{ itemId: 'catalog-2', price: 8 }]
+        }
+      ],
+      progression: { milestones: [{ id: 'm1', threshold: 20 }] }
+    })
+    let state = hook.createState()
+
+    state = hook.step(state, { x: 0, z: 0 }, {})
+    expect(hook.publishSlices!(state).wallet).toEqual({
+      balance: 12,
+      totalEarned: 20
+    })
+    expect(hook.complete(state)).toBe(false)
+
+    state = hook.step(state, { x: 0, z: 0 }, {})
+    expect(hook.publishSlices!(state).wallet).toEqual({
+      balance: 4,
+      totalEarned: 20
+    })
+    expect(hook.complete(state)).toBe(true)
+  })
 })

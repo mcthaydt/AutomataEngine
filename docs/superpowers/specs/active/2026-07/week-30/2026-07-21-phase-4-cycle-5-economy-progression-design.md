@@ -136,11 +136,12 @@ from the package):
   only when the emitting event fires.
 - `progression: { milestones: [{ id, threshold }] }` — thresholds bounded.
 
-The schema **cross-validates via `superRefine`**: pickup and shop ids unique;
-positions distinct; milestone thresholds strictly ascending and unique; milestone
-ids unique. Checks needing the spec or the inventory section — that milestone ids
-match the spec's `progression.milestones`, `stock.itemId` catalog validity, and
-the `placed + purchasable ≤ 8` bound — are enforced at compose time by
+The schema **cross-validates via `superRefine`**: pickup, shop, milestone, and
+stock item ids unique across their whole collections; positions distinct; and
+milestone thresholds strictly ascending and unique. Checks needing the spec or
+the inventory section — that milestone ids match the spec's
+`progression.milestones`, `stock.itemId` catalog validity, and the
+`placed + purchasable ≤ 8` bound — are enforced at compose time by
 `composeSection` (§4.1), the only place those inputs are in scope (cycle-3
 precedent).
 
@@ -203,7 +204,9 @@ prevents reloads from re-earning currency; `purchased` is load-bearing for the
 shop-clearance completion gate. Purchased items also round-trip through
 **inventory's** `collected` because inventory owns them; economy's local
 `purchased` set records the transaction/completion fact without writing the
-inventory slice. `loadState` parses-or-throws (inventory precedent).
+inventory slice. `loadState` parses-or-throws before mutation and validates ids
+against the compiled config, array uniqueness, milestone thresholds, and the
+wallet's earning/spending invariants.
 
 ### 3.5 `pack.ts` (browser adapter)
 
@@ -244,9 +247,11 @@ draws:
   margin, spawn/goal keepout, separation from items, dialogue NPCs, walker
   stations, enemy posts, and each other; bounded draw budget with a typed
   exhaustion error). Amounts use the fixed default.
-- **Shops:** one per cast member with role `vendor` (**zero is legal** — the
-  fixture set guarantees the shopping path is always exercised in the matrix).
-  Each shop is placed at a keepout post; stock uses deterministic
+- **Shops:** one per each of the first six cast members with role `vendor`
+  (**zero is legal** — the fixture set guarantees the shopping path is always
+  exercised in the matrix). Cast order is stable, so the six-shop config bound
+  remains deterministic for specs with seven-to-twelve vendors. Each shop is
+  placed at a keepout post; stock uses deterministic
   **catalog-only item ids** (new ids, not the inventory section's placed ids)
   and a fixed default price, bounded so `placed + purchasable ≤ 8`.
 - **Progression:** every spec `progression.milestones` id gets an ascending
