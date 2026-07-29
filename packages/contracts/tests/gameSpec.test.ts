@@ -55,6 +55,15 @@ describe('gameSpec schemas', () => {
 })
 
 describe('capability config schemas', () => {
+  it('economy-progression accepts startingBalance within bounds and rejects extras', () => {
+    const schema = capabilityConfigSchemas['economy-progression']
+    expect(schema.parse({})).toEqual({})
+    expect(schema.parse({ startingBalance: 12 })).toEqual({ startingBalance: 12 })
+    expect(() => schema.parse({ startingBalance: -1 })).toThrow()
+    expect(() => schema.parse({ startingBalance: 1.5 })).toThrow()
+    expect(() => schema.parse({ nope: 1 })).toThrow()
+  })
+
   it('keeps config: {} valid for every capability and parses it unchanged', () => {
     for (const id of capabilityIdSchema.options) {
       const draft = minimalGameSpecDraft()

@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 18% (14/79 steps; 2/16 tasks complete)
+**Implementation progress:** 23% (18/79 steps; 3/16 tasks complete)
 
 ## Global Constraints
 
@@ -362,7 +362,7 @@ Replace the Phase 2 empty stub with the one real knob.
 **Interfaces:**
 - Produces: `capabilityConfigSchemas['economy-progression']` accepting `{ startingBalance?: int 0..999 }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `packages/contracts/tests/gameSpec.test.ts`:
 
@@ -379,12 +379,12 @@ it('economy-progression config accepts an optional startingBalance and rejects e
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project contracts gameSpec`
 Expected: FAIL — `{ startingBalance: 12 }` throws against the empty `z.strictObject({})`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `packages/contracts/src/gameSpec.ts`, replace line 97:
 
@@ -394,7 +394,7 @@ In `packages/contracts/src/gameSpec.ts`, replace line 97:
   }),
 ```
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npx vitest run --project contracts gameSpec`
 Expected: PASS

@@ -94,7 +94,9 @@ export const capabilityConfigSchemas = {
   'combat-ai': z.strictObject({
     playerMaxHealth: z.number().int().min(1).max(20).optional()
   }),
-  'economy-progression': z.strictObject({}),
+  'economy-progression': z.strictObject({
+    startingBalance: z.number().int().min(0).max(999).optional()
+  }),
   'hub-navigation-vehicle': z.strictObject({}),
   'save-load': z.strictObject({})
 } as const satisfies Record<CapabilityId, z.ZodType>
