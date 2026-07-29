@@ -1,8 +1,8 @@
 import type { GamePack, PackRuntimeHandle } from '@automata/game-kit'
 import { packCompatibility } from '@automata/game-kit'
 import {
-  createInventoryState, deserializeInventory, inventoryComplete, packConfigSchema,
-  serializeInventory, stepInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT,
+  createInventoryState, deserializeInventory, grantItem, inventoryComplete, packConfigSchema,
+  serializeInventory, stepInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT, ITEM_PURCHASED_EVENT,
   type InventoryPackConfig, type InventoryState
 } from './core'
 
@@ -15,7 +15,7 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
   version: '1.0.0',
   compatibility: packCompatibility({
     stateSlices: { owns: [INVENTORY_SLICE_ID], reads: [] },
-    events: { emits: [ITEM_ACQUIRED_EVENT], consumes: [] }
+    events: { emits: [ITEM_ACQUIRED_EVENT], consumes: [ITEM_PURCHASED_EVENT] }
   }),
   configSchema: packConfigSchema,
   register(ctx, config): PackRuntimeHandle {
@@ -42,7 +42,10 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
     }
     const count = document.createElement('span')
     hud.append(count)
-    const updateHud = (): void => { count.textContent = ` ${state.collected.length}/${config.items.length}` }
+    const updateHud = (): void => {
+      const placedCollected = config.items.filter((item) => state.collected.includes(item.id)).length
+      count.textContent = ` ${placedCollected}/${config.items.length}`
+    }
     updateHud()
     ctx.host.overlays.append(hud)
 
@@ -61,6 +64,11 @@ export const interactionInventoryPack: GamePack<InventoryPackConfig> = {
       ctx.state.set(INVENTORY_SLICE_ID, interactionInventoryPack.id, state)
       updateHud()
     }
+
+    ctx.events.on(ITEM_PURCHASED_EVENT, (payload) => {
+      const itemId = (payload as { itemId: string }).itemId
+      applyState(grantItem(state, itemId))
+    })
 
     return {
       fixedUpdate(_dt, world) {

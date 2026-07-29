@@ -58,6 +58,14 @@ export function nextItemTarget(state: InventoryState, player: { x: number; z: nu
 /** Contract names: the slice this pack owns and the event it emits (v2). */
 export const INVENTORY_SLICE_ID = 'inventory'
 export const ITEM_ACQUIRED_EVENT = 'itemAcquired'
+/** Consumed from the economy pack (contract v2): a purchase grants ownership. */
+export const ITEM_PURCHASED_EVENT = 'itemPurchased'
+
+/** Grant an owned item id (from a purchase); idempotent, sole writer of the slice. */
+export function grantItem(state: InventoryState, itemId: string): InventoryState {
+  if (state.collected.includes(itemId)) return state
+  return { collected: [...state.collected, itemId] }
+}
 
 const savedInventorySchema = z.strictObject({
   collected: z.array(z.string().min(1).max(60)).max(8)

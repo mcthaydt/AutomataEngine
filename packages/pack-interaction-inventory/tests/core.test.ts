@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createInventoryState, deserializeInventory, inventoryComplete, nextItemTarget, packConfigSchema,
+  createInventoryState, deserializeInventory, grantItem, inventoryComplete, nextItemTarget, packConfigSchema,
   serializeInventory, stepInventory, INVENTORY_SLICE_ID, ITEM_ACQUIRED_EVENT
 } from '../src/core'
 import { createInventoryEvalHook } from '../src/evalHook'
@@ -8,6 +8,13 @@ import { fixtureConfig } from './fixtures'
 
 describe('inventory core', () => {
   const config = fixtureConfig()
+
+  it('grantItem appends an id and is idempotent', () => {
+    const initial = createInventoryState()
+    const granted = grantItem(initial, 'catalog-1')
+    expect(granted.collected).toEqual(['catalog-1'])
+    expect(grantItem(granted, 'catalog-1')).toBe(granted)
+  })
 
   it('collects an item only within the interact radius, exactly once', () => {
     let state = createInventoryState()

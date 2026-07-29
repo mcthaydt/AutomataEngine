@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createNullRenderer } from '@automata/engine'
 import { createGameHost, createPackEventBus, createPackStateRegistry, type PackBootContext } from '@automata/game-kit'
+import { ITEM_PURCHASED_EVENT } from '../src/core'
 import { interactionInventoryPack } from '../src/pack'
 import { fixtureConfig } from './fixtures'
 
@@ -17,6 +18,27 @@ function boot(config = fixtureConfig()) {
 }
 
 describe('interaction-inventory pack (browser adapter)', () => {
+  it('grants a purchased catalog id on itemPurchased, idempotently', () => {
+    const { handle, events, state, app, ctx } = boot()
+    events.emit(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: 'catalog-1' })
+    expect((handle.saveState!() as { collected: string[] }).collected).toEqual(['catalog-1'])
+    events.emit(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: 'catalog-1' })
+    expect((handle.saveState!() as { collected: string[] }).collected).toEqual(['catalog-1'])
+    expect((state.get('inventory') as { collected: string[] }).collected).toEqual(['catalog-1'])
+    expect(handle.objectivesComplete!()).toBe(false)
+    ctx.host.dispose()
+    app.remove()
+  })
+
+  it('counts only placed items in the HUD when a catalog id is owned', () => {
+    const { events, app, ctx } = boot()
+    events.emit(ITEM_PURCHASED_EVENT, { packId: 'economy-progression', itemId: 'catalog-1' })
+    const hud = app.querySelector('.inventory-hud span')
+    expect(hud?.textContent).toBe(` 0/${fixtureConfig().items.length}`)
+    ctx.host.dispose()
+    app.remove()
+  })
+
   it('declares the capability id and validates config through its schema', () => {
     expect(interactionInventoryPack.id).toBe('interaction-inventory')
     expect(interactionInventoryPack.version).toBe('1.0.0')

@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 8% (6/79 steps; 1/16 tasks complete)
+**Implementation progress:** 18% (14/79 steps; 2/16 tasks complete)
 
 ## Global Constraints
 
@@ -209,7 +209,7 @@ Give the inventory pack a consume path: on `itemPurchased`, grant the item into 
 - Consumes: the eval event bus from Task 1.
 - Produces: `grantItem(state, itemId)`, `ITEM_PURCHASED_EVENT = 'itemPurchased'` from `@automata/pack-interaction-inventory`; inventory pack now declares `events.consumes: ['itemPurchased']`.
 
-- [ ] **Step 1: Write the failing core test**
+- [x] **Step 1: Write the failing core test**
 
 Add to `packages/pack-interaction-inventory/tests/core.test.ts`:
 
@@ -225,12 +225,12 @@ it('grantItem appends an id and is idempotent', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --project pack-interaction-inventory core`
 Expected: FAIL — `grantItem` is not exported.
 
-- [ ] **Step 3: Implement `grantItem` + the event-name constant**
+- [x] **Step 3: Implement `grantItem` + the event-name constant**
 
 In `packages/pack-interaction-inventory/src/core.ts`, add after `ITEM_ACQUIRED_EVENT`:
 
@@ -245,7 +245,7 @@ export function grantItem(state: InventoryState, itemId: string): InventoryState
 }
 ```
 
-- [ ] **Step 4: Wire the runtime consume path + HUD fix**
+- [x] **Step 4: Wire the runtime consume path + HUD fix**
 
 In `packages/pack-interaction-inventory/src/pack.ts`:
 
@@ -276,7 +276,7 @@ In `packages/pack-interaction-inventory/src/pack.ts`:
 
 (`applyState` already reconciles renderables — a purchased catalog id has no entry in `config.items`, so it adds no marker, exactly as intended — publishes the slice, and refreshes the HUD.)
 
-- [ ] **Step 5: Wire the eval consume path**
+- [x] **Step 5: Wire the eval consume path**
 
 In `packages/pack-interaction-inventory/src/evalHook.ts`, add `grantItem`, `ITEM_PURCHASED_EVENT` to the `./core` import and a `connect` member to the returned hook:
 
@@ -297,7 +297,7 @@ In `packages/pack-interaction-inventory/src/evalHook.ts`, add `grantItem`, `ITEM
   }
 ```
 
-- [ ] **Step 6: Write the failing pack test (runtime grant + completion unaffected)**
+- [x] **Step 6: Write the failing pack test (runtime grant + completion unaffected)**
 
 Add to `packages/pack-interaction-inventory/tests/pack.test.ts`, reusing the
 file's existing `boot()` helper (`pack.test.ts:7-17`). That helper builds a
@@ -337,12 +337,12 @@ it('counts only placed items in the HUD when a catalog id is owned', () => {
 > assertion; the whole point of this task is that an emitted `itemPurchased`
 > mutates the inventory slice.
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [x] **Step 7: Run tests to verify they pass**
 
 Run: `npx vitest run --project pack-interaction-inventory`
 Expected: PASS (all existing inventory tests + the new core and pack tests).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/pack-interaction-inventory/src packages/pack-interaction-inventory/tests
