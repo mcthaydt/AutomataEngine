@@ -9,6 +9,19 @@ const noSlices = { inventory: { collected: [] as string[] } }
 const heldSlices = { inventory: { collected: ['item-1'] } }
 
 describe('dialogue-quests eval hook', () => {
+  it('emits questCompleted when a quest transitions to complete', () => {
+    const hook = createDialogueQuestsEvalHook(config)
+    let state = hook.createState()
+    const events: string[] = []
+    const emit = (name: string): void => { events.push(name) }
+
+    state = hook.step(state, npcPos, noSlices, emit)
+    state = hook.step(state, npcPos, heldSlices, emit)
+
+    expect(hook.complete(state)).toBe(true)
+    expect(events).toContain('questCompleted')
+  })
+
   it('targets the giver to accept, then yields (null) while the fetch is unsatisfied', () => {
     const hook = createDialogueQuestsEvalHook(config)
     let state = hook.createState()

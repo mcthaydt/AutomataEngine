@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 65% (51/79 steps; 11/16 tasks complete)
+**Implementation progress:** 72% (57/79 steps; 12/16 tasks complete)
 
 ## Global Constraints
 
@@ -1851,7 +1851,7 @@ So the bounty and reward edges are provable headlessly in the scenario rows.
 - Consumes: the eval `emit` param from Task 1.
 - Produces: combat eval `step` emits `enemyDefeated` (`{ enemyId }`) per newly defeated enemy; dialogue eval `step` emits `questCompleted` (`{ questId }`) per newly completed quest. Existing completion behavior unchanged.
 
-- [ ] **Step 1: Write the failing combat test**
+- [x] **Step 1: Write the failing combat test**
 
 Add to `packages/pack-combat-ai/tests/evalHook.test.ts` a test that drives the hook to defeat an enemy and asserts an `enemyDefeated` emission is captured. Use the package's existing fixture/driver if present; otherwise:
 
@@ -1877,12 +1877,12 @@ it('emits enemyDefeated when an enemy is defeated', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-combat-ai -- evalHook`
 Expected: FAIL — no `enemyDefeated` emitted (the eval `step` currently discards `defeatedEnemyIds`).
 
-- [ ] **Step 3: Implement the combat eval emit**
+- [x] **Step 3: Implement the combat eval emit**
 
 In `packages/pack-combat-ai/src/evalHook.ts`, change `step` to capture the result and emit. Replace the `step` method:
 
@@ -1899,7 +1899,7 @@ In `packages/pack-combat-ai/src/evalHook.ts`, change `step` to capture the resul
 
 Add `ENEMY_DEFEATED_EVENT, PLAYER_DEFEATED_EVENT` to the `./config` import in that file.
 
-- [ ] **Step 4: Write the failing dialogue test**
+- [x] **Step 4: Write the failing dialogue test**
 
 Add to `packages/pack-dialogue-quests/tests/evalHook.test.ts` a test that drives a quest to completion (reuse the file's existing fixture/compose helper) and asserts a `questCompleted` emission. Follow the existing test setup in that file for building `config`; the assertion is:
 
@@ -1908,7 +1908,7 @@ Add to `packages/pack-dialogue-quests/tests/evalHook.test.ts` a test that drives
 expect(emittedEvents).toContain('questCompleted')
 ```
 
-- [ ] **Step 5: Implement the dialogue eval emit**
+- [x] **Step 5: Implement the dialogue eval emit**
 
 In `packages/pack-dialogue-quests/src/evalHook.ts`, add `QUEST_COMPLETED_EVENT` to the `./config` import and emit for quests that transition to `'complete'`. Replace the `step` method's return region so it diffs the log:
 
@@ -1941,7 +1941,7 @@ In `packages/pack-dialogue-quests/src/evalHook.ts`, add `QUEST_COMPLETED_EVENT` 
 
 (Confirm `QUEST_COMPLETED_EVENT` is exported from `packages/pack-dialogue-quests/src/config.ts` — it is: `export const QUEST_COMPLETED_EVENT = 'questCompleted'`.)
 
-- [ ] **Step 6: Run both packages' tests + commit**
+- [x] **Step 6: Run both packages' tests + commit**
 
 Run: `npm test -w @automata/pack-combat-ai -- evalHook && npx vitest run --project pack-dialogue-quests evalHook`
 Expected: PASS

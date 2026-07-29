@@ -13,6 +13,23 @@ const config = (): CombatPackConfig => ({
 })
 
 describe('combat-ai eval hook', () => {
+  it('emits enemyDefeated when an enemy is defeated', () => {
+    const hook = createCombatAiEvalHook(config())
+    let state = hook.createState()
+    const events: string[] = []
+    const enemyPosition = config().enemies[0]!.post
+    for (let tick = 0; tick < 400 && !hook.complete(state); tick += 1) {
+      state = hook.step(
+        state,
+        enemyPosition,
+        {},
+        (name) => { events.push(name) }
+      )
+    }
+    expect(hook.complete(state)).toBe(true)
+    expect(events).toContain('enemyDefeated')
+  })
+
   it('targets the nearest alive enemy at its current position, null when all are down', () => {
     const hook = createCombatAiEvalHook(config())
     let state = hook.createState()

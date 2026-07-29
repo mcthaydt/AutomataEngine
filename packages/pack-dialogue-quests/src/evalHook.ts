@@ -1,5 +1,11 @@
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
-import { INVENTORY_SLICE_ID, type DialogueEffect, type DialogueQuestsPackConfig, type QuestDef } from './config'
+import {
+  INVENTORY_SLICE_ID,
+  QUEST_COMPLETED_EVENT,
+  type DialogueEffect,
+  type DialogueQuestsPackConfig,
+  type QuestDef
+} from './config'
 import { availableChoices, choose, startDialogue } from './dialogueCore'
 import {
   acceptQuest, completeQuest, createQuestLog, objectiveSatisfied, questsComplete,
@@ -50,14 +56,15 @@ export function createDialogueQuestsEvalHook(config: DialogueQuestsPackConfig): 
       const npc = config.npcs.find((entry) => entry.id === quest.giverNpcId)!
       return { ...npc.position }
     },
-    step(state, player, slices) {
+    step(state, player, slices, emit) {
       const evalState = state as EvalState
       const inventory = inventoryView(slices)
       const npc = config.npcs.find((entry) =>
         Math.hypot(entry.position.x - player.x, entry.position.z - player.z) <= config.talkRadius)
       if (!npc) return state
       const dialogue = config.dialogues.find((entry) => entry.id === npc.dialogueId)!
-      let questLog = evalState.questLog
+      const before = evalState.questLog
+      let questLog = before
       let session: ReturnType<typeof startDialogue> | null = startDialogue(dialogue)
       for (let turns = 0; session && turns < CONVERSATION_BUDGET; turns += 1) {
         if (availableChoices(dialogue, session, questLog, inventory).length === 0) break
@@ -65,7 +72,16 @@ export function createDialogueQuestsEvalHook(config: DialogueQuestsPackConfig): 
         questLog = applyEffects(questLog, outcome.effects, inventory)
         session = outcome.session
       }
-      return questLog === evalState.questLog ? state : { questLog }
+      if (questLog === before) return state
+      for (const quest of config.quests) {
+        if (before[quest.id] !== 'complete' && questLog[quest.id] === 'complete') {
+          emit?.(QUEST_COMPLETED_EVENT, {
+            packId: 'dialogue-quests',
+            questId: quest.id
+          })
+        }
+      }
+      return { questLog }
     },
     complete: (state) => questsComplete((state as EvalState).questLog, config.quests),
     publishSlices: (state) => ({ questLog: { ...(state as EvalState).questLog } })

@@ -1,5 +1,11 @@
 import type { EvalSliceView, PackEvalHook } from '@automata/game-kit'
-import { COMBAT_SLICE_ID, INVENTORY_SLICE_ID, type CombatPackConfig } from './config'
+import {
+  COMBAT_SLICE_ID,
+  ENEMY_DEFEATED_EVENT,
+  INVENTORY_SLICE_ID,
+  PLAYER_DEFEATED_EVENT,
+  type CombatPackConfig
+} from './config'
 import {
   combatSliceValue, createCombatState, enemiesDefeated, isWeaponHeld, stepCombat,
   type CombatState
@@ -34,10 +40,26 @@ export function createCombatAiEvalHook(config: CombatPackConfig): PackEvalHook {
       }
       return best ? { ...best } : null
     },
-    step(state, player, slices) {
+    step(state, player, slices, emit) {
       const combat = (state as EvalState).combat
       const held = isWeaponHeld(config, collectedView(slices))
-      return { combat: stepCombat(combat, player, config, EVAL_TICK_DT, held).state } satisfies EvalState
+      const result = stepCombat(
+        combat,
+        player,
+        config,
+        EVAL_TICK_DT,
+        held
+      )
+      for (const enemyId of result.defeatedEnemyIds) {
+        emit?.(ENEMY_DEFEATED_EVENT, {
+          packId: 'combat-ai',
+          enemyId
+        })
+      }
+      if (result.playerDefeated) {
+        emit?.(PLAYER_DEFEATED_EVENT, { packId: 'combat-ai' })
+      }
+      return { combat: result.state } satisfies EvalState
     },
     complete: (state) => enemiesDefeated((state as EvalState).combat, config),
     publishSlices: (state) => ({ [COMBAT_SLICE_ID]: combatSliceValue((state as EvalState).combat, config) })
