@@ -206,3 +206,7 @@ A pack cycle is complete when all seven items land and `npm run ci`,
 - **Cycle 5 — spec-authored milestone thresholds.** Thresholds are pack-derived
   under the reachability invariant; letting a spec author set per-milestone
   thresholds would be a `progression.milestones` schema extension.
+- **Cycle 5 — shop stock is bounded by base earning.** Stock size is capped at
+  `floor((startingBalance + Σ pickups) / catalogPrice)` because completion
+  requires buying it all. Decoupling "stock the vendor offers" from "stock the
+  objective requires" needs an optional-purchase concept the pack does not have.

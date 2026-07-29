@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 99% (78/79 steps; 15/16 tasks complete)
+**Implementation progress:** 100% (79/79 steps; 16/16 tasks complete)
 
 ## Global Constraints
 
@@ -2403,7 +2403,7 @@ git add docs/ROADMAP.md docs/superpowers/specs
 git commit -m "docs: mark Phase 4 cycle 5 (economy) shipped; log capability gaps"
 ```
 
-- [ ] **Step 5: Add the new gap discovered during this cycle**
+- [x] **Step 5: Add the new gap discovered during this cycle**
 
 Append to the umbrella §9 list from Step 1:
 
