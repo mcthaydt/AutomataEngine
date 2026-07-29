@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 59% (47/79 steps; 10/16 tasks complete)
+**Implementation progress:** 65% (51/79 steps; 11/16 tasks complete)
 
 ## Global Constraints
 
@@ -1741,7 +1741,7 @@ Prefab-less; previews pickups and shop radii from the parsed config (combat prec
 - Consumes: `PackEditorContribution` from `@automata/game-kit`; `packConfigSchema`.
 - Produces: `economyProgressionEditorContribution`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/editorContribution.test.ts`:
 
@@ -1782,12 +1782,12 @@ describe('economyProgressionEditorContribution', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- editorContribution`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `editorContribution.ts`**
+- [x] **Step 3: Implement `editorContribution.ts`**
 
 ```ts
 import type { PackEditorContribution } from '@automata/game-kit'
@@ -1826,7 +1826,7 @@ export const economyProgressionEditorContribution: PackEditorContribution = {
 
 Add `export * from './editorContribution'` to `src/index.ts`.
 
-- [ ] **Step 4: Run test to verify it passes + typecheck + commit**
+- [x] **Step 4: Run test to verify it passes + typecheck + commit**
 
 Run: `npm test -w @automata/pack-economy-progression && npm run typecheck -w @automata/pack-economy-progression`
 Expected: PASS / no type errors.
