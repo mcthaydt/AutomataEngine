@@ -4,6 +4,7 @@ import { generateGameAssets } from '@automata/asset-providers'
 import { validatePackSet, type GamePack } from '@automata/game-kit'
 import { combatAiPack, composeCombatSection } from '@automata/pack-combat-ai'
 import { composeDialogueSection, dialogueQuestsPack } from '@automata/pack-dialogue-quests'
+import { composeEconomySection, economyProgressionPack } from '@automata/pack-economy-progression'
 import { composeInventorySection, interactionInventoryPack } from '@automata/pack-interaction-inventory'
 import { composeSchedulesSection, schedulesRelationshipsPack } from '@automata/pack-schedules-relationships'
 
@@ -28,7 +29,8 @@ const drawGoal = (rng: SeededRng): { x: number; z: number } =>
 export async function composeGame(args: { spec: GameSpec; seed: number; specHash: string }): Promise<ComposeResult> {
   const { spec, seed, specHash } = args
   const supported = new Set<string>([
-    interactionInventoryPack.id, dialogueQuestsPack.id, schedulesRelationshipsPack.id, combatAiPack.id
+    interactionInventoryPack.id, dialogueQuestsPack.id, schedulesRelationshipsPack.id,
+    combatAiPack.id, economyProgressionPack.id
   ])
   const unsupported = spec.capabilities.filter((entry) => !supported.has(entry.id))
   if (unsupported.length > 0) {
@@ -36,7 +38,7 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       ok: false,
       issues: unsupported.map((entry) => ({
         code: 'compose-unsupported-capability',
-        message: `Phase 4 cycle 4 composes only [${[...supported].join(', ')}]; spec selects "${entry.id}"`
+        message: `Phase 4 cycle 5 composes only [${[...supported].join(', ')}]; spec selects "${entry.id}"`
       }))
     }
   }
@@ -44,6 +46,7 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
   const wantsDialogue = spec.capabilities.some((entry) => entry.id === dialogueQuestsPack.id)
   const wantsSchedules = spec.capabilities.some((entry) => entry.id === schedulesRelationshipsPack.id)
   const wantsCombat = spec.capabilities.some((entry) => entry.id === combatAiPack.id)
+  const wantsEconomy = spec.capabilities.some((entry) => entry.id === economyProgressionPack.id)
   // Validate the set the spec actually selected. Adding inventory implicitly
   // hid dialogue's declared requirement and later dereferenced it unsafely.
   const selectedPacks = spec.capabilities.flatMap((entry): GamePack[] => {
@@ -51,6 +54,7 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
     if (entry.id === dialogueQuestsPack.id) return [dialogueQuestsPack]
     if (entry.id === schedulesRelationshipsPack.id) return [schedulesRelationshipsPack]
     if (entry.id === combatAiPack.id) return [combatAiPack]
+    if (entry.id === economyProgressionPack.id) return [economyProgressionPack]
     return []
   })
   const packIssues = validatePackSet(selectedPacks).filter((issue) => issue.severity === 'error')
@@ -127,9 +131,10 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       config: schedulesConfig as unknown as Record<string, unknown>
     })
   }
+  let combatConfig: ReturnType<typeof composeCombatSection> | undefined
   if (wantsCombat) {
     const combatSelection = spec.capabilities.find((entry) => entry.id === combatAiPack.id)!
-    const combatConfig = composeCombatSection({
+    combatConfig = composeCombatSection({
       specConfig: combatSelection.config as { playerMaxHealth?: number },
       cast: spec.cast,
       arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
@@ -143,6 +148,28 @@ export async function composeGame(args: { spec: GameSpec; seed: number; specHash
       id: combatAiPack.id,
       version: combatAiPack.version,
       config: combatConfig as unknown as Record<string, unknown>
+    })
+  }
+  if (wantsEconomy) {
+    const economySelection = spec.capabilities.find(
+      (entry) => entry.id === economyProgressionPack.id
+    )!
+    const economyConfig = composeEconomySection({
+      specConfig: economySelection.config as { startingBalance?: number },
+      cast: spec.cast,
+      milestones: spec.progression.milestones.map(({ id }) => ({ id })),
+      arena: { half: ARENA.half, spawn: ARENA.spawn, goal },
+      inventory: { items: packConfig!.items },
+      occupied: [
+        ...(dialogueConfig?.npcs.map((npc) => npc.position) ?? []),
+        ...(schedulesConfig?.walkers.flatMap((walker) => walker.stations) ?? []),
+        ...(combatConfig?.enemies.map((enemy) => enemy.post) ?? [])
+      ]
+    }, rng)
+    packs.push({
+      id: economyProgressionPack.id,
+      version: economyProgressionPack.version,
+      config: economyConfig as unknown as Record<string, unknown>
     })
   }
 

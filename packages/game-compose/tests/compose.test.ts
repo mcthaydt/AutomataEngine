@@ -57,8 +57,14 @@ describe('composeGame', () => {
     await expect(composeGame({ spec, seed: 11, specHash: 'hash-11' }))
       .resolves.toEqual(await composeGame({ spec, seed: 11, specHash: 'hash-11' }))
   })
-  it('the composed pack set passes contract-v2 validation with no issues', () => {
-    expect(validatePackSet([interactionInventoryPack])).toEqual([])
+  it('the composed inventory pack has no contract-v2 errors', () => {
+    const issues = validatePackSet([interactionInventoryPack])
+    expect(issues.filter((issue) => issue.severity === 'error')).toEqual([])
+    expect(issues).toContainEqual(expect.objectContaining({
+      severity: 'warning',
+      code: 'pack-event-unproduced',
+      packId: 'interaction-inventory'
+    }))
   })
 
   it('is byte-deterministic for the same (spec, seed) and differs across seeds', async () => {
@@ -181,15 +187,51 @@ describe('composeGame', () => {
     expect(result.composition.packs).toMatchSnapshot()
   })
 
-  it('still rejects capabilities without a composed pack', async () => {
+  it('threads an economy-progression pack config when selected', async () => {
     const spec = specWithCapabilities([
       { id: 'interaction-inventory', config: {}, requirements: [] },
       { id: 'economy-progression', config: {}, requirements: [] }
     ])
-    const result = await composeGame({ spec, seed: 11, specHash: 'h' })
-    expect(result.ok).toBe(false)
-    if (result.ok) return
-    expect(result.issues[0]!.code).toBe('compose-unsupported-capability')
+    const withVendor: GameSpec = {
+      ...spec,
+      cast: [...spec.cast, {
+        id: 'c-trader',
+        name: 'Trader',
+        role: 'vendor',
+        description: 'Trades catalog goods.'
+      }]
+    }
+
+    const result = await composeGame({
+      spec: withVendor,
+      seed: 7,
+      specHash: 'h'
+    })
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const economy = result.composition.packs.find(
+      (pack) => pack.id === 'economy-progression'
+    )
+    expect(economy).toBeDefined()
+    expect((economy!.config as {
+      progression: { milestones: unknown[] }
+    }).progression.milestones).toHaveLength(
+      withVendor.progression.milestones.length
+    )
+  })
+
+  it('rejects economy-progression without interaction-inventory', async () => {
+    const spec = specWithCapabilities([
+      { id: 'economy-progression', config: {}, requirements: [] }
+    ])
+
+    const result = await composeGame({ spec, seed: 7, specHash: 'h' })
+
+    expect(result).toMatchObject({
+      ok: false,
+      issues: [{ code: 'pack-missing-requirement' }]
+    })
   })
 
   it('composes the schedules section after dialogue with tracked givers from the dialogue section', async () => {

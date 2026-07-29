@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 80% (63/79 steps; 13/16 tasks complete)
+**Implementation progress:** 87% (69/79 steps; 14/16 tasks complete)
 
 ## Global Constraints
 
@@ -2184,7 +2184,7 @@ Wire economy into the real compose flow (after combat) and prove first-light is 
 - Consumes: `economyProgressionPack`, `composeEconomySection` from `@automata/pack-economy-progression`.
 - Produces: economy pack entry in the composition when `economy-progression` is selected.
 
-- [ ] **Step 1: Add the dependency**
+- [x] **Step 1: Add the dependency**
 
 In `packages/game-compose/package.json` `dependencies`, add:
 
@@ -2194,7 +2194,7 @@ In `packages/game-compose/package.json` `dependencies`, add:
 
 Then `npm install`.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Add to `packages/game-compose/tests/compose.test.ts` a test that a spec selecting `economy-progression` (with `interaction-inventory`) produces an economy pack entry, and a frozen-baseline test that first-light recomposes identically. For the first-light regression, follow the file's existing recompose helper if present; the new selection test:
 
@@ -2212,12 +2212,12 @@ it('threads an economy-progression pack config when selected', () => {
 
 > Build the spec by extending the file's existing valid-spec fixture: add `{ id: 'economy-progression', config: {}, requirements: [] }` to `capabilities`, ensure `interaction-inventory` is also selected, and add a cast member with `role: 'vendor'`.
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 Run: `npx vitest run --project game-compose compose`
 Expected: FAIL — no economy pack entry (threading not wired).
 
-- [ ] **Step 4: Implement the threading**
+- [x] **Step 4: Implement the threading**
 
 In `packages/game-compose/src/compose.ts`:
 
@@ -2281,12 +2281,17 @@ raised and the `packConfig!` non-null assertion in Step 4 is unguarded:
 
 > Economy is threaded **last** so it consumes RNG only after the existing sections, preserving every prior section's stream — first-light (no economy) is bit-identical. Economy requires inventory, and Step 3 puts it in `selectedPacks` so `validatePackSet` returns `pack-missing-requirement` before this line is reached — that is what makes `packConfig!` safe. Add a test that a spec selecting economy **without** inventory returns `ok: false` with that code.
 
-- [ ] **Step 5: Run tests to verify they pass**
+> **Implementation note (2026-07-28):** The shipped threading also passes
+> combat enemy posts into economy's `occupied` keepouts. Task 8 and the approved
+> design require enemy-post separation; the original Step 4 snippet listed only
+> dialogue NPCs and schedule stations.
+
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run --project game-compose`
 Expected: PASS — the economy selection test and the first-light frozen-baseline recompose both green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/game-compose/src/compose.ts packages/game-compose/package.json packages/game-compose/tests package-lock.json
