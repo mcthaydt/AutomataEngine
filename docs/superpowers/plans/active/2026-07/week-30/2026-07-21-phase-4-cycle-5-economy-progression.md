@@ -11,7 +11,7 @@
 **Spec:** [`2026-07-21-phase-4-cycle-5-economy-progression-design.md`](../../specs/active/2026-07/week-30/2026-07-21-phase-4-cycle-5-economy-progression-design.md)
 **Umbrella:** [`2026-07-14-phase-4-capability-packs-design.md`](../../specs/active/2026-07/week-29/2026-07-14-phase-4-capability-packs-design.md)
 
-**Implementation progress:** 34% (27/79 steps; 5/16 tasks complete)
+**Implementation progress:** 39% (31/79 steps; 6/16 tasks complete)
 
 ## Global Constraints
 
@@ -692,7 +692,7 @@ Milestones flip in ascending-threshold order as `totalEarned` crosses them.
 **Interfaces:**
 - Produces: `MilestoneDef`, `ProgressionState`, `createProgressionState`, `advance(state, totalEarned, milestones) → { state, newlyAchieved }`, `progressionComplete(state, milestones)`, `savedProgressionSchema`, `serializeProgression`, `deserializeProgression`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/pack-economy-progression/tests/progressionCore.test.ts`:
 
@@ -725,12 +725,12 @@ describe('progressionCore', () => {
 })
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w @automata/pack-economy-progression -- progressionCore`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `progressionCore.ts`**
+- [x] **Step 3: Implement `progressionCore.ts`**
 
 ```ts
 import { z } from '@automata/project'
@@ -768,7 +768,7 @@ export function deserializeProgression(raw: unknown): ProgressionState { return 
 
 Add `export * from './progressionCore'` to `src/index.ts`.
 
-- [ ] **Step 4: Run test to verify it passes + commit**
+- [x] **Step 4: Run test to verify it passes + commit**
 
 Run: `npm test -w @automata/pack-economy-progression -- progressionCore`
 Expected: PASS
