@@ -118,11 +118,12 @@ Mirrors `claudeSvgProvider` and `claudePropProvider` line for line:
   and renders through the same shared renderer.
 
 **Determinism is `pinned`,** and it matters more here than for props:
-`optimizeAssetBytes` normalizes WAV peaks
-(`packages/asset-providers/src/optimize.ts`), so the provider's own bytes are
-rewritten downstream. `buildGeneratedAsset` already recomputes the pinned hash
-over the *final* bytes — this cycle depends on that existing behavior rather
-than adding to it.
+`optimizeAssetBytes` rescales every non-silent WAV to exactly
+`WAV_NORMALIZE_PEAK` (`packages/asset-providers/src/optimize.ts:36-66`), so the
+provider's own bytes are *always* rewritten downstream — unlike the SVG and prop
+optimizers, which no-op on canonical input. `buildGeneratedAsset` already
+recomputes the pinned hash over the final bytes; this cycle depends on that
+existing behavior rather than adding to it, and a test pins the dependency.
 
 ### 4.3 Provenance
 
@@ -182,9 +183,12 @@ One step, exactly as cycle 5 did for `model`: inject the provider in
 - **The semitone table drifts from equal temperament.** Mitigation: the twelve
   constants are pinned by a unit test against their rounded reference values;
   they are data, not computation.
-- **Peak normalization interacts badly with layered gains.** Mitigation: the
-  schema caps summed gains below `wavPeakMax`, so normalization is a no-op for
-  schema-valid recipes; a test asserts the no-op.
+- **A silent recipe slips through.** `optimizeWav` rescales every WAV to exactly
+  `WAV_NORMALIZE_PEAK` (29491) *except* when the peak is 0, so an all-rest or
+  zero-gain recipe is the one input that escapes normalization and yields a
+  degenerate asset. Mitigation: the schema requires at least one non-rest step
+  and a minimum layer gain, so silence is unrepresentable; a test asserts a
+  schema-valid recipe always renders a non-zero peak.
 
 ## 10. Docs on ship
 
