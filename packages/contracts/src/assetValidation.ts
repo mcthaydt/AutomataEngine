@@ -3,8 +3,14 @@ import type { CompositionManifest } from './composition'
 
 /**
  * Structural slice of the Phase 5 asset evaluator: pure manifest/composition
- * consistency. Media-level validation (dimensions, budgets, import success,
- * visual family, browser compatibility) arrives in cycle 3 on top of this.
+ * consistency. Media-level validation landed in cycle 3 as `validateAssetMedia`
+ * (`@automata/asset-providers`): byte budgets, dimensions, decode/parse
+ * success, browser-format constraints, and per-asset palette membership.
+ *
+ * Cross-asset *family* consistency is deliberately NOT implemented. Coherence
+ * is achieved structurally instead — one shared `StyleParams` per game feeds
+ * every provider call — and enforced per asset via palette membership. Nothing
+ * verifies that a finished asset set coheres; that evaluator is unbuilt.
  */
 export interface AssetIssue {
   severity: 'error' | 'warning'

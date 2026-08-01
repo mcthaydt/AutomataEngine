@@ -7,8 +7,15 @@ Strategy source: [Autonomous Game Factory design](/docs/superpowers/specs/archiv
 §Core model, §Evaluator taxonomy, §Risks (asset inconsistency, provider dependence).
 
 This is the **phase umbrella spec**: it pins the asset manifest v2 and the
-provider-adapter contract that all three cycles build against. Each cycle gets
-its own implementation plan; only cycle 1's plan is written with this spec.
+provider-adapter contract every cycle builds against. Each cycle gets its own
+implementation plan; only cycle 1's plan is written with this spec.
+
+**Cycle count (updated 2026-08-01).** This document was written for three
+cycles, which is what the phase exit required; those shipped and the exit
+criteria in §7 were met at cycle 3. Cycles 4 and 5 then extended the phase with
+AI provider adapters (`claude-svg`, `claude-prop`), and cycle 6 adds
+`claude-audio`. Where the text below says "three cycles" it means the three
+that define the contracts here — later cycles build against them unchanged.
 Phase 5 runs **in parallel with Phase 4** — disjoint code except
 `@automata/contracts`, where this phase owns `assetManifest.ts`.
 

@@ -196,7 +196,9 @@ omitted stays byte-identical to today (procedural `propProvider`).
 - Gates: `npm run ci` (offline, green), `npm run verify:new-game`, and
   `games/first-light` untouched (zero compose-path changes). Model-palette
   validation is pinned by the focused procedural-provider regression and the
-  editor MCP suite's default `beacon-model` fixture. Docs on ship: ROADMAP
+  shared `beacon-model` fixture at `packages/contracts/src/gameSpecFixtures.ts:38`
+  (a `@automata/contracts` fixture the editor MCP suite consumes — it is not
+  owned by `editor-mcp-server`). Docs on ship: ROADMAP
   Phase 5 cycle 5 line + phase status; week-28 decomposition phase-map row
   bumped to `5 completed`.
 

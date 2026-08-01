@@ -1266,7 +1266,16 @@ Expected: both PASS. Fix anything red before the docs step.
 
 - [ ] **Step 4: Append the capability gaps**
 
-In `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md`, add a `## Capability-gap log` section if none exists, and append:
+The Phase 5 umbrella has **no** capability-gap log — unlike the Phase 4 umbrella, whose §9 is the model to follow. Create one as a new final section in `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md`, after §8 Risks:
+
+```markdown
+## 9. Capability-gap log
+
+Deviations and deferrals logged per cycle, newest last. Cycles 1-5 recorded
+theirs in their own specs; this log is the phase-level record from cycle 6 on.
+```
+
+Then append under it:
 
 ```markdown
 - **Cycle 6 — monophonic layers, two maximum.** No chords within a layer and no
