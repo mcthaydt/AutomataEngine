@@ -146,10 +146,13 @@ One step, exactly as cycle 5 did for `model`: inject the provider in
 - A budget test proving no schema-valid recipe can exceed `MEDIA_BUDGETS`.
 - An opt-in live smoke appended to the existing
   `packages/asset-providers-ai/tests/live.test.ts`.
-- **The regression pin is the `editor-mcp-server` default fixture spec, not
-  first-light**, which ships no audio. Cycle 5 wrote its spec against
-  first-light, discovered mid-plan that first-light had no model assets, and had
-  to retarget; naming the correct target now avoids repeating that.
+- **The regression pin is the shared spec fixture at
+  `packages/contracts/src/gameSpecFixtures.ts:38`, not first-light**, which ships
+  no audio. That fixture is where cycle 5 put its `beacon-model` requirement —
+  it is a `@automata/contracts` fixture consumed by the editor MCP suite, not a
+  file owned by `editor-mcp-server`. Cycle 5 wrote its spec against first-light,
+  discovered mid-plan that first-light had no model assets, and retargeted here;
+  naming the exact path now avoids repeating that.
 - Gates: `npm run ci`, and `npm run coverage` because `asset-providers` is
   coverage-sensitive.
 

@@ -246,11 +246,11 @@ export const musicRecipeSchema: z.ZodType<z.infer<typeof baseMusicSchema>> =
   })
 export type MusicRecipe = z.infer<typeof baseMusicSchema>
 
-export const audioRecipeSchema = z.discriminatedUnion('kind', [sfxRecipeSchema, baseMusicSchema])
+export const audioRecipeSchema = z.discriminatedUnion('kind', [sfxRecipeSchema, musicRecipeSchema])
 export type AudioRecipe = SfxRecipe | MusicRecipe
 ```
 
-Note `audioRecipeSchema` unions the **base** music schema — `z.discriminatedUnion` requires object schemas, and a `superRefine` wrapper is not one. Task 4 parses with `musicRecipeSchema` explicitly so the refinements still run on the AI path.
+`audioRecipeSchema` unions the **refined** music schema. Zod v4 accepts a `superRefine` wrapper as a discriminated-union member and still runs its refinements through the union — verified against this repo's zod version on 2026-08-01, at both the type level and at runtime. Earlier drafts of this plan claimed otherwise and routed around it; that workaround is gone.
 
 - [ ] **Step 4: Add the export**
 
@@ -1087,24 +1087,66 @@ git commit -m "test(asset-providers): pin post-normalization hash contract for a
 
 - [ ] **Step 1: Write the failing routing test**
 
-Append to `tools/editor-mcp-server/tests/assetTools.test.ts`, following the file's existing provider-routing test for `claude-prop`:
+`namedProviders` is **not exposed on any host object** — it is a parameter threaded into the local `setup(...)` / `setupWithSpec(...)` helpers in `tools/editor-mcp-server/tests/assetTools.test.ts` (lines 44, 68, 77-78). Cycle 5's `describe('model provider override')` block (added in `fd30c5d`) is the precedent: it injects a **fake** provider and asserts end-to-end routing rather than asserting the real `sessionHost` wiring. Mirror that shape exactly.
+
+Append to `tools/editor-mcp-server/tests/assetTools.test.ts`, next to the `model provider override` block:
 
 ```ts
-it('routes audio and music requirements to claude-audio', async () => {
-  const host = createTestSessionHost()
-  for (const kind of ['audio', 'music'] as const) {
-    expect(host.namedProviders['claude-audio']!.kinds).toContain(kind)
+const AUDIO_ONLY_ASSETS = [{ id: 'harbor-loop', kind: 'music', description: 'Harbor ambience.' }]
+
+const fakeAudioProvider: AssetProvider = {
+  id: 'fake-audio',
+  version: '1.0.0',
+  kinds: ['audio', 'music'],
+  fileExtension: () => 'wav',
+  async generate() {
+    const bytes = writeWav(renderAudioRecipe(musicRecipeSchema.parse({
+      kind: 'music', formatVersion: 1, waveform: 'sine', basePitchHz: 110, stepSeconds: 0.5,
+      layers: [{ gain: 0.5, steps: [0, 3, 7, null] }]
+    })), AUDIO_SAMPLE_RATE)
+    return {
+      bytes,
+      provenance: {
+        provider: 'fake-audio', providerVersion: '1.0.0', generator: 'fake-audio',
+        sourceParams: {}, seed: 1, specVersion: 1,
+        determinism: { kind: 'pinned', contentHash: sha256Hex(bytes) },
+        license: { kind: 'generated', notes: 'test' }
+      }
+    }
   }
-  expect(host.namedProviders['claude-audio']!.id).toBe('claude-audio')
+}
+
+describe('audio provider override', () => {
+  it('routes a music requirement through the injected audio provider and validates', async () => {
+    const { runner, manifestPath } = await setupWithSpec(AUDIO_ONLY_ASSETS, { 'fake-audio': fakeAudioProvider })
+    const result = await runner.execute('generateAssets', { provider: 'fake-audio' })
+    expect(result.ok).toBe(true)
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    const entry = manifest.assets.find((a: { id: string }) => a.id === 'harbor-loop')
+    expect(entry.provenance.provider).toBe('fake-audio')
+    expect(entry.path.endsWith('.wav')).toBe(true)
+    expect(entry.provenance.determinism.kind).toBe('pinned')
+  })
+
+  it('rejects a non-audio requirement routed to an audio-only provider', async () => {
+    const { runner } = await setupWithSpec(
+      [{ id: 'icon-a', kind: 'ui', description: 'An icon.' }],
+      { 'fake-audio': fakeAudioProvider }
+    )
+    await expect(runner.execute('generateAssets', { provider: 'fake-audio' }))
+      .resolves.toMatchObject({ ok: false })
+  })
 })
 ```
 
-Mirror whatever accessor the neighbouring `claude-prop` test uses to reach `namedProviders`; if that test reaches it through a different seam, use the identical seam here rather than inventing `createTestSessionHost`.
+Match the exact destructuring, `runner.execute` argument shape, and manifest-reading idiom of the neighbouring `model provider override` block — the two must be structurally identical so a reviewer can diff them. Fold the new imports into the file's import block.
 
 - [ ] **Step 2: Run it and confirm it fails**
 
 Run: `npx vitest run --project editor-mcp-server assetTools`
-Expected: FAIL — `namedProviders['claude-audio']` is undefined.
+Expected: FAIL — `renderAudioRecipe` and `musicRecipeSchema` do not resolve until Task 1-2 are merged, and the assertions have never run.
+
+Note this block tests the **routing mechanism**, not `sessionHost`'s one-line wiring of the real `claude-audio`. That wiring is verified by typecheck alone, exactly as `claude-svg` and `claude-prop` are — instantiating them in a test would require a live SDK client.
 
 - [ ] **Step 3: Inject the provider**
 
@@ -1179,7 +1221,7 @@ git commit -m "feat(editor-mcp-server): inject claude-audio; add live smoke"
 ### Task 8: Regression pin, full gates, and ship documentation
 
 **Files:**
-- Modify: the `editor-mcp-server` default fixture spec (find it with the command in Step 1)
+- Modify: `packages/contracts/src/gameSpecFixtures.ts:38` (the shared spec fixture the editor MCP suite consumes)
 - Modify: `docs/ROADMAP.md` (§1 Shipped Phase 5 entry, §3 Phase 5 cycles list)
 - Modify: `docs/superpowers/specs/active/2026-07/week-28/2026-07-11-factory-phase-decomposition-design.md`
 - Modify: `docs/superpowers/specs/active/2026-07/week-29/2026-07-14-phase-5-asset-pipeline-design.md` (gap log)
@@ -1189,18 +1231,29 @@ git commit -m "feat(editor-mcp-server): inject claude-audio; add live smoke"
 - Consumes: all prior tasks.
 - Produces: nothing.
 
-- [ ] **Step 1: Locate the fixture spec and give it an audio requirement**
+- [ ] **Step 1: Give the shared spec fixture an audio requirement**
 
-```bash
-grep -rn "beacon-model\|assets:" tools/editor-mcp-server/src tools/editor-mcp-server/tests --include="*.ts" | grep -i "kind\|asset" | head
+The fixture is `packages/contracts/src/gameSpecFixtures.ts:38`, which already reads:
+
+```ts
+    assets: [{ id: 'beacon-model', kind: 'model', description: 'The beacon.' }],
 ```
 
-Cycle 5 added a `beacon-model` requirement to this fixture for the same reason. Add a sibling `music` requirement (for example `harbor-theme`) so the audio path is exercised by the default fixture. **Do not add one to `games/first-light`** — it ships one `ui` SVG and no audio, which is why the spec names the fixture as the pin.
+Cycle 5 added that `beacon-model` entry for exactly this reason. Add a sibling `music` requirement:
 
-- [ ] **Step 2: Run the fixture's suite**
+```ts
+    assets: [
+      { id: 'beacon-model', kind: 'model', description: 'The beacon.' },
+      { id: 'harbor-theme', kind: 'music', description: 'Brooding harbor ambience.' }
+    ],
+```
 
-Run: `npx vitest run --project editor-mcp-server`
-Expected: PASS, with the new requirement generating through `procedural-audio` in the standard suite.
+**Do not add one to `games/first-light`** — it ships one `ui` SVG and no audio, which is why the spec names this fixture as the pin. Note this file lives in `@automata/contracts`, not in `editor-mcp-server`; the editor MCP suite merely consumes it, so expect fallout in any suite that asserts this fixture's asset count.
+
+- [ ] **Step 2: Run every suite that consumes the fixture**
+
+Run: `npx vitest run --project contracts --project editor-mcp-server --project game-compose`
+Expected: PASS, with the new requirement generating through `procedural-audio` in the standard suite. Any assertion pinning the fixture's asset count or asset-id list needs the second entry added — that is expected churn from Step 1, not a regression.
 
 - [ ] **Step 3: Run the full gates**
 
@@ -1288,6 +1341,6 @@ git commit -m "docs: mark Phase 5 cycle 6 (claude-audio) shipped"
 
 **Type consistency:** `SfxRecipe`, `MusicRecipe`, `AudioRecipe`, `sfxRecipeSchema`, `musicRecipeSchema`, `semitoneRatio`, `SEMITONE_RATIOS` are defined in Task 1 and used unchanged in Tasks 2-6. `AUDIO_SAMPLE_RATE` and `renderAudioRecipe(recipe): Int16Array` come from Task 2 and are called identically in Tasks 4, 5, 6. `audioRecipeStyleErrors(recipe, style): string[]` and `TEMPO_STEP_SECONDS` come from Task 3 and have the same signature in Tasks 4, 5, 7. `createClaudeAudioProvider({ client?, model? })` matches the `claude-svg`/`claude-prop` option shape. The provider `id` `'claude-audio'`, `kinds: ['audio', 'music']`, and `fileExtension` `'wav'` are consistent across Tasks 5, 7, 8.
 
-**One schema subtlety worth re-reading:** `musicRecipeSchema` is a `superRefine` wrapper, which `z.discriminatedUnion` cannot accept — so `audioRecipeSchema` unions the *base* object schema, and Task 5 parses with `musicRecipeSchema` explicitly so the refinements still run on the AI path. Task 1 Step 3 carries this note inline.
+**Audit note (2026-08-01):** an earlier draft claimed `z.discriminatedUnion` cannot accept a `superRefine` wrapper, and added a workaround. That was verified false against this repo's zod v4 — a refined member both constructs and runs its refinements through the union — so `audioRecipeSchema` now unions `musicRecipeSchema` directly. Task 5 still parses with the specific schema per kind, which is about giving a precise error message, not about refinements running.
 
 **Ordering:** Tasks 1→2→3 are strictly sequential (each appends to the same module). Task 4 and Task 5 both depend on 1-3 but not on each other. Task 6 depends on 2. Task 7 depends on 5. Task 8 is last.

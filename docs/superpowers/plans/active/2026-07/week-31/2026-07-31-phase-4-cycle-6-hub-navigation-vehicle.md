@@ -570,20 +570,20 @@ it('teleports the player to spawn when the second wind triggers', () => {
   const host = createGameHost(app)
   const render = createNullRenderer()
   try {
-    const config = packConfigSchema.parse(fixtureConfig())
+    const parsed = packConfigSchema.parse(config())
     const handle = combatAiPack.register(
       { host, render: render.port, events: createPackEventBus(), state: createPackStateRegistry() },
-      config
+      parsed
     )!
     const sink = createWorldEffectsSink(new Set())
     const effects = sink.forPack(combatAiPack.id)
     // Stand on an enemy post until HP drains through the second wind.
-    const post = config.enemies[0]!.post
+    const post = parsed.enemies[0]!.post
     for (let tick = 0; tick < 1200; tick += 1) {
       handle.fixedUpdate!(1 / 60, { playerPosition: { x: post.x, z: post.z }, effects })
       if (sink.resolve().teleport) break
     }
-    expect(sink.resolve().teleport).toEqual({ x: config.player.spawn.x, z: config.player.spawn.z })
+    expect(sink.resolve().teleport).toEqual({ x: parsed.player.spawn.x, z: parsed.player.spawn.z })
   } finally {
     host.dispose()
     app.remove()
@@ -591,7 +591,7 @@ it('teleports the player to spawn when the second wind triggers', () => {
 })
 ```
 
-Fold `createWorldEffectsSink` into the file's `@automata/game-kit` import. If the file has no `fixtureConfig()` helper, reuse whatever config builder its existing tests use.
+Fold `createWorldEffectsSink` into the file's `@automata/game-kit` import. The helper is `const config = (): CombatPackConfig => ({ ... })` at `packages/pack-combat-ai/tests/pack.test.ts:10`. **It returns an object literal, not a `composeCombatSection` result**, so Step 3's new required `player.spawn` field breaks it until you add `spawn: { x: -8, z: -8 }` to its `player` block — do that in Step 3, not here, or this test fails on a schema error rather than the missing teleport.
 
 - [ ] **Step 2: Run it and confirm it fails**
 
@@ -617,6 +617,8 @@ In `packages/pack-combat-ai/src/composeSection.ts:5`, add `spawn` to the default
 ```
 
 …then, where the function builds the emitted player config, set `spawn: { x: input.arena.spawn.x, z: input.arena.spawn.z }`. Follow the file's existing rounding idiom if it rounds positions.
+
+Also add `spawn: { x: -8, z: -8 }` to the `player` literal in `packages/pack-combat-ai/tests/pack.test.ts:10` (`const config = (): CombatPackConfig => ({ ... })`). That helper hand-writes its config rather than calling `composeCombatSection`, so it does not pick the new field up automatically and every test in the file fails schema validation until it does.
 
 - [ ] **Step 4: Make the second wind a real respawn**
 
@@ -735,7 +737,7 @@ git commit -m "feat(contracts): hub-navigation-vehicle capability config"
 **Files:**
 - Create: `packages/pack-hub-navigation-vehicle/package.json`
 - Create: `packages/pack-hub-navigation-vehicle/tsconfig.json` (copy `packages/pack-economy-progression/tsconfig.json` verbatim)
-- Create: `packages/pack-hub-navigation-vehicle/vitest.config.ts` (copy `packages/pack-economy-progression/vitest.config.ts` verbatim if one exists; skip if the package relies on the root config)
+- Create: `packages/pack-hub-navigation-vehicle/vitest.config.ts` (copy `packages/pack-economy-progression/vitest.config.ts` verbatim — both files exist in that package and are required; the root config does not cover packages on its own)
 - Create: `packages/pack-hub-navigation-vehicle/src/locationCore.ts`
 - Create: `packages/pack-hub-navigation-vehicle/src/index.ts`
 - Test: `packages/pack-hub-navigation-vehicle/tests/locationCore.test.ts`
@@ -2165,21 +2167,21 @@ describe('hub editor contribution', () => {
   it('previews the vehicle, every doorway, and every interior outline', () => {
     const render = createNullRenderer()
     const cfg = config()
-    hubNavigationVehicleEditorContribution.createPreview(cfg, render.port)
+    hubNavigationVehicleEditorContribution.createPreview!(cfg, render.port)
     // 1 vehicle + 4 doorways + 4 corner dots per interior (2 interiors)
     expect(render.port.objectCount).toBe(1 + cfg.doorways.length + 2 * 4)
   })
 
   it('cleans up after itself', () => {
     const render = createNullRenderer()
-    const preview = hubNavigationVehicleEditorContribution.createPreview(config(), render.port)
+    const preview = hubNavigationVehicleEditorContribution.createPreview!(config(), render.port)
     preview.dispose()
     expect(render.port.objectCount).toBe(0)
   })
 })
 ```
 
-Check `packages/pack-economy-progression/tests/editorContribution.test.ts` for the exact `createPreview` return shape and mirror it — if it returns void rather than a disposable, drop the third test and match the shipped pattern instead.
+`createPreview` is **optional** on `PackEditorContribution` (`packages/game-kit/src/packEditor.ts:25`), so the `!` above is required or the test will not typecheck — the shipped `pack-economy-progression` test uses the same `createPreview!(...)` form. It returns a `PackPreviewHandle` with a required `dispose()` and an optional `render(alpha)`, so all three tests above are correct as written.
 
 - [ ] **Step 2: Run it and confirm it fails**
 
@@ -2391,18 +2393,27 @@ Add `"@automata/pack-hub-navigation-vehicle": "*"` to `packages/game-compose/pac
 
 - [ ] **Step 2: Write the failing test**
 
-Append to `packages/game-compose/tests/compose.test.ts`, following the file's existing spec-fixture helper:
+`packages/game-compose/tests/compose.test.ts` has three fixture helpers — `sliceSpec()`, `specWithCapabilities(capabilities)`, and `specWithAssets(assets)` (lines 7-33). **None of them can override `world.locations`**, which this task needs, so add a fourth helper next to them:
+
+```ts
+function specWithHub(locations: GameSpec['world']['locations']): GameSpec {
+  return gameSpecSchema.parse({
+    ...sliceSpec(),
+    capabilities: [{ id: 'hub-navigation-vehicle', config: {}, requirements: [] }],
+    world: { locations }
+  })
+}
+```
+
+Then append the tests:
 
 ```ts
 describe('hub-navigation-vehicle composition', () => {
+  const DISTRICT = { id: 'harbor', name: 'Harbor', kind: 'district' as const, description: 'The harbor.' }
+  const INTERIOR = { id: 'vault', name: 'Vault', kind: 'interior' as const, description: 'A locked vault.' }
+
   it('fails with a typed finding when the spec declares no interior', async () => {
-    const spec = specFixture({
-      capabilities: [{ id: 'hub-navigation-vehicle', config: {}, requirements: [] }],
-      world: { locations: [
-        { id: 'harbor', name: 'Harbor', kind: 'district', description: 'The harbor.' }
-      ] }
-    })
-    const result = await composeGame({ spec, seed: 7, specHash: 'hash' })
+    const result = await composeGame({ spec: specWithHub([DISTRICT]), seed: 7, specHash: 'hash' })
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.issues).toEqual([{
@@ -2412,29 +2423,23 @@ describe('hub-navigation-vehicle composition', () => {
   })
 
   it('composes a hub section when an interior exists', async () => {
-    const spec = specFixture({
-      capabilities: [{ id: 'hub-navigation-vehicle', config: {}, requirements: [] }],
-      world: { locations: [
-        { id: 'harbor', name: 'Harbor', kind: 'district', description: 'The harbor.' },
-        { id: 'vault', name: 'Vault', kind: 'interior', description: 'A locked vault.' }
-      ] }
+    const result = await composeGame({
+      spec: specWithHub([DISTRICT, INTERIOR]), seed: 7, specHash: 'hash'
     })
-    const result = await composeGame({ spec, seed: 7, specHash: 'hash' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.summary.packIds).toContain('hub-navigation-vehicle')
   })
 
-  it('leaves an existing composition byte-identical', async () => {
-    const spec = specFixture({})   // no hub capability
-    const before = await composeGame({ spec, seed: 7, specHash: 'hash' })
-    const after = await composeGame({ spec, seed: 7, specHash: 'hash' })
+  it('leaves a hub-free composition unchanged across runs', async () => {
+    const before = await composeGame({ spec: sliceSpec(), seed: 7, specHash: 'hash' })
+    const after = await composeGame({ spec: sliceSpec(), seed: 7, specHash: 'hash' })
     expect(before).toEqual(after)
   })
 })
 ```
 
-Adapt `specFixture` to whatever the file already uses to build a `GameSpec`; the point is a spec whose only capability is the hub, with and without an interior.
+`sliceSpec()` builds the `first-light` spec, whose sole capability is `interaction-inventory` — so the third test is the guard that adding the hub branch did not perturb an existing composition. `gameSpecSchema` and the `GameSpec` type are already imported at the top of the file.
 
 - [ ] **Step 3: Run it and confirm it fails**
 
@@ -2807,7 +2812,7 @@ git commit -m "docs: mark Phase 4 cycle 6 (hub navigation + vehicle) shipped"
 - Spec §4.2 implies the camera follows bounds continuously. The plan reframes only when the bounds key changes, so a static district costs one `setCamera` call at boot — identical to today's behavior.
 - The one-tick latency between a pack writing an effect and the game applying it is inherent to the existing loop order (`game.fixedUpdate` then `runtime.fixedUpdate`). It is documented in Task 14 Step 5 rather than reordered, because reordering would change every existing game's frame semantics.
 
-**Placeholder scan:** none. Every code step carries complete, runnable code. Three steps deliberately defer to a shipped sibling file for an exact shape — Task 11 Step 1 (`createPreview` return shape vs `pack-economy-progression`), Task 13 Step 2 (`specFixture` helper), Task 3 Step 1 (`fixtureConfig()`) — and each names the file to copy and what to do if it differs.
+**Placeholder scan:** none. Every code step carries complete, runnable code. An audit pass (2026-08-01) resolved the three spots that previously deferred to a sibling file, pinning each against the real source: Task 3 uses `config()` at `pack-combat-ai/tests/pack.test.ts:10` and calls out that its hand-written literal needs the new `spawn` field; Task 11 uses `createPreview!(...)` because `PackEditorContribution.createPreview` is optional (`game-kit/src/packEditor.ts:25`) and returns a `PackPreviewHandle` with a required `dispose()`; Task 13 adds a `specWithHub` helper because none of `compose.test.ts`'s three existing fixtures can override `world.locations`.
 
 **Command audit:** every test command uses `npx vitest run --project <directory-name>`, verified against this repo — `--project pack-economy-progression` passes, `--project @automata/pack-economy-progression` fails with "No projects matched the filter". Root gates are `npm run ci`, `npm run coverage`, `npm run verify:new-game`.
 
